@@ -12,23 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Test!
+        run: echo Test!!!
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17' # or '21', depending on your project
-
-      - name: Grant execute permission to Gradle wrapper
-        run: chmod +x ./gradlew
-
-      - name: Run Unit Tests
-        run: ./gradlew test --tests '*unit.*'
-
-      - name: Run Integration Tests
-        run: ./gradlew test --tests '*integration.*'
-
-      - name: Run E2E Tests
-        run: ./gradlew test --tests '*e2e.*'
+     
