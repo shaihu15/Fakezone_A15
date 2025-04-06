@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # or your preferred version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Unit Tests
+        run: |
+          echo "Running Unit Tests..."
+          pytest tests/unit
+
+      - name: Run Integration Tests
+        run: |
+          echo "Running Integration Tests..."
+          pytest tests/integration
+
+      - name: Run End-to-End Tests
+        run: |
+          echo "Running E2E Tests..."
+          pytest tests/e2e
