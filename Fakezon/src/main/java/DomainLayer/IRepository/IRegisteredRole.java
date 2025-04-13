@@ -1,4 +1,4 @@
-package DomainLayer.Interfaces;
+package DomainLayer.IRepository;
 
 public interface IRegisteredRole {
     String getRoleName();

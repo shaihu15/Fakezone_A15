@@ -1,6 +1,5 @@
 package DomainLayer.Model;
-import DomainLayer.Interfaces.IRegisteredRole;
-import javax.management.relation.Role;
+import DomainLayer.IRepository.IRegisteredRole;
 
 public abstract class RegisteredRole implements IRegisteredRole {
     protected Registered registered;
