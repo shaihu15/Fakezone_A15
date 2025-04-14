@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.util.List;
 
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
 
 public class ProductService implements IProductService {
@@ -25,13 +26,13 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public String viewProduct(int productId) {
+    public ProductDTO viewProduct(int productId) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'viewProduct'");
     }
 
     @Override
-    public List<String> searchProducts(String keyword) {
+    public List<ProductDTO> searchProducts(String keyword) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'searchProducts'");
     }
