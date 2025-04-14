@@ -20,6 +20,6 @@ public abstract class PurchasePolicy {
     }
 
     
-    public abstract boolean canPurchase(PurchaseRequest purchaseRequest);
+    public abstract boolean canPurchase(String userID, String productID, int quantity); // TO DO might change to some generic object like requestPurchase
 
 }
