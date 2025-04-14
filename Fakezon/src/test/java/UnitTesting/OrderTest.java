@@ -80,6 +80,5 @@ public class OrderTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             order.setPaymentMethod(PaymentMethod.CREDIT_CARD);
         });
-        assertEquals("Can only change payment method for \"cash on delevery\".", exception.getMessage());
-    }
+        assertEquals("Payment method can only be changed if it is CASH_ON_DELIVERY.", exception.getMessage());}
 }

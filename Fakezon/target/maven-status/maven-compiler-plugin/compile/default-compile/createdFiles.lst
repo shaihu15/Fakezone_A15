@@ -30,7 +30,6 @@ DomainLayer\Model\Product.class
 DomainLayer\Model\StoreManager.class
 DomainLayer\Interfaces\IUserType.class
 InfrastructureLayer\Repositories\ProductRepository.class
-DomainLayer\Model\Order.class
 ApplicationLayer\Services\StoreService.class
 DomainLayer\Model\Guest.class
 DomainLayer\IRepository\IStoreRepository.class
