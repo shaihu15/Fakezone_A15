@@ -1,15 +1,15 @@
 package DomainLayer.Model;
 
 public abstract class PurchasePolicy {
-    private String policyID;
+    private int policyID;
     private String policyName;
     private String description;
-    public PurchasePolicy(String policyID, String policyName, String description) {
+    public PurchasePolicy(int policyID, String policyName, String description) {
         this.policyID = policyID;
         this.policyName = policyName;
         this.description = description;
     }
-    public String getPolicyID() {
+    public int getPolicyID() {
         return policyID;
     }
     public String getPolicyName() {
@@ -20,6 +20,6 @@ public abstract class PurchasePolicy {
     }
 
     
-    public abstract boolean canPurchase(String userID, String productID, int quantity); // TO DO might change to some generic object like requestPurchase
+    public abstract boolean canPurchase(int userID, String productID, int quantity); // TO DO might change to some generic object like requestPurchase
 
 }
