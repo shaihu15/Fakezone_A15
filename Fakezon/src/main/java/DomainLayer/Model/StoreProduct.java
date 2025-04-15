@@ -5,15 +5,15 @@ import java.util.Map;
 
 
 public class StoreProduct {
-    private String SproductID;
+    private int SproductID;
     private String name;
     private double basePrice;
     private int quantity;
     private ProductState state;
-    private Map<String, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
+    private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
 
 
-   public StoreProduct(String SproductID, String name, double basePrice, int quantity, ProductState state) {
+   public StoreProduct(int SproductID, String name, double basePrice, int quantity, ProductState state) {
         this.SproductID = SproductID;
         this.name = name;
         this.basePrice = basePrice;
@@ -21,7 +21,7 @@ public class StoreProduct {
         this.state = state;
     }
 
-    public String getSproductID() {
+    public int getSproductID() {
         return SproductID;
     }
     public String getName() {
@@ -39,7 +39,7 @@ public class StoreProduct {
     public void setState(ProductState state) {
         this.state = state;
     }
-   public void  addRating(String userID, double rating, String comment) {
+   public void  addRating(int userID, double rating, String comment) {
         if (Pratings.containsKey(userID)) {
             Pratings.get(userID).setRating(rating);
         } else {
