@@ -18,6 +18,10 @@ public class Store {
     public String getName() {
         return name;
     }
+
+    public int getId(){
+        return storeID;
+    }
     //precondition: user is logged in and  previously made a purchase from the store - cheaked by service layer
     public void addRating(int userID, double rating, String comment) {
         ratings.put(userID, new StoreRating(userID, rating, comment));

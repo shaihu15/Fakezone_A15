@@ -9,11 +9,11 @@ import DomainLayer.Model.Store;
 
 
 public class StoreRepository implements IStoreRepository {
-    private final Map<String, Store> stores = new HashMap<>();
+    private final Map<Integer, Store> stores = new HashMap<>();
     
 
     @Override
-    public Store findById(String storeID) {
+    public Store findById(int storeID) {
         // Implementation to find a store by its ID
         return stores.get(storeID); // Placeholder return statement
     }
@@ -28,8 +28,9 @@ public class StoreRepository implements IStoreRepository {
         stores.put(store.getId(), store);
     }
 
+
     @Override
-    public void delete(String storeID) {
+    public void delete(int storeID) {
         stores.remove(storeID);
     }
 
