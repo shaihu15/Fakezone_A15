@@ -61,7 +61,7 @@ public class Store {
         return storeProducts;
     }
     public HashMap<Integer, StoreRating> getRatings() {
-        return ratings;
+        return Sratings;
     }
     public HashMap<Integer, PurchasePolicy> getPurchasePolicies() {
         return purchasePolicies;
