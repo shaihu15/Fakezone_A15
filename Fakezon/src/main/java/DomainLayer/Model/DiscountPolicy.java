@@ -1,17 +1,17 @@
 package DomainLayer.Model;
 
 public abstract class DiscountPolicy {
-    private String policyID;
+    private int policyID;
     private String policyName;
     private String description;
 
-    public DiscountPolicy(String policyID, String policyName, String description) {
+    public DiscountPolicy(int policyID, String policyName, String description) {
         this.policyID = policyID;
         this.policyName = policyName;
         this.description = description;
     }
 
-    public String getPolicyID() {
+    public int getPolicyID() {
         return policyID;
     }
 

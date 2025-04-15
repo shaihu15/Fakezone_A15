@@ -1,16 +1,16 @@
 package DomainLayer.Model;
 public class ProductRating {
-    private String userID;
+    private int userID;
     private double rating;
     private String comment;
 
-    public ProductRating(String userID, double rating, String comment) {
+    public ProductRating(int userID, double rating, String comment) {
         this.userID = userID;
         this.rating = rating;
         this.comment = comment;
     }
 
-    public String getUserID() {
+    public int getUserID() {
         return userID;
     }
 
