@@ -21,11 +21,10 @@ public class ProductRating {
     public String getComment() {
         return comment;
     }
-    public void setRating(double rating) {
+    public void updateRating(double rating, String comment) {
         this.rating = rating;
-    }
-    public void setComment(String comment) {
         this.comment = comment;
+
     }
 
 }
