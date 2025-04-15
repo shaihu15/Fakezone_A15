@@ -9,7 +9,7 @@ public class Store {
     private boolean isOpen = true;
     private int storeFounderID; //store founder ID
     private HashMap<Integer, Product> products;
-    private HashMap<Integer, StoreRating> ratings; //HASH userID to store rating
+    private HashMap<Integer, StoreRating> Sratings; //HASH userID to store rating
     private HashMap<Integer, StoreProduct> storeProducts; //HASH productID to store product
     private HashMap<Integer, PurchasePolicy> purchasePolicies; //HASH policyID to purchase policy
     private HashMap<Integer, DiscountPolicy> discountPolicies; //HASH policyID to discount policy
@@ -23,10 +23,11 @@ public class Store {
         this.name = name;
         this.storeID = storeID;
         this.products = new HashMap<>();
-        this.ratings = new HashMap<>();
+        this.Sratings = new HashMap<>();
         this.storeProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
+
     }
 
     public String getName() {
@@ -38,7 +39,11 @@ public class Store {
     }
     //precondition: user is logged in and  previously made a purchase from the store - cheaked by service layer
     public void addRating(int userID, double rating, String comment) {
-        ratings.put(userID, new StoreRating(userID, rating, comment));
+        if (Sratings.containsKey(userID)) {
+            Sratings.get(userID).updateRating(rating, comment);
+        } else {
+            Sratings.put(userID, new StoreRating(userID, rating, comment));
+        }
     }
     public void addStoreProduct(int productID, String name, double basePrice, int quantity, ProductState state) {
         storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, state));
