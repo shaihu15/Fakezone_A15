@@ -1,4 +1,6 @@
 package DomainLayer.Model;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import DomainLayer.Interfaces.IProduct;
 
 
@@ -7,6 +9,13 @@ public class Product implements IProduct {
     private int id;
     private String name;
     private String description;
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
+
+    public Product(String name, String description) {
+        this.id = idCounter.incrementAndGet();
+        this.name = name;
+        this.description = description;
+    }
 
     public Product(int id, String name, String description) {
         this.id = id;

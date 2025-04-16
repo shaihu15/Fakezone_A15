@@ -26,8 +26,8 @@ public class ProductService implements IProductService {
     @Override
     public void addProduct(String productName, String productDescription) {
         try {
-            // need to set id right
-            IProduct productToAdd = new Product(0, productName, productDescription);
+            
+            IProduct productToAdd = new Product(productName, productDescription);
             productRepository.addProduct(productToAdd);
             
 
