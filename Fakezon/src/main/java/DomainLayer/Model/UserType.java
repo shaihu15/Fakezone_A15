@@ -15,4 +15,7 @@ abstract class UserType implements IUserType {
     public User getUser(){
         return user;
     }
+    abstract public boolean logout();
+    abstract public boolean isRegistered();
+
 }

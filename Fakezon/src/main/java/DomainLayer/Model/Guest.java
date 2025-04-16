@@ -13,4 +13,8 @@ public class Guest extends UserType{
         // same logic as Registered
     }
 
+    @Override
+    public boolean logout() {
+        throw new UnsupportedOperationException("Guest cannot logout");
+    }
 }
