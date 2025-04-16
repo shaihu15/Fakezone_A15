@@ -24,11 +24,12 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public void addProduct(String productName, String productDescription) {
+    public int addProduct(String productName, String productDescription) {
         try {
             
             IProduct productToAdd = new Product(productName, productDescription);
             productRepository.addProduct(productToAdd);
+            return productToAdd.getId();
             
 
         }catch (Exception e) {
