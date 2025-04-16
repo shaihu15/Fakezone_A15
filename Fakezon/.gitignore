@@ -1,3 +1,4 @@
 *.class
 /.vscode/
 /Fakezon/target/
+toDelete.*

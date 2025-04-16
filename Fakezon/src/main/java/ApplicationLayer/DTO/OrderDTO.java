@@ -47,7 +47,7 @@ public class OrderDTO {
     public String getStoreName() {
         return storeName;
     }
-    public Collection<ProductDTO> getProdcts() {
+    public Collection<ProductDTO> getProducts() {
         return products;
     }
 
