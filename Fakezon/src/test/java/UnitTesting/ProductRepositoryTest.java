@@ -14,12 +14,12 @@ import InfrastructureLayer.Repositories.ProductRepository;
 class MockProduct implements IProduct {
     private int id;
     private String name;
-    private int stockQuantity;
+    private String prodcutDescription;
 
-    public MockProduct(int id, String name, int stockQuantity) {
+    public MockProduct(int id, String name, String prodcutDescription) {
         this.id = id;
         this.name = name;
-        this.stockQuantity = stockQuantity;
+        this.prodcutDescription = prodcutDescription;
     }
 
     @Override
@@ -43,13 +43,13 @@ class MockProduct implements IProduct {
     }
 
     @Override
-    public int getStockQuantity() {
-        return stockQuantity;
+    public String getDescription() {
+        return prodcutDescription;    
     }
 
     @Override
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
+    public void setDescription(String description) {
+        this.prodcutDescription = description;
     }
 }
 
@@ -61,8 +61,8 @@ public class ProductRepositoryTest {
     @BeforeEach
     void setUp() {
         repository = new ProductRepository(new HashMap<>());
-        product1 = new MockProduct(1, "Product1", 10);
-        product2 = new MockProduct(2, "Product2", 20);
+        product1 = new MockProduct(1, "Product1", "good product");
+        product2 = new MockProduct(2, "Product2", "another good product");
     }
 
     @Test
@@ -75,11 +75,9 @@ public class ProductRepositoryTest {
     void givenExistingProduct_WhenUpdateProduct_ThenProductIsUpdated() {
         repository.addProduct(product1);
         product1.setName("UpdatedProduct1");
-        product1.setStockQuantity(15);
         repository.updateProduct(product1);
         IProduct updatedProduct = repository.getProductById(1);
         assertEquals("UpdatedProduct1", updatedProduct.getName());
-        assertEquals(15, updatedProduct.getStockQuantity());
     }
 
     @Test

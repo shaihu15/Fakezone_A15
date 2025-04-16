@@ -7,12 +7,13 @@ public class ProductDTO {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("stockQuantity")
-    private int stockQuantity;
+    @JsonProperty("description")
+    private String description;
 
-    public ProductDTO(String name, int stockQuantity) {
+
+    public ProductDTO(String name, String description) {
         this.name = name;
-        this.stockQuantity = stockQuantity;
+        this.description = description;
     }
 
     public String getName() {
@@ -22,12 +23,15 @@ public class ProductDTO {
     public void setName(String name) {
         this.name = name;
     }
-
-    public int getStockQuantity() {
-        return stockQuantity;
+    
+    public String getDescription() {
+        return description;
     }
 
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
+    public String setDescription(String description) {
+        this.description = description;
+        return description;
     }
+
+
 }

@@ -10,4 +10,5 @@ public interface IProductRepository {
     void deleteProduct(int productId);
     IProduct getProductById(int productId);
     Collection<IProduct> getAllProducts(); 
+    Collection<IProduct> searchProducts(String keyword); 
 }

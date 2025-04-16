@@ -1,4 +1,6 @@
 package DomainLayer.Model;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import DomainLayer.Interfaces.IProduct;
 
 
@@ -6,19 +8,21 @@ public class Product implements IProduct {
     
     private int id;
     private String name;
-    private int stockQuantity;
+    private String description;
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
 
-    public Product(int id, String name, int stockQuantity) {
-        this.id = id;
+    public Product(String name, String description) {
+        this.id = idCounter.incrementAndGet();
         this.name = name;
-        this.stockQuantity = stockQuantity;
+        this.description = description;
     }
 
-    public Product(int id, String name) {
+    public Product(int id, String name, String description) {
         this.id = id;
         this.name = name;
-        this.stockQuantity = 0;
+        this.description = description;
     }
+
 
     @Override
     public int getId() {
@@ -30,10 +34,6 @@ public class Product implements IProduct {
         return name;
     }
 
-    @Override
-    public int getStockQuantity() {
-        return stockQuantity;    
-    }
 
     @Override
     public void setId(int id) {
@@ -46,7 +46,13 @@ public class Product implements IProduct {
     }
 
     @Override
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;    
+    public String getDescription() {
+        return description;    
     }
+
+    @Override
+    public void setDescription(String description) {
+        this.description = description;    
+    }
+
 }

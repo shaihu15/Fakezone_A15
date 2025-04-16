@@ -1,5 +1,6 @@
 package InfrastructureLayer.Repositories;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -29,7 +30,6 @@ public class ProductRepository implements IProductRepository {
             throw new IllegalArgumentException("Product not found in the repository.");
         }
         currentProduct.setName(product.getName());
-        currentProduct.setStockQuantity(product.getStockQuantity());
         products.put(product.getId(), currentProduct);
     }
 
@@ -55,4 +55,17 @@ public class ProductRepository implements IProductRepository {
     public Collection<IProduct> getAllProducts() {
         return products.values();    
     }
+    
+    @Override
+    public Collection<IProduct> searchProducts(String keyword){
+        Collection<IProduct> result = new ArrayList<>();
+        for(IProduct product : products.values()){
+            if(product.getName().toLowerCase().contains(keyword.toLowerCase()) || 
+               product.getDescription().toLowerCase().contains(keyword.toLowerCase())){
+                result.add(product);
+            }
+        }
+        return result;
+    } 
+
 }
