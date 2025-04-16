@@ -33,4 +33,7 @@ public class User {
     public UserType getUserType() {
         return userType;
     }
+    public boolean logout() {
+        return userType.logout();
+    }
 }
