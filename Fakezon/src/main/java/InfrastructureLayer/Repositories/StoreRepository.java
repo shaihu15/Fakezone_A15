@@ -34,4 +34,9 @@ public class StoreRepository implements IStoreRepository {
         stores.remove(storeID);
     }
 
+    @Override
+    public void addStoreOwner(int storeId, int appointor, int appointee){
+        findById(storeId).addStoreOwner(appointor, appointee);
+    }
+
 }

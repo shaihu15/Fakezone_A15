@@ -1,6 +1,54 @@
 package DomainLayer.Model;
 
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+class Node{
+    int id;
+    List<Node> children;
+
+    public Node(int id){
+        this.id = id;
+        this.children = new ArrayList<>();
+    }
+    public int getId(){
+        return this.id;
+    }
+    public void addChild(Node child){
+        this.children.add(child);
+    }
+    public List<Node> getChildren(){
+        return this.children;
+    }
+}
+class Tree{
+    private Node root;
+    public Tree(int rootID){
+        this.root = new Node(rootID);
+    }
+    public Node getNode(int id){
+        return findRec(root, id);
+    }
+    public Node getRoot(){
+        return this.root;
+    }
+    private Node findRec(Node curr, int id){
+        if (curr.getId() == id){
+            return curr;
+        }
+        for(Node child : curr.getChildren()){
+            Node found = findRec(child, id);
+            if(found != null)
+                return found;
+        }
+        return null;
+    }
+    public void addNode(int appointor, int appointee){
+        Node appointorNode = getNode(appointor);
+        if(appointorNode != null)
+            appointorNode.addChild(new Node(appointee));
+    }
+}
 
 public class Store {
 
@@ -13,11 +61,13 @@ public class Store {
     private HashMap<Integer, StoreProduct> storeProducts; //HASH productID to store product
     private HashMap<Integer, PurchasePolicy> purchasePolicies; //HASH policyID to purchase policy
     private HashMap<Integer, DiscountPolicy> discountPolicies; //HASH policyID to discount policy
-    private HashMap<Integer, StoreOwner> storeOwners; //HASH userID to store owner
+    private List<Integer> storeOwners;
+    private HashMap<Integer,Integer> pendingOwners; //appointee : appointor
     private HashMap<Integer, StoreManager> storeManagers; //HASH userID to store manager
+    private Tree rolesTree;
     public Store(String name, int storeID, int founderID) {
         this.storeFounderID = founderID;
-        this.storeOwners = new HashMap<>();
+        this.storeOwners = new ArrayList<>();
         //storeOwners.put(founderID, new StoreOwner(founderID, name));
         this.storeManagers = new HashMap<>();
         this.name = name;
@@ -27,7 +77,9 @@ public class Store {
         this.storeProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
-
+        this.rolesTree = new Tree(founderID);
+        this.storeOwners.add(founderID);
+        this.pendingOwners = new HashMap<>(); //appointee : appointor
     }
 
     public String getName() {
@@ -69,9 +121,34 @@ public class Store {
     public HashMap<Integer, DiscountPolicy> getDiscountPolicies() {
         return discountPolicies;
     }
-    public HashMap<Integer, StoreOwner> getStoreOwners() {
+    public List<Integer> getStoreOwners() {
         return storeOwners;
     }
+    //TO DO: Send Approval Request
+    public void addStoreOwner(int appointor, int appointee){
+        if(storeOwners.contains(appointee)){
+            throw new IllegalArgumentException("User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
+        }
+        if(pendingOwners.containsKey(appointee)){
+            throw new IllegalArgumentException("Already waiting for User with ID: " + appointee + "'s approval");
+        }
+        if(!storeOwners.contains(appointor)){
+            throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
+        }
+        //pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS IMPLEMENTED
+        storeOwners.add(appointee);
+        rolesTree.addNode(appointor, appointee);
+    }
+    //***will be relevant when observer/able is implemented***
+    // public void approvalStoreOwner(int appointee){
+    //     int appointor = pendingOwners.get(appointee);
+    //     pendingOwners.remove(appointee);
+    //     storeOwners.add(appointee);
+    //     rolesTree.addNode(appointor, appointee);
+    // }
+    // public void declineStoreOwner(int appointee){
+    //     pendingOwners.remove(appointee);
+    // }
     public HashMap<Integer, StoreManager> getStoreManagers() {
         return storeManagers;
     }
