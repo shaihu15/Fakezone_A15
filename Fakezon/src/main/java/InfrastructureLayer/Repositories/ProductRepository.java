@@ -29,7 +29,6 @@ public class ProductRepository implements IProductRepository {
             throw new IllegalArgumentException("Product not found in the repository.");
         }
         currentProduct.setName(product.getName());
-        currentProduct.setStockQuantity(product.getStockQuantity());
         products.put(product.getId(), currentProduct);
     }
 

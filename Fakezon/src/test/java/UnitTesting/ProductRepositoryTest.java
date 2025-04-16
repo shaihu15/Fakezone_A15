@@ -41,16 +41,6 @@ class MockProduct implements IProduct {
     public void setName(String name) {
         this.name = name;
     }
-
-    @Override
-    public int getStockQuantity() {
-        return stockQuantity;
-    }
-
-    @Override
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
-    }
 }
 
 public class ProductRepositoryTest {
@@ -75,11 +65,9 @@ public class ProductRepositoryTest {
     void givenExistingProduct_WhenUpdateProduct_ThenProductIsUpdated() {
         repository.addProduct(product1);
         product1.setName("UpdatedProduct1");
-        product1.setStockQuantity(15);
         repository.updateProduct(product1);
         IProduct updatedProduct = repository.getProductById(1);
         assertEquals("UpdatedProduct1", updatedProduct.getName());
-        assertEquals(15, updatedProduct.getStockQuantity());
     }
 
     @Test
