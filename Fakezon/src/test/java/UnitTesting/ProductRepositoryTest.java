@@ -14,12 +14,12 @@ import InfrastructureLayer.Repositories.ProductRepository;
 class MockProduct implements IProduct {
     private int id;
     private String name;
-    private int stockQuantity;
+    private String prodcutDescription;
 
-    public MockProduct(int id, String name, int stockQuantity) {
+    public MockProduct(int id, String name, String prodcutDescription) {
         this.id = id;
         this.name = name;
-        this.stockQuantity = stockQuantity;
+        this.prodcutDescription = prodcutDescription;
     }
 
     @Override
@@ -41,6 +41,16 @@ class MockProduct implements IProduct {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public String getDescription() {
+        return prodcutDescription;    
+    }
+
+    @Override
+    public void setDescription(String description) {
+        this.prodcutDescription = description;
+    }
 }
 
 public class ProductRepositoryTest {
@@ -51,8 +61,8 @@ public class ProductRepositoryTest {
     @BeforeEach
     void setUp() {
         repository = new ProductRepository(new HashMap<>());
-        product1 = new MockProduct(1, "Product1", 10);
-        product2 = new MockProduct(2, "Product2", 20);
+        product1 = new MockProduct(1, "Product1", "good product");
+        product2 = new MockProduct(2, "Product2", "another good product");
     }
 
     @Test

@@ -1,39 +1,93 @@
 package ApplicationLayer.Services;
 
+import java.util.Collection;
 import java.util.List;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
+import DomainLayer.IRepository.IProductRepository;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Product;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProductService implements IProductService {
 
-    @Override
-    public void addProduct(String productName) {
-        // TODO Auto-generated method stubb
-        throw new UnsupportedOperationException("Unimplemented method 'addProduct'");
+    private final IProductRepository productRepository;
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+
+
+
+    public ProductService(IProductRepository productRepository) {
+        this.productRepository = productRepository; 
     }
 
     @Override
-    public void updateProduct(int productId, String productName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateProduct'");
+    public void addProduct(String productName, String productDescription) {
+        try {
+            // need to set id right
+            IProduct productToAdd = new Product(0, productName, productDescription);
+            productRepository.addProduct(productToAdd);
+            
+
+        }catch (Exception e) {
+            logger.error("An error occurred while adding the product: {}", e.getMessage(), e);
+            throw e;
+        }
+    }    
+
+    @Override
+    public void updateProduct(int productId, String productName, String productDescription) {
+        try {
+            IProduct product = new Product(productId, productName, productDescription);
+            productRepository.updateProduct(product);
+            
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to update, recived error {}", e);
+            throw e;
+        }
     }
 
     @Override
     public void deleteProduct(int productId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteProduct'");
+        try {
+            productRepository.deleteProduct(productId);
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to delete, recived error {}", e);
+            throw e;
+        }
+
     }
 
     @Override
     public ProductDTO viewProduct(int productId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'viewProduct'");
+        try {
+            IProduct product = productRepository.getProductById(productId);
+            return new ProductDTO(product.getName(), product.getDescription());
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to view, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Product with id {} was viewed", productId);
+        }
     }
 
     @Override
     public List<ProductDTO> searchProducts(String keyword) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'searchProducts'");
+        try {
+            Collection<IProduct> products = productRepository.searchProducts(keyword);
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription()))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to search, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Product with keyword {} was searched", keyword);
+        } 
     }
+
+  
 }
