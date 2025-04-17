@@ -57,8 +57,8 @@ public class StoreService implements IStoreService {
                 store.getStoreFounderID(),
                 store.isOpen(),
                 StoreProductDTOs,
-                store.getStoreOwners(),
-                store.getStoreManagers(),
+                // store.getStoreOwners(),
+                // store.getStoreManagers(),
                 ratings
         );
     }
