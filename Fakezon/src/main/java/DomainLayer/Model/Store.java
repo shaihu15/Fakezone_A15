@@ -87,8 +87,21 @@ public class Store {
     public HashMap<Integer, DiscountPolicy> getDiscountPolicies() {
         return discountPolicies;
     }
-    public List<Integer> getStoreOwners() {
-        return storeOwners;
+    public List<Integer> getStoreOwners(int requesterId) {
+        if(storeOwners.contains(requesterId) || (storeManagers.containsKey(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
+            return storeOwners;
+        }
+        else{
+            throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+        }
+    }
+    public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int requesterId){
+        if(storeOwners.contains(requesterId) || (storeManagers.containsKey(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
+            return storeManagers;
+        }
+        else{
+            throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+        }
     }
     //TO DO: Send Approval Request
     public void addStoreOwner(int appointor, int appointee){
