@@ -1,8 +1,11 @@
 package ApplicationLayer.Services;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 public class UserService implements IUserService {
@@ -55,5 +58,63 @@ public class UserService implements IUserService {
     public void login(int userID, String password) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'login'");
+    }
+    @Override
+    public void addRole(int userID, int storeID, IRegisteredRole role) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().addRole(storeID, role);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during add role: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+    @Override
+    public void removeRole(int userID, int storeID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().removeRole(storeID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during remove role: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+    @Override
+    public IRegisteredRole getRoleByStoreID(int userID, int storeID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().getRoleByStoreID(storeID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get role: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        return null;
+    }
+    @Override
+    public HashMap<Integer, IRegisteredRole> getAllRoles(int userID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().getAllRoles();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get all roles: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        return null;
     }
 }

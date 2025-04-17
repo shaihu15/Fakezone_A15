@@ -1,13 +1,14 @@
 package DomainLayer.Model;
 
+import DomainLayer.Enums.RoleName;
+
 public class SystemAdministrator extends RegisteredRole {
 
-    public SystemAdministrator(Registered registered) {
-        super(registered);
+    public SystemAdministrator() {;
     }
 
-    public String getRoleName() {
-        return "SystemAdministrator";
+    public RoleName getRoleName() {
+        return RoleName.SYSTEM_ADMINISTRATOR;
     }
 }
 

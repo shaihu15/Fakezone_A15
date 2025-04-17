@@ -1,5 +1,8 @@
 package DomainLayer.Model;
 
+import java.util.HashMap;
+
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Interfaces.IUserType;
 
 abstract class UserType implements IUserType {
@@ -17,5 +20,9 @@ abstract class UserType implements IUserType {
     }
     abstract public boolean logout();
     abstract public boolean isRegistered();
+    abstract public void addRole(int storeID, IRegisteredRole role); // system admin (storeID = -1)or store owner
+    abstract public void removeRole(int storeID);
+    abstract public IRegisteredRole getRoleByStoreID(int storeID); // system admin (storeID = -1)or store owner
+    abstract public HashMap<Integer, IRegisteredRole> getAllRoles(); // system admin (storeID = -1)or store owner
 
 }

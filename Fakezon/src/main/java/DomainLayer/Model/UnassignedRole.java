@@ -1,12 +1,13 @@
 package DomainLayer.Model;
 
+import DomainLayer.Enums.RoleName;
+
 public class UnassignedRole extends RegisteredRole {
 
-    public UnassignedRole(Registered registered) {
-        super(registered);
+    public UnassignedRole() {
     }
 
-    public String getRoleName() {
-        return "Unassigned";
+    public RoleName getRoleName() {
+        return RoleName.UNASSIGNED;
     }
 }
