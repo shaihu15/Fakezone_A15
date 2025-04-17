@@ -16,6 +16,13 @@ public class HomeController {
         return "home";
     }
 
+    @GetMapping("/secured")
+    public String secured(Authentication authentication, Model model) {
+        String email = extractEmail(authentication);
+        model.addAttribute("email", email);
+        return "secured";
+    }
+
     private String extractEmail(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
             Object emailAttr = oAuth2User.getAttribute("email");
