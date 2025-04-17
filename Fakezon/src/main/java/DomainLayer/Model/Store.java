@@ -3,53 +3,7 @@ package DomainLayer.Model;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
-class Node{
-    int id;
-    List<Node> children;
-
-    public Node(int id){
-        this.id = id;
-        this.children = new ArrayList<>();
-    }
-    public int getId(){
-        return this.id;
-    }
-    public void addChild(Node child){
-        this.children.add(child);
-    }
-    public List<Node> getChildren(){
-        return this.children;
-    }
-}
-class Tree{
-    private Node root;
-    public Tree(int rootID){
-        this.root = new Node(rootID);
-    }
-    public Node getNode(int id){
-        return findRec(root, id);
-    }
-    public Node getRoot(){
-        return this.root;
-    }
-    private Node findRec(Node curr, int id){
-        if (curr.getId() == id){
-            return curr;
-        }
-        for(Node child : curr.getChildren()){
-            Node found = findRec(child, id);
-            if(found != null)
-                return found;
-        }
-        return null;
-    }
-    public void addNode(int appointor, int appointee){
-        Node appointorNode = getNode(appointor);
-        if(appointorNode != null)
-            appointorNode.addChild(new Node(appointee));
-    }
-}
-
+import DomainLayer.Model.helpers.*;
 public class Store {
 
     private String name;
