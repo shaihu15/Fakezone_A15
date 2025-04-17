@@ -2,6 +2,7 @@ package ApplicationLayer.Interfaces;
 
 import java.util.List;
 
+import ApplicationLayer.DTO.StoreDTO;
 import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.Product;
 import DomainLayer.Model.PurchasePolicy;
@@ -14,9 +15,9 @@ public interface IStoreService {
     int updateStore(int storeId, int requesterId, String name);
     void deleteStore(int storeId, int requesterId);
 
-    //IStoreDTO viewStore(int storeId);
-    //List<IStoreDTO> searchStores(String keyword);
-    //List<IStoreDTO> getAllStores();
+    StoreDTO viewStore(int storeId);
+    List<StoreDTO> searchStores(String keyword);
+    List<StoreDTO> getAllStores();
 
     void openStore(int storeId, int requesterId);
     void closeStore(int storeId, int requesterId);

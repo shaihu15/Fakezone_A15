@@ -22,11 +22,11 @@ public class StoreDTO {
     @JsonProperty("storeProducts")
     private final Collection<StoreProductDTO> storeProducts;
 
-    @JsonProperty("storeOwners")
-    private final Collection<Integer> storeOwners; // Collection of Owner IDs
+    // @JsonProperty("storeOwners")
+    // private final Collection<Integer> storeOwners; // Collection of Owner IDs
 
-    @JsonProperty("storeManagers")
-    private final Collection<Integer> storeManagers; // Collection of Manager User IDs
+    // @JsonProperty("storeManagers")
+    // private final Collection<Integer> storeManagers; // Collection of Manager User IDs
 
     @JsonProperty("ratings")
     private final Map<Integer, Double> ratings; // Map of userId -> rating (no DTO)
@@ -34,15 +34,14 @@ public class StoreDTO {
 
     public StoreDTO(int storeId, String name, int founderId, boolean isOpen,
                     Collection<StoreProductDTO> storeProducts,
-                    Collection<Integer> storeOwners, Collection<Integer> storeManagers,
                     Map<Integer, Double> ratings) {
         this.storeId = storeId;
         this.name = name;
         this.founderId = founderId;
         this.isOpen = isOpen;
         this.storeProducts = storeProducts;
-        this.storeOwners = storeOwners;
-        this.storeManagers = storeManagers;
+        // this.storeOwners = storeOwners;
+        // this.storeManagers = storeManagers;
         this.ratings = ratings;
     }
 
@@ -66,13 +65,13 @@ public class StoreDTO {
         return storeProducts;
     }
 
-    public Collection<Integer> getStoreOwners() {
-        return storeOwners;
-    }
+    // public Collection<Integer> getStoreOwners() {
+    //     return storeOwners;
+    // }
 
-    public Collection<Integer> getStoreManagers() {
-        return storeManagers;
-    }
+    // public Collection<Integer> getStoreManagers() {
+    //     return storeManagers;
+    // }
 
     public Map<Integer, Double> getRatings() {
         return ratings;

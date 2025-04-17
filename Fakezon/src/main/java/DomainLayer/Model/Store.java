@@ -139,4 +139,7 @@ public class Store {
     public void openStore() {
         this.isOpen = true;
     }
+    public boolean isOpen() {
+        return isOpen;
+    }
 }
