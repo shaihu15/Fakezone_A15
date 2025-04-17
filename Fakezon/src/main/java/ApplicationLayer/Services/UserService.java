@@ -6,7 +6,6 @@ import java.util.Optional;
 import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
@@ -54,13 +53,13 @@ public class UserService implements IUserService {
         }
         
     }
-    public void LoginGuest(int userID) {
+    public User LoginGuest(String token,int userID) {
         //assume i cheked everything and i have the user
-        User guest = userRepository.findById(0).get();
+        User guest = userRepository.findByToken(token).get();
         User registedUser = userRepository.findById(userID).get();
-        guest.setUserType(new Registered(guest));
-        guest.setEmail(registedUser.getEmail());
-        guest.setUserID(userID);
+        registedUser.mergeCart(guest.getCart());
+        userRepository.deleteByUserByToken(token);
+        return registedUser;
     }
     
     @Override

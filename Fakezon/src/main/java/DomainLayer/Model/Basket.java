@@ -9,6 +9,10 @@ public class Basket {
     private Store store;// maby just soreID?
     private List<IProduct> products;
 
+    public Basket(Basket other) {
+        this.store = other.store;
+        this.products = new ArrayList<>(other.products);
+    }
     public Basket(Store store) {
         this.store = store;
         this.products = new ArrayList<>();

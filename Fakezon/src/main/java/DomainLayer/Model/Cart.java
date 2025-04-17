@@ -13,6 +13,12 @@ public class Cart {
     public void clear() {
         baskets.clear();
     }
+    public List<Basket> getBaskets() {
+        return baskets;
+    }
+    public void addBasket(Basket basket) {
+        baskets.add(basket);
+    }
 
 
 }

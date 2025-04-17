@@ -11,5 +11,6 @@ public interface IUserRepository {
     List<User> findAll();
     User save(User user);
     void deleteByUserName(String email);
+    void deleteByUserByToken(String token);
     User update(User user);
 }

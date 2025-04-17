@@ -76,4 +76,9 @@ public class User {
     public void setProductsPurchase(HashMap<Integer, List<Integer>> productsPurchase) {
         this.productsPurchase = productsPurchase;
     }
+    public void mergeCart(Cart cart) {
+        for (Basket basket : cart.getBaskets()) {
+            this.cart.addBasket(new Basket(basket));
+        }
+    }
 }
