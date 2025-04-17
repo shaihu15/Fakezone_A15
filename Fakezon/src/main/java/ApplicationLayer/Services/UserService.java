@@ -1,13 +1,13 @@
 package ApplicationLayer.Services;
-import ApplicationLayer.Interfaces.IUserService;
-import DomainLayer.Model.StoreOwner;
-import DomainLayer.Model.User;
-import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.IRepository.IUserRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
+import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
 
@@ -54,6 +54,15 @@ public class UserService implements IUserService {
         }
         
     }
+    public void LoginGuest(int userID) {
+        //assume i cheked everything and i have the user
+        User guest = userRepository.findById(0).get();
+        User registedUser = userRepository.findById(userID).get();
+        guest.setUserType(new Registered(guest));
+        guest.setEmail(registedUser.getEmail());
+        guest.setUserID(userID);
+    }
+    
     @Override
     public void login(int userID, String password) {
         // TODO Auto-generated method stub

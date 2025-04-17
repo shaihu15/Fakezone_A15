@@ -57,4 +57,23 @@ public class User {
     public String getEmail() {
         return email;
     }
+
+    public void setUserID(int userID) {
+        this.userID = userID;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public HashMap<Integer, Order> getOrders() {
+        return orders;
+    }
+    public void setOrders(HashMap<Integer, Order> orders) {
+        this.orders = orders;
+    }
+    public HashMap<Integer, List<Integer>> getProductsPurchase() {
+        return productsPurchase;
+    }
+    public void setProductsPurchase(HashMap<Integer, List<Integer>> productsPurchase) {
+        this.productsPurchase = productsPurchase;
+    }
 }

@@ -1,11 +1,11 @@
 package ApplicationLayer.Services;
 
 import ApplicationLayer.Interfaces.ISystemService;
-import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
 public class SystemService implements ISystemService {
@@ -45,5 +45,10 @@ public class SystemService implements ISystemService {
         this.deliveryService = null;
         this.authenticatorService = null;
         this.paymentService = null;
+    }
+
+    @Override
+    public void GuestLogin(String userName, String Password){
+        
     }
 }
