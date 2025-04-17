@@ -12,5 +12,5 @@ public interface ISystemService {
 
     void initialize();
     void shutdown();
-    Void GuestLogin(String userName, String Password);
+    void GuestLogin(String userName, String Password);
 }
