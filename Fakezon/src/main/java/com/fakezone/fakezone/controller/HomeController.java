@@ -11,14 +11,18 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Authentication authentication, Model model) {
-        String email = null;
+        String email = extractEmail(authentication);
+        model.addAttribute("email", email);
+        return "home";
+    }
+
+    private String extractEmail(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
             Object emailAttr = oAuth2User.getAttribute("email");
             if (emailAttr != null) {
-                email = emailAttr.toString();
+                return emailAttr.toString();
             }
         }
-        model.addAttribute("email", email);
-        return "home";
+        return null;
     }
 }
