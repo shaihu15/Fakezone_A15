@@ -1,38 +1,122 @@
 package ApplicationLayer.Services;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Interfaces.IOrderService;
+import DomainLayer.Enums.OrderState;
+import DomainLayer.Enums.PaymentMethod;
+import DomainLayer.Interfaces.IOrder;
+import DomainLayer.Interfaces.IOrderRepository;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Order;
 
 public class OrderService implements IOrderService{
 
-    @Override
-    public int addOrder(String busket) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addOrder'");
+    private final IOrderRepository orderRepository;
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+
+
+    public OrderService(IOrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+        
     }
 
     @Override
-    public int updateOrder(int orderId, int productId, int quantity) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateOrder'");
+    public int addOrder(Basket basket, int userId, String address, PaymentMethod paymentMethod) {
+        List<IProduct> products = basket.getProducts();
+        List<Integer> productIds = products.stream().map(product->product.getId()).toList();
+        IOrder order = new Order(userId, OrderState.PENDING, productIds, basket.getStore().getId(), address, paymentMethod);
+        orderRepository.addOrder(order);
+        return order.getId();
+    }
+
+    @Override
+    public int updateOrder(int orderId, Basket basket, Integer userId, String address, PaymentMethod paymentMethod) {
+       try {
+            List<IProduct> products = basket.getProducts();
+            List<Integer> productIds = products.stream().map(product->product.getId()).toList();
+            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, productIds, basket.getStore().getId(), address, paymentMethod);
+            orderRepository.updateOrder(orderId, updatedOrder);
+            return updatedOrder.getId();
+           
+       } catch (IllegalArgumentException e) {
+            logger.error("While trying to update, recived error {}", e);
+            throw e;
+       }
     }
 
     @Override
     public void deleteOrder(int orderId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteOrder'");
+        try {
+            orderRepository.deleteOrder(orderId);
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to delete, recived error {}", e);
+            throw e;
+        }    
     }
 
     @Override
-    public String viewOrder(int orderId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'viewOrder'");
+    public OrderDTO viewOrder(int orderId, String userName, String storeName, List<ProductDTO> products) {
+        try {
+
+            IOrder order = orderRepository.getOrder(orderId);
+            
+            return new OrderDTO(order.getId(),userName, storeName, products, order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to view, recived error {}", e);
+            throw e;
+        }        
     }
 
     @Override
-    public List<String> searchOrders(String keyword) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'searchOrders'");
+    public List<Integer> searchOrders(String keyword) {
+        List<Integer> orderIds = new ArrayList<>();
+        for (IOrder order : orderRepository.getAllOrders()) {
+            if (order.getAddress().contains(keyword) || order.getState().toString().contains(keyword)
+            || order.getPaymentMethod().toString().contains(keyword) || order.getProductIds().toString().contains(keyword)) {
+                orderIds.add(order.getId());
+            }
+        } 
+        return orderIds;       
+    }
+
+    @Override
+    public int getOrderUserId(int orderId) {
+        try {
+            IOrder order = orderRepository.getOrder(orderId);
+            return order.getUserId();
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to get user id, recived error {}", e);
+            throw e;
+        }  
+    }
+
+    @Override
+    public int getOrderStoreId(int orderId) {
+        try {
+            IOrder order = orderRepository.getOrder(orderId);
+            return order.getStoreId();
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to get store id, recived error {}", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public List<Integer> getOrderProductIds(int orderId) {
+        try {
+            IOrder order = orderRepository.getOrder(orderId);
+            return new ArrayList<>(order.getProductIds());
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to get product ids, recived error {}", e);
+            throw e;
+        }
     }
 }

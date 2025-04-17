@@ -32,4 +32,28 @@ public class UserService implements IUserService {
     public User updateUser(User user) {
         return userRepository.update(user);
     }
+    @Override
+    public Optional<User> getUserById(int userID) {
+        return userRepository.findById(userID);
+    }
+    @Override
+    public void logout(int userID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().logout();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during logout: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        
+    }
+    @Override
+    public void login(int userID, String password) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'login'");
+    }
 }

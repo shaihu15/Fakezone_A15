@@ -1,6 +1,7 @@
 package DomainLayer.Model;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
@@ -14,9 +15,20 @@ public class Order implements IOrder{
     private OrderState orderState;
     private String address;
     private PaymentMethod paymentMethod;
+    private static AtomicInteger idCounter = new AtomicInteger(0);
 
-    public Order(int orderId, int userId, OrderState orderState, Collection<Integer> productIds, int storeId, String address, PaymentMethod paymentMethod) {
-        this.orderId = orderId;
+    public Order(int userId, OrderState orderState, Collection<Integer> productIds, int storeId, String address, PaymentMethod paymentMethod) {
+        this.orderId = idCounter.incrementAndGet();
+        this.userId = userId;
+        this.orderState = orderState;
+        this.productIds = productIds;
+        this.storeId = storeId;
+        this.address = address;
+        this.paymentMethod = paymentMethod;
+    }
+    
+    public Order(int id, int userId, OrderState orderState, Collection<Integer> productIds, int storeId, String address, PaymentMethod paymentMethod) {
+        this.orderId = id;
         this.userId = userId;
         this.orderState = orderState;
         this.productIds = productIds;

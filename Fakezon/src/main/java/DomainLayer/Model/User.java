@@ -27,4 +27,13 @@ public class User {
         }
         return false;
     }
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+    public UserType getUserType() {
+        return userType;
+    }
+    public boolean logout() {
+        return userType.logout();
+    }
 }

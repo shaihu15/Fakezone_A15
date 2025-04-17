@@ -1,6 +1,8 @@
 package InfrastructureLayer.Repositories;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
@@ -52,5 +54,10 @@ public class OrderRepository implements IOrderRepository {
             throw new IllegalArgumentException("Order with ID " + orderId + " does not exist.");
         }
         return existingOrder;    
+    }
+
+    @Override
+    public List<IOrder> getAllOrders() {
+        return new ArrayList<>(orders.values());    
     }
 }

@@ -3,16 +3,18 @@ package DomainLayer.Model;
 import java.util.ArrayList;
 import java.util.List;
 
+import DomainLayer.Interfaces.IProduct;
+
 public class Basket {
     private Store store;// maby just soreID?
-    private List<Product> products;
+    private List<IProduct> products;
 
     public Basket(Store store) {
         this.store = store;
         this.products = new ArrayList<>();
     }
 
-    public void addProduct(Product product) {
+    public void addProduct(IProduct product) {
         products.add(product);
     }
 
@@ -20,7 +22,7 @@ public class Basket {
         return store;
     }
 
-    public List<Product> getProducts() {
+    public List<IProduct> getProducts() {
         return products;
     }
 }
