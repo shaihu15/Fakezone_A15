@@ -48,4 +48,11 @@ public class UserRepository implements IUserRepository{
         throw new UnsupportedOperationException("Unimplemented method 'update'");
     }
 
+    @Override
+    public Optional<User> findByToken(String token) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findByToken'");
+    }
+    
+
 }

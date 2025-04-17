@@ -51,6 +51,5 @@ public class SystemService implements ISystemService {
     public void GuestLogin(String userName, String Password){
         // TODO: implement the logic to login as a guest
         // This is a placeholder implementation
-        return null;
     }
 }
