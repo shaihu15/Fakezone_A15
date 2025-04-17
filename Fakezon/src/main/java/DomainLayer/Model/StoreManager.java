@@ -1,11 +1,12 @@
 package DomainLayer.Model;
 
+import DomainLayer.Enums.RoleName;
+
 public class StoreManager extends RegisteredRole{
-    public StoreManager(Registered registered) {
-        super(registered);
+    public StoreManager() {
     }
 
-    public String getRoleName() {
-        return "StoreManager";
+    public RoleName getRoleName() {
+        return RoleName.STORE_MANAGER;
     }
 }

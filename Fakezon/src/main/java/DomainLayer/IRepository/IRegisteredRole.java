@@ -1,5 +1,7 @@
 package DomainLayer.IRepository;
 
+import DomainLayer.Enums.RoleName;
+
 public interface IRegisteredRole {
-    String getRoleName();
+    RoleName getRoleName();
 }

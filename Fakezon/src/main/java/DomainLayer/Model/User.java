@@ -3,10 +3,13 @@ package DomainLayer.Model;
 import java.util.HashMap;
 import java.util.List;
 
+import DomainLayer.IRepository.IRegisteredRole;
+
 public class User {
     private Cart cart;
     private UserType userType; // Guest or Registered
     private int userID;
+    private String email;
     private HashMap<Integer, Order> orders; // userID -> Order
     private HashMap<Integer,List<Integer>> productsPurchase; // userID -> List of productIDs
 
@@ -35,5 +38,23 @@ public class User {
     }
     public boolean logout() {
         return userType.logout();
+    }
+    public void addRole(int storeID, IRegisteredRole role) {
+        userType.addRole(storeID, role);
+    }
+    public void removeRole(int storeID) {
+        userType.removeRole(storeID);
+    }
+    public IRegisteredRole getRoleByStoreID(int storeID) {
+        return userType.getRoleByStoreID(storeID);
+    }
+    public HashMap<Integer, IRegisteredRole> getAllRoles() {
+        return userType.getAllRoles();
+    }
+    public int getUserID() {
+        return userID;
+    }
+    public String getEmail() {
+        return email;
     }
 }

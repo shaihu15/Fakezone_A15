@@ -1,0 +1,13 @@
+package DomainLayer.Enums;
+
+public enum StoreManagerPermission {
+    INVENTORY,
+    PURCHASE_POLICY,
+    DISCOUNT_POLICY,
+    MANAGER_APPOINTMENT,
+    MANAGER_REMOVAL,
+    EDIT_PERMISSIONS,
+    REQUESTS_REPLY,
+    VIEW_ROLES,
+    VIEW_PURCHASES
+}

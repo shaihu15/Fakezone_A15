@@ -3,6 +3,8 @@ package DomainLayer.Model;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
 public class Store {
 
@@ -17,7 +19,7 @@ public class Store {
     private HashMap<Integer, DiscountPolicy> discountPolicies; //HASH policyID to discount policy
     private List<Integer> storeOwners;
     private HashMap<Integer,Integer> pendingOwners; //appointee : appointor
-    private HashMap<Integer, StoreManager> storeManagers; //HASH userID to store manager
+    private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager
     private Tree rolesTree;
     public Store(String name, int storeID, int founderID) {
         this.storeFounderID = founderID;
@@ -34,6 +36,7 @@ public class Store {
         this.rolesTree = new Tree(founderID);
         this.storeOwners.add(founderID);
         this.pendingOwners = new HashMap<>(); //appointee : appointor
+        this.storeManagers = new HashMap<>(); //HASH userID to store manager
     }
 
     public String getName() {
@@ -56,11 +59,20 @@ public class Store {
     }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
-        purchasePolicies.put(userID, purchasePolicy);
-    }
+        if(storeOwners.contains(userID) || (storeManagers.containsKey(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))){
+            purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
+        }
+        else{
+            throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+        }    }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
-        discountPolicies.put(userID, discountPolicy);
+        if(storeOwners.contains(userID) || (storeManagers.containsKey(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))){
+            discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+        }
+        else{
+            throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+        }
     }
     
     public HashMap<Integer, StoreProduct> getStoreProducts() {
@@ -90,6 +102,7 @@ public class Store {
             throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
         }
         //pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS IMPLEMENTED
+        
         storeOwners.add(appointee);
         rolesTree.addNode(appointor, appointee);
     }
@@ -103,9 +116,7 @@ public class Store {
     // public void declineStoreOwner(int appointee){
     //     pendingOwners.remove(appointee);
     // }
-    public HashMap<Integer, StoreManager> getStoreManagers() {
-        return storeManagers;
-    }
+    
     public int getStoreFounderID() {
         return storeFounderID;
     }

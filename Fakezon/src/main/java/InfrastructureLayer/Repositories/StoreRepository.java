@@ -9,7 +9,7 @@ import DomainLayer.Model.Store;
 
 
 public class StoreRepository implements IStoreRepository {
-    private final Map<Integer, Store> stores = new HashMap<>();
+    private Map<Integer, Store> stores = new HashMap<>();
     
 
     @Override

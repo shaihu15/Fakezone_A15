@@ -1,6 +1,8 @@
 package ApplicationLayer.Interfaces;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.User;
 import java.util.Optional;
+import java.util.HashMap;
 import java.util.List;
 public interface IUserService {
     Optional<User> getUserByUserName(String userName);
@@ -11,6 +13,8 @@ public interface IUserService {
     User updateUser(User user);
     void logout(int userID);
     void login(int userID, String password);
-
-
+    void addRole(int userID, int storeID, IRegisteredRole role);
+    void removeRole(int userID, int storeID);
+    IRegisteredRole getRoleByStoreID(int userID, int storeID);
+    HashMap<Integer, IRegisteredRole> getAllRoles(int userID);
 }
