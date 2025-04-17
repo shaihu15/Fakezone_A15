@@ -33,4 +33,8 @@ build/
 .vscode/
 
 
-Fakezon/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
+# Maven target directory
+/target/
+
+# Maven build output
+!.mvn/wrapper/maven-wrapper.jar
