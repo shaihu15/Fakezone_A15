@@ -18,6 +18,7 @@ abstract class UserType implements IUserType {
     public User getUser(){
         return user;
     }
+    
     abstract public boolean logout();
     abstract public boolean isRegistered();
     abstract public void addRole(int storeID, IRegisteredRole role); // system admin (storeID = -1)or store owner

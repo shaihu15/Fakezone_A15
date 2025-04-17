@@ -19,7 +19,7 @@ public class Guest extends UserType{
 
     @Override
     public boolean logout() {
-        throw new UnsupportedOperationException("Guest cannot logout");
+        throw new UnsupportedOperationException("Guests cannot log out because they are not logged in.");
     }
 
     @Override
