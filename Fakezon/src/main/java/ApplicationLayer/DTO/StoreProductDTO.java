@@ -1,6 +1,8 @@
 package ApplicationLayer.DTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import DomainLayer.Model.StoreProduct;
 public class StoreProductDTO {
 
     @JsonProperty("productId")
@@ -28,6 +30,15 @@ public class StoreProductDTO {
         this.quantity = quantity;
         this.state = state;
         this.averageRating = averageRating;
+    }
+    public StoreProductDTO(StoreProduct storeProduct) {
+        this.productId = storeProduct.getSproductID();
+        this.name = storeProduct.getName();
+        this.basePrice = storeProduct.getBasePrice();
+        this.quantity = storeProduct.getQuantity();
+        this.state = storeProduct.getState().getStateName(); // Assuming getState() returns a ProductState object
+        this.averageRating = storeProduct.getAverageRating(); // Assuming getAverageRating() returns a double
+        
     }
 
     public int getProductId() {

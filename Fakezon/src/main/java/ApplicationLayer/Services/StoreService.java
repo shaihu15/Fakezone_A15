@@ -38,25 +38,19 @@ public class StoreService implements IStoreService {
     }
     // --- Store-related DTO Conversions ---
     private StoreDTO toStoreDTO(Store store) {
-        Collection<StoreProductDTO> StoreProductDTOs = store.getStoreProducts().values().stream()
-                .map(sp -> new StoreProductDTO(
-                        sp.getSproductID(),
-                        sp.getName(),
-                        sp.getBasePrice(),
-                        sp.getQuantity(),
-                        sp.getStateName(),
-                        sp.getAverageRating()))
-                .collect(Collectors.toList());
+        Collection<StoreProductDTO> storeProductDTOs = store.getStoreProducts().values().stream()
+            .map(sp->new StoreProductDTO(sp)) // using the constructor directly
+            .collect(Collectors.toList());
 
-        Map<Integer, Double> ratings = store.getRatings().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getRating()));
+    Map<Integer, Double> ratings = store.getRatings().entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getRating()));
 
         return new StoreDTO(
                 store.getId(),
                 store.getName(),
                 store.getStoreFounderID(),
                 store.isOpen(),
-                StoreProductDTOs,
+                storeProductDTOs,
                 // store.getStoreOwners(),
                 // store.getStoreManagers(),
                 ratings
