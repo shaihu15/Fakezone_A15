@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fakezone</title>
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background: #fff;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .login-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #222;
+        }
+        .oauth-btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .github {
+            background: #24292f;
+            color: #fff;
+        }
+        .github:hover {
+            background: #444950;
+        }
+        .google {
+            background: #fff;
+            color: #444;
+            border: 1px solid #ddd;
+        }
+        .google:hover {
+            background: #f1f1f1;
+        }
+        .oauth-icon {
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-title">Sign in to Fakezone</div>
+        <a class="oauth-btn github" href="/oauth2/authorization/github">
+            <img class="oauth-icon" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" width="24" height="24" alt="GitHub"> Sign in with GitHub
+        </a>
+        <a class="oauth-btn google" href="/oauth2/authorization/google">
+            <img class="oauth-icon" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" width="24" height="24" alt="Google"> Sign in with Google
+        </a>
+    </div>
+</body>
+</html>
