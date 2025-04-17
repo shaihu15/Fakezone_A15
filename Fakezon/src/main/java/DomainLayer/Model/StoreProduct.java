@@ -36,6 +36,9 @@ public class StoreProduct {
     public ProductState getState() {
         return state;
     }
+    public String getStateName() {
+        return state.getStateName();
+    }
     public void setState(ProductState state) {
         this.state = state;
     }
