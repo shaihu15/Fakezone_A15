@@ -15,6 +15,6 @@ public class Guest extends UserType{
 
     @Override
     public boolean logout() {
-        throw new UnsupportedOperationException("Guest cannot logout");
+        return false; // cannot logout as a guest
     }
 }
