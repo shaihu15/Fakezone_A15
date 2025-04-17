@@ -1,7 +1,7 @@
 package ApplicationLayer.Interfaces;
 
-import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 
 public interface ISystemService {
@@ -12,4 +12,5 @@ public interface ISystemService {
 
     void initialize();
     void shutdown();
+    Void GuestLogin(String userName, String Password);
 }
