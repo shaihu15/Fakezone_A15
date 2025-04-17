@@ -19,7 +19,8 @@ public class Guest extends UserType{
 
     @Override
     public boolean logout() {
-        throw new UnsupportedOperationException("Guests cannot log out because they are not logged in.");
+        user.getCart().clear(); // Clear the cart when logging out
+        return true; // Assuming logout is successful
     }
 
     @Override
