@@ -103,6 +103,9 @@ public class Store {
             throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    public List<Integer> getStoreManagers() {
+        return new ArrayList<>(storeManagers.keySet());
+    }
     //TO DO: Send Approval Request
     public void addStoreOwner(int appointor, int appointee){
         if(storeOwners.contains(appointee)){
@@ -141,5 +144,12 @@ public class Store {
     }
     public boolean isOpen() {
         return isOpen;
+    }
+    public double getAverageRating() {
+        double sum = 0;
+        for (StoreRating rating : Sratings.values()) {
+            sum += rating.getRating();
+        }
+        return sum / Sratings.size();
     }
 }
