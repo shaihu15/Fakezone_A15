@@ -7,8 +7,12 @@ import java.util.Optional;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.User;
 
-public class UserRepository implements IUserRepository{
+public class UserRepository implements IUserRepository {
     private Map<Integer, User> users;
+
+    public UserRepository() {
+    }
+
     @Override
     public Optional<User> findByUserName(String email) {
         return users.values().stream()
@@ -46,6 +50,18 @@ public class UserRepository implements IUserRepository{
     public User update(User user) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'update'");
+    }
+
+    @Override
+    public Optional<User> findByToken(String token) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findByToken'");
+    }
+
+    @Override
+    public void deleteByUserByToken(String token) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteByUserByToken'");
     }
 
 }

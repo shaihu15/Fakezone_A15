@@ -1,18 +1,24 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.Interfaces.IProductService;
+import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
-import DomainLayer.Interfaces.IDelivery;
+import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import InfrastructureLayer.Repositories.UserRepository;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
     private IPayment paymentService;
-
+    private IUserService userService;
+    private IStoreService storeService;
+    private IProductService productService;
     public SystemService() {
         initialize();
     }
@@ -37,6 +43,8 @@ public class SystemService implements ISystemService {
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter();
         this.paymentService = new PaymentAdapter();
+
+        this.userService = new UserService(new UserRepository()); // Assuming you have a UserService implementation
     }
 
     @Override
@@ -45,5 +53,11 @@ public class SystemService implements ISystemService {
         this.deliveryService = null;
         this.authenticatorService = null;
         this.paymentService = null;
+    }
+
+    @Override
+    public void GuestLogin(String userName, String Password){
+        
+
     }
 }

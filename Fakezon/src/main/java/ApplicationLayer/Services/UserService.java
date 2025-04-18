@@ -1,13 +1,12 @@
 package ApplicationLayer.Services;
-import ApplicationLayer.Interfaces.IUserService;
-import DomainLayer.Model.StoreOwner;
-import DomainLayer.Model.User;
-import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.IRepository.IUserRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+
+import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Model.User;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
 
@@ -54,6 +53,15 @@ public class UserService implements IUserService {
         }
         
     }
+    public User LoginGuest(String token,int userID) {
+        //assume i cheked everything and i have the user
+        User guest = userRepository.findByToken(token).get();
+        User registedUser = userRepository.findById(userID).get();
+        registedUser.mergeCart(guest.getCart());
+        userRepository.deleteByUserByToken(token);
+        return registedUser;
+    }
+    
     @Override
     public void login(int userID, String password) {
         // TODO Auto-generated method stub
