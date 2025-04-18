@@ -10,7 +10,7 @@ import org.mockito.Mockito;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class StoreServiceCloseStoreAcceptanceTest {
+public class StoreServiceAcceptanceTest {
 
     private StoreService storeService;
     private IStoreRepository storeRepository;
