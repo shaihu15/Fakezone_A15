@@ -53,7 +53,8 @@ public class StoreService implements IStoreService {
                 storeProductDTOs,
                 // store.getStoreOwners(),
                 // store.getStoreManagers(),
-                ratings
+                ratings,
+                store.getAverageRating()
         );
     }
 

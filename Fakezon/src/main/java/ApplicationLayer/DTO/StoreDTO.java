@@ -31,10 +31,13 @@ public class StoreDTO {
     @JsonProperty("ratings")
     private final Map<Integer, Double> ratings; // Map of userId -> rating (no DTO)
 
+    @JsonProperty("averageRating")
+    private final double averageRating; // Assuming you want to include this as well
+
 
     public StoreDTO(int storeId, String name, int founderId, boolean isOpen,
                     Collection<StoreProductDTO> storeProducts,
-                    Map<Integer, Double> ratings) {
+                    Map<Integer, Double> ratings,double averageRating) {
         this.storeId = storeId;
         this.name = name;
         this.founderId = founderId;
@@ -43,6 +46,8 @@ public class StoreDTO {
         // this.storeOwners = storeOwners;
         // this.storeManagers = storeManagers;
         this.ratings = ratings;
+        this.averageRating = averageRating;
+
     }
 
     public int getStoreId() {
