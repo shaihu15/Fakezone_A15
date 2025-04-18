@@ -155,7 +155,7 @@ public class Store {
             throw new IllegalAccessError("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
         }
     }
-    public StoreRating getStoreRating(int userID) {
+    public StoreRating getStoreRatingByUser(int userID) {
         if (Sratings.containsKey(userID)) {
             return Sratings.get(userID);
         } else {
@@ -164,7 +164,7 @@ public class Store {
     }
     public ProductRating getStoreProductRating(int userID, int productID) {
         if (storeProducts.containsKey(productID)) {
-            return storeProducts.get(productID).getRating(userID);
+            return storeProducts.get(productID).getRatingByUser(userID);
         } else {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }

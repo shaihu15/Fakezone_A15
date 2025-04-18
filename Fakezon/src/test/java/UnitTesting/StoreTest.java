@@ -58,7 +58,7 @@ public class StoreTest {
 
         store.addRating(userId, rating, comment);
 
-        assertEquals(rating, store.getStoreRating(userId).getRating(), "Rating should be added successfully");
+        assertEquals(rating, store.getStoreRatingByUser(userId).getRating(), "Rating should be added successfully");
     }
     @Test
     void addStoreProductRating_ValidRating_ShouldSucceed() {

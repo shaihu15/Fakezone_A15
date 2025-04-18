@@ -79,7 +79,7 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         assertTrue(store.isOpen());
         storeService.addStoreRating(storeId, founderId, 4.5, "Great store!");
-        StoreRating rating = store.getStoreRating(founderId);
+        StoreRating rating = store.getStoreRatingByUser(founderId);
         assertNotNull(rating);
         assertEquals(4.5, rating.getRating(), 0.01);
         verify(storeRepository).findById(storeId);

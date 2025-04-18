@@ -50,7 +50,7 @@ public class StoreProduct {
             Pratings.put(userID, new ProductRating(userID, rating, comment));
         }
     }
-    public ProductRating getRating(int userID) {
+    public ProductRating getRatingByUser(int userID) {
         if (Pratings.containsKey(userID)) {
             return Pratings.get(userID);
         } else {
