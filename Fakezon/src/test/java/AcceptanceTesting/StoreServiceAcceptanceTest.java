@@ -3,6 +3,8 @@ package AcceptanceTesting;
 import DomainLayer.IRepository.IStoreRepository;
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.Model.Store;
+import DomainLayer.Model.StoreRating;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -72,4 +74,26 @@ public class StoreServiceAcceptanceTest {
 
         assertTrue(ex.getMessage().contains("Store not found"));
     }
+    @Test
+    void ratingStore_ValidRating_Success() {
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        assertTrue(store.isOpen());
+        storeService.addStoreRating(storeId, founderId, 4.5, "Great store!");
+        StoreRating rating = store.getStoreRating(founderId);
+        assertNotNull(rating);
+        assertEquals(4.5, rating.getRating(), 0.01);
+        verify(storeRepository).findById(storeId);
+    }
+    @Test
+    void ratingStore_StoreNotFound_ShouldThrow() {
+        when(storeRepository.findById(storeId)).thenReturn(null);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                storeService.addStoreRating(storeId, founderId, 4.5, "Great store!"));
+
+        assertTrue(ex.getMessage().contains("Store not found"));
+    }
+
+
+
 }

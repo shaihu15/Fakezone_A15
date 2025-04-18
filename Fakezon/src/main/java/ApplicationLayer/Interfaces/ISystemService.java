@@ -10,6 +10,8 @@ public interface ISystemService {
     IAuthenticator getAuthenticatorService();
     IPayment getPaymentService();
 
+    void ratingStore(int storeId, int userId, double rating, String comment);
+    void ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
     void initialize();
     void shutdown();
 }

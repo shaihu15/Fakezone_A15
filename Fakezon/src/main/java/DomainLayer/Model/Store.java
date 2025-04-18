@@ -54,6 +54,13 @@ public class Store {
             Sratings.put(userID, new StoreRating(userID, rating, comment));
         }
     }
+    public void addStoreProductRating(int userID, int productID, double rating, String comment) {
+        if (storeProducts.containsKey(productID)) {
+            storeProducts.get(productID).addRating(userID, rating, comment);
+        } else {
+            throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
     public void addStoreProduct(int productID, String name, double basePrice, int quantity, ProductState state) {
         storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, state));
     }
@@ -148,6 +155,20 @@ public class Store {
             throw new IllegalAccessError("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
         }
     }
+    public StoreRating getStoreRating(int userID) {
+        if (Sratings.containsKey(userID)) {
+            return Sratings.get(userID);
+        } else {
+            throw new IllegalArgumentException("User with ID: " + userID + " has not rated the store yet.");
+        }
+    }
+    public ProductRating getStoreProductRating(int userID, int productID) {
+        if (storeProducts.containsKey(productID)) {
+            return storeProducts.get(productID).getRating(userID);
+        } else {
+            throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
     public void openStore() {
         this.isOpen = true;
     }
@@ -161,4 +182,5 @@ public class Store {
         }
         return sum / Sratings.size();
     }
+
 }

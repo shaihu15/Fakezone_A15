@@ -50,6 +50,13 @@ public class StoreProduct {
             Pratings.put(userID, new ProductRating(userID, rating, comment));
         }
     }
+    public ProductRating getRating(int userID) {
+        if (Pratings.containsKey(userID)) {
+            return Pratings.get(userID);
+        } else {
+            throw new IllegalArgumentException("User with ID: " + userID + " has not rated the product with ID: " + SproductID);
+        }
+    }
     public  double getAverageRating() {
         double totalRating = 0;
         for (ProductRating rating : Pratings.values()) {

@@ -50,4 +50,48 @@ public class StoreTest {
         assertTrue(thrown.getMessage().contains("Requester ID: " + nonFounderId));
         assertTrue(store.isOpen(), "Store should still be open if close failed");
     }
+    @Test
+    void addRating_ValidRating_ShouldSucceed() {
+        int userId = 1;
+        double rating = 4.5;
+        String comment = "Great product!";
+
+        store.addRating(userId, rating, comment);
+
+        assertEquals(rating, store.getStoreRating(userId).getRating(), "Rating should be added successfully");
+    }
+    @Test
+    void addStoreProductRating_ValidRating_ShouldSucceed() {
+        int userId = 1;
+        int productId = 1;
+        store.addStoreProduct(productId, "Test Product", 10.0, 100, null); // Assuming this method exists to add a product
+        double rating = 4.5;
+        String comment = "Great product!";
+
+        store.addStoreProductRating(userId, productId, rating, comment);
+
+        assertEquals(rating, store.getStoreProductRating(userId, productId).getRating(), "Product rating should be added successfully");
+    }
+    @Test
+    void addStoreProductRating_ProductNotFound_ShouldThrow() {
+        int userId = 1;
+        int productId = 99; // Assuming this product does not exist
+        double rating = 4.5;
+        String comment = "Great product!";
+
+        IllegalArgumentException thrown = assertThrows(
+                IllegalArgumentException.class,
+                () -> store.addStoreProductRating(userId, productId, rating, comment),
+                "Expected addStoreProductRating to throw if the product is not found"
+        );
+
+        assertTrue(thrown.getMessage().contains("Product with ID: " + productId + " does not exist in store ID: " + storeId));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> store.getStoreProductRating(userId, productId),
+                "Expected getStoreProductRating to throw if the product is not found"
+        );
+    }
+
+
 }
