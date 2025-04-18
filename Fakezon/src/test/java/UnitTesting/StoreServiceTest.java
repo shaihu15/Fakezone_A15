@@ -26,15 +26,14 @@ class StoreServiceTest {
 
     @Test
     void testCloseStore_Successful() {
-        int storeId = 1;
+        String storeName = "Test Store";
         int requesterId = 10;
-
-        when(storeRepository.findById(storeId)).thenReturn(mockStore);
-
+        int storeId = storeService.openStore(requesterId, storeName);
+        assertTrue(storeId > 0);
+        Store store1 = storeRepository.findById(storeId);
+        assertNotNull(store1);
         storeService.closeStore(storeId, requesterId);
-
-        verify(storeRepository).findById(storeId);
-        verify(mockStore).closeStore(requesterId);
+        assertFalse(store1.isOpen());
     }
 
     @Test
@@ -42,27 +41,25 @@ class StoreServiceTest {
         int storeId = 1;
         int requesterId = 10;
 
-        when(storeRepository.findById(storeId)).thenReturn(null);
-
+        assertNull(storeRepository.findById(storeId));
         assertThrows(IllegalArgumentException.class, () -> {
             storeService.closeStore(storeId, requesterId);
         });
 
-        verify(storeRepository).findById(storeId);
     }
     @Test
     void testAddStoreRating_Successful() {
-        int storeId = 1;
         int userId = 10;
         int rating = 5;
         String comment = "Great store!";
-
-        when(storeRepository.findById(storeId)).thenReturn(mockStore);
-
+        String storeName = "Test Store";
+        int requesterId = 10;
+        int storeId = storeService.openStore(requesterId, storeName);
+        assertTrue(storeId > 0);
+        Store store1 = storeRepository.findById(storeId);
+        assertNotNull(store1);
         storeService.addStoreRating(storeId, userId, rating, comment);
-
-        verify(storeRepository).findById(storeId);
-    }
+        assertEquals(rating, store1.getStoreRatingByUser(userId).getRating());}
     @Test
     void testAddStoreRating_StoreNotFound() {
         int storeId = 1;
@@ -70,13 +67,12 @@ class StoreServiceTest {
         int rating = 5;
         String comment = "Great store!";
 
-        when(storeRepository.findById(storeId)).thenReturn(null);
+        assertNull(storeRepository.findById(storeId));
 
         assertThrows(IllegalArgumentException.class, () -> {
             storeService.addStoreRating(storeId, userId, rating, comment);
         });
 
-        verify(storeRepository).findById(storeId);
     }
     @Test
     void testOpenStore_Successful() {
