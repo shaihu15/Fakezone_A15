@@ -10,4 +10,5 @@ public interface IUserType {
     boolean isRegistered();
     void addRole(int storeID, IRegisteredRole role);
     void removeRole(int storeID);
+    boolean isLoggedIn();
 }

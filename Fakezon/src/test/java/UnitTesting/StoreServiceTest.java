@@ -3,6 +3,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
+import InfrastructureLayer.Repositories.StoreRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,7 +19,7 @@ class StoreServiceTest {
 
     @BeforeEach
     void setUp() {
-        storeRepository = mock(IStoreRepository.class);
+        storeRepository = new StoreRepository(); // Assuming StoreRepository is a concrete implementation of IStoreRepository
         storeService = new StoreService(storeRepository);
         mockStore = mock(Store.class);
     }
@@ -76,4 +78,33 @@ class StoreServiceTest {
 
         verify(storeRepository).findById(storeId);
     }
+    @Test
+    void testOpenStore_Successful() {
+        String storeName = "Test Store";
+        int requesterId = 5;
+
+        assertNull(storeRepository.findByName(storeName));
+        int storeId = storeService.openStore(requesterId, storeName);
+        assertTrue(storeId > 0);
+        Store store1 = storeRepository.findById(storeId);
+        assertNotNull(store1);
+        assertTrue(store1.getStoreFounderID() == requesterId);
+        assertTrue(store1.getName().equals(storeName));
+    }
+    @Test
+    void testOpenStore_StoreAllreadyOpen() {
+        String OldStoreName = "Test Store";
+        int requesterId = 5;
+
+        assertNull(storeRepository.findByName(OldStoreName));
+        int storeId = storeService.openStore(requesterId, OldStoreName);
+        Store store = storeRepository.findById(storeId);
+        assertNotNull(store);
+        String newStoreName = store.getName();
+        assertThrows(IllegalArgumentException.class, () -> {
+            storeService.openStore(requesterId, newStoreName);
+        });
+    }
+
+
 }

@@ -21,6 +21,7 @@ public class Store {
     private HashMap<Integer,Integer> pendingOwners; //appointee : appointor
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager
     private Tree rolesTree;
+    
     public Store(String name, int storeID, int founderID) {
         this.storeFounderID = founderID;
         this.storeOwners = new ArrayList<>();
@@ -175,6 +176,7 @@ public class Store {
     public boolean isOpen() {
         return isOpen;
     }
+
     public double getAverageRating() {
         double sum = 0;
         for (StoreRating rating : Sratings.values()) {
