@@ -135,6 +135,9 @@ public class Store {
     }
     public void closeStore(int requesterId) {
         if(requesterId == this.storeFounderID){
+            if(!this.isOpen){
+                throw new IllegalArgumentException("Store: " + storeID + " is already closed");
+            }
             this.isOpen = false;
             //TODO: ADD NOTIFICATIONS SENDING
         }
