@@ -106,7 +106,11 @@ public class StoreService implements IStoreService {
 
     @Override
     public void closeStore(int storeId, int requesterId) {
-
+        Store store = storeRepository.findById(storeId);
+        if(store == null){
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.closeStore(requesterId);
     }
 
     @Override
