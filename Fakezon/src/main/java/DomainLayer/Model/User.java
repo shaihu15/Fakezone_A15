@@ -8,10 +8,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 public class User {
     private Cart cart;
     private UserType userType; // Guest or Registered
-    private int userID;
-    private String email;
-    private HashMap<Integer, Order> orders; // userID -> Order
-    private HashMap<Integer,List<Integer>> productsPurchase; // userID -> List of productIDs
+
 
     public User() {
         this.cart = new Cart();
@@ -22,13 +19,10 @@ public class User {
         return cart;
     }
     public boolean didPurchaseStore(int storeID) {
-        return productsPurchase.containsKey(storeID);
+        return userType.didPurchaseStore(storeID);
     }
     public boolean didPurchaseProduct(int storeID,int productID) {
-        if (productsPurchase.containsKey(storeID)) {
-            return productsPurchase.get(storeID).contains(productID);
-        }
-        return false;
+        return userType.didPurchaseProduct(storeID, productID);
     }
     public void setUserType(UserType userType) {
         this.userType = userType;
@@ -52,9 +46,12 @@ public class User {
         return userType.getAllRoles();
     }
     public int getUserID() {
-        return userID;
+        return userType.getUserID();
     }
     public String getEmail() {
-        return email;
+        return userType.getEmail();
+    }
+    public HashMap<Integer, Order> getOrders() {
+        return userType.getOrders();
     }
 }
