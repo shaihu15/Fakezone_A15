@@ -126,7 +126,13 @@ public class StoreService implements IStoreService {
     public void removeProductFromStore(int storeId, int requesterId, int productId) {}
 
     @Override
-    public void addStoreRating(int storeId, int userId, double rating, String comment) {}
+    public void addStoreRating(int storeId, int userId, double rating, String comment) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.addRating(userId, rating, comment);
+    }
 
     @Override
     public void removeStoreRating(int storeId, int userId) {}
@@ -137,7 +143,13 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void addStoreProductRating(int storeId, int productId, int userId, double rating, String comment) {}
+    public void addStoreProductRating(int storeId, int productId, int userId, double rating, String comment) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.addStoreProductRating(userId, productId, rating, comment);
+    }
 
     @Override
     public void removeStoreProductRating(int storeId, int productId, int userId) {}
@@ -167,6 +179,7 @@ public class StoreService implements IStoreService {
 
     @Override
     public void removeStoreManager(int storeId, int requesterId, int managerId) {}
+
 }
 
 

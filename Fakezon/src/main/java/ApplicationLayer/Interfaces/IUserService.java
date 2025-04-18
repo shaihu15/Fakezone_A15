@@ -17,4 +17,6 @@ public interface IUserService {
     void removeRole(int userID, int storeID);
     IRegisteredRole getRoleByStoreID(int userID, int storeID);
     HashMap<Integer, IRegisteredRole> getAllRoles(int userID);
+    boolean didPurchaseStore(int userID, int storeID); //check if the user purchased from the store
+    boolean didPurchaseProduct(int userID, int storeID, int productID); //check if the user purchased from the product
 }

@@ -48,4 +48,32 @@ class StoreServiceTest {
 
         verify(storeRepository).findById(storeId);
     }
+    @Test
+    void testAddStoreRating_Successful() {
+        int storeId = 1;
+        int userId = 10;
+        int rating = 5;
+        String comment = "Great store!";
+
+        when(storeRepository.findById(storeId)).thenReturn(mockStore);
+
+        storeService.addStoreRating(storeId, userId, rating, comment);
+
+        verify(storeRepository).findById(storeId);
+    }
+    @Test
+    void testAddStoreRating_StoreNotFound() {
+        int storeId = 1;
+        int userId = 10;
+        int rating = 5;
+        String comment = "Great store!";
+
+        when(storeRepository.findById(storeId)).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            storeService.addStoreRating(storeId, userId, rating, comment);
+        });
+
+        verify(storeRepository).findById(storeId);
+    }
 }

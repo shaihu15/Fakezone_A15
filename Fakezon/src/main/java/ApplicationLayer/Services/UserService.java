@@ -117,4 +117,32 @@ public class UserService implements IUserService {
         }
         return null;
     }
+    public boolean didPurchaseStore(int userID, int storeID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().didPurchaseStore(storeID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during check purchase: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        return false;
+    }
+    public boolean didPurchaseProduct(int userID, int storeID,int productID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().didPurchaseProduct(storeID,productID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during check purchase: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        return false;
+    }
 }
