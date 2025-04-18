@@ -112,7 +112,7 @@ public class Store {
             throw new IllegalArgumentException("Already waiting for User with ID: " + appointee + "'s approval");
         }
         if(!storeOwners.contains(appointor)){
-            throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
+            throw new IllegalAccessError("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
         }
         //pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS IMPLEMENTED
         
@@ -133,8 +133,14 @@ public class Store {
     public int getStoreFounderID() {
         return storeFounderID;
     }
-    public void closerStore() {
-        this.isOpen = false;
+    public void closeStore(int requesterId) {
+        if(requesterId == this.storeFounderID){
+            this.isOpen = false;
+            //TODO: ADD NOTIFICATIONS SENDING
+        }
+        else{
+            throw new IllegalAccessError("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
+        }
     }
     public void openStore() {
         this.isOpen = true;
