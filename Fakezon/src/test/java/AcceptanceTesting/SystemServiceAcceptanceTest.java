@@ -32,9 +32,9 @@ public class SystemServiceAcceptanceTest {
 
     @BeforeEach
     void setUp() {
-        storeRepository = Mockito.mock(IStoreRepository.class);
-        userRepository = Mockito.mock(IUserRepository.class);
-        productRepository = Mockito.mock(IProductRepository.class);
+        storeRepository = mock(IStoreRepository.class);
+        userRepository = mock(IUserRepository.class);
+        productRepository = mock(IProductRepository.class);
         systemService = new SystemService(storeRepository, userRepository, productRepository);
 
         store1 = new Store("Test Store 1", store1Id, founder1Id);
