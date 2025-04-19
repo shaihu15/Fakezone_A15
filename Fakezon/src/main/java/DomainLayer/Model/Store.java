@@ -1,12 +1,17 @@
 package DomainLayer.Model;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
+import java.util.AbstractMap.SimpleEntry;
 public class Store {
 
     private String name;
@@ -22,6 +27,8 @@ public class Store {
     private HashMap<Integer,Integer> pendingOwners; //appointee : appointor
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager
     private Tree rolesTree;
+    private Queue<SimpleEntry<Integer, String>> messagesFromUsers; //HASH userID to message
+    private Stack<SimpleEntry<Integer, String>> messagesFromStore; //HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     
@@ -41,6 +48,8 @@ public class Store {
         this.storeOwners.add(founderID);
         this.pendingOwners = new HashMap<>(); //appointee : appointor
         this.storeManagers = new HashMap<>(); //HASH userID to store manager
+        this.messagesFromUsers = new LinkedList<>();
+        this.messagesFromStore = new Stack<>();
     }
 
     public String getName() {
@@ -85,6 +94,33 @@ public class Store {
             throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    public void receivingMessage(int userID, String message) {
+        messagesFromUsers.add(new SimpleEntry<>(userID, message));
+    }
+    public void sendMessage(int managerId, int userID, String message) {
+        if(storeOwners.contains(managerId) || (storeManagers.containsKey(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+            messagesFromStore.push(new SimpleEntry<>(userID, message));
+        }
+        else{
+            throw new IllegalArgumentException("User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
+        }
+    }
+    public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId) {
+        if(storeOwners.contains(managerId) || (storeManagers.containsKey(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+            return messagesFromUsers;
+        }
+        else{
+            throw new IllegalArgumentException("User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
+        }
+    }
+    public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId) {
+        if (storeOwners.contains(managerId) || (storeManagers.containsKey(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+            return messagesFromStore;
+        } else {
+            throw new IllegalArgumentException("User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
+        }
+    }
+
     
     public HashMap<Integer, StoreProduct> getStoreProducts() {
         return storeProducts;
