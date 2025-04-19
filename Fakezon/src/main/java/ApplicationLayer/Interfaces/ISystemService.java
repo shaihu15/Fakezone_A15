@@ -1,5 +1,6 @@
 package ApplicationLayer.Interfaces;
 
+import ApplicationLayer.DTO.StoreDTO;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -12,7 +13,7 @@ public interface ISystemService {
 
     IPayment getPaymentService();
 
-    boolean userAccessStore(int userId, int storeId);
+    StoreDTO userAccessStore(int userId, int storeId);
 
     void ratingStore(int storeId, int userId, double rating, String comment);
 

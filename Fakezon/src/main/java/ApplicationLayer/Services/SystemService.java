@@ -113,18 +113,21 @@ public class SystemService implements ISystemService {
         }
     }
 
-    public boolean userAccessStore(int userId, int storeId) {
+    public StoreDTO userAccessStore(int userId, int storeId) {
         try {
+            logger.info("System Service - User accessed store: " + storeId + " by user: " + userId);
             StoreDTO s = this.storeService.viewStore(storeId);
             if (s.isOpen()) {
-                return true;
+                return s;
             }
+            logger.error("System Service - Store is closed: " + storeId);
 
         } catch (Exception e) {
             // Handle exception if needed
-            System.out.println("Error during user access store: " + e.getMessage());
+            logger.error("System Service - Error during user access store: " + e.getMessage());
+            return null;
         }
-        return false;
+        return null;
     }
 
     @Override
