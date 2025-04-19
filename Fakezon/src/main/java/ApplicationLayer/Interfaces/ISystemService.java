@@ -1,5 +1,9 @@
 package ApplicationLayer.Interfaces;
 
+import java.util.HashMap;
+import java.util.List;
+
+import ApplicationLayer.DTO.OrderDTO;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -8,6 +12,7 @@ import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Model.Order;
 
 public interface ISystemService {
     // Access to core services
@@ -22,8 +27,11 @@ public interface ISystemService {
     void ratingStore(int storeId, int userId, double rating, String comment);
 
     void ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
+    HashMap<Integer, Order> getOrdersByUser(int userId); // userID -> OrderDTO
+    void sendMessageToStore(int userId, int storeId, String message); //send message to store
+    void sendMessageToUser(int managerId, int storeId,int userToAnswer, String message); //send message to user
 
-    void openStore(int userId, String storeName);
+    void addStore(int userId, String storeName);
 
     StoreProductDTO getProductFromStore(int productId, int storeId);
 

@@ -211,4 +211,38 @@ public class UserService implements IUserService {
     
         return false;
     }
+    @Override
+    public void sendMessageToStore(int userID, int storeID, String message) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().sendMessageToStore(storeID, message);
+                logger.info("Message sent to store: " + storeID + " from user: " + userID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                logger.error("Error during send message: " + e.getMessage());
+                System.out.println("Error during send message: " + e.getMessage());
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+    @Override
+    public void receivingMessageFromStore(int userID, int storeID, String message) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().receivingMessageFromStore(storeID, message);
+                logger.info("Message received from store: " + storeID + " to user: " + userID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                logger.error("Error during receiving message: " + e.getMessage());
+                System.out.println("Error during receiving message: " + e.getMessage());
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            throw new IllegalArgumentException("User not found");
+        }
+    }
 }

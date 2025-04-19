@@ -22,4 +22,6 @@ public interface IUserService {
     boolean didPurchaseStore(int userID, int storeID); //check if the user purchased from the store
     boolean didPurchaseProduct(int userID, int storeID, int productID); //check if the user purchased from the product
     HashMap<Integer, Order> getOrdersByUser(int userID); // userID -> Order
+    void sendMessageToStore(int userID, int storeID, String message); //send message to store
+    void receivingMessageFromStore(int userID, int storeID, String message); //receive message from store
 }
