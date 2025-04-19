@@ -3,6 +3,7 @@ package DomainLayer.Model;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
@@ -21,13 +22,16 @@ public class Store {
     private HashMap<Integer,Integer> pendingOwners; //appointee : appointor
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager
     private Tree rolesTree;
-    public Store(String name, int storeID, int founderID) {
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
+
+    
+    public Store(String name, int founderID) {
         this.storeFounderID = founderID;
         this.storeOwners = new ArrayList<>();
         //storeOwners.put(founderID, new StoreOwner(founderID, name));
         this.storeManagers = new HashMap<>();
         this.name = name;
-        this.storeID = storeID;
+        this.storeID = idCounter.incrementAndGet();
         this.products = new HashMap<>();
         this.Sratings = new HashMap<>();
         this.storeProducts = new HashMap<>();
@@ -194,6 +198,7 @@ public class Store {
     public boolean isOpen() {
         return isOpen;
     }
+
     public double getAverageRating() {
         double sum = 0;
         for (StoreRating rating : Sratings.values()) {

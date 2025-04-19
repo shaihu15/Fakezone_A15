@@ -42,4 +42,9 @@ public class Guest extends UserType{
     public HashMap<Integer, IRegisteredRole> getAllRoles() {
         throw new UnsupportedOperationException("Guest cannot have role");
     }
+
+    @Override
+    public boolean isLoggedIn() {
+        throw new UnsupportedOperationException("Guest cannot be logged in");
+    }
 }

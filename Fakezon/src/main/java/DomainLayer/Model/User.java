@@ -57,4 +57,7 @@ public class User {
     public String getEmail() {
         return email;
     }
+    public boolean isLoggedIn() {
+        return userType.isLoggedIn();
+    }
 }
