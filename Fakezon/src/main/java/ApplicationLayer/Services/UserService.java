@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
 import DomainLayer.IRepository.IRegisteredRole;
@@ -163,6 +164,21 @@ public class UserService implements IUserService {
         return false;
     }
     @Override
+    public HashMap<Integer, Order> getOrdersByUser(int userID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().getOrders();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get orders: " + e.getMessage());
+            }
+        } else {
+                throw new IllegalArgumentException("User not found");
+            }
+            return null;
+        }
+
     public boolean isUserLoggedIn(int userID) {
         Optional<User> user = userRepository.findById(userID);
         if (user.isPresent() ) {
@@ -175,6 +191,8 @@ public class UserService implements IUserService {
         } else {
             throw new IllegalArgumentException("User not found");
         }
+
+    
         return false;
     }
 }
