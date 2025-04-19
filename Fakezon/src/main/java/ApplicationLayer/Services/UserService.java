@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Model.Guest;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
@@ -53,6 +54,9 @@ public class UserService implements IUserService {
             try {
                 user.get().logout();
                 logger.info("User logged out: " + userID);
+                user.get().setUserType(new Guest());
+                logger.info("User type changed to Guest for user: " + userID);
+
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during logout: " + e.getMessage());

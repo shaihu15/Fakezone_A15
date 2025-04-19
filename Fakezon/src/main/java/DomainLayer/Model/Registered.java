@@ -1,7 +1,9 @@
 package DomainLayer.Model;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 
 
@@ -12,24 +14,27 @@ public class Registered extends UserType{
     private String email;
     private HashMap<Integer, Order> orders; // userID -> Order
     private HashMap<Integer,List<Integer>> productsPurchase; // userID -> List of productIDs
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
 
-    public Registered(User user){
-        super(user);
+    public Registered(String email){
+        super();
+        this.userID = idCounter.incrementAndGet(); // auto-increment userID
+        this.email = email;
+        this.orders = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
         this.roles = new HashMap<>();
         this.isLoggedIn = true;
+    }
+    public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
+        this.productsPurchase.put(storeID, productsPurchase);
     }
 
     public boolean isRegistered(){
         return true;
     }
 
-    public void addToCart(Product product){
-        // same logic as Guest
-    }
-
     public boolean logout(){
         this.isLoggedIn = false;
-        this.user.setUserType(new Guest(this.user));
         return true;
     }
     public void addRole(int storeID, IRegisteredRole role){ // sytem admin (storeID = -1)or store owner
@@ -76,5 +81,10 @@ public class Registered extends UserType{
         return isLoggedIn;
     }
 
-
+	@Override
+	public boolean addToCart(int storeID, ProductDTO product) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'addToCart'");
+        //add product to productsPurchase
+	}
 }
