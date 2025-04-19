@@ -27,7 +27,7 @@ public class StoreServiceAcceptanceTest {
     @BeforeEach
     void setUp() {
         storeRepository = mock(IStoreRepository.class);
-        store = new Store("Test Store", storeId, founderId);
+        store = new Store("Test Store", founderId);
         storeService = new StoreService(storeRepository);
     }
 

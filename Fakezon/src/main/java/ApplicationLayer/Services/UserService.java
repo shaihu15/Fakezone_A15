@@ -1,15 +1,20 @@
 package ApplicationLayer.Services;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
 
     public UserService(IUserRepository userRepository) {
         this.userRepository = userRepository;
@@ -24,11 +29,13 @@ public class UserService implements IUserService {
 
     public User registerUser(User user) {
         // You might add validation logic here
+
         return userRepository.save(user);
     }
 
     public void deleteUser(String userName) {
         userRepository.deleteByUserName(userName);
+        logger.info("User deleted: " + userName);
     }
 
     @Override
@@ -45,12 +52,17 @@ public class UserService implements IUserService {
         if (user.isPresent() ) {
             try {
                 user.get().logout();
+                logger.info("User logged out: " + userID);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during logout: " + e.getMessage());
+                logger.error("Error during logout: " + e.getMessage());
+                
             }
         } else {
+            logger.error("User not found: " + userID);
             throw new IllegalArgumentException("User not found");
+
         }
         
     }
@@ -65,11 +77,14 @@ public class UserService implements IUserService {
         if (user.isPresent() ) {
             try {
                 user.get().addRole(storeID, role);
+                logger.info("Role added to user: " + userID + " for store: " + storeID);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during add role: " + e.getMessage());
+                logger.error("Error during add role: " + e.getMessage());
             }
         } else {
+            logger.error("User not found: " + userID);
             throw new IllegalArgumentException("User not found");
         }
     }
@@ -79,11 +94,14 @@ public class UserService implements IUserService {
         if (user.isPresent() ) {
             try {
                 user.get().removeRole(storeID);
+                logger.info("Role removed from user: " + userID + " for store: " + storeID);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during remove role: " + e.getMessage());
+                logger.error("Error during remove role: " + e.getMessage());
             }
         } else {
+            logger.error("User not found: " + userID);
             throw new IllegalArgumentException("User not found");
         }
     }
@@ -143,6 +161,38 @@ public class UserService implements IUserService {
         } else {
             throw new IllegalArgumentException("User not found");
         }
+        return false;
+    }
+    @Override
+    public HashMap<Integer, Order> getOrdersByUser(int userID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().getOrders();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get orders: " + e.getMessage());
+            }
+        } else {
+                throw new IllegalArgumentException("User not found");
+            }
+            return null;
+        }
+
+    public boolean isUserLoggedIn(int userID) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                return user.get().isLoggedIn();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during check login: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+
+    
         return false;
     }
 }

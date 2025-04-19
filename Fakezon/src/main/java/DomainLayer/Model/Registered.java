@@ -1,5 +1,6 @@
 package DomainLayer.Model;
 import java.util.HashMap;
+import java.util.List;
 
 import DomainLayer.IRepository.IRegisteredRole;
 
@@ -7,6 +8,10 @@ import DomainLayer.IRepository.IRegisteredRole;
 public class Registered extends UserType{
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
     private boolean isLoggedIn;
+    private int userID;
+    private String email;
+    private HashMap<Integer, Order> orders; // userID -> Order
+    private HashMap<Integer,List<Integer>> productsPurchase; // userID -> List of productIDs
 
     public Registered(User user){
         super(user);
@@ -37,6 +42,21 @@ public class Registered extends UserType{
             throw new IllegalArgumentException("Role not found for the given store ID.");
         }
     }
+    public boolean didPurchaseStore(int storeID) {
+        return productsPurchase.containsKey(storeID);
+    }
+    public boolean didPurchaseProduct(int storeID,int productID) {
+        if (productsPurchase.containsKey(storeID)) {
+            return productsPurchase.get(storeID).contains(productID);
+        }
+        return false;
+    }
+    public int getUserID() {
+        return userID;
+    }
+    public String getEmail() {
+        return email;
+    }
 
     @Override
     public IRegisteredRole getRoleByStoreID(int storeID) {
@@ -46,6 +66,14 @@ public class Registered extends UserType{
     @Override
     public HashMap<Integer, IRegisteredRole> getAllRoles() {
         return roles; // system admin (storeID = -1)or store owner
+    }
+
+    @Override
+    public HashMap<Integer, Order> getOrders() {
+        return orders; // userID -> Order
+    }
+    public boolean isLoggedIn() {
+        return isLoggedIn;
     }
 
 

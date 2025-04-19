@@ -30,6 +30,7 @@ public class StoreService implements IStoreService {
     public void addStoreOwner(int storeId, int requesterId, int newOwnerId){
         Store store = storeRepository.findById(storeId);
         if (store == null) {
+            logger.error("addStoreOwner - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         store.addStoreOwner(requesterId, newOwnerId);
@@ -80,6 +81,7 @@ public class StoreService implements IStoreService {
     public StoreDTO viewStore(int storeId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
+            logger.error("viewStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         return toStoreDTO(store);
@@ -104,10 +106,7 @@ public class StoreService implements IStoreService {
 
     // --- Skeleton for remaining interface methods (still to be implemented) ---
 
-    @Override
-    public int addStore(String name, int founderId) {
-        return 0;
-    }
+
 
     @Override
     public int updateStore(int storeId, int requesterId, String name) {
@@ -124,9 +123,11 @@ public class StoreService implements IStoreService {
     public void closeStore(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
         if(store == null){
+            logger.error("closeStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         store.closeStore(requesterId);
+        logger.info("Store closed: " + storeId + " by user: " + requesterId);
     }
 
     @Override
@@ -145,9 +146,11 @@ public class StoreService implements IStoreService {
     public void addStoreRating(int storeId, int userId, double rating, String comment) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
+            logger.error("addStoreRating - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         store.addRating(userId, rating, comment);
+        logger.info("Store rating added: " + storeId + " by user: " + userId + " with rating: " + rating);
     }
 
     @Override
@@ -162,9 +165,11 @@ public class StoreService implements IStoreService {
     public void addStoreProductRating(int storeId, int productId, int userId, double rating, String comment) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
+            logger.error("addStoreProductRating - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         store.addStoreProductRating(userId, productId, rating, comment);
+        logger.info("Store product rating added: " + productId + " by user: " + userId + " with rating: " + rating);
     }
 
     @Override
@@ -201,6 +206,20 @@ public class StoreService implements IStoreService {
 
     @Override
     public void removeStoreManager(int storeId, int requesterId, int managerId) {}
+    @Override
+    public int addStore(int userId, String storeName) {
+        if(storeRepository.findByName(storeName) != null){
+            logger.error("openStore - Store name already exists: " + storeName);
+            throw new IllegalArgumentException("Store name already exists");
+        }
+        Store store = new Store(storeName, userId);
+        int storeId = store.getId();
+        logger.info("openStore - New store ID: " + storeId);
+
+        storeRepository.addStore(store);
+        logger.info("Store opened: " + storeName + " by user: " + userId);
+        return storeId;
+    }
 
 }
 

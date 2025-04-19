@@ -13,7 +13,7 @@ import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 
 public interface IStoreService {
-    int addStore(String name, int founderId);
+    int addStore(int userId, String storeName);
     int updateStore(int storeId, int requesterId, String name);
     void deleteStore(int storeId, int requesterId);
 

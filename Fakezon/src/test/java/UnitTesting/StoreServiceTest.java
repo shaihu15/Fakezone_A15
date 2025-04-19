@@ -3,6 +3,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
+import InfrastructureLayer.Repositories.StoreRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,22 +19,21 @@ class StoreServiceTest {
 
     @BeforeEach
     void setUp() {
-        storeRepository = mock(IStoreRepository.class);
+        storeRepository = new StoreRepository(); // Assuming StoreRepository is a concrete implementation of IStoreRepository
         storeService = new StoreService(storeRepository);
         mockStore = mock(Store.class);
     }
 
     @Test
     void testCloseStore_Successful() {
-        int storeId = 1;
+        String storeName = "Test Store";
         int requesterId = 10;
-
-        when(storeRepository.findById(storeId)).thenReturn(mockStore);
-
+        int storeId = storeService.addStore(requesterId, storeName);
+        assertTrue(storeId > 0);
+        Store store1 = storeRepository.findById(storeId);
+        assertNotNull(store1);
         storeService.closeStore(storeId, requesterId);
-
-        verify(storeRepository).findById(storeId);
-        verify(mockStore).closeStore(requesterId);
+        assertFalse(store1.isOpen());
     }
 
     @Test
@@ -40,27 +41,25 @@ class StoreServiceTest {
         int storeId = 1;
         int requesterId = 10;
 
-        when(storeRepository.findById(storeId)).thenReturn(null);
-
+        assertNull(storeRepository.findById(storeId));
         assertThrows(IllegalArgumentException.class, () -> {
             storeService.closeStore(storeId, requesterId);
         });
 
-        verify(storeRepository).findById(storeId);
     }
     @Test
     void testAddStoreRating_Successful() {
-        int storeId = 1;
         int userId = 10;
         int rating = 5;
         String comment = "Great store!";
-
-        when(storeRepository.findById(storeId)).thenReturn(mockStore);
-
+        String storeName = "Test Store";
+        int requesterId = 10;
+        int storeId = storeService.addStore(requesterId, storeName);
+        assertTrue(storeId > 0);
+        Store store1 = storeRepository.findById(storeId);
+        assertNotNull(store1);
         storeService.addStoreRating(storeId, userId, rating, comment);
-
-        verify(storeRepository).findById(storeId);
-    }
+        assertEquals(rating, store1.getStoreRatingByUser(userId).getRating());}
     @Test
     void testAddStoreRating_StoreNotFound() {
         int storeId = 1;
@@ -68,12 +67,40 @@ class StoreServiceTest {
         int rating = 5;
         String comment = "Great store!";
 
-        when(storeRepository.findById(storeId)).thenReturn(null);
+        assertNull(storeRepository.findById(storeId));
 
         assertThrows(IllegalArgumentException.class, () -> {
             storeService.addStoreRating(storeId, userId, rating, comment);
         });
 
-        verify(storeRepository).findById(storeId);
     }
+    @Test
+    void testOpenStore_Successful() {
+        String storeName = "Test Store";
+        int requesterId = 5;
+
+        assertNull(storeRepository.findByName(storeName));
+        int storeId = storeService.addStore(requesterId, storeName);
+        assertTrue(storeId > 0);
+        Store store1 = storeRepository.findById(storeId);
+        assertNotNull(store1);
+        assertTrue(store1.getStoreFounderID() == requesterId);
+        assertTrue(store1.getName().equals(storeName));
+    }
+    @Test
+    void testOpenStore_StoreAllreadyOpen() {
+        String OldStoreName = "Test Store";
+        int requesterId = 5;
+
+        assertNull(storeRepository.findByName(OldStoreName));
+        int storeId = storeService.addStore(requesterId, OldStoreName);
+        Store store = storeRepository.findById(storeId);
+        assertNotNull(store);
+        String newStoreName = store.getName();
+        assertThrows(IllegalArgumentException.class, () -> {
+            storeService.addStore(requesterId, newStoreName);
+        });
+    }
+
+
 }

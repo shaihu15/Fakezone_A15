@@ -1,5 +1,6 @@
 package ApplicationLayer.Interfaces;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.Order;
 import DomainLayer.Model.User;
 import java.util.Optional;
 import java.util.HashMap;
@@ -13,10 +14,12 @@ public interface IUserService {
     User updateUser(User user);
     void logout(int userID);
     void login(int userID, String password);
+    boolean isUserLoggedIn(int userID);
     void addRole(int userID, int storeID, IRegisteredRole role);
     void removeRole(int userID, int storeID);
     IRegisteredRole getRoleByStoreID(int userID, int storeID);
     HashMap<Integer, IRegisteredRole> getAllRoles(int userID);
     boolean didPurchaseStore(int userID, int storeID); //check if the user purchased from the store
     boolean didPurchaseProduct(int userID, int storeID, int productID); //check if the user purchased from the product
+    HashMap<Integer, Order> getOrdersByUser(int userID); // userID -> Order
 }
