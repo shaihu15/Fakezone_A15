@@ -92,7 +92,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public void addProductsToStore(int storeId, Set<Integer> productsIds){
+    public void addProductsToStore(int storeId, Collection<Integer> productsIds){
         try {
             for (Integer productId : productsIds) {
                 IProduct product = productRepository.getProductById(productId);
@@ -107,5 +107,20 @@ public class ProductService implements IProductService {
         }
     }
 
+    @Override
+    public void removeStoreFromProducts(int storeId, Collection<Integer> productIds){
+        try {
+            for (Integer productId : productIds) {
+                IProduct product = productRepository.getProductById(productId);
+                product.removeStore(storeId);
+                productRepository.updateProduct(product);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to remove products to store, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Products with ids {} were added to store with id {}", productIds, storeId);
+        }
+    }
   
 }
