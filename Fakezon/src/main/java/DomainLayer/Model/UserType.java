@@ -26,5 +26,6 @@ abstract class UserType implements IUserType {
     abstract public IRegisteredRole getRoleByStoreID(int storeID); // system admin (storeID = -1)or store owner
     abstract public HashMap<Integer, IRegisteredRole> getAllRoles(); // system admin (storeID = -1)or store owner
     abstract public boolean isLoggedIn();
+    abstract public String getPassword();
 
 }

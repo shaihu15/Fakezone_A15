@@ -78,4 +78,8 @@ public class Guest extends UserType{
         throw new UnsupportedOperationException("Unimplemented method 'addToCart'");
     }
 
+    @Override
+    public String getPassword(){
+        throw new UnsupportedOperationException("Guest cannot have password");
+    }
 }

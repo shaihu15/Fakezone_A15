@@ -13,11 +13,12 @@ import java.util.List;
 public class RegisteredTest {
     private Registered registeredUser;
     private String email = "email@com";
+    private String password = "password1234";
     private int userID;
 
     @BeforeEach
     void setUp() {
-        registeredUser = new Registered(email);
+        registeredUser = new Registered(email, password);
         userID = registeredUser.getUserID();
     }
 

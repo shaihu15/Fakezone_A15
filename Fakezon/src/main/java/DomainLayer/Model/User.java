@@ -59,4 +59,7 @@ public class User {
     public boolean isLoggedIn() {
         return userType.isLoggedIn();
     }
+    public String getPassword(){
+        return userType.getPassword();
+    }
 }

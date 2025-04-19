@@ -29,9 +29,7 @@ public class UserService implements IUserService {
     }
 
     public User registerUser(User user) {
-        // You might add validation logic here
-
-        return userRepository.save(user);
+        return userRepository.addUser(user);
     }
 
     public void deleteUser(String userName) {
@@ -72,8 +70,22 @@ public class UserService implements IUserService {
     }
     @Override
     public void login(int userID, String password) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'login'");
+        Optional<User> optionalUser = userRepository.findById(userID);
+
+        if (optionalUser.isEmpty()) {
+            logger.warn("Login failed: User with ID {} not found", userID);
+            throw new IllegalArgumentException("User not found");
+        }
+
+        User user = optionalUser.get();
+
+        if (!user.getPassword().equals(password)) {
+            logger.warn("Login failed: Incorrect password for user ID {}", userID);
+            throw new IllegalArgumentException("Incorrect password");
+        }
+
+        logger.info("User with ID {} logged in successfully", userID);
+        //TODO Here you can add any logic related to logging in (e.g., session management)
     }
     @Override
     public void addRole(int userID, int storeID, IRegisteredRole role) {
