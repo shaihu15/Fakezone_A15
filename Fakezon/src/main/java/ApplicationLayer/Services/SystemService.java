@@ -7,7 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.OrderDTO;
+
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -220,4 +224,15 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during sending message to user: " + e.getMessage());
         }
     }
+    public StoreProductDTO getProductFromStore(int productId, int storeId) {
+        try {
+            logger.info("System service - user trying to view procuct " + productId + " in store: " + storeId);
+            StoreDTO s = this.storeService.viewStore(storeId);
+            return s.getStoreProductById(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting product: " + e.getMessage());
+        }
+        return null;
+    }
+
 }

@@ -4,7 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import ApplicationLayer.DTO.OrderDTO;
+
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -28,6 +32,9 @@ public interface ISystemService {
     void sendMessageToUser(int managerId, int storeId,int userToAnswer, String message); //send message to user
 
     void addStore(int userId, String storeName);
+
+    StoreProductDTO getProductFromStore(int productId, int storeId);
+
     void initialize();
 
     void shutdown();
