@@ -1,68 +1,41 @@
 package UnitTesting;
+
 import java.util.Collection;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import DomainLayer.Interfaces.IProduct;
 import InfrastructureLayer.Repositories.ProductRepository;
 
-class MockProduct implements IProduct {
-    private int id;
-    private String name;
-    private String prodcutDescription;
-
-    public MockProduct(int id, String name, String prodcutDescription) {
-        this.id = id;
-        this.name = name;
-        this.prodcutDescription = prodcutDescription;
-    }
-
-    @Override
-    public int getId() {
-        return id;
-    }
-    
-    @Override
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String getDescription() {
-        return prodcutDescription;    
-    }
-
-    @Override
-    public void setDescription(String description) {
-        this.prodcutDescription = description;
-    }
-}
-
 public class ProductRepositoryTest {
     private ProductRepository repository;
-    private MockProduct product1;
-    private MockProduct product2;
+    private IProduct product1;
+    private IProduct product2;
 
     @BeforeEach
     void setUp() {
         repository = new ProductRepository(new HashMap<>());
-        product1 = new MockProduct(1, "Product1", "good product");
-        product2 = new MockProduct(2, "Product2", "another good product");
+
+        // Use Mockito to create mock objects for IProduct
+        product1 = mock(IProduct.class);
+        product2 = mock(IProduct.class);
+
+        // Define behavior for product1
+        when(product1.getId()).thenReturn(1);
+        when(product1.getName()).thenReturn("Product1");
+        when(product1.getDescription()).thenReturn("good product");
+
+        // Define behavior for product2
+        when(product2.getId()).thenReturn(2);
+        when(product2.getName()).thenReturn("Product2");
+        when(product2.getDescription()).thenReturn("another good product");
     }
 
     @Test
@@ -74,7 +47,7 @@ public class ProductRepositoryTest {
     @Test
     void givenExistingProduct_WhenUpdateProduct_ThenProductIsUpdated() {
         repository.addProduct(product1);
-        product1.setName("UpdatedProduct1");
+        when(product1.getName()).thenReturn("UpdatedProduct1");
         repository.updateProduct(product1);
         IProduct updatedProduct = repository.getProductById(1);
         assertEquals("UpdatedProduct1", updatedProduct.getName());

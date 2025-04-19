@@ -2,13 +2,16 @@ package UnitTesting;
 
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IProductRepository;
@@ -33,7 +36,7 @@ public class ProductServiceTest {
 
     @Test
     void givenValidProductDetails_WhenUpdateProduct_ThenProductIsUpdated() {
-        productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription");
+        productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         verify(productRepository, times(1)).updateProduct(any(IProduct.class));
     }
 
@@ -41,7 +44,7 @@ public class ProductServiceTest {
     void givenNonExistingProduct_WhenUpdateProduct_ThenThrowsException() {
         doThrow(new IllegalArgumentException("Product not found")).when(productRepository).updateProduct(any(IProduct.class));
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription");
+            productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         });
         assertEquals("Product not found", exception.getMessage());
     }
@@ -111,5 +114,42 @@ public class ProductServiceTest {
             productService.searchProducts("keyword");
         });
         assertEquals("Search failed", exception.getMessage());
+    }
+    @Test
+    void givenValidStoreIdAndProductIds_WhenAddProductsToStore_ThenProductsAreUpdated() {
+        // Arrange
+        int storeId = 101;
+        Set<Integer> productIds = new HashSet<>(Arrays.asList(1, 2));
+        IProduct mockProduct1 = mock(IProduct.class);
+        IProduct mockProduct2 = mock(IProduct.class);
+
+        when(productRepository.getProductById(1)).thenReturn(mockProduct1);
+        when(productRepository.getProductById(2)).thenReturn(mockProduct2);
+
+        // Act
+        productService.addProductsToStore(storeId, productIds);
+
+        // Assert
+        verify(mockProduct1, times(1)).addStore(storeId);
+        verify(mockProduct2, times(1)).addStore(storeId);
+        verify(productRepository, times(1)).updateProduct(mockProduct1);
+        verify(productRepository, times(1)).updateProduct(mockProduct2);
+    }
+
+    @Test
+    void givenInvalidProductId_WhenAddProductsToStore_ThenThrowsException() {
+        // Arrange
+        int storeId = 101;
+        Set<Integer> productIds = new HashSet<>(Arrays.asList(1, 2));
+        when(productRepository.getProductById(1)).thenThrow(new IllegalArgumentException("Product not found"));
+
+        // Act & Assert
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            productService.addProductsToStore(storeId, productIds);
+        });
+
+        assertEquals("Product not found", exception.getMessage());
+        verify(productRepository, times(1)).getProductById(1);
+        verify(productRepository, never()).updateProduct(any(IProduct.class));
     }
 }

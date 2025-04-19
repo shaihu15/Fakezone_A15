@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
@@ -39,9 +40,9 @@ public class ProductService implements IProductService {
     }    
 
     @Override
-    public void updateProduct(int productId, String productName, String productDescription) {
+    public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
-            IProduct product = new Product(productId, productName, productDescription);
+            IProduct product = new Product(productId, productName, productDescription, storesIds);
             productRepository.updateProduct(product);
             
         } catch (IllegalArgumentException e) {
@@ -90,5 +91,41 @@ public class ProductService implements IProductService {
         } 
     }
 
+    @Override
+    public void addProductsToStore(int storeId, Collection<Integer> productsIds){
+        try {
+            for (Integer productId : productsIds) {
+                IProduct product = productRepository.getProductById(productId);
+                product.addStore(storeId);
+                productRepository.updateProduct(product);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to add products to store, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Products with ids {} were added to store with id {}", productsIds, storeId);
+        }
+    }
+
+    @Override
+    public void removeStoreFromProducts(int storeId, Collection<Integer> productIds){
+        try {
+            for (Integer productId : productIds) {
+                IProduct product = productRepository.getProductById(productId);
+                product.removeStore(storeId);
+                productRepository.updateProduct(product);
+                List<Integer> storesIds = product.getStoresIds();
+                if (storesIds.isEmpty()) {
+                    productRepository.deleteProduct(productId);
+                }
+            }
+            
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to remove products to store, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Products with ids {} were added to store with id {}", productIds, storeId);
+        }
+    }
   
 }
