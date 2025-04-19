@@ -82,10 +82,20 @@ public class GuestTest {
         }, "Guest doesn't have orders");
     }
     @Test
-    void givenNonValidUser_whenIsLoggedIn_shouldThrow() {
+    void givenNonValidUser_whenIsLoggedIn_shouldFalse() {
+        assertFalse(guestUser.isLoggedIn(), "Guest user should not be logged in");
+    }
+    @Test
+    void givenNonValidUser_whenSendingMessageToStore_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
-            guestUser.isLoggedIn();
-        }, "Guest cannot be logged in");
+            guestUser.sendMessageToStore(1, "message");
+        }, "Guest cannot send message to store");
+    }
+    @Test
+    void givenNonValidUser_whenReceivingMessageFromStore_shouldThrow() {
+        assertThrows(UnsupportedOperationException.class, () -> {
+            guestUser.receivingMessageFromStore(1, "message");
+        }, "Guest cannot receive message from store");
     }
 
 

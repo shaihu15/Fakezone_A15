@@ -1,7 +1,10 @@
 package ApplicationLayer.Interfaces;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
+import java.util.Stack;
 
 import ApplicationLayer.DTO.StoreDTO;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -23,6 +26,7 @@ public interface IStoreService {
 
     void openStore(int storeId, int requesterId);
     void closeStore(int storeId, int requesterId);
+    boolean isStoreOpen(int storeId);
     void updateStoreName(int storeId, String newName, int requesterId);
 
     // --- Product Management ---
@@ -56,5 +60,8 @@ public interface IStoreService {
     void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms);
     void removeStoreManager(int storeId, int requesterId, int managerId);
     HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId);
-
+    void receivingMessage(int storeId, int userId, String message);
+    void sendMessageToUser(int managerId,int storeId, int userId, String message);
+    Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId,int storeId);
+    Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId,int storeId);
 }
