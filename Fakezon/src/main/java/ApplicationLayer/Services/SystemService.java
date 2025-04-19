@@ -1,15 +1,15 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
@@ -84,5 +84,19 @@ public class SystemService implements ISystemService {
         catch (Exception e){
             throw new IllegalArgumentException("Error during rating product: " + e.getMessage());
         }
+    }
+    @Override
+    public boolean userAccessStore(int userId, int storeId) {
+    try {
+        StoreDTO s = this.storeService.viewStore(storeId);
+        if(s.isOpen()){
+            return true;
+        }
+
+    } catch (Exception e) {
+        // Handle exception if needed
+        System.out.println("Error during user access store: " + e.getMessage());
+    }
+    return false;
     }
 }
