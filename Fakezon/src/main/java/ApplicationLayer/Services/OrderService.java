@@ -119,4 +119,15 @@ public class OrderService implements IOrderService{
             throw e;
         }
     }
+
+    @Override
+    public List<Integer> getOrdersByStoreId(int storeId) {
+        List<Integer> orderIds = new ArrayList<>();
+        for (IOrder order : orderRepository.getAllOrders()) {
+            if (order.getStoreId() == storeId) {
+                orderIds.add(order.getId());
+            }
+        }
+        return orderIds;
+    }
 }

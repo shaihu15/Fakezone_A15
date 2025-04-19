@@ -16,4 +16,6 @@ public interface IOrderService {
     int getOrderUserId(int orderId);
     int getOrderStoreId(int orderId);
     List<Integer> getOrderProductIds(int orderId);
+    List<Integer> getOrdersByStoreId(int storeId);
+
 }
