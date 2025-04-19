@@ -69,7 +69,14 @@ public class StoreDTO {
     public Collection<StoreProductDTO> getStoreProducts() {
         return storeProducts;
     }
-
+    public StoreProductDTO getStoreProductById(int productId){
+        for (StoreProductDTO sp : storeProducts) {
+            if (sp.getProductId() == productId) {
+                return sp;
+            }
+        }
+        throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: " + storeId);
+    }
     // public Collection<Integer> getStoreOwners() {
     //     return storeOwners;
     // }
