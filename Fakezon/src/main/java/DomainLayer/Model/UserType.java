@@ -2,23 +2,23 @@ package DomainLayer.Model;
 
 import java.util.HashMap;
 
+import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Interfaces.IUserType;
 
 abstract class UserType implements IUserType {
-    protected User user;
+    Cart cart;
+    public UserType(){
+        this.cart = new Cart();
+    }
+    abstract public boolean addToCart(int storeID,ProductDTO product);
 
-    public UserType(User user){
-        this.user = user;
+    public void clearCart(){
+        cart.clear();
     }
-    public void addToCart(){
-        //@TODO
+    public Cart getCart(){
+        return cart;
     }
-
-    public User getUser(){
-        return user;
-    }
-    
     abstract public boolean logout();
     abstract public boolean isRegistered();
     abstract public void addRole(int storeID, IRegisteredRole role); // system admin (storeID = -1)or store owner
