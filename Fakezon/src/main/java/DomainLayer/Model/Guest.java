@@ -68,4 +68,7 @@ public class Guest extends UserType{
     public HashMap<Integer, Order> getOrders() {
         throw new UnsupportedOperationException("Guest dones't have purchase history");
     }
+    public boolean isLoggedIn() {
+        throw new UnsupportedOperationException("Guest cannot be logged in");
+    }
 }

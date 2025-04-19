@@ -14,6 +14,7 @@ public interface IUserService {
     User updateUser(User user);
     void logout(int userID);
     void login(int userID, String password);
+    boolean isUserLoggedIn(int userID);
     void addRole(int userID, int storeID, IRegisteredRole role);
     void removeRole(int userID, int storeID);
     IRegisteredRole getRoleByStoreID(int userID, int storeID);

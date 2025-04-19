@@ -72,6 +72,9 @@ public class Registered extends UserType{
     public HashMap<Integer, Order> getOrders() {
         return orders; // userID -> Order
     }
+    public boolean isLoggedIn() {
+        return isLoggedIn;
+    }
 
 
 }

@@ -20,4 +20,5 @@ public interface IUserType {
     IRegisteredRole getRoleByStoreID(int storeID);
     HashMap<Integer, IRegisteredRole> getAllRoles();
     HashMap<Integer, Order> getOrders(); // userID -> Order
+    boolean isLoggedIn();
 }

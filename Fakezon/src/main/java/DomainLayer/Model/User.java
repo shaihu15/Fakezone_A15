@@ -54,4 +54,7 @@ public class User {
     public HashMap<Integer, Order> getOrders() {
         return userType.getOrders();
     }
+    public boolean isLoggedIn() {
+        return userType.isLoggedIn();
+    }
 }

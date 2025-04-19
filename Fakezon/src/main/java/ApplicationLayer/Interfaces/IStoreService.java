@@ -52,5 +52,6 @@ public interface IStoreService {
 
     void addStoreManager(int storeId, int requesterId, int newManagerId);
     void removeStoreManager(int storeId, int requesterId, int managerId);
+    int openStore(int userId, String storeName);//return storeId
 
 }
