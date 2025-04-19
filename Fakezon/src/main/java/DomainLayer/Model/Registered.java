@@ -12,8 +12,8 @@ public class Registered extends UserType{
     private boolean isLoggedIn;
     private int userID;
     private String email;
-    private HashMap<Integer, Order> orders; // userID -> Order
-    private HashMap<Integer,List<Integer>> productsPurchase; // userID -> List of productIDs
+    private HashMap<Integer, Order> orders; // orderId -> Order
+    private HashMap<Integer,List<Integer>> productsPurchase; // storeId -> List of productIDs
     private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public Registered(String email){

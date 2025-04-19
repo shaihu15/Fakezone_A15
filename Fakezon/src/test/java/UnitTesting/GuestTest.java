@@ -17,72 +17,72 @@ public class GuestTest {
     }
 
     @Test
-    void testIsRegistered() {
+    void givenNonValidUser_whenIsRegistered_returnFalse() {
         assertFalse(guestUser.isRegistered(), "Guest user should not be registered");
     }
 
     @Test
-    void testLogout() {
+    void givenNonValidUser_whenLogout_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.logout();
         }, "Guest cannot be logged out");
     }
     @Test
-    void testAddRole() {
+    void givenNonValidUser_whenAddRole_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.addRole(1, mock(StoreOwner.class));
         }, "Guest cannot have role");
     }
     @Test
-    void testRemoveRole() {
+    void givenNonValidUser_whenRemoveRole_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.removeRole(1);
         }, "Guest cannot have role");
     }
     @Test
-    void testGetRoleByStoreID() {
+    void givenNonValidUser_whenGetRoleByStoreID_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.getRoleByStoreID(1);
         }, "Guest cannot have role");
     }
     @Test
-    void testGetAllRoles() {
+    void givenNonValidUser_whenGetAllRoles_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.getAllRoles();
         }, "Guest cannot have role");
     }
     @Test
-    void testGetUserID() {
+    void givenNonValidUser_whenGetUserID_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.getUserID();
         }, "Guest cannot have user ID");
     }
     @Test
-    void testGetEmail() {
+    void givenNonValidUser_whenGetEmail_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.getEmail();
         }, "Guest cannot have email");
     }
     @Test
-    void testDidPurchaseStore() {
+    void givenNonValidUser_whenDidPurchaseStore_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.didPurchaseStore(1);
         }, "Guest doesn't have purchase history");
     }
     @Test
-    void testDidPurchaseProduct() {
+    void givenNonValidUser_whenDidPurchaseProduct_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.didPurchaseProduct(1, 1);
         }, "Guest doesn't have purchase history");
     }
     @Test
-    void testGetOrders() {
+    void givenNonValidUser_whenGetOrders_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.getOrders();
         }, "Guest doesn't have orders");
     }
     @Test
-    void testIsLoggedIn() {
+    void givenNonValidUser_whenIsLoggedIn_shouldThrow() {
         assertThrows(UnsupportedOperationException.class, () -> {
             guestUser.isLoggedIn();
         }, "Guest cannot be logged in");

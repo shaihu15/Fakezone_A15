@@ -22,31 +22,31 @@ public class RegisteredTest {
     }
 
     @Test
-    void testIsRegistered() {
+    void givenValidUser_whenIsRegistered_returnTrue() {
         assertTrue(registeredUser.isRegistered(), "Registered user should be registered");
     }
     @Test
-    void testLogout() {
+    void givenValidUser_whenLogout_returnTrue() {
         assertTrue(registeredUser.logout(), "Logout should be successful");
         assertFalse(registeredUser.isLoggedIn(), "User should not be logged in after logout");
     }
     @Test
-    void testGetEmail() {
+    void givenValidUser_whenGetEmail_returnTrue() {
         assertEquals(email, registeredUser.getEmail(), "Email should match the one set during registration");
     }
     @Test
-    void testDidPurchaseStore() {
+    void givenNonExistingPurchaseStore_whenDidPurchaseStore_ShouldFalse() {
         assertFalse(registeredUser.didPurchaseStore(1), "User should not have purchased any store initially");
     }
     @Test
-    void addRole_ValidStoreID_ShouldSucceed() {
+    void givenValidStoreID_whenAddRole_ThenRolesAreUpdated() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
         registeredUser.addRole(storeID, role);
         assertNotNull(registeredUser.getRoleByStoreID(storeID), "Role should be added successfully");
     }
     @Test
-    void removeRole_ValidStoreID_ShouldSucceed() {
+    void givenValidStoreID_whenRemoveRole_ShouldSucceed() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
         registeredUser.addRole(storeID, role);
@@ -54,7 +54,7 @@ public class RegisteredTest {
         assertNull(registeredUser.getRoleByStoreID(storeID), "Role should be removed successfully");
     }
     @Test
-    void removeRole_InvalidStoreID_ShouldThrow() {
+    void givenInvalidStoreID_whenRemoveRole_ShouldThrow() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
         registeredUser.addRole(storeID, role);
@@ -62,14 +62,14 @@ public class RegisteredTest {
         assertThrows(IllegalArgumentException.class, () -> registeredUser.removeRole(storeID), "Should throw exception for non-existing role");
     }
     @Test
-    void testGetRoleByStoreID() {
+    void givenRoles_whenGetRoleByStoreID_returnRole() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
         registeredUser.addRole(storeID, role);
         assertEquals(role, registeredUser.getRoleByStoreID(storeID), "Should return the correct role for the given store ID");
     }
     @Test
-    void testGetAllRoles() {
+    void givenRoles_whenGetAllRoles_returnRoles() {
         int storeID1 = 1;
         int storeID2 = 2;
         StoreManager role1 = mock(StoreManager.class);
@@ -79,23 +79,23 @@ public class RegisteredTest {
         assertEquals(2, registeredUser.getAllRoles().size(), "Should return all roles");
     }
     @Test
-    void testGetOrders() {
+    void givenNoOrder_whenGetOrders_returnEmpty() {
         assertNotNull(registeredUser.getOrders(), "Orders should not be null");
     }
     @Test
-    void testIsLoggedIn() {
+    void givenLogedoutUser_isLoggedIn_returnFalse() {
         assertTrue(registeredUser.isLoggedIn(), "User should be logged in initially");
         registeredUser.logout();
         assertFalse(registeredUser.isLoggedIn(), "User should not be logged in after logout");
     }
     @Test
-    void testDidPurchaseProduct_shouldFalse() {
+    void givenNonExistingPurchaseProduct_whenDidPurchaseProduct_ReturnFalse() {
         int storeID = 1;
         int productID = 1;
         assertFalse(registeredUser.didPurchaseProduct(storeID, productID), "User should not have purchased any product initially");
     }
     @Test
-    void testDidPurchaseProduct_shouldTrue() {
+    void givenValidPurchaseProduct_whenDidPurchaseProduct_ReturnTrue() {
         int storeID = 1;
         int productID = 1;
         List<Integer> purchasedProducts = List.of(productID);
