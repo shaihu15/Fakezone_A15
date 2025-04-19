@@ -41,8 +41,8 @@ public class StoreTest {
     void closeStore_NotFounder_ShouldThrow() {
         int nonFounderId = 99;
 
-        IllegalAccessError thrown = assertThrows(
-                IllegalAccessError.class,
+        IllegalArgumentException thrown = assertThrows(
+            IllegalArgumentException.class,
                 () -> store.closeStore(nonFounderId),
                 "Expected closeStore to throw, but it didn't"
         );
