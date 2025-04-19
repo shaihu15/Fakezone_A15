@@ -8,5 +8,4 @@ public interface IStoreRepository {
     Collection<Store> getAllStores();
     void addStore(Store store);
     void delete(int storeID);
-    int getNextStoreId();
 }

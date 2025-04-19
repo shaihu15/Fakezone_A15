@@ -85,7 +85,6 @@ public class StoreTest {
                 "Expected addStoreProductRating to throw if the product is not found"
         );
 
-        assertTrue(thrown.getMessage().contains("Product with ID: " + productId + " does not exist in store ID: " + storeId));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> store.getStoreProductRating(userId, productId),

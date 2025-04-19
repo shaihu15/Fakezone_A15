@@ -40,13 +40,6 @@ public class StoreRepository implements IStoreRepository {
         stores.remove(storeID);
     }
 
-    @Override
-    public int getNextStoreId() {
-        // Implementation to get the next store ID
-        return stores.size() + 1; // Placeholder logic for generating a new store ID
-
-    }
-
 
     @Override
     public Store findByName(String storeName) {
