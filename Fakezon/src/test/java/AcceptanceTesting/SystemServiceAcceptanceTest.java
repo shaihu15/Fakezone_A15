@@ -1,18 +1,15 @@
 package AcceptanceTesting;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+
+import ApplicationLayer.Services.SystemService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import ApplicationLayer.Services.SystemService;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.User;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class SystemServiceAcceptanceTest {
     private SystemService systemService;
@@ -26,14 +23,25 @@ public class SystemServiceAcceptanceTest {
     private int store2Id = 2;
     private int founder2Id = 20;
 
-
     @BeforeEach
     void setUp() {
-        storeRepository = Mockito.mock(IStoreRepository.class);
-        userRepository = Mockito.mock(IUserRepository.class);
-        productRepository = Mockito.mock(IProductRepository.class);
+        storeRepository = mock(IStoreRepository.class);
+        userRepository = mock(IUserRepository.class);
+        productRepository = mock(IProductRepository.class);
         systemService = new SystemService(storeRepository, userRepository, productRepository);
+
+        store1 = new Store("Test Store 1", founder1Id);
+        store2 = new Store("Test Store 2", founder2Id);
+
     }
 
-    
+    @Test
+    void testUserAccessStore() {
+        // after regestration will be solved we can test this method
+        User user1 = new User();
+        // assertTrue(systemService.userAccessStore(0, store1Id));
+        // assertFalse(systemService.userAccessStore(-1, store1Id));
+        // assertFalse(systemService.userAccessStore(user1.getUserID(), -1));
+    }
+
 }
