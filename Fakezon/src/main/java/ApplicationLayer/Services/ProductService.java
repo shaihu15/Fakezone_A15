@@ -91,5 +91,21 @@ public class ProductService implements IProductService {
         } 
     }
 
+    @Override
+    public void addProductsToStore(int storeId, Set<Integer> productsIds){
+        try {
+            for (Integer productId : productsIds) {
+                IProduct product = productRepository.getProductById(productId);
+                product.addStore(storeId);
+                productRepository.updateProduct(product);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to add products to store, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Products with ids {} were added to store with id {}", productsIds, storeId);
+        }
+    }
+
   
 }

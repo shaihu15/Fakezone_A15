@@ -11,4 +11,5 @@ public interface IProductService {
     void deleteProduct(int productId);
     ProductDTO viewProduct(int productId); 
     List<ProductDTO> searchProducts(String keyword);
+    void addProductsToStore(int storeId, Set<Integer> productsIds);
 }
