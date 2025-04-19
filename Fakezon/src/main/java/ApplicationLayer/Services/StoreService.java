@@ -193,9 +193,10 @@ public class StoreService implements IStoreService {
             logger.error("openStore - Store name already exists: " + storeName);
             throw new IllegalArgumentException("Store name already exists");
         }
-        int storeId = storeRepository.getNextStoreId();
+        Store store = new Store(storeName, userId);
+        int storeId = store.getId();
         logger.info("openStore - New store ID: " + storeId);
-        Store store = new Store(storeName,storeId, userId);
+
         storeRepository.addStore(store);
         logger.info("Store opened: " + storeName + " by user: " + userId);
         return storeId;

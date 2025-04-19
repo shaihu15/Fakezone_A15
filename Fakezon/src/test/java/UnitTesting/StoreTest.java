@@ -11,7 +11,7 @@ public class StoreTest {
 
     @BeforeEach
     void setUp(){
-        store = new Store("Test Store", storeId, founderId);
+        store = new Store("Test Store", founderId);
     }
 
     @Test
