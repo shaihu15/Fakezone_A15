@@ -2,6 +2,7 @@ package ApplicationLayer.Interfaces;
 
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 import DomainLayer.Interfaces.IAuthenticator;
