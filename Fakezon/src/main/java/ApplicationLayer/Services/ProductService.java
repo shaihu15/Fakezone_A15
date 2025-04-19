@@ -114,7 +114,12 @@ public class ProductService implements IProductService {
                 IProduct product = productRepository.getProductById(productId);
                 product.removeStore(storeId);
                 productRepository.updateProduct(product);
+                List<Integer> storesIds = product.getStoresIds();
+                if (storesIds.isEmpty()) {
+                    productRepository.deleteProduct(productId);
+                }
             }
+            
         } catch (IllegalArgumentException e) {
             logger.error("While trying to remove products to store, recived error {}", e);
             throw e;
