@@ -42,4 +42,33 @@ public class Guest extends UserType{
     public HashMap<Integer, IRegisteredRole> getAllRoles() {
         throw new UnsupportedOperationException("Guest cannot have role");
     }
+
+    @Override
+    public int getUserID() {
+        throw new UnsupportedOperationException("Guest cannot have user ID");
+    }
+
+    @Override
+    public String getEmail() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Guest cannot have email");
+    }
+
+    @Override
+    public boolean didPurchaseStore(int storeID) {
+        throw new UnsupportedOperationException("Guest dones't have purchase history");
+    }
+
+    @Override
+    public boolean didPurchaseProduct(int storeID, int productID) {
+        throw new UnsupportedOperationException("Guest dones't have purchase history");
+    }
+
+    @Override
+    public HashMap<Integer, Order> getOrders() {
+        throw new UnsupportedOperationException("Guest dones't have purchase history");
+    }
+    public boolean isLoggedIn() {
+        throw new UnsupportedOperationException("Guest cannot be logged in");
+    }
 }
