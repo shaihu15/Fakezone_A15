@@ -70,23 +70,34 @@ public class UserService implements IUserService {
     }
     @Override
     public void login(int userID, String password) {
-        Optional<User> optionalUser = userRepository.findById(userID);
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
 
-        if (optionalUser.isEmpty()) {
-            logger.warn("Login failed: User with ID {} not found", userID);
-            throw new IllegalArgumentException("User not found");
+            if (optionalUser.isEmpty()) {
+                logger.warn("Login failed: User with ID {} not found", userID);
+                throw new IllegalArgumentException("User not found");
+            }
+
+            User user = optionalUser.get();
+
+            if (!user.getPassword().equals(password)) {
+                logger.warn("Login failed: Incorrect password for user ID {}", userID);
+                throw new IllegalArgumentException("Incorrect password");
+            }
+
+            logger.info("User with ID {} logged in successfully", userID);
+            // TODO: Add login-related logic here (e.g., session handling)
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Login failed (user error): " + e.getMessage());
+            logger.error("Error during login: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during login for user ID {}: {}", userID, e.getMessage());
+            throw new RuntimeException("Unexpected error during login");
         }
-
-        User user = optionalUser.get();
-
-        if (!user.getPassword().equals(password)) {
-            logger.warn("Login failed: Incorrect password for user ID {}", userID);
-            throw new IllegalArgumentException("Incorrect password");
-        }
-
-        logger.info("User with ID {} logged in successfully", userID);
-        //TODO Here you can add any logic related to logging in (e.g., session management)
     }
+
     @Override
     public void addRole(int userID, int storeID, IRegisteredRole role) {
         Optional<User> user = userRepository.findById(userID);
