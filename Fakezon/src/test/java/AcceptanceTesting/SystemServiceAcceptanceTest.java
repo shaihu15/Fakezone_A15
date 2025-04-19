@@ -3,18 +3,14 @@ package AcceptanceTesting;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import ApplicationLayer.Services.SystemService;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 
 import ApplicationLayer.Services.SystemService;
+import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
+import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.User;
 
@@ -37,8 +33,8 @@ public class SystemServiceAcceptanceTest {
         productRepository = mock(IProductRepository.class);
         systemService = new SystemService(storeRepository, userRepository, productRepository);
 
-        store1 = new Store("Test Store 1", store1Id, founder1Id);
-        store2 = new Store("Test Store 2", store2Id, founder2Id);
+        store1 = new Store("Test Store 1", founder1Id);
+        store2 = new Store("Test Store 2", founder2Id);
 
     }
 
