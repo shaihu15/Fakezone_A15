@@ -48,5 +48,10 @@ public class Registered extends UserType{
         return roles; // system admin (storeID = -1)or store owner
     }
 
+    @Override
+    public boolean isLoggedIn() {
+        return isLoggedIn;
+    }
+
 
 }
