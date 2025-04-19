@@ -1,6 +1,8 @@
 package ApplicationLayer.Interfaces;
 
 
+import java.util.Set;
+
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -30,4 +32,12 @@ public interface ISystemService {
     void initialize();
 
     void shutdown();
+
+    ProductDTO getProduct(int productId);
+
+    int addProduct(String productName, String productDescription);
+
+    void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
+
+    void deleteProduct(int productId);
 }

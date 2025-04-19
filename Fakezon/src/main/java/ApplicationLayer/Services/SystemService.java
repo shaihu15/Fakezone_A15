@@ -1,8 +1,9 @@
 package ApplicationLayer.Services;
 
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -162,6 +163,68 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during getting product: " + e.getMessage());
         }
         return null;
+    }
+
+    @Override
+    public ProductDTO getProduct(int productId) {
+        try {
+            logger.info("System service - user trying to view procuct " + productId);
+            return this.productService.viewProduct(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting product: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public int addProduct(String productName, String productDescription) {
+        try {
+            logger.info("System service - user trying to add procuct " + productName);
+            return this.productService.addProduct(productName, productDescription);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding product: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    @Override
+    public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
+        try {
+            logger.info("System service - user trying to update procuct " + productId);
+            this.productService.updateProduct(productId, productName, productDescription, storesIds);
+        } catch (Exception e) {
+            logger.error("System Service - Error during updating product: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteProduct(int productId) {
+        try {
+            logger.info("System service - user trying to delete procuct " + productId);
+            this.productService.deleteProduct(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during deleting product: " + e.getMessage());
+        }try {
+            logger.info("System service - user trying to delete procuct " + productId);
+            this.productService.deleteProduct(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during deleting product: " + e.getMessage());
+        }try {
+            logger.info("System service - user trying to delete procuct " + productId);
+            this.productService.deleteProduct(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during deleting product: " + e.getMessage());
+        }try {
+            logger.info("System service - user trying to delete procuct " + productId);
+            this.productService.deleteProduct(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during deleting product: " + e.getMessage());
+        }try {
+            logger.info("System service - user trying to delete procuct " + productId);
+            this.productService.deleteProduct(productId);
+        } catch (Exception e) {
+            logger.error("System Service - Error during deleting product: " + e.getMessage());
+        }
     }
 
 }
