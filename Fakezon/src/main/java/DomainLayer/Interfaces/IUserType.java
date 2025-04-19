@@ -2,13 +2,19 @@ package DomainLayer.Interfaces;
 
 import java.util.HashMap;
 
+import org.springframework.security.access.method.P;
+
+import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.Order;
-import DomainLayer.Model.User;
 
 public interface IUserType {
-    User getUser();
-    void addToCart();
+    //cart
+    boolean addToCart(int storeID, ProductDTO product);
+    void clearCart();
+    Cart getCart();
+    
     boolean logout();
     boolean isRegistered();
     void addRole(int storeID, IRegisteredRole role);

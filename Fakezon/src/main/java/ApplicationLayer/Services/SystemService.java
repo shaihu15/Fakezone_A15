@@ -3,9 +3,11 @@ package ApplicationLayer.Services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -115,11 +117,30 @@ public class SystemService implements ISystemService {
         }
     }
 
+    public StoreDTO userAccessStore(int userId, int storeId) {
+        try {
+            logger.info("System Service - User accessed store: " + storeId + " by user: " + userId);
+            StoreDTO s = this.storeService.viewStore(storeId);
+            if (s.isOpen()) {
+                return s;
+            }
+            logger.error("System Service - Store is closed: " + storeId);
+
+        } catch (Exception e) {
+            // Handle exception if needed
+            logger.error("System Service - Error during user access store: " + e.getMessage());
+            return null;
+        }
+        return null;
+    }
+
     @Override
     public void openStore(int userId, String storeName) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
+
                 int storeId = this.storeService.openStore(userId, storeName);
+
                 this.userService.addRole(userId, storeId, new StoreFounder());
                 logger.info("System Service - User opened store: " + storeId + " by user: " + userId + " with name: "
                         + storeName);

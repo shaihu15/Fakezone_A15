@@ -6,18 +6,20 @@ import java.util.List;
 import DomainLayer.IRepository.IRegisteredRole;
 
 public class User {
-    private Cart cart;
     private UserType userType; // Guest or Registered
 
 
     public User() {
-        this.cart = new Cart();
-        this.userType = new Guest(this); // default state is Guest
+        this.userType = new Guest(); // default state is Guest
     }
 
     public Cart getCart() {
-        return cart;
+        return userType.getCart();
     }
+    public void clearCart() {
+        userType.clearCart();
+    }
+
     public boolean didPurchaseStore(int storeID) {
         return userType.didPurchaseStore(storeID);
     }
