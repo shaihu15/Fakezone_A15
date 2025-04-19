@@ -74,7 +74,7 @@ public class Store {
             purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
         }
         else{
-            throw new IllegalAccessError("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+            throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }    }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
@@ -82,7 +82,7 @@ public class Store {
             discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
         }
         else{
-            throw new IllegalAccessError("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+            throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }
     }
     
@@ -103,7 +103,7 @@ public class Store {
             return storeOwners;
         }
         else{
-            throw new IllegalAccessError("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+            throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }
     public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int requesterId){
@@ -111,25 +111,30 @@ public class Store {
             return storeManagers;
         }
         else{
-            throw new IllegalAccessError("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+            throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
-    }
-    public List<Integer> getStoreManagers() {
-        return new ArrayList<>(storeManagers.keySet());
     }
     //TO DO: Send Approval Request
     public void addStoreOwner(int appointor, int appointee){
+        if(!storeOwners.contains(appointor)){
+            throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
+        }
         if(storeOwners.contains(appointee)){
             throw new IllegalArgumentException("User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
         }
-        if(pendingOwners.containsKey(appointee)){
+        // relevant after notifs
+        /*if(pendingOwners.containsKey(appointee)){
             throw new IllegalArgumentException("Already waiting for User with ID: " + appointee + "'s approval");
-        }
-        if(!storeOwners.contains(appointor)){
-            throw new IllegalAccessError("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
-        }
+        }*/
         //pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS IMPLEMENTED
-        
+        if(storeManagers.containsKey(appointee)){
+            Node appointeeNode = rolesTree.getNode(appointee);
+            Node appointorNode = rolesTree.getNode(appointor);
+            if(!appointorNode.getChildren().contains(appointeeNode)){
+                throw new IllegalArgumentException("Only the manager with id: " + appointee + "'s appointor can reassign them as Owner");
+            }
+            storeManagers.remove(appointee); // how should reappointing a manager affect the tree?? right now - only their father can re-assign them
+        }
         storeOwners.add(appointee);
         rolesTree.addNode(appointor, appointee);
     }
@@ -144,6 +149,20 @@ public class Store {
     //     pendingOwners.remove(appointee);
     // }
     
+    public void addStoreManager(int appointor, int appointee, List<StoreManagerPermission> perms){
+        if(!storeOwners.contains(appointor)){
+            throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
+        }
+        if(storeManagers.containsKey(appointee)){
+            throw new IllegalArgumentException("User with ID: " + appointee + " is already a store manager for store with ID: " + storeID);
+        }
+        if(perms == null || perms.isEmpty()){
+            throw new IllegalArgumentException("Permissions list is empty");
+        }
+        storeManagers.put(appointee, perms);
+        rolesTree.addNode(appointor, appointee);
+    }
+
     public int getStoreFounderID() {
         return storeFounderID;
     }
@@ -156,7 +175,7 @@ public class Store {
             //TODO: ADD NOTIFICATIONS SENDING
         }
         else{
-            throw new IllegalAccessError("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
+            throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
         }
     }
     public StoreRating getStoreRatingByUser(int userID) {

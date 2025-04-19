@@ -28,7 +28,7 @@ class StoreServiceTest {
     void testCloseStore_Successful() {
         String storeName = "Test Store";
         int requesterId = 10;
-        int storeId = storeService.openStore(requesterId, storeName);
+        int storeId = storeService.addStore(requesterId, storeName);
         assertTrue(storeId > 0);
         Store store1 = storeRepository.findById(storeId);
         assertNotNull(store1);
@@ -54,7 +54,7 @@ class StoreServiceTest {
         String comment = "Great store!";
         String storeName = "Test Store";
         int requesterId = 10;
-        int storeId = storeService.openStore(requesterId, storeName);
+        int storeId = storeService.addStore(requesterId, storeName);
         assertTrue(storeId > 0);
         Store store1 = storeRepository.findById(storeId);
         assertNotNull(store1);
@@ -80,7 +80,7 @@ class StoreServiceTest {
         int requesterId = 5;
 
         assertNull(storeRepository.findByName(storeName));
-        int storeId = storeService.openStore(requesterId, storeName);
+        int storeId = storeService.addStore(requesterId, storeName);
         assertTrue(storeId > 0);
         Store store1 = storeRepository.findById(storeId);
         assertNotNull(store1);
@@ -93,12 +93,12 @@ class StoreServiceTest {
         int requesterId = 5;
 
         assertNull(storeRepository.findByName(OldStoreName));
-        int storeId = storeService.openStore(requesterId, OldStoreName);
+        int storeId = storeService.addStore(requesterId, OldStoreName);
         Store store = storeRepository.findById(storeId);
         assertNotNull(store);
         String newStoreName = store.getName();
         assertThrows(IllegalArgumentException.class, () -> {
-            storeService.openStore(requesterId, newStoreName);
+            storeService.addStore(requesterId, newStoreName);
         });
     }
 

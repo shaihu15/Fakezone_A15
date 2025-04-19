@@ -1,8 +1,10 @@
 package ApplicationLayer.Interfaces;
 
+import java.util.HashMap;
 import java.util.List;
 
 import ApplicationLayer.DTO.StoreDTO;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.Product;
 import DomainLayer.Model.PurchasePolicy;
@@ -11,7 +13,7 @@ import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 
 public interface IStoreService {
-    int addStore(String name, int founderId);
+    int addStore(int userId, String storeName);
     int updateStore(int storeId, int requesterId, String name);
     void deleteStore(int storeId, int requesterId);
 
@@ -49,9 +51,10 @@ public interface IStoreService {
     // --- Ownership & Management ---
     void addStoreOwner(int storeId, int requesterId, int newOwnerId);
     void removeStoreOwner(int storeId, int requesterId, int ownerId);
+    List<Integer> getStoreOwners(int storeId, int requesterId);
 
-    void addStoreManager(int storeId, int requesterId, int newManagerId);
+    void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms);
     void removeStoreManager(int storeId, int requesterId, int managerId);
-    int openStore(int userId, String storeName);//return storeId
+    HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId);
 
 }

@@ -134,7 +134,7 @@ public class SystemService implements ISystemService {
     public void openStore(int userId, String storeName) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
-                int storeId = this.storeService.openStore(userId, storeName);
+                int storeId = this.storeService.addStore(userId, storeName);
                 this.userService.addRole(userId, storeId, new StoreFounder());
                 logger.info("System Service - User opened store: " + storeId + " by user: " + userId + " with name: "
                         + storeName);
