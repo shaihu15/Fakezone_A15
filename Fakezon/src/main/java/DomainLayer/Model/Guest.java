@@ -2,11 +2,12 @@ package DomainLayer.Model;
 
 import java.util.HashMap;
 
+import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 
 public class Guest extends UserType{
-    public Guest(User user){
-        super(user);
+    public Guest(){
+        super();
     }
 
     public boolean isRegistered(){
@@ -19,8 +20,7 @@ public class Guest extends UserType{
 
     @Override
     public boolean logout() {
-        user.getCart().clear(); // Clear the cart when logging out
-        return true; // Assuming logout is successful
+        throw new UnsupportedOperationException("Guest cannot be logged out");
     }
 
     @Override
@@ -71,4 +71,11 @@ public class Guest extends UserType{
     public boolean isLoggedIn() {
         throw new UnsupportedOperationException("Guest cannot be logged in");
     }
+
+    @Override
+    public boolean addToCart(int storeID, ProductDTO product) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addToCart'");
+    }
+
 }
