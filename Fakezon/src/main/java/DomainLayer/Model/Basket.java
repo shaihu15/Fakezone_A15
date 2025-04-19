@@ -21,7 +21,7 @@ public class Basket {
     public Store getStore() {
         return store;
     }
-
+    
     public List<IProduct> getProducts() {
         return products;
     }

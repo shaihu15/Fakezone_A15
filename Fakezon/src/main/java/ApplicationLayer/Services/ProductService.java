@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
@@ -39,9 +40,9 @@ public class ProductService implements IProductService {
     }    
 
     @Override
-    public void updateProduct(int productId, String productName, String productDescription) {
+    public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
-            IProduct product = new Product(productId, productName, productDescription);
+            IProduct product = new Product(productId, productName, productDescription, storesIds);
             productRepository.updateProduct(product);
             
         } catch (IllegalArgumentException e) {

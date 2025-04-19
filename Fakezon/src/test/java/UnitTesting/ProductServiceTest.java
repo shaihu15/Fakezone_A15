@@ -8,7 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+
 
 import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IProductRepository;
@@ -33,7 +35,7 @@ public class ProductServiceTest {
 
     @Test
     void givenValidProductDetails_WhenUpdateProduct_ThenProductIsUpdated() {
-        productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription");
+        productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         verify(productRepository, times(1)).updateProduct(any(IProduct.class));
     }
 
@@ -41,7 +43,7 @@ public class ProductServiceTest {
     void givenNonExistingProduct_WhenUpdateProduct_ThenThrowsException() {
         doThrow(new IllegalArgumentException("Product not found")).when(productRepository).updateProduct(any(IProduct.class));
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription");
+            productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         });
         assertEquals("Product not found", exception.getMessage());
     }
