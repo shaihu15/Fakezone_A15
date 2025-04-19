@@ -29,6 +29,7 @@ public interface IUserType {
     HashMap<Integer, IRegisteredRole> getAllRoles();
     HashMap<Integer, Order> getOrders(); // userID -> Order
     boolean isLoggedIn();
+    String getPassword();
     void receivingMessageFromStore(int storeID, String message);
     void sendMessageToStore(int storeID, String message);
     List<SimpleEntry<Integer, String>> getMessagesFromUser(); // storeID -> message

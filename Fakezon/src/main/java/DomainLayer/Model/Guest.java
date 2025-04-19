@@ -81,6 +81,9 @@ public class Guest extends UserType{
     }
 
     @Override
+    public String getPassword(){
+        throw new UnsupportedOperationException("Guest cannot have password");
+    }
     public void sendMessageToStore(int storeID, String message) {
         throw new UnsupportedOperationException("Guest cannot send message to store");
     }
@@ -100,5 +103,4 @@ public class Guest extends UserType{
         throw new UnsupportedOperationException("Guest cannot keep messages");
 
     }
-
 }

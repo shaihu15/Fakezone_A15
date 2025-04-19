@@ -59,6 +59,10 @@ public class User {
     public boolean isLoggedIn() {
         return userType.isLoggedIn();
     }
+
+    public String getPassword(){
+        return userType.getPassword();
+    }
     public void sendMessageToStore(int storeID, String message) {
         userType.sendMessageToStore(storeID, message);
     }

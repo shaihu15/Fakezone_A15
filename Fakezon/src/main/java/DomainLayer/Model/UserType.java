@@ -28,10 +28,12 @@ abstract class UserType implements IUserType {
     abstract public IRegisteredRole getRoleByStoreID(int storeID); // system admin (storeID = -1)or store owner
     abstract public HashMap<Integer, IRegisteredRole> getAllRoles(); // system admin (storeID = -1)or store owner
     abstract public boolean isLoggedIn();
+    abstract public String getPassword();
     abstract public void sendMessageToStore(int storeID, String message);
     abstract public void receivingMessageFromStore(int storeID, String message);
     abstract public List<SimpleEntry<Integer, String>> getMessagesFromUser(); // storeID -> message
     abstract public List<SimpleEntry<Integer, String>> getMessagesFromStore(); // storeID -> message
+
 
 
 }

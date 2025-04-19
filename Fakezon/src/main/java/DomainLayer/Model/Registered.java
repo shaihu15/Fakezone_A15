@@ -16,16 +16,18 @@ public class Registered extends UserType{
     private boolean isLoggedIn;
     private int userID;
     private String email;
+    private String password;
     private HashMap<Integer, Order> orders; // orderId -> Order
     private HashMap<Integer,List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
 
-    public Registered(String email){
+    public Registered(String email, String password){
         super();
         this.userID = idCounter.incrementAndGet(); // auto-increment userID
         this.email = email;
+        this.password = password;
         this.orders = new HashMap<>();
         this.productsPurchase = new HashMap<>();
         this.roles = new HashMap<>();
@@ -108,4 +110,9 @@ public class Registered extends UserType{
 		throw new UnsupportedOperationException("Unimplemented method 'addToCart'");
         //add product to productsPurchase
 	}
+
+    @Override
+    public String getPassword(){
+        return password;
+    }
 }
