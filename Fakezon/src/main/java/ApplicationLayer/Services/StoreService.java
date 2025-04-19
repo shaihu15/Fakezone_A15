@@ -6,10 +6,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import DomainLayer.Enums.StoreManagerPermission;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -24,17 +25,32 @@ public class StoreService implements IStoreService {
     public StoreService(IStoreRepository storeRepository) {
         this.storeRepository = storeRepository;
     }
+    //should store service catch the errors? who's printing to console??
     @Override
     public void addStoreOwner(int storeId, int requesterId, int newOwnerId){
-        try{
-            Store store = storeRepository.findById(storeId);
-            if (store == null) {
-                throw new IllegalArgumentException("Store not found");
-            }
-            store.addStoreOwner(requesterId, newOwnerId);
-        }catch (Exception e){
-            System.out.println("Error doring add store owner: " + e.getMessage());
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            throw new IllegalArgumentException("Store not found");
         }
+        store.addStoreOwner(requesterId, newOwnerId);
+    }
+
+    @Override
+    public List<Integer> getStoreOwners(int storeId, int requesterId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.getStoreOwners(requesterId);
+    }
+
+    @Override
+    public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.getStoreManagers(requesterId);
     }
     // --- Store-related DTO Conversions ---
     private StoreDTO toStoreDTO(Store store) {
@@ -175,7 +191,13 @@ public class StoreService implements IStoreService {
     public void removeStoreOwner(int storeId, int requesterId, int ownerId) {}
 
     @Override
-    public void addStoreManager(int storeId, int requesterId, int newManagerId) {}
+    public void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.addStoreManager(requesterId, newManagerId, perms);
+    }
 
     @Override
     public void removeStoreManager(int storeId, int requesterId, int managerId) {}
