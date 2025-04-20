@@ -275,26 +275,6 @@ public class SystemService implements ISystemService {
             this.productService.deleteProduct(productId);
         } catch (Exception e) {
             logger.error("System Service - Error during deleting product: " + e.getMessage());
-        }try {
-            logger.info("System service - user trying to delete procuct " + productId);
-            this.productService.deleteProduct(productId);
-        } catch (Exception e) {
-            logger.error("System Service - Error during deleting product: " + e.getMessage());
-        }try {
-            logger.info("System service - user trying to delete procuct " + productId);
-            this.productService.deleteProduct(productId);
-        } catch (Exception e) {
-            logger.error("System Service - Error during deleting product: " + e.getMessage());
-        }try {
-            logger.info("System service - user trying to delete procuct " + productId);
-            this.productService.deleteProduct(productId);
-        } catch (Exception e) {
-            logger.error("System Service - Error during deleting product: " + e.getMessage());
-        }try {
-            logger.info("System service - user trying to delete procuct " + productId);
-            this.productService.deleteProduct(productId);
-        } catch (Exception e) {
-            logger.error("System Service - Error during deleting product: " + e.getMessage());
         }
     }
 
