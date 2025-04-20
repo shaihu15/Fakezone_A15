@@ -43,8 +43,6 @@ public interface ISystemService {
 
     ProductDTO getProduct(int productId);
 
-    int addProduct(String productName, String productDescription);
-
     void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
 
     void deleteProduct(int productId);

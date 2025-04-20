@@ -247,8 +247,7 @@ public class SystemService implements ISystemService {
         return null;
     }
 
-    @Override
-    public int addProduct(String productName, String productDescription) {
+    private int addProduct(String productName, String productDescription) {
         try {
             logger.info("System service - user trying to add procuct " + productName);
             return this.productService.addProduct(productName, productDescription);
