@@ -57,4 +57,12 @@ public interface IStoreService {
     void removeStoreManager(int storeId, int requesterId, int managerId);
     HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId);
 
+    /**
+     * Sends a direct message to a store.
+     * @param storeId The ID of the store to send the message to.
+     * @param senderId The ID of the user sending the message.
+     * @param messageContent The content of the message.
+     * @throws IllegalArgumentException if the store is not found.
+     */
+    void sendMessageToStoreId(int storeId, int senderId, String messageContent);
 }

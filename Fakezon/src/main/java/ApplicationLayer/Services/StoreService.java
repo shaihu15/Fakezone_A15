@@ -17,6 +17,7 @@ import ApplicationLayer.Interfaces.IStoreService;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import DomainLayer.Model.Message; // Import the new Message class
 
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
@@ -219,6 +220,23 @@ public class StoreService implements IStoreService {
         storeRepository.addStore(store);
         logger.info("Store opened: " + storeName + " by user: " + userId);
         return storeId;
+    }
+
+    @Override
+    public void sendMessageToStoreId(int storeId, int senderId, String messageContent) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("sendMessageToStoreId - Store not found: {}", storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try {
+            store.receiveMessage(senderId, messageContent);
+            logger.info("Message sent from user {} to store {}", senderId, storeId);
+        } catch (Exception e) {
+            logger.error("Error sending message from user {} to store {}: {}", senderId, storeId, e.getMessage(), e);
+            // Consider re-throwing a more specific service-level exception if needed
+            throw new RuntimeException("Failed to send message to store", e);
+        }
     }
 
 }
