@@ -3,26 +3,26 @@ package DomainLayer.Model;
 import java.util.ArrayList;
 import java.util.List;
 
-import DomainLayer.Interfaces.IProduct;
+import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Basket {
-    private Store store;// maby just soreID?
-    private List<IProduct> products;
+    private int storeId;// maby just soreID?
+    private List<StoreProductDTO> products;
 
-    public Basket(Store store) {
-        this.store = store;
+    public Basket(int storeId) {
+        this.storeId = storeId;
         this.products = new ArrayList<>();
     }
 
-    public void addProduct(IProduct product) {
+    public void addProduct(StoreProductDTO product) {
         products.add(product);
     }
 
-    public Store getStore() {
-        return store;
+    public int getStoreID() {
+        return storeId;
     }
-    
-    public List<IProduct> getProducts() {
+
+    public List<StoreProductDTO> getProducts() {
         return products;
     }
 }
