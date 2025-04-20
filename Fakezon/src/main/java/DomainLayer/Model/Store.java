@@ -23,6 +23,7 @@ public class Store {
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager
     private Tree rolesTree;
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private final List<Message> pendingMessages; // List to hold incoming messages
 
     
     public Store(String name, int founderID) {
@@ -41,6 +42,7 @@ public class Store {
         this.storeOwners.add(founderID);
         this.pendingOwners = new HashMap<>(); //appointee : appointor
         this.storeManagers = new HashMap<>(); //HASH userID to store manager
+        this.pendingMessages =  new ArrayList<Message>(); // List to hold incoming messages
     }
 
     public String getName() {
@@ -205,6 +207,51 @@ public class Store {
             sum += rating.getRating();
         }
         return sum / Sratings.size();
+    }
+
+    /**
+     * Receives a message from a user and adds it to the pending messages list.
+     * @param senderId The ID of the user sending the message.
+     * @param content The content of the message.
+     */
+    public void receiveMessage(int senderId, String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Message content cannot be empty.");
+        }
+        Message newMessage = new Message(senderId, content);
+        this.pendingMessages.add(newMessage);
+        // Optional: Notify relevant store staff (owners/managers) about the new message
+        // This would likely involve an Observer pattern or similar mechanism.
+    }
+
+    /**
+     * Retrieves the list of pending messages for the store.
+     * Requires appropriate permissions (e.g., owner or manager).
+     * @param requesterId The ID of the user requesting the messages.
+     * @return A list of pending messages.
+     * @throws SecurityException if the requester does not have permission.
+     */
+    public List<Message> getPendingMessages(int requesterId) {
+        // Example permission check (adjust based on your actual permission logic)
+        if (!storeOwners.contains(requesterId) && !storeManagers.containsKey(requesterId)) { // Basic check, refine as needed
+             throw new SecurityException("User " + requesterId + " does not have permission to view messages for store " + storeID);
+        }
+        // Return a copy to prevent external modification of the internal list
+        return new ArrayList<>(pendingMessages);
+    }
+
+    // Optional: Method to mark a message as read
+    public void markMessageAsRead(int requesterId, int messageId) {
+         if (!storeOwners.contains(requesterId) && !storeManagers.containsKey(requesterId)) { // Basic check, refine as needed
+             throw new SecurityException("User " + requesterId + " does not have permission to modify messages for store " + storeID);
+        }
+        for (Message msg : pendingMessages) {
+            if (msg.getMessageId() == messageId) {
+                msg.markAsRead();
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Message with ID " + messageId + " not found.");
     }
 
 }
