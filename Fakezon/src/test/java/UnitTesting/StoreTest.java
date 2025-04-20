@@ -1,8 +1,12 @@
 package UnitTesting;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Store;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.lang.management.ManagementPermission;
+import java.util.List;
 
 public class StoreTest {
     private Store store;
@@ -91,6 +95,64 @@ public class StoreTest {
                 "Expected getStoreProductRating to throw if the product is not found"
         );
     }
+    
+    // Test receiving message from user
+    @Test
+    void receivingMessageFromUser_ValidMessage_ShouldSucceed() {
+        int userId = 1;
+        String message = "Hello, this is a test message.";
+
+        store.receivingMessage(userId, message);
+
+        assertEquals(message, store.getMessagesFromUsers(founderId).peek().getValue(), "Message should be received successfully");
+    }
+    // Test sending message to user
+    @Test
+    void sendMessageToUser_ValidOwner_ShouldSucceed() {
+        int userId = 1;
+        String message = "Hello, this is a test message.";
+        store.sendMessage(founderId,userId, message);
+
+        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(), "Message should be sent successfully");
+    }
+    @Test
+    void sendMessageToUser_ValidManagerPermission_ShouldSucceed() {
+        int userId = 1;
+        int managerId = 2;
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY)); // Assuming null permissions for simplicity
+        String message = "Hello, this is a test message.";
+        store.sendMessage(managerId,userId, message);
+
+        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(), "Message should be sent successfully");
+    }
+    @Test
+    void sendMessageToUser_InValidManagerPermission_ShouldThrow() {
+        int userId = 1;
+        int managerId = 2;
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.DISCOUNT_POLICY)); // Assuming null permissions for simplicity
+        String message = "Hello, this is a test message.";
+
+        IllegalArgumentException thrown = assertThrows(
+            IllegalArgumentException.class,
+            () -> store.sendMessage(managerId, userId, message),
+            "Expected sendMessage to throw if the owner is invalid"
+    );
+}
+    @Test
+    void sendMessageToUser_InvalidOwner_ShouldThrow() {
+        int invalidOwnerId = 99;
+        int userId = 1;
+        String message = "Hello, this is a test message.";
+
+        IllegalArgumentException thrown = assertThrows(
+                IllegalArgumentException.class,
+                () -> store.sendMessage(invalidOwnerId, userId, message),
+                "Expected sendMessage to throw if the owner is invalid"
+        );
+
+        assertTrue(store.getMessagesFromStore(founderId).isEmpty(), "No message should be sent if the owner is invalid");
+    }
+
 
 
 }

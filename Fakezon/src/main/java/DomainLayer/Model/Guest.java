@@ -1,6 +1,8 @@
 package DomainLayer.Model;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
+import java.util.List;
 
 import ApplicationLayer.DTO.ProductDTO;
 import DomainLayer.IRepository.IRegisteredRole;
@@ -69,7 +71,7 @@ public class Guest extends UserType{
         throw new UnsupportedOperationException("Guest dones't have purchase history");
     }
     public boolean isLoggedIn() {
-        throw new UnsupportedOperationException("Guest cannot be logged in");
+        return false; // Guest is never logged in
     }
 
     @Override
@@ -78,4 +80,27 @@ public class Guest extends UserType{
         throw new UnsupportedOperationException("Unimplemented method 'addToCart'");
     }
 
+    @Override
+    public String getPassword(){
+        throw new UnsupportedOperationException("Guest cannot have password");
+    }
+    public void sendMessageToStore(int storeID, String message) {
+        throw new UnsupportedOperationException("Guest cannot send message to store");
+    }
+
+    @Override
+    public void receivingMessageFromStore(int storeID, String message) {
+        throw new UnsupportedOperationException("Guest cannot receive message from store");
+    }
+
+    @Override
+    public List<SimpleEntry<Integer, String>> getMessagesFromUser() {
+        throw new UnsupportedOperationException("Guest cannot keep messages");
+    }
+
+    @Override
+    public List<SimpleEntry<Integer, String>> getMessagesFromStore() {
+        throw new UnsupportedOperationException("Guest cannot keep messages");
+
+    }
 }

@@ -1,9 +1,13 @@
 package ApplicationLayer.Services;
 
+import java.util.HashMap;
+import java.util.List;
+
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ApplicationLayer.DTO.OrderDTO;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -19,6 +23,7 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
@@ -136,7 +141,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void openStore(int userId, String storeName) {
+    public void addStore(int userId, String storeName) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
                 int storeId = this.storeService.addStore(userId, storeName);
@@ -154,6 +159,72 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    public HashMap<Integer, Order> getOrdersByUser(int userId) {
+        try {
+            if (!this.userService.isUserLoggedIn(userId)) {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+            HashMap<Integer, Order> orders = this.userService.getOrdersByUser(userId);
+            logger.info("System Service - User orders retrieved: " + userId);
+            return orders;
+        } catch (Exception e) {
+            logger.error("System Service - Error during retrieving user orders: " + e.getMessage());
+            throw new IllegalArgumentException("Error during retrieving user orders: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendMessageToStore(int userId, int storeId, String message) {
+        try{
+            if (this.userService.isUserLoggedIn(userId)) {
+                if(this.storeService.isStoreOpen(storeId)){
+                    this.userService.sendMessageToStore(userId, storeId, message);
+                    logger.info("System Service - User sent message to store: " + storeId + " by user: " + userId
+                        + " with message: " + message);
+                    this.storeService.receivingMessage(storeId, userId, message);
+                    logger.info("System Service - Store received message from user: " + userId + " to store: " + storeId
+                        + " with message: " + message);
+                }
+                else{
+                    logger.error("System Service - Store is closed: " + storeId);
+                    throw new IllegalArgumentException("Store is closed");
+                }
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during sending message to store: " + e.getMessage());
+            throw new IllegalArgumentException("Error during sending message to store: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendMessageToUser(int managerId, int storeId, int userToAnswer, String message) {
+        try {
+            if (this.userService.isUserLoggedIn(managerId)) {
+                if(this.storeService.isStoreOpen(storeId)){
+                    this.storeService.sendMessageToUser(managerId, storeId, userToAnswer, message);
+                    logger.info("System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
+                        + " with message: " + message);
+                    this.userService.receivingMessageFromStore(userToAnswer, storeId, message);
+                    logger.info("System Service - User received message from store: " + storeId + " to user: " + userToAnswer
+                        + " with message: " + message);
+                }
+                else{
+                    logger.error("System Service - Store is closed: " + storeId);
+                    throw new IllegalArgumentException("Store is closed");
+                }
+            } else {
+                logger.error("System Service - User is not logged in: " + managerId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during sending message to user: " + e.getMessage());
+            throw new IllegalArgumentException("Error during sending message to user: " + e.getMessage());
+        }
+    }
     public StoreProductDTO getProductFromStore(int productId, int storeId) {
         try {
             logger.info("System service - user trying to view procuct " + productId + " in store: " + storeId);

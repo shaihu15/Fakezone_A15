@@ -7,7 +7,7 @@ public interface IUserRepository {
     Optional<User> findByUserName(String email);
     Optional<User> findById(int userID);
     List<User> findAll();
-    User save(User user);
     void deleteByUserName(String email);
     User update(User user);
+    User addUser(User user);
 }

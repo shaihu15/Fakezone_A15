@@ -1,5 +1,6 @@
 package InfrastructureLayer.Repositories;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,6 +10,11 @@ import DomainLayer.Model.User;
 
 public class UserRepository implements IUserRepository{
     private Map<Integer, User> users;
+
+    public UserRepository() {
+        this.users = new HashMap<>();
+    }
+
     @Override
     public Optional<User> findByUserName(String email) {
         return users.values().stream()
@@ -27,12 +33,6 @@ public class UserRepository implements IUserRepository{
     }
 
     @Override
-    public User save(User user) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'save'");
-    }
-
-    @Override
     public void deleteByUserName(String email) {
         Optional<User> user = findByUserName(email);
         if (user.isPresent()) {
@@ -44,8 +44,20 @@ public class UserRepository implements IUserRepository{
 
     @Override
     public User update(User user) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'update'");
+        if (!users.containsKey(user.getUserID())) {
+            throw new IllegalArgumentException("User with ID " + user.getUserID() + " does not exist.");
+        }
+        users.put(user.getUserID(), user); // update existing
+        return user;
+    }
+
+    @Override
+    public User addUser(User user){
+        if (users.containsKey(user.getUserID())) {
+            throw new IllegalArgumentException("User with ID " + user.getUserID() + " already exists.");
+        }
+        users.put(user.getUserID(), user);
+        return user;
     }
 
 }

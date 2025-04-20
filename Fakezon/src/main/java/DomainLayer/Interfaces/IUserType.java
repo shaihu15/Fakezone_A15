@@ -1,6 +1,8 @@
 package DomainLayer.Interfaces;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
+import java.util.List;
 
 import org.springframework.security.access.method.P;
 
@@ -27,4 +29,9 @@ public interface IUserType {
     HashMap<Integer, IRegisteredRole> getAllRoles();
     HashMap<Integer, Order> getOrders(); // userID -> Order
     boolean isLoggedIn();
+    String getPassword();
+    void receivingMessageFromStore(int storeID, String message);
+    void sendMessageToStore(int storeID, String message);
+    List<SimpleEntry<Integer, String>> getMessagesFromUser(); // storeID -> message
+    List<SimpleEntry<Integer, String>> getMessagesFromStore(); // storeID -> message
 }

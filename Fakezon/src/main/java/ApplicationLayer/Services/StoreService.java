@@ -2,9 +2,12 @@ package ApplicationLayer.Services;
 
 import DomainLayer.IRepository.IStoreRepository;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.HashMap;
 
@@ -219,6 +222,61 @@ public class StoreService implements IStoreService {
         storeRepository.addStore(store);
         logger.info("Store opened: " + storeName + " by user: " + userId);
         return storeId;
+    }
+    @Override
+    public void receivingMessage(int storeId, int userId, String message) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("receivingMessage - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.receivingMessage(userId, message);
+    }
+    @Override
+    public void sendMessageToUser(int managerId,int storeId, int userId, String message) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("sendMessage - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.sendMessage(managerId,userId, message);
+    }
+    @Override
+    public boolean isStoreOpen(int storeId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("isStoreOpen - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.isOpen();
+    }
+    @Override
+    public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId,int storeId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getMessagesFromUsers - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            return store.getMessagesFromUsers(managerId);
+        }catch (IllegalArgumentException e){
+            logger.error("getMessagesFromUsers - Manager not found: " + managerId);
+            throw new IllegalArgumentException("Manager not found");
+        }
+    }
+    @Override
+    public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId,int storeId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getMessagesFromStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            return store.getMessagesFromStore(managerId);
+        }catch (IllegalArgumentException e){
+            logger.error("getMessagesFromStore - Manager not found: " + managerId);
+            throw new IllegalArgumentException("Manager not found");
+        }
     }
 
 }

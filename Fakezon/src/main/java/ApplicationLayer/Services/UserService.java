@@ -29,9 +29,7 @@ public class UserService implements IUserService {
     }
 
     public User registerUser(User user) {
-        // You might add validation logic here
-
-        return userRepository.save(user);
+        return userRepository.addUser(user);
     }
 
     public void deleteUser(String userName) {
@@ -72,9 +70,34 @@ public class UserService implements IUserService {
     }
     @Override
     public void login(int userID, String password) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'login'");
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+
+            if (optionalUser.isEmpty()) {
+                logger.warn("Login failed: User with ID {} not found", userID);
+                throw new IllegalArgumentException("User not found");
+            }
+
+            User user = optionalUser.get();
+
+            if (!user.getPassword().equals(password)) {
+                logger.warn("Login failed: Incorrect password for user ID {}", userID);
+                throw new IllegalArgumentException("Incorrect password");
+            }
+
+            logger.info("User with ID {} logged in successfully", userID);
+            // TODO: Add login-related logic here (e.g., session handling)
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Login failed (user error): " + e.getMessage());
+            logger.error("Error during login: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during login for user ID {}: {}", userID, e.getMessage());
+            throw new RuntimeException("Unexpected error during login");
+        }
     }
+
     @Override
     public void addRole(int userID, int storeID, IRegisteredRole role) {
         Optional<User> user = userRepository.findById(userID);
@@ -198,5 +221,39 @@ public class UserService implements IUserService {
 
     
         return false;
+    }
+    @Override
+    public void sendMessageToStore(int userID, int storeID, String message) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().sendMessageToStore(storeID, message);
+                logger.info("Message sent to store: " + storeID + " from user: " + userID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                logger.error("Error during send message: " + e.getMessage());
+                System.out.println("Error during send message: " + e.getMessage());
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+    @Override
+    public void receivingMessageFromStore(int userID, int storeID, String message) {
+        Optional<User> user = userRepository.findById(userID);
+        if (user.isPresent() ) {
+            try {
+                user.get().receivingMessageFromStore(storeID, message);
+                logger.info("Message received from store: " + storeID + " to user: " + userID);
+            } catch (Exception e) {
+                // Handle exception if needed
+                logger.error("Error during receiving message: " + e.getMessage());
+                System.out.println("Error during receiving message: " + e.getMessage());
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            throw new IllegalArgumentException("User not found");
+        }
     }
 }

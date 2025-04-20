@@ -13,11 +13,12 @@ import java.util.List;
 public class RegisteredTest {
     private Registered registeredUser;
     private String email = "email@com";
+    private String password = "password1234";
     private int userID;
 
     @BeforeEach
     void setUp() {
-        registeredUser = new Registered(email);
+        registeredUser = new Registered(email, password);
         userID = registeredUser.getUserID();
     }
 
@@ -102,6 +103,21 @@ public class RegisteredTest {
         registeredUser.setproductsPurchase(storeID, purchasedProducts);
         assertTrue(registeredUser.didPurchaseProduct(storeID, productID), "User should have purchased the product");
     }
+    @Test
+    void givenValidMessageFromStore_whenGetMessagesFromStore_returnTrue() {
+        int storeID = 1;
+        String message = "Hello, this is a test message.";
+        registeredUser.receivingMessageFromStore(storeID, message);
+        assertEquals(message, registeredUser.getMessagesFromStore().get(0).getValue(), "Message should be received successfully");
+    }
+    @Test
+    void givenValidMessageFromUser_whenGetMessagesFromUser_returnTrue() {
+        int storeID = 1;
+        String message = "Hello, this is a test message.";
+        registeredUser.sendMessageToStore(storeID, message);
+        assertEquals(message, registeredUser.getMessagesFromUser().get(0).getValue(), "Message should be received successfully");
+    }
+    
 
 
 }
