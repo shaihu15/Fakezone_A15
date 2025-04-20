@@ -247,16 +247,7 @@ public class SystemService implements ISystemService {
         return null;
     }
 
-    private int addProduct(String productName, String productDescription) {
-        try {
-            logger.info("System service - user trying to add procuct " + productName);
-            return this.productService.addProduct(productName, productDescription);
-        } catch (Exception e) {
-            logger.error("System Service - Error during adding product: " + e.getMessage());
-        }
-        return -1;
-    }
-
+    
     @Override
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
@@ -276,5 +267,14 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during deleting product: " + e.getMessage());
         }
     }
-
+    
+    private int addProduct(String productName, String productDescription) {
+        try {
+            logger.info("System service - user trying to add procuct " + productName);
+            return this.productService.addProduct(productName, productDescription);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding product: " + e.getMessage());
+        }
+        return -1;
+    }
 }
