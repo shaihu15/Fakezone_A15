@@ -1,6 +1,8 @@
 package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,7 @@ import java.util.List;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Services.OrderService;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
@@ -33,17 +36,17 @@ public class OrderServiceTest {
         orderRepository = mock(IOrderRepository.class);
         mockBasket = mock(Basket.class);
         mockStore = mock(Store.class);
-        when(mockBasket.getStore()).thenReturn(mockStore);
+        
         orderService = new OrderService(orderRepository);
     }
 
     @Test
     void givenValidOrderDetails_WhenAddOrder_ThenOrderIsAdded() {
-        IProduct mockProduct = mock(IProduct.class);
-        when(mockProduct.getId()).thenReturn(1);
+        StoreProductDTO mockProduct = mock(StoreProductDTO.class);
+        when(mockProduct.getProductId()).thenReturn(1);
 
         when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProduct));
-        when(mockBasket.getStore().getId()).thenReturn(101);
+        when(mockBasket.getStoreID()).thenReturn(101);
 
         int orderId = orderService.addOrder(mockBasket, 1, "123 Main St", PaymentMethod.CREDIT_CARD);
 
@@ -53,10 +56,9 @@ public class OrderServiceTest {
 
     @Test
     void givenValidOrderDetails_WhenUpdateOrder_ThenOrderIsUpdated() {
-        IProduct mockProduct = mock(IProduct.class);
-        when(mockProduct.getId()).thenReturn(1);
-        when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProduct));
-        when(mockBasket.getStore().getId()).thenReturn(101);
+        StoreProductDTO mockProductDTO = mock(StoreProductDTO.class);
+        when(mockProductDTO.getProductId()).thenReturn(1);
+        when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProductDTO));
 
         int orderId = orderService.updateOrder(1, mockBasket, 1, "123 Main St", PaymentMethod.CREDIT_CARD);
 
