@@ -2,15 +2,22 @@ package ApplicationLayer.Interfaces;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+<<<<<<< HEAD
 
 <<<<<<< HEAD
+=======
+>>>>>>> 189463d003ece15e4cf9b74af16a82ae35d582f5
 import ApplicationLayer.DTO.OrderDTO;
 
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
+<<<<<<< HEAD
 =======
 >>>>>>> 59075ad306552982f9348915a6a82e032e99a311
+=======
+
+>>>>>>> 189463d003ece15e4cf9b74af16a82ae35d582f5
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Interfaces.IAuthenticator;
