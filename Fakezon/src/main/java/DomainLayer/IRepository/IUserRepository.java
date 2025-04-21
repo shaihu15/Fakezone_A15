@@ -1,13 +1,20 @@
 package DomainLayer.IRepository;
-import DomainLayer.Model.User;
+
+import DomainLayer.Model.Registered;
+
 import java.util.Optional;
 import java.util.List;
 
 public interface IUserRepository {
-    Optional<User> findByUserName(String email);
-    Optional<User> findById(int userID);
-    List<User> findAll();
+    Optional<Registered> findByUserName(String email);
+
+    Optional<Registered> findById(int userID);
+
+    List<Registered> findAll();
+
     void deleteByUserName(String email);
-    User update(User user);
-    User addUser(User user);
+
+    void update(Registered user);
+
+    void addUser(Registered user);
 }

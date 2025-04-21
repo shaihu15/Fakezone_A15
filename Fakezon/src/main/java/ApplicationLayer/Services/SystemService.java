@@ -1,7 +1,7 @@
 package ApplicationLayer.Services;
 
+import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 
 import java.util.Set;
 
@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 import ApplicationLayer.DTO.OrderDTO;
 
 import ApplicationLayer.DTO.ProductDTO;
+
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -176,17 +176,16 @@ public class SystemService implements ISystemService {
 
     @Override
     public void sendMessageToStore(int userId, int storeId, String message) {
-        try{
+        try {
             if (this.userService.isUserLoggedIn(userId)) {
-                if(this.storeService.isStoreOpen(storeId)){
+                if (this.storeService.isStoreOpen(storeId)) {
                     this.userService.sendMessageToStore(userId, storeId, message);
                     logger.info("System Service - User sent message to store: " + storeId + " by user: " + userId
-                        + " with message: " + message);
+                            + " with message: " + message);
                     this.storeService.receivingMessage(storeId, userId, message);
                     logger.info("System Service - Store received message from user: " + userId + " to store: " + storeId
-                        + " with message: " + message);
-                }
-                else{
+                            + " with message: " + message);
+                } else {
                     logger.error("System Service - Store is closed: " + storeId);
                     throw new IllegalArgumentException("Store is closed");
                 }
@@ -204,15 +203,16 @@ public class SystemService implements ISystemService {
     public void sendMessageToUser(int managerId, int storeId, int userToAnswer, String message) {
         try {
             if (this.userService.isUserLoggedIn(managerId)) {
-                if(this.storeService.isStoreOpen(storeId)){
+                if (this.storeService.isStoreOpen(storeId)) {
                     this.storeService.sendMessageToUser(managerId, storeId, userToAnswer, message);
-                    logger.info("System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
-                        + " with message: " + message);
+                    logger.info(
+                            "System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
+                                    + " with message: " + message);
                     this.userService.receivingMessageFromStore(userToAnswer, storeId, message);
-                    logger.info("System Service - User received message from store: " + storeId + " to user: " + userToAnswer
-                        + " with message: " + message);
-                }
-                else{
+                    logger.info("System Service - User received message from store: " + storeId + " to user: "
+                            + userToAnswer
+                            + " with message: " + message);
+                } else {
                     logger.error("System Service - Store is closed: " + storeId);
                     throw new IllegalArgumentException("Store is closed");
                 }
@@ -225,6 +225,8 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during sending message to user: " + e.getMessage());
         }
     }
+
+    @Override
     public StoreProductDTO getProductFromStore(int productId, int storeId) {
         try {
             logger.info("System service - user trying to view procuct " + productId + " in store: " + storeId);
@@ -237,6 +239,17 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    public void guestRegister(String userName, String password, String email, int UserId, LocalDate dateOfBirth) {
+        try {
+            logger.info("System Service - Guest registered: " + userName + " with email: " + email);
+            String token = authenticatorService.register(UserId);
+            this.userService.addUser(password, email, dateOfBirth);
+        } catch (Exception e) {
+            logger.error("System Service - Error during guest registration: " + e.getMessage());
+            throw new IllegalArgumentException("Error during guest registration: " + e.getMessage());
+        }
+    }
+    @Override
     public ProductDTO getProduct(int productId) {
         try {
             logger.info("System service - user trying to view procuct " + productId);
@@ -247,7 +260,7 @@ public class SystemService implements ISystemService {
         return null;
     }
 
-    
+
     @Override
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
@@ -267,7 +280,7 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during deleting product: " + e.getMessage());
         }
     }
-    
+
     private int addProduct(String productName, String productDescription) {
         try {
             logger.info("System service - user trying to add procuct " + productName);

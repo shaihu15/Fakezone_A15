@@ -1,7 +1,11 @@
 package DomainLayer.Interfaces;
 
 public interface IAuthenticator {
-    boolean register(String email, String password);
-    boolean login(String email, String password);
-    void logout(String email);
+    String register(int userId);
+
+    String login(int userId);
+
+    void logout(int userId);
+
+    boolean isValid(String sessionToken);
 }
