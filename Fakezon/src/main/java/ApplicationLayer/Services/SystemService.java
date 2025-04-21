@@ -277,7 +277,7 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during adding product: " + e.getMessage());
         }
         return -1;
-
+    }
     public void guestRegister(String userName, String password, String email, int UserId, LocalDate dateOfBirth) {
         try {
             logger.info("System Service - Guest registered: " + userName + " with email: " + email);
@@ -285,8 +285,6 @@ public class SystemService implements ISystemService {
             this.userService.addUser(password, email, dateOfBirth);
         } catch (Exception e) {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
-            throw new IllegalArgumentException("Error during guest registration: " + e.getMessage());
         }
-
     }
 }
