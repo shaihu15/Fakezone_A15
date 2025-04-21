@@ -1,9 +1,6 @@
 package ApplicationLayer.Interfaces;
 
-import java.time.LocalDate;
 import java.util.HashMap;
-import ApplicationLayer.DTO.OrderDTO;
-
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
@@ -25,9 +22,6 @@ public interface ISystemService {
 
     StoreDTO userAccessStore(int userId, int storeId);
 
-    void guestRegister(String userName, String password, String email, int UserId, LocalDate dateOfBirth); // register a
-                                                                                                           // guest user
-
     void ratingStore(int storeId, int userId, double rating, String comment);
 
     void ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
@@ -41,10 +35,6 @@ public interface ISystemService {
     void addStore(int userId, String storeName);
 
     StoreProductDTO getProductFromStore(int productId, int storeId);
-
-    void initialize();
-
-    void shutdown();
 
     ProductDTO getProduct(int productId);
 
