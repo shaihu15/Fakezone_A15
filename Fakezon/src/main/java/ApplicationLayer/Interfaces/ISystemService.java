@@ -2,6 +2,11 @@ package ApplicationLayer.Interfaces;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import ApplicationLayer.DTO.OrderDTO;
+
+import java.util.Set;
+
+import ApplicationLayer.DTO.ProductDTO;
 
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -40,4 +45,10 @@ public interface ISystemService {
     void initialize();
 
     void shutdown();
+
+    ProductDTO getProduct(int productId);
+
+    void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
+
+    void deleteProduct(int productId);
 }
