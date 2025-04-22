@@ -1,10 +1,7 @@
 package DomainLayer.Model;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import DomainLayer.IRepository.IRegisteredRole;
 
 public class User {
     protected boolean isLoggedIn;

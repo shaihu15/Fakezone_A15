@@ -5,11 +5,9 @@ import java.time.LocalDate;
 import ApplicationLayer.Interfaces.IUserService;
 
 import DomainLayer.Model.Order;
-import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.Registered;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Model.Registered;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +36,22 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO registerUser(Registered user) {
+    public UserDTO registerUser(String email, String password, LocalDate dateOfBirth) {
+        Registered user = new Registered(email, password, dateOfBirth);
+        // Check if the user already exists
+        Optional<Registered> existingUser = userRepository.findByUserName(email);
+        if (existingUser.isPresent()) {
+            logger.error("User already exists: " + email);
+            throw new IllegalArgumentException("User already exists");
+        }
+        // Check if the email is valid
+        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            logger.error("Invalid email format: " + email);
+            throw new IllegalArgumentException("Invalid email format");
+        }
         try {
             logger.info("Registering user: " + user.getEmail());
             userRepository.addUser(user);
-
         } catch (Exception e) {
             // Handle exception if needed
             System.out.println("Error during registration: " + e.getMessage());
@@ -70,56 +79,42 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void logout(int userID) {
-        Optional<Registered> user = userRepository.findById(userID);
-        if (user.isPresent()) {
-            try {
-                user.get().logout();
-                logger.info("User logged out: " + userID);
-
-            } catch (Exception e) {
-                // Handle exception if needed
-                System.out.println("Error during logout: " + e.getMessage());
-                logger.error("Error during logout: " + e.getMessage());
-
-            }
+    public void logout(String email) {
+        Optional<Registered> optionalUser = userRepository.findByUserName(email);
+        if (optionalUser.isPresent()) {
+            Registered user = optionalUser.get();
+            user.logout();
+            logger.info("User logged out: " + email);
         } else {
-            logger.error("User not found: " + userID);
+            logger.warn("Logout failed: User with email {} not found", email);
             throw new IllegalArgumentException("User not found");
-
         }
-
     }
 
     @Override
-    public void login(int userID, String password) {
+    public void login(String email, String password) {
         try {
-            Optional<Registered> optionalUser = userRepository.findById(userID);
-
+            Optional<Registered> optionalUser = userRepository.findByUserName(email);
             if (optionalUser.isEmpty()) {
-                logger.warn("Login failed: User with ID {} not found", userID);
+                logger.warn("Login failed: User with email {} not found", email);
                 throw new IllegalArgumentException("User not found");
             }
-
             Registered user = optionalUser.get();
-
-            if (!user.getPassword().equals(password)) {
-                logger.warn("Login failed: Incorrect password for user ID {}", userID);
+            if (user.getPassword().equals(password)) {
+                user.login();
+                logger.info("User logged in: " + email);
+            } else {
+                logger.warn("Login failed: Incorrect password for user with email {}", email);
                 throw new IllegalArgumentException("Incorrect password");
             }
-
-            logger.info("User with ID {} logged in successfully", userID);
-            // TODO: Add login-related logic here (e.g., session handling)
-
-        } catch (IllegalArgumentException e) {
-            System.out.println("Login failed (user error): " + e.getMessage());
-            logger.error("Error during login: " + e.getMessage());
-            throw e;
         } catch (Exception e) {
-            logger.error("Unexpected error during login for user ID {}: {}", userID, e.getMessage());
-            throw new RuntimeException("Unexpected error during login");
+            // Handle exception if needed
+            logger.error("Error during login: " + e.getMessage());
+            throw new IllegalArgumentException("Error during login: " + e.getMessage());
         }
     }
+
+
 
     @Override
     public void addRole(int userID, int storeID, IRegisteredRole role) {

@@ -5,12 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
-import DomainLayer.Model.User;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 
@@ -24,7 +21,6 @@ public class Registered extends User {
     private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public Registered(String email, String password, LocalDate dateOfBirth) {
         super();
@@ -118,6 +114,10 @@ public class Registered extends User {
 
     public boolean isLoggedIn() {
         return isLoggedIn;
+    }
+
+    public void login() {
+        this.isLoggedIn = true;
     }
 
     public String getPassword() {

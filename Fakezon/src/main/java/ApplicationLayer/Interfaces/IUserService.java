@@ -17,15 +17,15 @@ public interface IUserService {
 
     List<Registered> getAllUsers();
 
-    UserDTO registerUser(Registered user);
+    UserDTO registerUser(String email, String password, LocalDate dateOfBirth); 
 
     void deleteUser(String userName);// need?
 
     void updateUser(Registered user);
 
-    void logout(int userID);
+    void logout(String email);
 
-    void login(int userID, String password);
+    void login(String email, String password);
 
     boolean isUserLoggedIn(int userID);
 

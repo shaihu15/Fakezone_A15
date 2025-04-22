@@ -1,13 +1,11 @@
 package ApplicationLayer.Services;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ApplicationLayer.DTO.OrderDTO;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -27,9 +25,6 @@ import DomainLayer.Model.StoreFounder;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -40,17 +35,13 @@ public class SystemService implements ISystemService {
     private IProductService productService;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
 
-    public SystemService() {
-        initialize();
-    }
-
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
             IProductRepository productRepository) {
         this.storeService = new StoreService(storeRepository);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
         this.deliveryService = new DeliveryAdapter();
-        this.authenticatorService = new AuthenticatorAdapter();
+        this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
 
@@ -67,24 +58,6 @@ public class SystemService implements ISystemService {
     @Override
     public IPayment getPaymentService() {
         return paymentService;
-    }
-
-    @Override
-    public void initialize() {
-        this.deliveryService = new DeliveryAdapter();
-        this.authenticatorService = new AuthenticatorAdapter();
-        this.paymentService = new PaymentAdapter();
-        this.userService = new UserService(new UserRepository());
-        this.storeService = new StoreService(new StoreRepository());
-        this.productService = new ProductService(new ProductRepository());
-    }
-
-    @Override
-    public void shutdown() {
-        // Clean up resources if needed
-        this.deliveryService = null;
-        this.authenticatorService = null;
-        this.paymentService = null;
     }
 
     @Override
@@ -277,14 +250,5 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during adding product: " + e.getMessage());
         }
         return -1;
-    }
-    public void guestRegister(String userName, String password, String email, int UserId, LocalDate dateOfBirth) {
-        try {
-            logger.info("System Service - Guest registered: " + userName + " with email: " + email);
-            String token = authenticatorService.register(UserId);
-            this.userService.addUser(password, email, dateOfBirth);
-        } catch (Exception e) {
-            logger.error("System Service - Error during guest registration: " + e.getMessage());
-        }
     }
 }
