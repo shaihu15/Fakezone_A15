@@ -41,4 +41,6 @@ public interface ISystemService {
     void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
 
     void deleteProduct(int productId);
+
+    void GuestLogin(String email, String password,String dobInput);
 }

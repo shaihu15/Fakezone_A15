@@ -8,8 +8,6 @@ import java.util.List;
 public interface IUserRepository {
     Optional<Registered> findByUserName(String email);
 
-    Optional<Registered> findById(int userID);
-
     List<Registered> findAll();
 
     void deleteByUserName(String email);

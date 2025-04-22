@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 
 import java.util.Set;
@@ -44,7 +45,22 @@ public class SystemService implements ISystemService {
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
-
+    @Override
+    public void GuestLogin(String email, String password,String dobInput) {
+        try {
+            
+        } catch (Exception e) {
+        }
+        try {
+            LocalDate dob = LocalDate.parse(dobInput); // Expecting "YYYY-MM-DD"
+            logger.info("System Service - Guest login initiated.");
+            this.authenticatorService.register(email, password, dob);
+            logger.info("System Service - Guest login successful.");
+        } catch (Exception e) {
+            logger.error("System Service - Error during guest login: " + e.getMessage());
+            throw new IllegalArgumentException("Error during guest login: " + e.getMessage());
+        }
+    }
     @Override
     public IDelivery getDeliveryService() {
         return deliveryService;

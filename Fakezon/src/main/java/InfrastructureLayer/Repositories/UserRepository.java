@@ -23,11 +23,6 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public Optional<Registered> findById(int userID) {
-        return Optional.ofNullable(users.get(userID));
-    }
-
-    @Override
     public List<Registered> findAll() {
         return List.copyOf(users.values());
     }

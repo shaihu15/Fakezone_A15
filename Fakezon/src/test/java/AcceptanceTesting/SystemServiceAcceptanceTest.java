@@ -1,8 +1,10 @@
 package AcceptanceTesting;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.IRepository.IProductRepository;
@@ -45,5 +47,53 @@ public class SystemServiceAcceptanceTest {
         store2 = new Store("Test Store 2", founder2Id);
 
     }
+    //closeStore_Founder_Success
+    @Test
+    void UserRegistration_Guest_Success() {
+        // Arrange
+        String email = "test@gmail.com";
+        String password = "password123";
+        String dobInput = "1990-01-01";
+        LocalDate dob = LocalDate.parse(dobInput);
+        Registered user = new Registered(email, password, dob);
+        when(userRepository.findByUserName(email)).thenReturn(Optional.of(user)); // User exists
+        
+        // Act
+        systemService.GuestLogin(email, password, dobInput);
+        assertEquals(email, this.userRepository.findByUserName(email).get().getEmail());
+    }
+    @Test
+    void InvalidEmailUserRegistration_MalformedEmail_Fails() {
+        // Arrange
+        String email = "invalid-email"; // Malformed email
+        String password = "password123";
+        String dobInput = "1990-01-01";
+        LocalDate dob = LocalDate.parse(dobInput);
+        systemService.GuestLogin(email, password, dobInput);
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            systemService.GuestLogin(email, password, dobInput);
+        });
+    }
+    @Test
+    void InvalidEmailUserRegistration_EmailAlreadyExists_Fails() {
+        // Arrange
+        String email = "test@gmail.com";
+        String password = "password123";
+        String dobInput = "1990-01-01";
+        LocalDate dob = LocalDate.parse(dobInput);
+        Registered existingUser = new Registered(email, password, dob);
+    
+        when(userRepository.findByUserName(email)).thenReturn(Optional.of(existingUser)); // Email already in use
+    
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () -> {
+            systemService.GuestLogin(email, password, dobInput);
+        });
+    }
+
+
+
+
 
 }
