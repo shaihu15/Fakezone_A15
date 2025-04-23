@@ -1,7 +1,6 @@
 package ApplicationLayer.Services;
 
 import java.util.HashMap;
-
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -221,7 +220,6 @@ public class SystemService implements ISystemService {
         return null;
     }
 
-    
     @Override
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
@@ -241,7 +239,17 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during deleting product: " + e.getMessage());
         }
     }
-    
+
+    @Override
+    public void GuestLogin(String email, String password) {
+        try {
+            logger.info("System service - user trying to login as guest " + email);
+            this.authenticatorService.login(email, password);
+        } catch (Exception e) {
+            logger.error("System Service - Error during guest login: " + e.getMessage());
+        }
+    }
+
     private int addProduct(String productName, String productDescription) {
         try {
             logger.info("System service - user trying to add procuct " + productName);
@@ -251,4 +259,5 @@ public class SystemService implements ISystemService {
         }
         return -1;
     }
+
 }
