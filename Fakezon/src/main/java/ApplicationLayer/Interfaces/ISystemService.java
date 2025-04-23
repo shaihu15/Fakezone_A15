@@ -19,7 +19,7 @@ public interface ISystemService {
 
     IPayment getPaymentService();
 
-    StoreDTO userAccessStore(int userId, int storeId);
+    StoreDTO userAccessStore(String token , int storeId);
 
     void ratingStore(int storeId, int userId, double rating, String comment);
 

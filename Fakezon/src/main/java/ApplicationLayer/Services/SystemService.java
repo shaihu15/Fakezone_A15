@@ -93,10 +93,16 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during rating product: " + e.getMessage());
         }
     }
-
-    public StoreDTO userAccessStore(int userId, int storeId) {
+    @Override
+    public StoreDTO userAccessStore(String token ,int storeId) {
         try {
-            logger.info("System Service - User accessed store: " + storeId + " by user: " + userId);
+            logger.info("System Service - User accessed store: " + storeId + " by user with token " + token);
+            if(this.authenticatorService.isValid(token))
+                logger.info("System Service - Token is valid: " + token);
+            else {
+                logger.error("System Service - Token is not valid: " + token);
+                throw new IllegalArgumentException("Token is not valid");
+            }
             StoreDTO s = this.storeService.viewStore(storeId);
             if (s.isOpen()) {
                 return s;
