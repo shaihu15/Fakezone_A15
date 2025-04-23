@@ -21,6 +21,10 @@ public class UserRepository implements IUserRepository {
                 .filter(user -> user.getEmail().equals(email))
                 .findFirst();
     }
+    @Override
+    public Optional<Registered> findById(int userID) {
+        return Optional.ofNullable(users.get(userID));
+    }
 
     @Override
     public List<Registered> findAll() {
