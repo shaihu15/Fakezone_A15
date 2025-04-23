@@ -2,7 +2,6 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.HashMap;
-
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -46,7 +45,7 @@ public class SystemService implements ISystemService {
         this.paymentService = new PaymentAdapter();
     }
     @Override
-    public void GuestLogin(String email, String password,String dobInput) {
+    public void GuestRegister(String email, String password,String dobInput) {
         try {
             
         } catch (Exception e) {
@@ -110,7 +109,7 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during rating product: " + e.getMessage());
         }
     }
-
+    @Override
     public StoreDTO userAccessStore(int userId, int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId + " by user: " + userId);

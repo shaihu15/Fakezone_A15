@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
-
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Interfaces.IAuthenticator;
@@ -42,5 +41,5 @@ public interface ISystemService {
 
     void deleteProduct(int productId);
 
-    void GuestLogin(String email, String password,String dobInput);
+    void GuestRegister(String email, String password,String dobInput);
 }
