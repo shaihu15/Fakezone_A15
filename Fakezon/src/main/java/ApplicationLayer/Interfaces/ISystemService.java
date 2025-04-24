@@ -41,5 +41,6 @@ public interface ISystemService {
 
     void deleteProduct(int productId);
 
-    void GuestLogin(String email, String password); // login as guest
+    void guestRegister(String email, String password,String dobInput);
+
 }
