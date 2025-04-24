@@ -51,7 +51,7 @@ public class SystemServiceAcceptanceTest {
         when(userRepository.findByUserName(email)).thenReturn(Optional.of(user)); // User exists
         
         // Act
-        systemService.GuestLogin(email, password, dobInput);
+        systemService.GuestRegister(email, password, dobInput);
         assertEquals(email, this.userRepository.findByUserName(email).get().getEmail());
     }
 
