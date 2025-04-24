@@ -10,4 +10,8 @@ public interface IAuthenticator {
     void logout(String email);
 
     boolean isValid(String sessionToken);
+
+    String getEmail(String sessionToken);
+
+    int getUserId(String sessionToken);
 }

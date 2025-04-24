@@ -251,4 +251,14 @@ public class SystemService implements ISystemService {
         }
         return -1;
     }
+    // // Example of a system service method that uses the authenticator service
+    // public void SystemServiceMethod(String sessionToken) {
+    //     if (authenticatorService.isValid(sessionToken)) {
+    //         int userId = authenticatorService.getUserId(sessionToken);
+    //         storeService.doSomething(userId);
+    //     } else {
+    //         logger.error("System Service - Invalid session token: " + sessionToken);
+    //         throw new IllegalArgumentException("Invalid session token");
+    //     }
+    // }
 }

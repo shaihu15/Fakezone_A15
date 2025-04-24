@@ -28,8 +28,8 @@ public class AuthenticatorAdapter implements IAuthenticator {
             UserDTO userDTO = userService.registerUser(email, password, dateOfBirth);
             if (userDTO != null) {
                 logger.info("User registered successfully: {}", userDTO.getUserEmail());
-                // Generate a token for the registered user
-                String token = tokenService.generateToken(userDTO.getUserEmail());
+                // Generate a token for the registered user with userId
+                String token = tokenService.generateToken(userDTO.getUserEmail(), userDTO.getUserId());
                 return token;
             } else {
                 logger.error("User registration failed for email: {}", email);
@@ -48,7 +48,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
             // Generate a token for the logged-in user
             Optional<Registered> user = userService.getUserByUserName(email);
             if (user.isPresent()) {
-                String token = tokenService.generateToken(user.get().getEmail());
+                String token = tokenService.generateToken(user.get().getEmail(), user.get().getUserID());
                 logger.info("User logged in successfully: {}", email);
                 return token;
             } else {
@@ -74,5 +74,12 @@ public class AuthenticatorAdapter implements IAuthenticator {
 
     public boolean isValid(String sessionToken) {
         return tokenService.validateToken(sessionToken);
+    }
+
+    public String getEmail(String sessionToken) {
+        return tokenService.extractEmail(sessionToken);
+    }
+    public int getUserId(String sessionToken) {
+        return tokenService.extractUserId(sessionToken);
     }
 }
