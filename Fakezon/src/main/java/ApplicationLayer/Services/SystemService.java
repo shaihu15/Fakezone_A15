@@ -1,6 +1,7 @@
 package ApplicationLayer.Services;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
@@ -264,6 +266,28 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during adding product: " + e.getMessage());
         }
         return -1;
+    }
+
+    @Override
+    public void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+        try{
+            logger.info("Systrem service - user: "+ requesterId + " trying to add permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
+        }
+        catch(Exception e){
+            logger.error("System Service - Error during adding store manager permissions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+        try{
+            logger.info("Systrem service - user: "+ requesterId + " trying to remove permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
+        }
+        catch(Exception e){
+            logger.error("System Service - Error during removing store manager permissions: " + e.getMessage());
+        }
     }
 
 }

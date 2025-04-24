@@ -1,11 +1,13 @@
 package ApplicationLayer.Interfaces;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -42,4 +44,8 @@ public interface ISystemService {
     void deleteProduct(int productId);
 
     void GuestLogin(String email, String password); // login as guest
-}
+
+    void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
+    
+    void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove);
+ }
