@@ -44,22 +44,7 @@ public class SystemService implements ISystemService {
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
-    @Override
-    public void GuestRegister(String email, String password,String dobInput) {
-        try {
-            
-        } catch (Exception e) {
-        }
-        try {
-            LocalDate dob = LocalDate.parse(dobInput); // Expecting "YYYY-MM-DD"
-            logger.info("System Service - Guest login initiated.");
-            this.authenticatorService.register(email, password, dob);
-            logger.info("System Service - Guest login successful.");
-        } catch (Exception e) {
-            logger.error("System Service - Error during guest login: " + e.getMessage());
-            throw new IllegalArgumentException("Error during guest login: " + e.getMessage());
-        }
-    }
+    
     @Override
     public IDelivery getDeliveryService() {
         return deliveryService;
@@ -109,10 +94,11 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during rating product: " + e.getMessage());
         }
     }
-    public StoreDTO userAccessStore(String token ,int storeId) {
+
+    public StoreDTO userAccessStore(String token, int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId + " by user with token " + token);
-            if(this.authenticatorService.isValid(token))
+            if (this.authenticatorService.isValid(token))
                 logger.info("System Service - Token is valid: " + token);
             else {
                 logger.error("System Service - Token is not valid: " + token);
@@ -262,12 +248,14 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void GuestLogin(String email, String password) {
-        try {
-            logger.info("System service - user trying to login as guest " + email);
-            this.authenticatorService.login(email, password);
-        } catch (Exception e) {
-            logger.error("System Service - Error during guest login: " + e.getMessage());
+    public void guestRegister(String email, String password, String dateOfBirth) {
+        logger.info("System service - user trying to register " + email);
+        LocalDate dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
+        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
+        if (token == null) {
+            logger.error("System Service - Error during guest registration: " + email);
+        } else {
+            logger.info("System service - user registered successfully " + email);
         }
     }
 
