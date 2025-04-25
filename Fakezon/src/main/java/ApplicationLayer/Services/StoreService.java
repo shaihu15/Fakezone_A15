@@ -77,7 +77,9 @@ public class StoreService implements IStoreService {
                 store.getAverageRating()
         );
     }
-
+    public StoreProductDTO toStoreProductDTO(StoreProduct storeProduct) {
+        return new StoreProductDTO(storeProduct);
+    }
     // --- Store Info Methods ---
 
     @Override
