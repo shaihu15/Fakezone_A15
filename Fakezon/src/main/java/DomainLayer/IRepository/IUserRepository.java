@@ -1,14 +1,12 @@
 package DomainLayer.IRepository;
 
-import DomainLayer.Model.Registered;
-
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
+
+import DomainLayer.Model.Registered;
 
 public interface IUserRepository {
     Optional<Registered> findByUserName(String email);
-
-    Optional<Registered> findById(int userID);
 
     List<Registered> findAll();
 
@@ -17,4 +15,6 @@ public interface IUserRepository {
     void update(Registered user);
 
     void addUser(Registered user);
+
+    Optional<Registered> findById(int userID);
 }
