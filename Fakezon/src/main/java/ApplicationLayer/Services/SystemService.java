@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -44,7 +45,17 @@ public class SystemService implements ISystemService {
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
-    
+    // Overloaded constructor for testing purposes
+    public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
+            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService) {
+        this.storeService = storeService;
+        this.userService = userService;
+        this.productService = productService;
+        this.deliveryService = deliveryService;
+        this.authenticatorService = authenticatorService;
+        this.paymentService = paymentService;
+    }
+
     @Override
     public IDelivery getDeliveryService() {
         return deliveryService;
@@ -257,6 +268,28 @@ public class SystemService implements ISystemService {
         } else {
             logger.info("System service - user registered successfully " + email);
         }
+    }
+
+    @Override
+    public List<ProductDTO> getProduct(String token, String keyword) {
+        try {
+            if (!this.authenticatorService.isValid(token)) {
+                logger.error("System Service - Token is not valid: " + token);
+                throw new IllegalArgumentException("Token is not valid");
+            } else {
+                logger.info("System Service - Token is valid: " + token);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during user access store: " + e.getMessage());
+            return null;
+        }
+        try {
+            logger.info("System service - user trying to view procuct " + keyword);
+            return this.productService.searchProducts(keyword);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting product: " + e.getMessage());
+        }
+        return null;
     }
 
     private int addProduct(String productName, String productDescription) {

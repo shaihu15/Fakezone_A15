@@ -1,6 +1,7 @@
 package ApplicationLayer.Interfaces;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
@@ -42,5 +43,7 @@ public interface ISystemService {
     void deleteProduct(int productId);
 
     void guestRegister(String email, String password,String dobInput);
+    
+    List<ProductDTO> getProduct(String token, String keyword);
 
 }
