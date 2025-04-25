@@ -1,26 +1,20 @@
 package AcceptanceTesting;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Model.Store;
 import DomainLayer.Model.Registered;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.mockito.Mockito;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import ApplicationLayer.DTO.StoreProductDTO;
-import DomainLayer.Model.Product;
+import DomainLayer.Model.Store;
 
 public class SystemServiceAcceptanceTest {
     private SystemService systemService;
@@ -45,5 +39,23 @@ public class SystemServiceAcceptanceTest {
         store2 = new Store("Test Store 2", founder2Id);
 
     }
+    //closeStore_Founder_Success
+    @Test
+    void UserRegistration_Guest_Success() {
+        // Arrange
+        String email = "test@gmail.com";
+        String password = "password123";
+        String dobInput = "1990-01-01";
+        LocalDate dob = LocalDate.parse(dobInput);
+        Registered user = new Registered(email, password, dob);
+        when(userRepository.findByUserName(email)).thenReturn(Optional.of(user)); // User exists
+        
+        // Act
+        systemService.guestRegister(email, password, dobInput);
+        assertEquals(email, this.userRepository.findByUserName(email).get().getEmail());
+    }
+
+
+
 
 }

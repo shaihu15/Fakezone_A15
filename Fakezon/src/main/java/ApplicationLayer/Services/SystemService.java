@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -45,7 +46,7 @@ public class SystemService implements ISystemService {
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
-
+    
     @Override
     public IDelivery getDeliveryService() {
         return deliveryService;
@@ -95,11 +96,11 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during rating product: " + e.getMessage());
         }
     }
-    @Override
-    public StoreDTO userAccessStore(String token ,int storeId) {
+
+    public StoreDTO userAccessStore(String token, int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId + " by user with token " + token);
-            if(this.authenticatorService.isValid(token))
+            if (this.authenticatorService.isValid(token))
                 logger.info("System Service - Token is valid: " + token);
             else {
                 logger.error("System Service - Token is not valid: " + token);
@@ -249,12 +250,14 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void GuestLogin(String email, String password) {
-        try {
-            logger.info("System service - user trying to login as guest " + email);
-            this.authenticatorService.login(email, password);
-        } catch (Exception e) {
-            logger.error("System Service - Error during guest login: " + e.getMessage());
+    public void guestRegister(String email, String password, String dateOfBirth) {
+        logger.info("System service - user trying to register " + email);
+        LocalDate dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
+        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
+        if (token == null) {
+            logger.error("System Service - Error during guest registration: " + email);
+        } else {
+            logger.info("System service - user registered successfully " + email);
         }
     }
 
@@ -269,10 +272,16 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+    public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms){
         try{
-            logger.info("Systrem service - user: "+ requesterId + " trying to add permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
-            storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
+            logger.info("Systrem service - user sessionToken: "+ sessionToken + " trying to add permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            if(this.authenticatorService.isValid(sessionToken)){
+                int requesterId = 1;
+                storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
+            }
+            else{
+                throw new IllegalArgumentException("Invalid session token: " + sessionToken);
+            }
         }
         catch(Exception e){
             logger.error("System Service - Error during adding store manager permissions: " + e.getMessage());
@@ -280,9 +289,10 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+    public void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms){
         try{
-            logger.info("Systrem service - user: "+ requesterId + " trying to remove permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            logger.info("Systrem service - user sessionToken: "+ sessionToken + " trying to remove permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            int requesterId = 1;
             storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
         }
         catch(Exception e){

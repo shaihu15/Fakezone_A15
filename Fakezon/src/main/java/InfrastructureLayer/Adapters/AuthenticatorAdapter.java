@@ -22,6 +22,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
         this.userService = userService;
     }
 
+    @Override
     public String register(String email, String password, LocalDate dateOfBirth) {
         try {
             logger.info("Registering user with email: {}", email);
@@ -41,6 +42,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
         }
     }
 
+    @Override
     public String login(String email, String password) {
         try {
             logger.info("Logging in user with email: {}", email);
@@ -62,6 +64,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
 
     }
 
+    @Override
     public void logout(String email) {
         try {
             logger.info("Logging out user with email: {}", email);
@@ -72,6 +75,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
         }
     }
 
+    @Override
     public boolean isValid(String sessionToken) {
         return tokenService.validateToken(sessionToken);
     }
