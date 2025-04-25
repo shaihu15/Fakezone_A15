@@ -1,6 +1,7 @@
 package ApplicationLayer.Interfaces;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
@@ -12,7 +13,6 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
-
 public interface ISystemService {
     // Access to core services
     IDelivery getDeliveryService();
