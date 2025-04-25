@@ -42,7 +42,7 @@ public interface ISystemService {
 
     void deleteProduct(int productId);
 
-    void guestRegister(String email, String password,String dobInput);
+    String guestRegister(String email, String password,String dobInput);
     
     List<ProductDTO> getProduct(String token, String keyword);
 

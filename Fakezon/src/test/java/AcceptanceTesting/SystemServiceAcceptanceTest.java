@@ -1,22 +1,22 @@
 package AcceptanceTesting;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
@@ -30,7 +30,6 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 
 public class SystemServiceAcceptanceTest {
@@ -75,19 +74,52 @@ public class SystemServiceAcceptanceTest {
     }
 
     // closeStore_Founder_Success
-    @Test
+   @Test
     void UserRegistration_Guest_Success() {
         // Arrange
         String email = "test@gmail.com";
         String password = "password123";
         String dobInput = "1990-01-01";
         LocalDate dob = LocalDate.parse(dobInput);
-        Registered user = new Registered(email, password, dob);
-        when(userRepository.findByUserName(email)).thenReturn(Optional.of(user)); // User exists
-
+    
+        // Mock the behavior of the authenticatorService to return a token
+        String mockToken = "mockToken123";
+        when(authenticatorService.register(email, password, dob)).thenReturn(mockToken);
+    
         // Act
         systemService.guestRegister(email, password, dobInput);
-        assertEquals(email, this.userRepository.findByUserName(email).get().getEmail());
+    
+        // Assert
+        verify(authenticatorService, times(1)).register(email, password, dob);
+        verifyNoMoreInteractions(authenticatorService);
+    }
+    @Test
+    void UserRegistration_InvalidDateOfBirth_Failure() {
+        // Arrange
+        String email = "test@gmail.com";
+        String password = "password123";
+        String invalidDobInput = "invalid-date";
+    
+        // Act & Assert
+        Exception exception = assertThrows(DateTimeParseException.class, () -> {
+            systemService.guestRegister(email, password, invalidDobInput);
+        });
+    
+        assertEquals("Text 'invalid-date' could not be parsed at index 0", exception.getMessage());
+        verifyNoInteractions(authenticatorService); // Ensure authenticatorService is not called
+    }
+    @Test
+void UserRegistration_InvalidEmail_Failure() {
+    // Arrange
+    String invalidEmail = "invalid-email"; // Invalid email format
+    String password = "password123";
+    String dobInput = "1990-01-01";
+
+    // Act
+    String result = systemService.guestRegister(invalidEmail, password, dobInput);
+
+    // Assert
+    assertNull(result, "Expected guestRegister to return null for invalid email");
     }
     @Test
     void GetProductByName_Success() {

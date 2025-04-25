@@ -45,6 +45,7 @@ public class SystemService implements ISystemService {
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
+
     // Overloaded constructor for testing purposes
     public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
             IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService) {
@@ -259,7 +260,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void guestRegister(String email, String password, String dateOfBirth) {
+    public String guestRegister(String email, String password, String dateOfBirth) {
         logger.info("System service - user trying to register " + email);
         LocalDate dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
         String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
@@ -268,6 +269,7 @@ public class SystemService implements ISystemService {
         } else {
             logger.info("System service - user registered successfully " + email);
         }
+        return token;
     }
 
     @Override
