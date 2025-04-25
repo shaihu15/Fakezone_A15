@@ -7,6 +7,7 @@ import java.util.Set;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -45,5 +46,9 @@ public interface ISystemService {
     String guestRegister(String email, String password,String dobInput);
     
     List<ProductDTO> getProduct(String token, String keyword);
+    
+    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
+    
+    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
 
 }
