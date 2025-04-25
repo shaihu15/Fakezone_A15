@@ -43,7 +43,9 @@ public interface ISystemService {
 
     void deleteProduct(int productId);
 
-    void guestRegister(String email, String password,String dobInput);
+    String guestRegister(String email, String password,String dobInput);
+    
+    List<ProductDTO> searchByKeyword(String token, String keyword);
     
     void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
     
