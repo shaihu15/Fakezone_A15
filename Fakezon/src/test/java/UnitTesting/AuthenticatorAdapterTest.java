@@ -57,7 +57,7 @@ public class AuthenticatorAdapterTest {
         String expectedToken = "valid-token-123";
         
         when(mockUserService.registerUser(email, password, dateOfBirth)).thenReturn(mockUserDTO);
-        when(mockTokenService.generateToken(email)).thenReturn(expectedToken);
+        when(mockTokenService.generateToken(email, 1)).thenReturn(expectedToken);
         
         // Act
         String actualToken = authenticatorAdapter.register(email, password, dateOfBirth);
@@ -65,7 +65,7 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertEquals(expectedToken, actualToken);
         verify(mockUserService).registerUser(email, password, dateOfBirth);
-        verify(mockTokenService).generateToken(email);
+        verify(mockTokenService).generateToken(email, 1);
     }
     
     @Test
@@ -83,7 +83,7 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertNull(token);
         verify(mockUserService).registerUser(email, password, dateOfBirth);
-        verify(mockTokenService, never()).generateToken(anyString());
+        verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     
     @Test
@@ -102,7 +102,7 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertNull(token);
         verify(mockUserService).registerUser(email, password, dateOfBirth);
-        verify(mockTokenService, never()).generateToken(anyString());
+        verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     
     @Test
@@ -113,10 +113,12 @@ public class AuthenticatorAdapterTest {
         Registered mockUser = mock(Registered.class);
         Optional<Registered> optionalUser = Optional.of(mockUser);
         String expectedToken = "valid-token-456";
+        int userId = 42;
         
         when(mockUserService.getUserByUserName(email)).thenReturn(optionalUser);
         when(mockUser.getEmail()).thenReturn(email);
-        when(mockTokenService.generateToken(email)).thenReturn(expectedToken);
+        when(mockUser.getUserID()).thenReturn(userId);
+        when(mockTokenService.generateToken(email, userId)).thenReturn(expectedToken);
         
         // Act
         String actualToken = authenticatorAdapter.login(email, password);
@@ -125,7 +127,7 @@ public class AuthenticatorAdapterTest {
         assertEquals(expectedToken, actualToken);
         verify(mockUserService).login(email, password);
         verify(mockUserService).getUserByUserName(email);
-        verify(mockTokenService).generateToken(email);
+        verify(mockTokenService).generateToken(email, userId);
     }
     
     @Test
@@ -143,7 +145,7 @@ public class AuthenticatorAdapterTest {
         assertNull(token);
         verify(mockUserService).login(email, password);
         verify(mockUserService).getUserByUserName(email);
-        verify(mockTokenService, never()).generateToken(anyString());
+        verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     
     @Test
@@ -162,7 +164,7 @@ public class AuthenticatorAdapterTest {
         assertNull(token);
         verify(mockUserService).login(email, password);
         verify(mockUserService, never()).getUserByUserName(anyString());
-        verify(mockTokenService, never()).generateToken(anyString());
+        verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     
     @Test
@@ -217,5 +219,33 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertFalse(isValid);
         verify(mockTokenService).validateToken(token);
+    }
+    
+    @Test
+    void getUserIdFromToken_WhenValidToken_ShouldReturnUserId() {
+        // Arrange
+        String token = "valid-token-789";
+        int expectedUserId = 42;
+        when(mockTokenService.validateToken(token)).thenReturn(true);
+        when(mockTokenService.extractUserId(token)).thenReturn(expectedUserId);
+        
+        // Act
+        int actualUserId = authenticatorAdapter.getUserId(token);
+        
+        // Assert
+        assertEquals(expectedUserId, actualUserId);
+    }
+    
+    @Test
+    void getUserIdFromToken_WhenInvalidToken_ShouldReturnNull() {
+        // Arrange
+        String token = "invalid-token";
+        when(mockTokenService.validateToken(token)).thenReturn(false);
+        
+        // Act
+        int userId = authenticatorAdapter.getUserId(token);
+        
+        // Assert
+        assertEquals(0, userId); // Assuming 0 is the default value for an invalid token
     }
 }
