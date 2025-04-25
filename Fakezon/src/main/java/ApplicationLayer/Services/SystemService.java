@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
@@ -267,6 +269,34 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during adding product: " + e.getMessage());
         }
         return -1;
+    }
+    @Override
+    public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms){
+        try{
+            logger.info("Systrem service - user sessionToken: "+ sessionToken + " trying to add permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            if(this.authenticatorService.isValid(sessionToken)){
+                int requesterId = this.authenticatorService.getUserId(sessionToken);
+                storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
+            }
+            else{
+                throw new IllegalArgumentException("Invalid session token: " + sessionToken);
+            }
+        }
+        catch(Exception e){
+            logger.error("System Service - Error during adding store manager permissions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms){
+        try{
+            logger.info("Systrem service - user sessionToken: "+ sessionToken + " trying to remove permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+            int requesterId = this.authenticatorService.getUserId(sessionToken);
+            storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
+        }
+        catch(Exception e){
+            logger.error("System Service - Error during removing store manager permissions: " + e.getMessage());
+        }
     }
   
     // // Example of a system service method that uses the authenticator service

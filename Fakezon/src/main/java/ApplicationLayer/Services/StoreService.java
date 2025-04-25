@@ -210,6 +210,26 @@ public class StoreService implements IStoreService {
     }
 
     @Override
+    public void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+        Store store = storeRepository.findById(storeId);
+        if (store == null){
+            logger.error("addStoreManagerPermissions - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.addManagerPermissions(requesterId, managerId, perms);
+    }
+
+    @Override
+    public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove){
+        Store store = storeRepository.findById(storeId);
+        if (store == null){
+            logger.error("removeStoreManagerPermissions - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.removeManagerPermissions(requesterId, managerId, toRemove);
+    }
+
+    @Override
     public void removeStoreManager(int storeId, int requesterId, int managerId) {}
     @Override
     public int addStore(int userId, String storeName) {
