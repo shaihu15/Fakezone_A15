@@ -45,7 +45,7 @@ public interface ISystemService {
 
     String guestRegister(String email, String password,String dobInput);
     
-    List<ProductDTO> getProduct(String token, String keyword);
+    List<ProductDTO> searchByKeyword(String token, String keyword);
     
     void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
     

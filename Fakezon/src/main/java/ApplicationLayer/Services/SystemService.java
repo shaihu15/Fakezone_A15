@@ -263,7 +263,13 @@ public class SystemService implements ISystemService {
     @Override
     public String guestRegister(String email, String password, String dateOfBirth) {
         logger.info("System service - user trying to register " + email);
-        LocalDate dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
+        LocalDate dateOfBirthLocalDate;
+        try {
+            dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
+        } catch (Exception e) {
+            logger.error("System Service - Error during guest registration: " + e.getMessage());
+            throw new java.time.format.DateTimeParseException("Invalid date of birth format. Expected format: YYYY-MM-DD", dateOfBirth, 0);
+        }
         String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
@@ -274,7 +280,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public List<ProductDTO> getProduct(String token, String keyword) {
+    public List<ProductDTO> searchByKeyword(String token, String keyword) {
         try {
             if (!this.authenticatorService.isValid(token)) {
                 logger.error("System Service - Token is not valid: " + token);
@@ -304,43 +310,45 @@ public class SystemService implements ISystemService {
         }
         return -1;
     }
+
     @Override
-    public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms){
-        try{
-            logger.info("Systrem service - user sessionToken: "+ sessionToken + " trying to add permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
-            if(this.authenticatorService.isValid(sessionToken)){
+    public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
+            List<StoreManagerPermission> perms) {
+        try {
+            logger.info("Systrem service - user sessionToken: " + sessionToken + " trying to add permissions: "
+                    + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
+            if (this.authenticatorService.isValid(sessionToken)) {
                 int requesterId = this.authenticatorService.getUserId(sessionToken);
                 storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
-            }
-            else{
+            } else {
                 throw new IllegalArgumentException("Invalid session token: " + sessionToken);
             }
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("System Service - Error during adding store manager permissions: " + e.getMessage());
         }
     }
 
     @Override
-    public void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms){
-        try{
-            logger.info("Systrem service - user sessionToken: "+ sessionToken + " trying to remove permissions: " + perms.toString() + " to manager: " + managerId + " in store: " + storeId );
+    public void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
+            List<StoreManagerPermission> perms) {
+        try {
+            logger.info("Systrem service - user sessionToken: " + sessionToken + " trying to remove permissions: "
+                    + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
             int requesterId = this.authenticatorService.getUserId(sessionToken);
             storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("System Service - Error during removing store manager permissions: " + e.getMessage());
         }
     }
-  
+
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
-    //     if (authenticatorService.isValid(sessionToken)) {
-    //         int userId = authenticatorService.getUserId(sessionToken);
-    //         storeService.doSomething(userId);
-    //     } else {
-    //         logger.error("System Service - Invalid session token: " + sessionToken);
-    //         throw new IllegalArgumentException("Invalid session token");
-    //     }
+    // if (authenticatorService.isValid(sessionToken)) {
+    // int userId = authenticatorService.getUserId(sessionToken);
+    // storeService.doSomething(userId);
+    // } else {
+    // logger.error("System Service - Invalid session token: " + sessionToken);
+    // throw new IllegalArgumentException("Invalid session token");
+    // }
     // }
 }

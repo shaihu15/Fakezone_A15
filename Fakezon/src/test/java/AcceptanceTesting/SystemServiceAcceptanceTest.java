@@ -45,8 +45,6 @@ public class SystemServiceAcceptanceTest {
     @Mock
     private IAuthenticator authenticatorService;
 
-    
-
     private Store store1;
     private int store1Id = 1;
     private int founder1Id = 10;
@@ -60,70 +58,74 @@ public class SystemServiceAcceptanceTest {
 
     @BeforeEach
     void setUp() {
-    // Mock the dependencies
-    storeService = mock(IStoreService.class);
-    userService = mock(IUserService.class);
-    productService = mock(IProductService.class);
-    authenticatorService = mock(IAuthenticator.class);
-    deliveryService = mock(IDelivery.class);
-    paymentService = mock(IPayment.class);
+        // Mock the dependencies
+        storeService = mock(IStoreService.class);
+        userService = mock(IUserService.class);
+        productService = mock(IProductService.class);
+        authenticatorService = mock(IAuthenticator.class);
+        deliveryService = mock(IDelivery.class);
+        paymentService = mock(IPayment.class);
 
-    // Inject the mocked services using the overloaded constructor
-    systemService = new SystemService(storeService, userService, productService, deliveryService, authenticatorService, paymentService);
+        // Inject the mocked services using the overloaded constructor
+        systemService = new SystemService(storeService, userService, productService, deliveryService,
+                authenticatorService, paymentService);
 
     }
 
     // closeStore_Founder_Success
-   @Test
+    @Test
     void UserRegistration_Guest_Success() {
         // Arrange
         String email = "test@gmail.com";
         String password = "password123";
         String dobInput = "1990-01-01";
         LocalDate dob = LocalDate.parse(dobInput);
-    
+
         // Mock the behavior of the authenticatorService to return a token
         String mockToken = "mockToken123";
         when(authenticatorService.register(email, password, dob)).thenReturn(mockToken);
-    
+
         // Act
         systemService.guestRegister(email, password, dobInput);
-    
+
         // Assert
         verify(authenticatorService, times(1)).register(email, password, dob);
         verifyNoMoreInteractions(authenticatorService);
     }
+
     @Test
     void UserRegistration_InvalidDateOfBirth_Failure() {
         // Arrange
         String email = "test@gmail.com";
         String password = "password123";
         String invalidDobInput = "invalid-date";
-    
+
         // Act & Assert
         Exception exception = assertThrows(DateTimeParseException.class, () -> {
             systemService.guestRegister(email, password, invalidDobInput);
         });
-    
-        assertEquals("Text 'invalid-date' could not be parsed at index 0", exception.getMessage());
+
+        assertEquals("Invalid date of birth format. Expected format: YYYY-MM-DD", exception.getMessage());
         verifyNoInteractions(authenticatorService); // Ensure authenticatorService is not called
     }
+
     @Test
-void UserRegistration_InvalidEmail_Failure() {
-    // Arrange
-    String invalidEmail = "invalid-email"; // Invalid email format
-    String password = "password123";
-    String dobInput = "1990-01-01";
+    void UserRegistration_InvalidEmail_Failure() {
+        // Arrange
+        String invalidEmail = "invalid-email"; // Invalid email format
+        String password = "password123";
+        String dobInput = "1990-01-01";
 
-    // Act
-    String result = systemService.guestRegister(invalidEmail, password, dobInput);
+        // Act
+        String result = systemService.guestRegister(invalidEmail, password, dobInput);
 
-    // Assert
-    assertNull(result, "Expected guestRegister to return null for invalid email");
+        // Assert
+        assertNull(result, "Expected guestRegister to return null for invalid email");
     }
+
     @Test
     void GetProductByName_Success() {
-        
+
         // Arrange
         int productId = 1;
         ProductDTO mockProduct = new ProductDTO("Test Product", "Description");
@@ -135,8 +137,9 @@ void UserRegistration_InvalidEmail_Failure() {
         // Assert
         assertNotNull(result);
         assertEquals("Test Product", result.getName());
-        
+
     }
+
     @Test
     void GetProductByKeyword_Success() {
         // Arrange
@@ -144,13 +147,12 @@ void UserRegistration_InvalidEmail_Failure() {
         String keyword = "Test";
         List<ProductDTO> mockProducts = Arrays.asList(
                 new ProductDTO("Test Product 1", "Description 1"),
-                new ProductDTO("Test Product 2", "Description 2")
-        );
+                new ProductDTO("Test Product 2", "Description 2"));
         when(authenticatorService.isValid(token)).thenReturn(true);
         when(productService.searchProducts(keyword)).thenReturn(mockProducts);
 
         // Act
-        List<ProductDTO> result = systemService.getProduct(token, keyword);
+        List<ProductDTO> result = systemService.searchByKeyword(token, keyword);
 
         // Assert
         assertNotNull(result);
@@ -158,7 +160,8 @@ void UserRegistration_InvalidEmail_Failure() {
         verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
     }
-     @Test
+
+    @Test
     void GetProductByKeyword_Failure() {
         // Arrange
         String token = "validToken";
@@ -167,15 +170,12 @@ void UserRegistration_InvalidEmail_Failure() {
         when(productService.searchProducts(keyword)).thenThrow(new RuntimeException("Search failed"));
 
         // Act
-        List<ProductDTO> result = systemService.getProduct(token, keyword);
+        List<ProductDTO> result = systemService.searchByKeyword(token, keyword);
 
         // Assert
         assertNull(result);
         verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
     }
-
-
-
 
 }
