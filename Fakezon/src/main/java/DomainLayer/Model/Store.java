@@ -8,7 +8,10 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import ApplicationLayer.Services.StoreService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -30,6 +33,7 @@ public class Store {
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; //HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; //HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private static final Logger logger = LoggerFactory.getLogger(Store.class);
 
     
     public Store(String name, int founderID) {
@@ -139,6 +143,7 @@ public class Store {
             return storeOwners;
         }
         else{
+            logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
             throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }
@@ -147,6 +152,7 @@ public class Store {
             return storeManagers;
         }
         else{
+            logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
             throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -267,6 +268,20 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during adding product: " + e.getMessage());
         }
         return -1;
+    }
+    @Override
+    public StoreRolesDTO getStoreRoles(int storeId, int userId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                return this.storeService.getStoreRoles(storeId, userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting store roles: " + e.getMessage());
+            throw new IllegalArgumentException("Error during getting store roles: " + e.getMessage());
+        }
     }
 
 }

@@ -6,6 +6,7 @@ import java.util.Set;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -43,4 +44,5 @@ public interface ISystemService {
 
     void guestRegister(String email, String password,String dobInput);
 
+    StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 }

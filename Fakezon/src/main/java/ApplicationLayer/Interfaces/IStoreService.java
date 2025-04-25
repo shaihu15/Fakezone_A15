@@ -7,6 +7,7 @@ import java.util.Queue;
 import java.util.Stack;
 
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.Product;
@@ -64,4 +65,5 @@ public interface IStoreService {
     void sendMessageToUser(int managerId,int storeId, int userId, String message);
     Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId,int storeId);
     Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId,int storeId);
+    StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 }

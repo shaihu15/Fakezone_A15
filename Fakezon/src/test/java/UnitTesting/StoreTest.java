@@ -152,7 +152,16 @@ public class StoreTest {
 
         assertTrue(store.getMessagesFromStore(founderId).isEmpty(), "No message should be sent if the owner is invalid");
     }
+    @Test
+    void getStoreOwners_ValidRequest_ShouldSucceed() {
+        int userId = 1;
+        store.addStoreOwner(founderId, userId); // Assuming this method exists to add an owner
 
+        List<Integer> owners = store.getStoreOwners(founderId);
+
+        assertTrue(owners.contains(userId), "User should be in the list of store owners");
+    }
+    
 
 
 }

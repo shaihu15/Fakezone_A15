@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import DomainLayer.Enums.StoreManagerPermission;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Interfaces.IStoreService;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
@@ -47,11 +48,21 @@ public class StoreService implements IStoreService {
         }
         return store.getStoreOwners(requesterId);
     }
+    @Override
+    public StoreRolesDTO getStoreRoles(int storeId, int requesterId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getStoreRoles - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return new StoreRolesDTO(store, requesterId);
+    }
 
     @Override
     public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId){
         Store store = storeRepository.findById(storeId);
         if (store == null) {
+            logger.error("getStoreManagers - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         return store.getStoreManagers(requesterId);
