@@ -18,19 +18,16 @@ public class StoreProductDTO {
     @JsonProperty("quantity")
     private final int quantity;
 
-    @JsonProperty("state")
-    private final String state;
 
     @JsonProperty("averageRating")
     private final double averageRating;
 
-    public StoreProductDTO(int productId, String name, double basePrice, int quantity, String state,
+    public StoreProductDTO(int productId, String name, double basePrice, int quantity,
             double averageRating) {
         this.productId = productId;
         this.name = name;
         this.basePrice = basePrice;
         this.quantity = quantity;
-        this.state = state;
         this.averageRating = averageRating;
     }
 
@@ -39,7 +36,6 @@ public class StoreProductDTO {
         this.name = storeProduct.getName();
         this.basePrice = storeProduct.getBasePrice();
         this.quantity = storeProduct.getQuantity();
-        this.state = storeProduct.getState().getStateName(); // Assuming getState() returns a ProductState object
         this.averageRating = storeProduct.getAverageRating(); // Assuming getAverageRating() returns a double
 
     }
@@ -58,10 +54,6 @@ public class StoreProductDTO {
 
     public int getQuantity() {
         return quantity;
-    }
-
-    public String getState() {
-        return state;
     }
 
     public double getAverageRating() {

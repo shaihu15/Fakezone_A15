@@ -19,9 +19,9 @@ public class Store {
     private int storeID;
     private boolean isOpen = true;
     private int storeFounderID; //store founder ID
-    private HashMap<Integer, Product> products;
     private HashMap<Integer, StoreRating> Sratings; //HASH userID to store rating
     private HashMap<Integer, StoreProduct> storeProducts; //HASH productID to store product
+    private HashMap<Integer, AuctionProduct> auctionProducts; //HASH productID to auction product
     private HashMap<Integer, PurchasePolicy> purchasePolicies; //HASH policyID to purchase policy
     private HashMap<Integer, DiscountPolicy> discountPolicies; //HASH policyID to discount policy
     private List<Integer> storeOwners;
@@ -40,9 +40,9 @@ public class Store {
         this.storeManagers = new HashMap<>();
         this.name = name;
         this.storeID = idCounter.incrementAndGet();
-        this.products = new HashMap<>();
         this.Sratings = new HashMap<>();
         this.storeProducts = new HashMap<>();
+        this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
         this.rolesTree = new Tree(founderID); // founder = root
@@ -75,8 +75,8 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
-    public void addStoreProduct(int productID, String name, double basePrice, int quantity, ProductState state) {
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, state));
+    public void addStoreProduct(int productID, String name, double basePrice, int quantity) {
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
     }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
@@ -86,6 +86,8 @@ public class Store {
         else{
             throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }    }
+
+    
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
         if(isOwner(userID) || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))){
@@ -95,6 +97,42 @@ public class Store {
             throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    public void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd) {
+        if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.INVENTORY))){
+            throw new IllegalArgumentException("User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+        }
+        if(storeProducts.containsKey(productID)){
+            StoreProduct storeProduct = storeProducts.get(productID);
+            auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
+        }
+        else{
+            throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
+    public boolean addBidToAuctionProduct(int requesterId, int productID, double bidAmount) {
+        if(auctionProducts.containsKey(productID)){
+            return auctionProducts.get(productID).addBid(requesterId, bidAmount);
+        }
+        else{
+            throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
+    public void isValidPurchaseAction(int requesterId, int productID) {
+        if(auctionProducts.containsKey(productID)){
+            AuctionProduct auctionProduct = auctionProducts.get(productID);
+            if(auctionProduct.getDaysToEnd() <= 0){
+                throw new IllegalArgumentException("Auction for product with ID: " + productID + " has ended.");
+            }
+            if(auctionProduct.getUserIDHighestBid() != requesterId){
+                throw new IllegalArgumentException("User with ID: " + requesterId + " is not the highest bidder for product with ID: " + productID);
+            }
+        }
+        else{
+            throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
+        }
+    }
+    
+
     public void receivingMessage(int userID, String message) {
         messagesFromUsers.add(new SimpleEntry<>(userID, message));
     }

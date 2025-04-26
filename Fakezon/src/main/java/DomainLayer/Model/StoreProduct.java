@@ -9,16 +9,20 @@ public class StoreProduct {
     private String name;
     private double basePrice;
     private int quantity;
-    private ProductState state;
     private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
 
 
-   public StoreProduct(int SproductID, String name, double basePrice, int quantity, ProductState state) {
+   public StoreProduct(int SproductID, String name, double basePrice, int quantity) {
         this.SproductID = SproductID;
         this.name = name;
         this.basePrice = basePrice;
         this.quantity = quantity;
-        this.state = state;
+    }
+    public StoreProduct(StoreProduct storeProduct) {
+        this.SproductID = storeProduct.SproductID;
+        this.name = storeProduct.name;
+        this.basePrice = storeProduct.basePrice;
+        this.quantity = storeProduct.quantity;
     }
 
     public int getSproductID() {
@@ -30,18 +34,10 @@ public class StoreProduct {
     public double getBasePrice() {
         return basePrice;
     }
-    public int getQuantity() {
+    public synchronized int getQuantity() {
         return quantity;
     }
-    public ProductState getState() {
-        return state;
-    }
-    public String getStateName() {
-        return state.getStateName();
-    }
-    public void setState(ProductState state) {
-        this.state = state;
-    }
+   
     //precondition: user is logged in and User has purchased the product - cheaked by service layer
    public void  addRating(int userID, double rating, String comment) {
         if (Pratings.containsKey(userID)) {
@@ -63,6 +59,12 @@ public class StoreProduct {
             totalRating += rating.getRating();
         }
         return totalRating / Pratings.size();
+    }
+    public synchronized void setQuantity(int quantity) {
+        if(quantity < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative");
+        }
+        this.quantity = quantity;
     }
 }
 
