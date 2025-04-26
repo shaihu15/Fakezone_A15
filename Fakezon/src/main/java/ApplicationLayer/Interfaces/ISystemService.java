@@ -55,4 +55,8 @@ public interface ISystemService {
     
     void removeStoreOwner(int storeId, int requesterId, int ownerId);
 
+    void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
+
+    void addStoreOwner(int storeId, int requesterId, int ownerId);
+
 }

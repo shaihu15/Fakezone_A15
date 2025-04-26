@@ -24,6 +24,8 @@ import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
+import DomainLayer.Model.StoreManager;
+import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -343,12 +345,20 @@ public class SystemService implements ISystemService {
 
     @Override
     public void removeStoreManager(int storeId, int requesterId, int managerId){
+        try {
+            logger.info("System service - user " + requesterId + " trying to remove manager " + managerId +" from store: " + storeId);
+            userService.removeRole(managerId, storeId);
+        } 
+        catch (Exception e) {
+            logger.error("System service - failed to remove StoreManager role from user " + e.getMessage());
+            throw e;
+        }
         try{
-            logger.info("System service - user " + requesterId + " trying to remove manager " + managerId);
             storeService.removeStoreManager(storeId, requesterId, managerId);
         }
         catch(Exception e){
-            logger.info("System service - removeStoreManager failed" + e.getMessage());
+            logger.error("System service - removeStoreManager failed" + e.getMessage());
+            userService.addRole(managerId, storeId, new StoreManager()); // reverting 
             throw e;
         }
     }
@@ -356,14 +366,63 @@ public class SystemService implements ISystemService {
     @Override
     public void removeStoreOwner(int storeId, int requesterId, int ownerId){
         try{
-            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId);
+            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId + " from store: " + storeId);
+            userService.removeRole(ownerId, storeId);
+        }
+        catch(Exception e){
+            logger.error("System service - failed to remove StoreOwner role from user " + e.getMessage());
+            throw e;
+        }
+        try{
             storeService.removeStoreOwner(storeId, requesterId, ownerId);
         }
         catch(Exception e){
-            logger.info("System service - removeStoreOwner failed" + e.getMessage());
+            logger.error("System service - removeStoreOwner failed" + e.getMessage());
+            userService.addRole(ownerId, storeId, new StoreOwner()); // reverting 
             throw e;
         }
     }
+
+    @Override
+    public void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+        try {
+            logger.info("System service - user " + requesterId + " trying to add manager " + managerId +" to store: " + storeId);
+            userService.addRole(managerId, storeId, new StoreManager());
+        } 
+        catch (Exception e) {
+            logger.error("System service - failed to add StoreManager role to user " + e.getMessage());
+            throw e;
+        }
+        try{
+            storeService.addStoreManager(storeId, requesterId, managerId, perms);
+        }
+        catch (Exception e){
+            logger.error("System service - failed to add manager to store " + e.getMessage());
+            userService.removeRole(managerId, storeId); // reverting
+            throw e;
+        }
+    }
+
+    @Override
+    public void addStoreOwner(int storeId, int requesterId, int ownerId){
+        try {
+            logger.info("System service - user " + requesterId + " trying to add owner " + ownerId +" to store: " + storeId);
+            userService.addRole(ownerId, storeId, new StoreOwner());
+        } 
+        catch (Exception e) {
+            logger.error("System service - failed to add StoreOwner role to user " + e.getMessage());
+            throw e;
+        }
+        try{
+            storeService.addStoreOwner(storeId, requesterId, ownerId);
+        }
+        catch (Exception e){
+            logger.error("System service - failed to add owner to store " + e.getMessage());
+            userService.removeRole(ownerId, storeId); // reverting
+            throw e;
+        }
+    }
+
 
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
