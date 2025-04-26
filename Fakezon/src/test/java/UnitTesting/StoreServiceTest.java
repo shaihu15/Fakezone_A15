@@ -167,6 +167,7 @@ class StoreServiceTest {
             storeService.sendMessageToUser(invalidFounderId, storeId, userId, message);
         }, "Expected sendMessageToUser to throw if the founder ID is invalid");
     }
+
     
 
 

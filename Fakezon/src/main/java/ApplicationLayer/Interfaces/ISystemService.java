@@ -58,5 +58,6 @@ public interface ISystemService {
     void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
-
+    void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
 }

@@ -422,6 +422,26 @@ public class SystemService implements ISystemService {
             throw e;
         }
     }
+    @Override
+    public void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd) {
+        try {
+            logger.info("System service - user " + requesterId + " trying to add auction product " + productID
+                    + " to store: " + storeId);
+            this.storeService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, daysToEnd);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding auction product to store: " + e.getMessage());
+        }
+    }
+    @Override
+    public void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
+        try {
+            logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
+                    + productID + " in store: " + storeId);
+            this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
+        }
+    }
 
 
     // // Example of a system service method that uses the authenticator service

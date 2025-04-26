@@ -180,18 +180,61 @@ public class StoreTest {
         });
         assertTrue(thrown.getMessage().contains("insufficient permissions"));
     }
+    @Test
+    void addAuctionProduct_AsManagerWithInventoryPermission_Success() {
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.INVENTORY));
+        assertDoesNotThrow(() -> store.addAuctionProduct(managerId, productId, 50.0, 7));
+    }
 
     @Test
-    void addBidToAuctionProduct_SuccessfulBid() {
+    void addAuctionProduct_ManagerWithoutInventoryPermission_Fails() {
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            store.addAuctionProduct(managerId, productId, 50.0, 7);
+        });
+        assertTrue(thrown.getMessage().contains("insufficient permissions"));
+    }
+    @Test
+    void addAuctionProduct_AlreadyExists_Fails() {
         store.addAuctionProduct(founderId, productId, 50.0, 7);
-        boolean success = store.addBidToAuctionProduct(founderId, productId, 55.0);
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            store.addAuctionProduct(founderId, productId, 50.0, 7);
+        });
+        assertTrue(thrown.getMessage().contains("already"));
+    }
+    @Test
+    void addAuctionProduct_ZeroDays_Fails() {
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            store.addAuctionProduct(founderId, productId, 50.0, 0);
+        });
+        assertTrue(thrown.getMessage().contains("must be greater than 0"));
+    }
+    @Test
+    void addAuctionProduct_NegativeDays_Fails() {
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            store.addAuctionProduct(founderId, productId, 50.0, -1);
+        });
+        assertTrue(thrown.getMessage().contains("must be greater than 0"));
+    }
+    @Test
+    void addAuctionProduct_NegativeBasePrice_Fails() {
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            store.addAuctionProduct(founderId, productId, -50.0, 7);
+        });
+        assertTrue(thrown.getMessage().contains("must be greater than 0"));
+    }
+
+    @Test
+    void addBidOnAuctionProduct_SuccessfulBid() {
+        store.addAuctionProduct(founderId, productId, 50.0, 7);
+        boolean success = store.addBidOnAuctionProduct(founderId, productId, 55.0);
         assertTrue(success);
     }
 
     @Test
-    void addBidToAuctionProduct_NonExistingAuctionProduct_Fails() {
+    void addBidOnAuctionProduct_NonExistingAuctionProduct_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-            store.addBidToAuctionProduct(founderId, nonExistingProductId, 60.0);
+            store.addBidOnAuctionProduct(founderId, nonExistingProductId, 60.0);
         });
         assertTrue(thrown.getMessage().contains("does not exist"));
     }
@@ -199,14 +242,14 @@ public class StoreTest {
     @Test
     void isValidPurchaseAction_SuccessfulFlow() {
         store.addAuctionProduct(founderId, productId, 50.0, 7);
-        store.addBidToAuctionProduct(founderId, productId, 60.0);
+        store.addBidOnAuctionProduct(founderId, productId, 60.0);
         assertDoesNotThrow(() -> store.isValidPurchaseAction(founderId, productId));
     }
 
     @Test
     void isValidPurchaseAction_WrongBidder_Fails() {
         store.addAuctionProduct(founderId, productId, 50.0, 7);
-        store.addBidToAuctionProduct(founderId, productId, 60.0);
+        store.addBidOnAuctionProduct(founderId, productId, 60.0);
 
         int otherUserId = 999;
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -223,19 +266,6 @@ public class StoreTest {
         assertTrue(thrown.getMessage().contains("is not an auction product"));
     }
 
-    @Test
-    void addAuctionProduct_AsManagerWithInventoryPermission_Success() {
-        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.INVENTORY));
-        assertDoesNotThrow(() -> store.addAuctionProduct(managerId, productId, 50.0, 7));
-    }
 
-    @Test
-    void addAuctionProduct_ManagerWithoutInventoryPermission_Fails() {
-        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY));
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-            store.addAuctionProduct(managerId, productId, 50.0, 7);
-        });
-        assertTrue(thrown.getMessage().contains("insufficient permissions"));
-    }
 }
 

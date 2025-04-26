@@ -14,6 +14,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import DomainLayer.Enums.StoreManagerPermission;
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -363,6 +364,61 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Product not found");
         }
         return toStoreProductDTO(product);
+    }
+    public void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("addAuctionProductToStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            store.addAuctionProduct(requesterId, productID, basePrice, daysToEnd);
+            logger.info("Auction product added to store: " + storeId + " by user: " + requesterId + " with product ID: " + productID);
+        } catch (IllegalArgumentException e) {
+            logger.error("addAuctionProductToStore - Product not found: " + productID);
+            throw new IllegalArgumentException("Product not found");
+        }
+    }
+    public void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("addBidOnAuctionProductInStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            store.addBidOnAuctionProduct(requesterId, productID, bid);
+            logger.info("Bid added to auction product in store: " + storeId + " by user: " + requesterId + " with product ID: " + productID + " and bid: " + bid);
+        } catch (IllegalArgumentException e) {
+            logger.error("addBidOnAuctionProductInStore - Product not found: " + productID);
+            throw new IllegalArgumentException("Product not found");
+        }
+    }
+    private void isValidPurchaseActionForUserInStore(int storeId, int requesterId, int productId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("isValidPurchaseActionForUserInStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            store.isValidPurchaseAction(requesterId, productId);
+            logger.info("Purchase action is valid for user: " + requesterId + " in store: " + storeId + " for product: " + productId);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("isValidPurchaseActionForUserInStore - Product not found: " + productId);
+            throw new IllegalArgumentException("Product not found");
+        }
+    }
+    public List<AuctionProductDTO> getAuctionProductsFromStore(int storeId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getAuctionProductsFromStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        List<AuctionProductDTO> auctionProducts = store.getAuctionProducts().stream()
+                .map(AuctionProductDTO::new)
+                .collect(Collectors.toList());
+        logger.info("Auction products retrieved from store: " + storeId);
+        return auctionProducts;
     }
 
 }

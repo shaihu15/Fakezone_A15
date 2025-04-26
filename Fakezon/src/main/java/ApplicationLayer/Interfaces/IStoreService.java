@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.DiscountPolicy;
@@ -65,4 +66,8 @@ public interface IStoreService {
     void sendMessageToUser(int managerId,int storeId, int userId, String message);
     Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId,int storeId);
     Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId,int storeId);
+    void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
+    List<AuctionProductDTO> getAuctionProductsFromStore(int storeId);
+    
 }
