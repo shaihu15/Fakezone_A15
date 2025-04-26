@@ -75,8 +75,8 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
-    public void addStoreProduct(int productID, String name, double basePrice, int quantity, ProductState state) {
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, state));
+    public void addStoreProduct(int productID, String name, double basePrice, int quantity) {
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
     }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {

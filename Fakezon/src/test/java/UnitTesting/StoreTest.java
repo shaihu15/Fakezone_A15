@@ -68,7 +68,7 @@ public class StoreTest {
     void addStoreProductRating_ValidRating_ShouldSucceed() {
         int userId = 1;
         int productId = 1;
-        store.addStoreProduct(productId, "Test Product", 10.0, 100, null); // Assuming this method exists to add a product
+        store.addStoreProduct(productId, "Test Product", 10.0, 100); // Assuming this method exists to add a product
         double rating = 4.5;
         String comment = "Great product!";
 
