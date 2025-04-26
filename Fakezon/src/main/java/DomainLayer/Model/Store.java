@@ -9,6 +9,7 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
+import org.springframework.security.access.method.P;
 
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
@@ -75,9 +76,65 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
-    public void addStoreProduct(int productID, String name, double basePrice, int quantity) {
+    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
+        if(!hasInventoryPermissions(requesterId)){
+            throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+        }
+        if(storeProducts.containsKey(productID)){
+            throw new IllegalArgumentException("Product " + productID + " is already in store " + storeID);
+        }
+        if(quantity <= 0){
+            throw new IllegalArgumentException("Product's quantity must be greater than 0");
+        }
+        if(basePrice <= 0){
+            throw new IllegalArgumentException("Product's base price must be greater than 0");
+        }
+        if(name == null || name.length() <= 0){
+            throw new IllegalArgumentException("Porduct's name can not be empty");
+        }
         storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
     }
+    public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity){
+        if(!hasInventoryPermissions(requesterId)){
+            throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+        }
+        if(!storeProducts.containsKey(productID)){
+            throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
+        }
+        if(quantity <= 0){
+            throw new IllegalArgumentException("Product's quantity must be greater than 0");
+        }
+        if(basePrice <= 0){
+            throw new IllegalArgumentException("Product's base price must be greater than 0");
+        }
+        if(name == null || name.length() <= 0){
+            throw new IllegalArgumentException("Product's name can not be empty");
+        }
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity)); //overrides old product
+    }
+    public void removeStoreProduct(int requesterId, int productID){
+        if(!hasInventoryPermissions(requesterId)){
+            throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+        }
+        if(!storeProducts.containsKey(productID)){
+            throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
+        }
+        if(auctionProducts.containsKey(productID)){
+            auctionProducts.remove(productID);
+        }
+        storeProducts.remove(productID);
+    }
+
+    public void addAuctionProductDays(int requesterId, int productId, int daysToAdd){
+        if(!hasInventoryPermissions(requesterId)){
+            throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+        }
+        if(!auctionProducts.containsKey(productId)){
+            throw new IllegalArgumentException("Product "+ productId + " not on Auction in store " + storeID);
+        }
+        auctionProducts.get(productId).addDays(daysToAdd); //throws if daysToAdd <= 0, gets caught in service
+    }
+
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
         if(isOwner(userID) || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))){
@@ -98,7 +155,7 @@ public class Store {
         }
     }
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd) {
-        if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.INVENTORY))){
+        if(!hasInventoryPermissions(requesterId)){
             throw new IllegalArgumentException("User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
         if(storeProducts.containsKey(productID)){
@@ -410,6 +467,10 @@ public class Store {
             throw new IllegalArgumentException("Only " + childId + "'s appointor can change/remove their permissions");
         }
         return new Node[] {fatherNode, childNode};
+    }
+
+    private boolean hasInventoryPermissions(int id){
+        return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
     }
 
 }

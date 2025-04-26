@@ -30,9 +30,10 @@ public interface IStoreService {
     void updateStoreName(int storeId, String newName, int requesterId);
 
     // --- Product Management ---
-    void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType);
-    void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType);
+    void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity);
+    void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity);
     void removeProductFromStore(int storeId, int requesterId, int productId);
+    void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
     //List<IProductDTO> getProductsInStore(int storeId);
 
     // --- Ratings ---

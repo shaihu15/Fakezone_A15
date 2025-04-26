@@ -139,13 +139,73 @@ public class StoreService implements IStoreService {
     public void updateStoreName(int storeId, String newName, int requesterId) {}
 
     @Override
-    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType) {}
+    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity) {
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to add store product " + productId + " to store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - addProductToStore - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.addStoreProduct(requesterId, productId, name, basePrice, quantity);
+        }
+        catch (Exception e){
+            logger.error("StoreService - failed to add store product " + e.getMessage());
+            throw e;
+        }
+    }
+
 
     @Override
-    public void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType) {}
+    public void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity) {
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to update store product " + productId + " in store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - updateProductToStore - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.editStoreProduct(requesterId, productId, name, basePrice, quantity);
+        }
+        catch (Exception e){
+            logger.error("StoreService - failed to update store product " + e.getMessage());
+            throw e;
+        }
+    }
 
     @Override
-    public void removeProductFromStore(int storeId, int requesterId, int productId) {}
+    public void removeProductFromStore(int storeId, int requesterId, int productId) {
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to remove store product " + productId + " from store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - removeProductFromStore - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.removeStoreProduct(requesterId, productId);
+        }
+        catch (Exception e){
+            logger.error("StoreService - failed to remove store product " + e.getMessage());
+            throw e;
+        }
+    }
+
+    
+    @Override
+    public void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd){
+        try {
+            logger.info("Store Service - User "+ requesterId + " trying to add " + daysToAdd + " days to auction product " + productId + " in store " + storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - removeProductFromStore - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.addAuctionProductDays(requesterId, productId, daysToAdd);
+        } catch (Exception e) {
+            logger.error("StoreService - failed to add store auction product days " + e.getMessage());
+            throw e;
+        }
+    }
 
     @Override
     public void addStoreRating(int storeId, int userId, double rating, String comment) {
@@ -165,6 +225,7 @@ public class StoreService implements IStoreService {
     public double getStoreAverageRating(int storeId) {
         return 0;
     }
+
 
     @Override
     public void addStoreProductRating(int storeId, int productId, int userId, double rating, String comment) {

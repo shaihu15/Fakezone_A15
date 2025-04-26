@@ -423,6 +423,71 @@ public class SystemService implements ISystemService {
         }
     }
 
+    @Override
+    public void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity){
+        String name = null;
+        try{
+            logger.info("System service - user " + requesterId + " trying to add product " + productId + " to store " + storeId);
+            name = productService.viewProduct(productId).getName();
+        }
+        catch (Exception e){
+            logger.error("System service - failed to fetch product " + e.getMessage());
+            throw e;
+        }
+        try{
+            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity);
+        }
+        catch (Exception e){
+            logger.error("System service - failed to add product to store " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity){
+        String name = null;
+        try{
+            logger.info("System service - user " + requesterId + " trying to update product " + productId +" in store " + storeId);
+            name = productService.viewProduct(productId).getName();
+        }
+        catch (Exception e){
+            logger.error("System service - failed to fetch product " + e.getMessage());
+            throw e;
+        }
+        try{
+            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity);
+        }
+        catch (Exception e){
+            logger.error("System service - failed to update product in store " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void removeProductFromStore(int storeId, int requesterId, int productId){
+        try {
+            logger.info("System service - user " + requesterId + " trying to remove product " + productId + " from store " + storeId);
+            storeService.removeProductFromStore(storeId, requesterId, productId);
+        } 
+        catch (Exception e) {
+            logger.info("System service - failed to remove product from store " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd){
+        try{
+            logger.info("System service - user " + requesterId + " trying to add store auction product days");
+            storeService.addStoreAuctionProductDays(storeId, requesterId, productId, daysToAdd);
+        }
+        catch (Exception e) {
+            logger.info("System service - failed to add auction product days  " + e.getMessage());
+            throw e;
+        }
+    }
+
+   
 
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {

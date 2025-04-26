@@ -59,4 +59,12 @@ public interface ISystemService {
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
 
+    void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void removeProductFromStore(int storeId, int requesterId, int productId);
+    
+    void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
 }
