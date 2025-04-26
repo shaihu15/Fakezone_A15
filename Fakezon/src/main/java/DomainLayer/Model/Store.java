@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -27,7 +28,7 @@ public class Store {
     private HashMap<Integer, DiscountPolicy> discountPolicies; //HASH policyID to discount policy
     private List<Integer> storeOwners;
     private HashMap<Integer,Integer> pendingOwners; //appointee : appointor
-    private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager
+    private HashMap<Integer, List<StoreManagerPermission>> storeManagers; //HASH userID to store manager perms
     private Tree rolesTree;
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; //HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; //HASH userID to message
@@ -82,7 +83,7 @@ public class Store {
     }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
-        if(storeOwners.contains(userID) || (storeManagers.containsKey(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))){
+        if(isOwner(userID) || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))){
             purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
         }
         else{
@@ -90,7 +91,7 @@ public class Store {
         }    }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
-        if(storeOwners.contains(userID) || (storeManagers.containsKey(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))){
+        if(isOwner(userID) || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))){
             discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
         }
         else{
@@ -101,7 +102,7 @@ public class Store {
         messagesFromUsers.add(new SimpleEntry<>(userID, message));
     }
     public void sendMessage(int managerId, int userID, String message) {
-        if(storeOwners.contains(managerId) || (storeManagers.containsKey(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+        if(isOwner(managerId) || (isManager(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
             messagesFromStore.push(new SimpleEntry<>(userID, message));
         }
         else{
@@ -109,7 +110,7 @@ public class Store {
         }
     }
     public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId) {
-        if(storeOwners.contains(managerId) || (storeManagers.containsKey(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+        if(isOwner(managerId) || (isManager(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
             return messagesFromUsers;
         }
         else{
@@ -117,7 +118,7 @@ public class Store {
         }
     }
     public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId) {
-        if (storeOwners.contains(managerId) || (storeManagers.containsKey(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+        if (isOwner(managerId) || (isManager(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
             return messagesFromStore;
         } else {
             throw new IllegalArgumentException("User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
@@ -138,17 +139,26 @@ public class Store {
         return discountPolicies;
     }
     public List<Integer> getStoreOwners(int requesterId) {
-        if(storeOwners.contains(requesterId) || (storeManagers.containsKey(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
-            return storeOwners;
+        if(isOwner(requesterId) || (isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
+            return new ArrayList<>(storeOwners); // copy of store owners
         }
         else{
             logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
             throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    //so the list won't change outside of Store and mess with the hashmap
+    private HashMap<Integer, List<StoreManagerPermission>> copyStoreManagersMap(){
+        HashMap<Integer, List<StoreManagerPermission>> copy = new HashMap<>();
+        for(Integer id : storeManagers.keySet()){
+            copy.put(id, new ArrayList<>(storeManagers.get(id)));
+        }
+        return copy;
+    }
+
     public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int requesterId){
-        if(storeOwners.contains(requesterId) || (storeManagers.containsKey(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
-            return storeManagers;
+        if(isOwner(requesterId) || (isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
+            return copyStoreManagersMap();
         }
         else{
             logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
@@ -157,10 +167,10 @@ public class Store {
     }
     //TO DO: Send Approval Request
     public void addStoreOwner(int appointor, int appointee){
-        if(!storeOwners.contains(appointor)){
+        if(!isOwner(appointor)){
             throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
         }
-        if(storeOwners.contains(appointee)){
+        if(isOwner(appointee)){
             throw new IllegalArgumentException("User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
         }
         // relevant after notifs
@@ -168,7 +178,7 @@ public class Store {
             throw new IllegalArgumentException("Already waiting for User with ID: " + appointee + "'s approval");
         }*/
         //pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS IMPLEMENTED
-        if(storeManagers.containsKey(appointee)){
+        if(isManager(appointee)){
             Node appointeeNode = rolesTree.getNode(appointee);
             Node appointorNode = rolesTree.getNode(appointor);
             if(!appointorNode.getChildren().contains(appointeeNode)){
@@ -189,12 +199,20 @@ public class Store {
     // public void declineStoreOwner(int appointee){
     //     pendingOwners.remove(appointee);
     // }
-    
+
+    public boolean isOwner(int userId){
+        return storeOwners.contains(userId);
+    }
+
+    public boolean isManager(int userId){
+        return storeManagers.containsKey(userId);
+    }
+
     public void addStoreManager(int appointor, int appointee, List<StoreManagerPermission> perms){
-        if(!storeOwners.contains(appointor)){
+        if(!isOwner(appointor)){
             throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
         }
-        if(storeManagers.containsKey(appointee)){
+        if(isManager(appointee)){
             throw new IllegalArgumentException("User with ID: " + appointee + " is already a store manager for store with ID: " + storeID);
         }
         if(perms == null || perms.isEmpty()){
@@ -202,6 +220,42 @@ public class Store {
         }
         storeManagers.put(appointee, perms);
         rolesTree.addNode(appointor, appointee);
+    }
+
+    public void addManagerPermissions(int requesterId, int managerId, List<StoreManagerPermission> perms){
+        if(!isOwner(requesterId)){
+            throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
+        }
+        if(!isManager(managerId)){
+            throw new IllegalArgumentException("Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
+        }
+        List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
+        for (StoreManagerPermission perm : perms) {
+            if(!currentPerms.contains(perm))
+                currentPerms.add(perm);
+        }
+    }
+
+    public void removeManagerPermissions(int requesterId, int managerId, List<StoreManagerPermission> toRemove){
+        if(!isOwner(requesterId)){
+            throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
+        }
+        if(!isManager(managerId)){
+            throw new IllegalArgumentException("Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
+        }
+        List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
+        List<StoreManagerPermission> copyCurrentPerms = new ArrayList<>(currentPerms);
+        for(StoreManagerPermission perm : toRemove){
+            if(!currentPerms.contains(perm)){
+                storeManagers.put(managerId, copyCurrentPerms); //restore initial perms because method failed
+                throw new IllegalArgumentException("can not remove permission: " + perm + " because manager: " + managerId + " does not have it. permissions reseted to original");
+            }
+            currentPerms.remove(perm);
+        }
+        if(currentPerms.isEmpty()){
+            storeManagers.put(managerId, copyCurrentPerms); //restore initial perms because method failed
+            throw new IllegalArgumentException("permissions can not be empty. reseting manager: " + managerId + " permissions to original");
+        }
     }
 
     public int getStoreFounderID() {

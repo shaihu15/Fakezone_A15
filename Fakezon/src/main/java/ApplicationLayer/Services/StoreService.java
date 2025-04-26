@@ -88,7 +88,9 @@ public class StoreService implements IStoreService {
                 store.getAverageRating()
         );
     }
-
+    public StoreProductDTO toStoreProductDTO(StoreProduct storeProduct) {
+        return new StoreProductDTO(storeProduct);
+    }
     // --- Store Info Methods ---
 
     @Override
@@ -216,6 +218,26 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.addStoreManager(requesterId, newManagerId, perms);
+    }
+
+    @Override
+    public void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+        Store store = storeRepository.findById(storeId);
+        if (store == null){
+            logger.error("addStoreManagerPermissions - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.addManagerPermissions(requesterId, managerId, perms);
+    }
+
+    @Override
+    public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove){
+        Store store = storeRepository.findById(storeId);
+        if (store == null){
+            logger.error("removeStoreManagerPermissions - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.removeManagerPermissions(requesterId, managerId, toRemove);
     }
 
     @Override

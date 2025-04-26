@@ -8,6 +8,7 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
+
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
@@ -43,7 +44,13 @@ public interface ISystemService {
 
     void deleteProduct(int productId);
 
-    void guestRegister(String email, String password,String dobInput);
+    String guestRegister(String email, String password,String dobInput);
+    
+    List<ProductDTO> searchByKeyword(String token, String keyword);
+    
+    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
+    
+    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
 
     StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 }
