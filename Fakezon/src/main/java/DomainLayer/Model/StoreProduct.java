@@ -20,6 +20,13 @@ public class StoreProduct {
         this.quantity = quantity;
         this.state = state;
     }
+    public StoreProduct(StoreProduct storeProduct) {
+        this.SproductID = storeProduct.SproductID;
+        this.name = storeProduct.name;
+        this.basePrice = storeProduct.basePrice;
+        this.quantity = storeProduct.quantity;
+        this.state = storeProduct.state;
+    }
 
     public int getSproductID() {
         return SproductID;
@@ -30,7 +37,7 @@ public class StoreProduct {
     public double getBasePrice() {
         return basePrice;
     }
-    public int getQuantity() {
+    public synchronized int getQuantity() {
         return quantity;
     }
     public ProductState getState() {
@@ -63,6 +70,12 @@ public class StoreProduct {
             totalRating += rating.getRating();
         }
         return totalRating / Pratings.size();
+    }
+    public synchronized void setQuantity(int quantity) {
+        if(quantity < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative");
+        }
+        this.quantity = quantity;
     }
 }
 
