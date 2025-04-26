@@ -8,7 +8,7 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
+import org.apache.commons.lang3.ObjectUtils.Null;
 
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
@@ -45,7 +45,7 @@ public class Store {
         this.storeProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
-        this.rolesTree = new Tree(founderID);
+        this.rolesTree = new Tree(founderID); // founder = root
         this.storeOwners.add(founderID);
         this.pendingOwners = new HashMap<>(); //appointee : appointor
         this.storeManagers = new HashMap<>(); //HASH userID to store manager
@@ -207,8 +207,8 @@ public class Store {
         if(!isOwner(appointor)){
             throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
         }
-        if(isManager(appointee)){
-            throw new IllegalArgumentException("User with ID: " + appointee + " is already a store manager for store with ID: " + storeID);
+        if(isManager(appointee) || isOwner(appointee)){
+            throw new IllegalArgumentException("User with ID: " + appointee + " is already a store manager/owner for store with ID: " + storeID);
         }
         if(perms == null || perms.isEmpty()){
             throw new IllegalArgumentException("Permissions list is empty");
@@ -224,6 +224,7 @@ public class Store {
         if(!isManager(managerId)){
             throw new IllegalArgumentException("Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
         }
+        checkNodesValidity(requesterId, managerId); // no need to hold the nodes here
         List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
         for (StoreManagerPermission perm : perms) {
             if(!currentPerms.contains(perm))
@@ -238,6 +239,7 @@ public class Store {
         if(!isManager(managerId)){
             throw new IllegalArgumentException("Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
         }
+        checkNodesValidity(requesterId, managerId); // no need to hold the nodes here
         List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
         List<StoreManagerPermission> copyCurrentPerms = new ArrayList<>(currentPerms);
         for(StoreManagerPermission perm : toRemove){
@@ -295,6 +297,74 @@ public class Store {
             sum += rating.getRating();
         }
         return sum / Sratings.size();
+    }
+
+    public void removeStoreOwner(int requesterId, int toRemoveId){
+        if(!isOwner(requesterId)){
+            throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
+        }
+        if(!isOwner(toRemoveId)){
+            throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store owner");
+        }
+        Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
+        Node fatherNode = nodesArr[0];
+        Node childNode = nodesArr[1];
+        storeOwners.remove(Integer.valueOf(childNode.getId())); // WRAPPED AS INTEGER BECAUSE OTHERWISE JAVA WANTS TO REMOVE AS INDEX  - DO NOT CHANGE!!
+        removeAllChildrenRoles(childNode); // remove all children from their respective roles list/hashmap
+        if(requesterId != toRemoveId)
+            fatherNode.removeChild(childNode); //remove child & all descendants from the actual tree
+    }
+
+    public void removeStoreManager(int requesterId, int toRemoveId){
+        if(!isOwner(requesterId)){
+            throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
+        }
+        if(!isManager(toRemoveId)){
+            throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store manager");
+        }
+        Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
+        Node fatherNode = nodesArr[0];
+        Node childNode = nodesArr[1];
+        if(!childNode.getChildren().isEmpty()){
+            throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); //should not happen - just for debugging purposes
+        }
+        storeManagers.remove(toRemoveId);
+        fatherNode.removeChild(childNode);//remove child from the actual tree
+    }
+
+    private void removeAllChildrenRoles(Node toRemove){
+        List<Node> children = toRemove.getAllDescendants();
+        for(Node child : children){
+            int childId = child.getId();
+            if(storeOwners.contains(childId)){
+                storeOwners.remove(Integer.valueOf(childId));// WRAPPED AS INTEGER BECAUSE OTHERWISE JAVA WANTS TO REMOVE AS INDEX  - DO NOT CHANGE!!
+            }
+            else {
+                if(storeManagers.containsKey(childId)){
+                    storeManagers.remove(childId);
+                }
+                else{
+                    throw new IllegalArgumentException("Node with id " + toRemove.getId() + " has descendant with id " + childId + " with no roles on owners list/managers hashmap"); //should not happen - just for debugging purposes
+                }
+            }
+        }
+    }
+
+    //returns [father,child]
+    //allows requesterId = childId!!!
+    private Node[] checkNodesValidity(int requesterId, int childId){
+        Node fatherNode = rolesTree.getNode(requesterId);
+        Node childNode = rolesTree.getNode(childId);
+        if(fatherNode == null){
+            throw new IllegalArgumentException("Could Not Find fatherNode in rolesTree (id: " + requesterId +")"); //should not happen - just for debugging purposes
+        }
+        if(childNode == null){
+            throw new IllegalArgumentException("Could Not Find childNode in rolesTree (id: " + requesterId +")"); //should not happen - just for debugging purposes
+        }
+        if(requesterId != childId && !fatherNode.isChild(childNode)){
+            throw new IllegalArgumentException("Only " + childId + "'s appointor can change/remove their permissions");
+        }
+        return new Node[] {fatherNode, childNode};
     }
 
 }

@@ -51,4 +51,8 @@ public interface ISystemService {
     
     void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
 
+    void removeStoreManager(int storeId, int requesterId, int managerId);
+    
+    void removeStoreOwner(int storeId, int requesterId, int ownerId);
+
 }

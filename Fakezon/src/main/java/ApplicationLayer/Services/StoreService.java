@@ -198,7 +198,14 @@ public class StoreService implements IStoreService {
     public void removeDiscountPolicy(int storeId, int requesterId, int policyId) {}
 
     @Override
-    public void removeStoreOwner(int storeId, int requesterId, int ownerId) {}
+    public void removeStoreOwner(int storeId, int requesterId, int ownerId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null){
+            logger.error("removeStoreOwner - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.removeStoreOwner(requesterId, ownerId);
+    }
 
     @Override
     public void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms) {
@@ -230,7 +237,14 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void removeStoreManager(int storeId, int requesterId, int managerId) {}
+    public void removeStoreManager(int storeId, int requesterId, int managerId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null){
+            logger.error("removeStoreManager - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.removeStoreManager(requesterId, managerId);
+    }
     @Override
     public int addStore(int userId, String storeName) {
         if(storeRepository.findByName(storeName) != null){

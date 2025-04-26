@@ -332,12 +332,36 @@ public class SystemService implements ISystemService {
     public void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
             List<StoreManagerPermission> perms) {
         try {
-            logger.info("Systrem service - user sessionToken: " + sessionToken + " trying to remove permissions: "
+            logger.info("System service - user sessionToken: " + sessionToken + " trying to remove permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
             int requesterId = this.authenticatorService.getUserId(sessionToken);
             storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
         } catch (Exception e) {
             logger.error("System Service - Error during removing store manager permissions: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeStoreManager(int storeId, int requesterId, int managerId){
+        try{
+            logger.info("System service - user " + requesterId + " trying to remove manager " + managerId);
+            storeService.removeStoreManager(storeId, requesterId, managerId);
+        }
+        catch(Exception e){
+            logger.info("System service - removeStoreManager failed" + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void removeStoreOwner(int storeId, int requesterId, int ownerId){
+        try{
+            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId);
+            storeService.removeStoreOwner(storeId, requesterId, ownerId);
+        }
+        catch(Exception e){
+            logger.info("System service - removeStoreOwner failed" + e.getMessage());
+            throw e;
         }
     }
 
