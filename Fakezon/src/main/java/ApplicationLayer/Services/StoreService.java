@@ -198,39 +198,90 @@ public class StoreService implements IStoreService {
     public void removeDiscountPolicy(int storeId, int requesterId, int policyId) {}
 
     @Override
-    public void removeStoreOwner(int storeId, int requesterId, int ownerId) {}
+    public void removeStoreOwner(int storeId, int requesterId, int ownerId) {
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to remove store owner " + ownerId + " from store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - removeStoreOwner - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.removeStoreOwner(requesterId, ownerId);
+        }
+        catch (Exception e){
+            logger.error("StoreService - failed to remove store owner " + e.getMessage());
+            throw e;
+        }
+
+    }
 
     @Override
     public void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms) {
-        Store store = storeRepository.findById(storeId);
-        if (store == null) {
-            throw new IllegalArgumentException("Store not found");
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to add store manager " + newManagerId + " to store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null) {
+                logger.error("Store Service - addStoreManager - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.addStoreManager(requesterId, newManagerId, perms);
         }
-        store.addStoreManager(requesterId, newManagerId, perms);
+        catch (Exception e){
+            logger.error("Store Service - failed to add store manager " + e.getMessage());
+            throw e;
+        }
     }
 
     @Override
     public void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
-        Store store = storeRepository.findById(storeId);
-        if (store == null){
-            logger.error("addStoreManagerPermissions - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to add store manager permissions to " + managerId + " in store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - addStoreManagerPermissions - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.addManagerPermissions(requesterId, managerId, perms);
         }
-        store.addManagerPermissions(requesterId, managerId, perms);
+        catch (Exception e){
+            logger.error("Store Service - failed to add manager permissions: " + e.getMessage());
+            throw e;
+        }
     }
 
     @Override
     public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove){
-        Store store = storeRepository.findById(storeId);
-        if (store == null){
-            logger.error("removeStoreManagerPermissions - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to remove store manager permissions from " + managerId + " in store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - removeStoreManagerPermissions - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.removeManagerPermissions(requesterId, managerId, toRemove);
         }
-        store.removeManagerPermissions(requesterId, managerId, toRemove);
+        catch (Exception e){
+            logger.error("Store Service - failed to remove  manager permissions: " + e.getMessage());
+            throw e;
+        }
     }
 
     @Override
-    public void removeStoreManager(int storeId, int requesterId, int managerId) {}
+    public void removeStoreManager(int storeId, int requesterId, int managerId) {
+        try{
+            logger.info("Store Service - User " + requesterId + " trying to remove store manager " + managerId + " from store "+ storeId);
+            Store store = storeRepository.findById(storeId);
+            if (store == null){
+                logger.error("Store Service - removeStoreManager - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.removeStoreManager(requesterId, managerId);
+        }
+        catch (Exception e){
+            logger.error("Store Service - failed to remove store manager");
+            throw e;
+        }
+    }
     @Override
     public int addStore(int userId, String storeName) {
         if(storeRepository.findByName(storeName) != null){

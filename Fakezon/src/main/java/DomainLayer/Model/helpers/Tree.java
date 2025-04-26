@@ -26,5 +26,9 @@ public class Tree{
         Node appointorNode = getNode(appointor);
         if(appointorNode != null)
             appointorNode.addChild(new Node(appointee));
+        else
+            throw new IllegalArgumentException("appointor id: " + appointor + " not in rolesTree"); // should not happend - for debugging purposes
     }
+
+    
 }
