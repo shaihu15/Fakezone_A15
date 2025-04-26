@@ -351,6 +351,19 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Manager not found");
         }
     }
+    public StoreProductDTO getProductFromStore(int productId, int storeId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getProductFromStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        StoreProduct product = store.getStoreProduct(productId);
+        if (product == null) {
+            logger.error("getProductFromStore - Product not found: " + productId);
+            throw new IllegalArgumentException("Product not found");
+        }
+        return toStoreProductDTO(product);
+    }
 
 }
 
