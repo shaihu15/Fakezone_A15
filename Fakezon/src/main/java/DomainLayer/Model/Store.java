@@ -296,5 +296,12 @@ public class Store {
         }
         return sum / Sratings.size();
     }
+    public StoreProduct getStoreProduct(int productID) {
+        if (storeProducts.containsKey(productID)) {
+            return storeProducts.get(productID);
+        } else {
+            throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
 
 }
