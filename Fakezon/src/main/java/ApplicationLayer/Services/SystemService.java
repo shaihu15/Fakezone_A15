@@ -29,6 +29,7 @@ import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import ApplicationLayer.DTO.StoreRolesDTO;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -340,6 +341,21 @@ public class SystemService implements ISystemService {
         }
         return -1;
     }
+    @Override
+    public StoreRolesDTO getStoreRoles(int storeId, int userId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                return this.storeService.getStoreRoles(storeId, userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting store roles: " + e.getMessage());
+            throw new IllegalArgumentException("Error during getting store roles: " + e.getMessage());
+        }
+    }
+
 
     @Override
     public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId,

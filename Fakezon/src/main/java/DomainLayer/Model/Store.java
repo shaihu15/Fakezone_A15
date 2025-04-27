@@ -15,6 +15,9 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
 import DomainLayer.Model.helpers.*;
 import java.util.AbstractMap.SimpleEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Store implements IStore {
 
     private String name;
@@ -33,7 +36,7 @@ public class Store implements IStore {
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; //HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; //HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
-
+    private static final Logger logger = LoggerFactory.getLogger(Store.class);
     
     public Store(String name, int founderID) {
         this.storeFounderID = founderID;
@@ -195,6 +198,7 @@ public class Store implements IStore {
             return new ArrayList<>(storeOwners); // copy of store owners
         }
         else{
+            logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
             throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }
@@ -212,6 +216,7 @@ public class Store implements IStore {
             return copyStoreManagersMap();
         }
         else{
+            logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
             throw new IllegalArgumentException("User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
         }
     }

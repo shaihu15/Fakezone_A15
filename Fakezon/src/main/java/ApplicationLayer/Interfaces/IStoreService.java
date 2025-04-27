@@ -10,6 +10,14 @@ import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 
+import DomainLayer.Model.DiscountPolicy;
+import DomainLayer.Model.Product;
+import DomainLayer.Model.PurchasePolicy;
+import DomainLayer.Model.Store;
+import DomainLayer.Model.StoreManager;
+import DomainLayer.Model.StoreOwner;
+import ApplicationLayer.DTO.StoreRolesDTO;
+
 public interface IStoreService {
     int addStore(int userId, String storeName);
 
@@ -92,6 +100,5 @@ public interface IStoreService {
     StoreProductDTO decrementProductQuantity(int productId, int storeId, int quantity);
 
     void removeProductFromStore(int storeId, int requesterId, int productId);
-
 
 }
