@@ -19,6 +19,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import ApplicationLayer.DTO.StoreRolesDTO;
 
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
@@ -51,6 +52,7 @@ public class StoreService implements IStoreService {
     public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId){
         Store store = storeRepository.findById(storeId);
         if (store == null) {
+            logger.error("getStoreManagers - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         return store.getStoreManagers(requesterId);
@@ -213,6 +215,16 @@ public class StoreService implements IStoreService {
         }
 
     }
+    @Override
+    public StoreRolesDTO getStoreRoles(int storeId, int requesterId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getStoreRoles - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return new StoreRolesDTO(store, requesterId);
+    }
+
 
     @Override
     public void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms) {
