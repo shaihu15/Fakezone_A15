@@ -76,34 +76,31 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public synchronized void addToBasket(int userId, int productId, int storeId, int quantity) {
+    public void addToBasket(int userId, int productId, int storeId, int quantity) {
         StoreProductDTO product;
         try {
-            if(this.storeService.isStoreOpen(storeId)) {
+            if (this.storeService.isStoreOpen(storeId)) {
                 logger.info("System Service - Store is open: " + storeId);
             } else {
                 logger.error("System Service - Store is closed: " + storeId);
                 throw new IllegalArgumentException("Store is closed");
             }
             product = this.storeService.decrementProductQuantity(productId, storeId);
-            if( product.getQuantity() < quantity) {
-                logger.error("System Service - Not enough product in store: " + productId + " from store: " + storeId);
-                throw new IllegalArgumentException("Not enough product in store");
-            }
             if (!this.userService.isUserLoggedIn(userId)) {
                 logger.info("System Service - User is logged in: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 throw new IllegalArgumentException("User is not logged in");
-            } 
+            }
         } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
             throw new IllegalArgumentException("Error during adding to basket: " + e.getMessage());
         }
         this.userService.addToBasket(userId, storeId, product);
-        logger.info("System Service - User added product to basket: " + productId + " from store: " + storeId + " by user: "
-                + userId + " with quantity: " + quantity);
-    } 
+        logger.info(
+                "System Service - User added product to basket: " + productId + " from store: " + storeId + " by user: "
+                        + userId + " with quantity: " + quantity);
+    }
 
     @Override
     public void ratingStore(int storeId, int userId, double rating, String comment) {
@@ -300,7 +297,8 @@ public class SystemService implements ISystemService {
             dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
         } catch (Exception e) {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
-            throw new java.time.format.DateTimeParseException("Invalid date of birth format. Expected format: YYYY-MM-DD", dateOfBirth, 0);
+            throw new java.time.format.DateTimeParseException(
+                    "Invalid date of birth format. Expected format: YYYY-MM-DD", dateOfBirth, 0);
         }
         String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
         if (token == null) {
@@ -374,59 +372,56 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void removeStoreManager(int storeId, int requesterId, int managerId){
+    public void removeStoreManager(int storeId, int requesterId, int managerId) {
         try {
-            logger.info("System service - user " + requesterId + " trying to remove manager " + managerId +" from store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to remove manager " + managerId
+                    + " from store: " + storeId);
             userService.removeRole(managerId, storeId);
-        } 
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("System service - failed to remove StoreManager role from user " + e.getMessage());
             throw e;
         }
-        try{
+        try {
             storeService.removeStoreManager(storeId, requesterId, managerId);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("System service - removeStoreManager failed" + e.getMessage());
-            userService.addRole(managerId, storeId, new StoreManager()); // reverting 
+            userService.addRole(managerId, storeId, new StoreManager()); // reverting
             throw e;
         }
     }
 
     @Override
-    public void removeStoreOwner(int storeId, int requesterId, int ownerId){
-        try{
-            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId + " from store: " + storeId);
+    public void removeStoreOwner(int storeId, int requesterId, int ownerId) {
+        try {
+            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId + " from store: "
+                    + storeId);
             userService.removeRole(ownerId, storeId);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to remove StoreOwner role from user " + e.getMessage());
             throw e;
         }
-        try{
+        try {
             storeService.removeStoreOwner(storeId, requesterId, ownerId);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("System service - removeStoreOwner failed" + e.getMessage());
-            userService.addRole(ownerId, storeId, new StoreOwner()); // reverting 
+            userService.addRole(ownerId, storeId, new StoreOwner()); // reverting
             throw e;
         }
     }
 
     @Override
-    public void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
+    public void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add manager " + managerId +" to store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: "
+                    + storeId);
             userService.addRole(managerId, storeId, new StoreManager());
-        } 
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("System service - failed to add StoreManager role to user " + e.getMessage());
             throw e;
         }
-        try{
+        try {
             storeService.addStoreManager(storeId, requesterId, managerId, perms);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
             userService.removeRole(managerId, storeId); // reverting
             throw e;
@@ -434,25 +429,23 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void addStoreOwner(int storeId, int requesterId, int ownerId){
+    public void addStoreOwner(int storeId, int requesterId, int ownerId) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add owner " + ownerId +" to store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to add owner " + ownerId + " to store: "
+                    + storeId);
             userService.addRole(ownerId, storeId, new StoreOwner());
-        } 
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("System service - failed to add StoreOwner role to user " + e.getMessage());
             throw e;
         }
-        try{
+        try {
             storeService.addStoreOwner(storeId, requesterId, ownerId);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to add owner to store " + e.getMessage());
             userService.removeRole(ownerId, storeId); // reverting
             throw e;
         }
     }
-
 
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {

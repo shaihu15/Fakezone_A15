@@ -297,12 +297,13 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void addToBasket(int userId,int storeId,StoreProductDTO product) {
+    public void addToBasket(int userId, int storeId, StoreProductDTO product) {
         Optional<Registered> user = userRepository.findById(userId);
         if (user.isPresent()) {
             try {
                 user.get().addToBasket(storeId, product);
-                logger.info("Product added to basket: " + product.getName() + " from store: " + storeId + " by user: " + userId);
+                logger.info("Product added to basket: " + product.getName() + " from store: " + storeId + " by user: "
+                        + userId);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during add to basket: " + e.getMessage());
