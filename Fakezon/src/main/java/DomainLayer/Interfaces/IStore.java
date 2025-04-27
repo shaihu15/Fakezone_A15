@@ -88,4 +88,6 @@ public interface IStore {
     boolean isManager(int userId);
 
     ProductRating getStoreProductRating(int userID, int productID);
+
+    boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 }

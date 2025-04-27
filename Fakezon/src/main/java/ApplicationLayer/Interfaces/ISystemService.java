@@ -60,6 +60,10 @@ public interface ISystemService {
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
     
+    void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    
+    void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
+    
     StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 
     void addToBasket(int userId, int productId, int storeId, int quantity);

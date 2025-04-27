@@ -88,6 +88,15 @@ public class Store implements IStore {
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
+   @Override
+    public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
+        if (auctionProducts.containsKey(productID)) {
+            return auctionProducts.get(productID).addBid(requesterId, bidAmount);
+        } else {
+            throw new IllegalArgumentException(
+                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
 
     @Override
     public void addStoreProduct(int productID, String name, double basePrice, int quantity) {
@@ -129,6 +138,22 @@ public class Store implements IStore {
         }
         if (storeProducts.containsKey(productID)) {
             StoreProduct storeProduct = storeProducts.get(productID);
+            if (storeProduct.getQuantity() <= 0) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
+            }
+            if (auctionProducts.containsKey(productID)) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " is already an auction product in store ID: " + storeID);
+            }
+            if (basePrice <= 0) {
+                throw new IllegalArgumentException("Base price must be greater than 0 for auction product with ID: "
+                        + productID + " in store ID: " + storeID);
+            }
+            if (daysToEnd <= 0) {
+                throw new IllegalArgumentException("Days to end must be greater than 0 for auction product with ID: "
+                        + productID + " in store ID: " + storeID);
+            }
             auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
         } else {
             throw new IllegalArgumentException(
@@ -160,6 +185,10 @@ public class Store implements IStore {
         } else {
             throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
         }
+    }
+
+    public List<AuctionProduct> getAuctionProducts() {
+        return new ArrayList<>(auctionProducts.values());
     }
 
     @Override

@@ -1,4 +1,3 @@
-DomainLayer\Model\RaffleProductState.class
 DomainLayer\Model\ProductRating.class
 ApplicationLayer\Services\OrderService.class
 DomainLayer\Model\helpers\Tree.class
@@ -8,10 +7,8 @@ InfrastructureLayer\Adapters\ExternalDeliverySystem.class
 DomainLayer\Model\PurchasePolicy.class
 DomainLayer\Model\StoreRating.class
 ApplicationLayer\Interfaces\IOrderService.class
-DomainLayer\Model\ConcreteProductState.class
 DomainLayer\Model\Cart.class
 com\fakezone\fakezone\FakezoneApplication.class
-DomainLayer\Model\ProductState.class
 DomainLayer\Model\SystemAdministrator.class
 ApplicationLayer\DTO\StoreDTO.class
 DomainLayer\Model\Basket.class
@@ -24,7 +21,6 @@ InfrastructureLayer\Adapters\PaymentAdapter.class
 InfrastructureLayer\Repositories\StoreRepository.class
 ApplicationLayer\Interfaces\IStoreService.class
 DomainLayer\Interfaces\IOrderRepository.class
-ApplicationLayer\Services\AuthenticationService.class
 DomainLayer\IRepository\IProductRepository.class
 ApplicationLayer\DTO\ProductDTO.class
 ApplicationLayer\DTO\StoreProductDTO.class
@@ -47,12 +43,9 @@ InfrastructureLayer\Repositories\OrderRepository.class
 DomainLayer\Model\DiscountPolicy.class
 InfrastructureLayer\Adapters\ExternalPaymentSystem.class
 DomainLayer\Model\StoreFounder.class
-com\fakezone\fakezone\controller\ErrorController.class
 DomainLayer\Interfaces\IProduct.class
 ApplicationLayer\DTO\UserDTO.class
 InfrastructureLayer\Adapters\DeliveryAdapter.class
-DomainLayer\Model\UserType.class
-DomainLayer\Model\AuctionProductState.class
 DomainLayer\IRepository\IRegisteredRole.class
 DomainLayer\Model\User.class
 DomainLayer\Model\Store.class
@@ -60,11 +53,8 @@ DomainLayer\Interfaces\IDelivery.class
 ApplicationLayer\DTO\OrderDTO.class
 ApplicationLayer\Interfaces\ISystemService.class
 DomainLayer\Model\StoreManager.class
-DomainLayer\Interfaces\IUserType.class
 ApplicationLayer\Interfaces\IProductService.class
 InfrastructureLayer\Repositories\ProductRepository.class
 ApplicationLayer\Services\StoreService.class
-DomainLayer\Model\Guest.class
 ApplicationLayer\Services\ProductService.class
-com\fakezone\fakezone\config\SecurityConfig.class
 InfrastructureLayer\Repositories\UserRepository.class

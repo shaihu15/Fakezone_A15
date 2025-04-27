@@ -171,6 +171,7 @@ class StoreServiceTest {
             storeService.sendMessageToUser(invalidFounderId, storeId, userId, message);
         }, "Expected sendMessageToUser to throw if the founder ID is invalid");
     }
+  
     @Test
     void testGetStoreRoles_AsFounder_Success() {
         int founderId = 1;
