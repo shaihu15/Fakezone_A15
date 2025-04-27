@@ -339,5 +339,15 @@ public class StoreTest {
         assertTrue(thrown.getMessage().contains("permissions can not be empty"));
         assertTrue(store.getStoreManagers(founderId).get(noPermsId).equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
     }
+    @Test
+    void getStoreOwners_ValidRequest_ShouldSucceed() {
+        int userId = 1;
+        store.addStoreOwner(founderId, userId); // Assuming this method exists to add an owner
+
+        List<Integer> owners = store.getStoreOwners(founderId);
+
+        assertTrue(owners.contains(userId), "User should be in the list of store owners");
+    }
+
 }
 

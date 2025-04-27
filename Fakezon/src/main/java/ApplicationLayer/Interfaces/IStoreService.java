@@ -14,6 +14,7 @@ import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
+import ApplicationLayer.DTO.StoreRolesDTO;
 
 public interface IStoreService {
     int addStore(int userId, String storeName);
@@ -65,4 +66,5 @@ public interface IStoreService {
     void sendMessageToUser(int managerId,int storeId, int userId, String message);
     Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId,int storeId);
     Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId,int storeId);
+    StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 }
