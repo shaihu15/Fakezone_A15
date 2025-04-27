@@ -30,9 +30,10 @@ public class StoreService implements IStoreService {
     public StoreService(IStoreRepository storeRepository) {
         this.storeRepository = storeRepository;
     }
-    //should store service catch the errors? who's printing to console??
+
+    // should store service catch the errors? who's printing to console??
     @Override
-    public void addStoreOwner(int storeId, int requesterId, int newOwnerId){
+    public void addStoreOwner(int storeId, int requesterId, int newOwnerId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("addStoreOwner - Store not found: " + storeId);
@@ -42,7 +43,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public List<Integer> getStoreOwners(int storeId, int requesterId){
+    public List<Integer> getStoreOwners(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             throw new IllegalArgumentException("Store not found");
@@ -51,7 +52,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId){
+    public HashMap<Integer, List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("getStoreManagers - Store not found: " + storeId);
@@ -59,14 +60,15 @@ public class StoreService implements IStoreService {
         }
         return store.getStoreManagers(requesterId);
     }
+
     // --- Store-related DTO Conversions ---
     private StoreDTO toStoreDTO(Store store) {
         Collection<StoreProductDTO> storeProductDTOs = store.getStoreProducts().values().stream()
-            .map(sp->new StoreProductDTO(sp)) // using the constructor directly
-            .collect(Collectors.toList());
+                .map(sp -> new StoreProductDTO(sp)) // using the constructor directly
+                .collect(Collectors.toList());
 
-    Map<Integer, Double> ratings = store.getRatings().entrySet().stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getRating()));
+        Map<Integer, Double> ratings = store.getRatings().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getRating()));
 
         return new StoreDTO(
                 store.getId(),
@@ -77,9 +79,9 @@ public class StoreService implements IStoreService {
                 // store.getStoreOwners(),
                 // store.getStoreManagers(),
                 ratings,
-                store.getAverageRating()
-        );
+                store.getAverageRating());
     }
+
     public StoreProductDTO toStoreProductDTO(StoreProduct storeProduct) {
         return new StoreProductDTO(storeProduct);
     }
@@ -104,7 +106,7 @@ public class StoreService implements IStoreService {
 
     @Override
     public List<StoreDTO> searchStores(String keyword) {
-        //String lowerKeyword = keyword.toLowerCase();
+        // String lowerKeyword = keyword.toLowerCase();
 
         return storeRepository.getAllStores().stream()
                 .filter(store -> store.getName().contains(keyword))
@@ -114,23 +116,23 @@ public class StoreService implements IStoreService {
 
     // --- Skeleton for remaining interface methods (still to be implemented) ---
 
-
-
     @Override
     public int updateStore(int storeId, int requesterId, String name) {
         return 0;
     }
 
     @Override
-    public void deleteStore(int storeId, int requesterId) {}
+    public void deleteStore(int storeId, int requesterId) {
+    }
 
     @Override
-    public void openStore(int storeId, int requesterId) {}
+    public void openStore(int storeId, int requesterId) {
+    }
 
     @Override
     public void closeStore(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
-        if(store == null){
+        if (store == null) {
             logger.error("closeStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
@@ -139,16 +141,22 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void updateStoreName(int storeId, String newName, int requesterId) {}
+    public void updateStoreName(int storeId, String newName, int requesterId) {
+    }
 
     @Override
-    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType) {}
+    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice,
+            int quantity, String productType) {
+    }
 
     @Override
-    public void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType) {}
+    public void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice,
+            int quantity, String productType) {
+    }
 
     @Override
-    public  void removeProductFromStore(int storeId, int requesterId, int productId) {}
+    public void removeProductFromStore(int storeId, int requesterId, int productId) {
+    }
 
     @Override
     public void addStoreRating(int storeId, int userId, double rating, String comment) {
@@ -162,7 +170,8 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void removeStoreRating(int storeId, int userId) {}
+    public void removeStoreRating(int storeId, int userId) {
+    }
 
     @Override
     public double getStoreAverageRating(int storeId) {
@@ -181,7 +190,8 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void removeStoreProductRating(int storeId, int productId, int userId) {}
+    public void removeStoreProductRating(int storeId, int productId, int userId) {
+    }
 
     @Override
     public double getStoreProductAverageRating(int storeId, int productId) {
@@ -189,36 +199,41 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void addPurchasePolicy(int storeId, int requesterId, int policyId, String name, String description) {}
+    public void addPurchasePolicy(int storeId, int requesterId, int policyId, String name, String description) {
+    }
 
     @Override
-    public void removePurchasePolicy(int storeId, int requesterId, int policyId) {}
+    public void removePurchasePolicy(int storeId, int requesterId, int policyId) {
+    }
 
     @Override
-    public void addDiscountPolicy(int storeId, int requesterId, int policyId, String name, String description) {}
+    public void addDiscountPolicy(int storeId, int requesterId, int policyId, String name, String description) {
+    }
 
     @Override
-    public void removeDiscountPolicy(int storeId, int requesterId, int policyId) {}
+    public void removeDiscountPolicy(int storeId, int requesterId, int policyId) {
+    }
 
     @Override
     public void removeStoreOwner(int storeId, int requesterId, int ownerId) {
-        try{
-            logger.info("Store Service - User " + requesterId + " trying to remove store owner " + ownerId + " from store "+ storeId);
+        try {
+            logger.info("Store Service - User " + requesterId + " trying to remove store owner " + ownerId
+                    + " from store " + storeId);
             Store store = storeRepository.findById(storeId);
-            if (store == null){
+            if (store == null) {
                 logger.error("Store Service - removeStoreOwner - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeStoreOwner(requesterId, ownerId);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("StoreService - failed to remove store owner " + e.getMessage());
             throw e;
         }
 
     }
+
     @Override
-    public StoreRolesDTO getStoreRoles(int storeId, int requesterId){
+    public StoreRolesDTO getStoreRoles(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("getStoreRoles - Store not found: " + storeId);
@@ -227,53 +242,54 @@ public class StoreService implements IStoreService {
         return new StoreRolesDTO(store, requesterId);
     }
 
-
     @Override
     public void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms) {
-        try{
-            logger.info("Store Service - User " + requesterId + " trying to add store manager " + newManagerId + " to store "+ storeId);
+        try {
+            logger.info("Store Service - User " + requesterId + " trying to add store manager " + newManagerId
+                    + " to store " + storeId);
             Store store = storeRepository.findById(storeId);
             if (store == null) {
                 logger.error("Store Service - addStoreManager - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
             store.addStoreManager(requesterId, newManagerId, perms);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("Store Service - failed to add store manager " + e.getMessage());
             throw e;
         }
     }
 
     @Override
-    public void addStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms){
-        try{
-            logger.info("Store Service - User " + requesterId + " trying to add store manager permissions to " + managerId + " in store "+ storeId);
+    public void addStoreManagerPermissions(int storeId, int requesterId, int managerId,
+            List<StoreManagerPermission> perms) {
+        try {
+            logger.info("Store Service - User " + requesterId + " trying to add store manager permissions to "
+                    + managerId + " in store " + storeId);
             Store store = storeRepository.findById(storeId);
-            if (store == null){
+            if (store == null) {
                 logger.error("Store Service - addStoreManagerPermissions - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
             store.addManagerPermissions(requesterId, managerId, perms);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("Store Service - failed to add manager permissions: " + e.getMessage());
             throw e;
         }
     }
 
     @Override
-    public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove){
-        try{
-            logger.info("Store Service - User " + requesterId + " trying to remove store manager permissions from " + managerId + " in store "+ storeId);
+    public void removeStoreManagerPermissions(int storeId, int requesterId, int managerId,
+            List<StoreManagerPermission> toRemove) {
+        try {
+            logger.info("Store Service - User " + requesterId + " trying to remove store manager permissions from "
+                    + managerId + " in store " + storeId);
             Store store = storeRepository.findById(storeId);
-            if (store == null){
+            if (store == null) {
                 logger.error("Store Service - removeStoreManagerPermissions - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeManagerPermissions(requesterId, managerId, toRemove);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("Store Service - failed to remove  manager permissions: " + e.getMessage());
             throw e;
         }
@@ -281,23 +297,24 @@ public class StoreService implements IStoreService {
 
     @Override
     public void removeStoreManager(int storeId, int requesterId, int managerId) {
-        try{
-            logger.info("Store Service - User " + requesterId + " trying to remove store manager " + managerId + " from store "+ storeId);
+        try {
+            logger.info("Store Service - User " + requesterId + " trying to remove store manager " + managerId
+                    + " from store " + storeId);
             Store store = storeRepository.findById(storeId);
-            if (store == null){
+            if (store == null) {
                 logger.error("Store Service - removeStoreManager - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeStoreManager(requesterId, managerId);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("Store Service - failed to remove store manager");
             throw e;
         }
     }
+
     @Override
     public int addStore(int userId, String storeName) {
-        if(storeRepository.findByName(storeName) != null){
+        if (storeRepository.findByName(storeName) != null) {
             logger.error("openStore - Store name already exists: " + storeName);
             throw new IllegalArgumentException("Store name already exists");
         }
@@ -309,6 +326,7 @@ public class StoreService implements IStoreService {
         logger.info("Store opened: " + storeName + " by user: " + userId);
         return storeId;
     }
+
     @Override
     public void receivingMessage(int storeId, int userId, String message) {
         Store store = storeRepository.findById(storeId);
@@ -318,15 +336,17 @@ public class StoreService implements IStoreService {
         }
         store.receivingMessage(userId, message);
     }
+
     @Override
-    public void sendMessageToUser(int managerId,int storeId, int userId, String message) {
+    public void sendMessageToUser(int managerId, int storeId, int userId, String message) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("sendMessage - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
-        store.sendMessage(managerId,userId, message);
+        store.sendMessage(managerId, userId, message);
     }
+
     @Override
     public boolean isStoreOpen(int storeId) {
         Store store = storeRepository.findById(storeId);
@@ -336,34 +356,37 @@ public class StoreService implements IStoreService {
         }
         return store.isOpen();
     }
+
     @Override
-    public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId,int storeId) {
+    public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId, int storeId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("getMessagesFromUsers - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
-        try{
+        try {
             return store.getMessagesFromUsers(managerId);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error("getMessagesFromUsers - Manager not found: " + managerId);
             throw new IllegalArgumentException("Manager not found");
         }
     }
+
     @Override
-    public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId,int storeId) {
+    public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("getMessagesFromStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
-        try{
+        try {
             return store.getMessagesFromStore(managerId);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error("getMessagesFromStore - Manager not found: " + managerId);
             throw new IllegalArgumentException("Manager not found");
         }
     }
+
     @Override
     public StoreProductDTO getProductFromStore(int productId, int storeId) {
         Store store = storeRepository.findById(storeId);
@@ -385,43 +408,49 @@ public class StoreService implements IStoreService {
             logger.error("addAuctionProductToStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
-        try{
+        try {
             store.addAuctionProduct(requesterId, productID, basePrice, daysToEnd);
-            logger.info("Auction product added to store: " + storeId + " by user: " + requesterId + " with product ID: " + productID);
+            logger.info("Auction product added to store: " + storeId + " by user: " + requesterId + " with product ID: "
+                    + productID);
         } catch (IllegalArgumentException e) {
             logger.error("addAuctionProductToStore - Product not found: " + productID);
             throw new IllegalArgumentException("Product not found");
         }
     }
+
     public void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("addBidOnAuctionProductInStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
-        try{
+        try {
             store.addBidOnAuctionProduct(requesterId, productID, bid);
-            logger.info("Bid added to auction product in store: " + storeId + " by user: " + requesterId + " with product ID: " + productID + " and bid: " + bid);
+            logger.info("Bid added to auction product in store: " + storeId + " by user: " + requesterId
+                    + " with product ID: " + productID + " and bid: " + bid);
         } catch (IllegalArgumentException e) {
             logger.error("addBidOnAuctionProductInStore - Product not found: " + productID);
             throw new IllegalArgumentException("Product not found");
         }
     }
+
     private void isValidPurchaseActionForUserInStore(int storeId, int requesterId, int productId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("isValidPurchaseActionForUserInStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
-        try{
+        try {
             store.isValidPurchaseAction(requesterId, productId);
-            logger.info("Purchase action is valid for user: " + requesterId + " in store: " + storeId + " for product: " + productId);
+            logger.info("Purchase action is valid for user: " + requesterId + " in store: " + storeId + " for product: "
+                    + productId);
 
         } catch (IllegalArgumentException e) {
             logger.error("isValidPurchaseActionForUserInStore - Product not found: " + productId);
             throw new IllegalArgumentException("Product not found");
         }
     }
+
     public List<AuctionProductDTO> getAuctionProductsFromStore(int storeId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
@@ -433,8 +462,10 @@ public class StoreService implements IStoreService {
                 .collect(Collectors.toList());
         logger.info("Auction products retrieved from store: " + storeId);
         return auctionProducts;
+    }
+
     @Override
-    public StoreProductDTO decrementProductQuantity(int productId, int storeId,int quantity) {
+    public StoreProductDTO decrementProductQuantity(int productId, int storeId, int quantity) {
         Store store = storeRepository.findById(storeId);
         StoreProductDTO prod;
         if (store == null) {
@@ -442,8 +473,8 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         try {
-            prod = store.decrementProductQuantity(productId,quantity);
-            
+            prod = store.decrementProductQuantity(productId, quantity);
+
         } catch (Exception e) {
             logger.error("decrementProductQuantity - Product not found: " + productId);
             throw new IllegalArgumentException("Product not found");
@@ -453,5 +484,3 @@ public class StoreService implements IStoreService {
     }
 
 }
-
-

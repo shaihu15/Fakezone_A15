@@ -1,4 +1,5 @@
 package UnitTesting;
+
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Store;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,7 @@ public class StoreTest {
     private int nonExistingProductId = 99;
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         store = new Store("Test Store", founderId);
         store.addStoreProduct(productId, "Test Product", 100.0, 5);
 
@@ -40,26 +41,24 @@ public class StoreTest {
         IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
                 () -> store.closeStore(founderId),
-                "Expected closeStore to throw if the store is already closed"
-        );
+                "Expected closeStore to throw if the store is already closed");
 
         assertTrue(thrown.getMessage().contains("already closed"));
     }
-
 
     @Test
     void closeStore_NotFounder_ShouldThrow() {
         int nonFounderId = 99;
 
         IllegalArgumentException thrown = assertThrows(
-            IllegalArgumentException.class,
+                IllegalArgumentException.class,
                 () -> store.closeStore(nonFounderId),
-                "Expected closeStore to throw, but it didn't"
-        );
+                "Expected closeStore to throw, but it didn't");
 
         assertTrue(thrown.getMessage().contains("Requester ID: " + nonFounderId));
         assertTrue(store.isOpen(), "Store should still be open if close failed");
     }
+
     @Test
     void addRating_ValidRating_ShouldSucceed() {
         int userId = 1;
@@ -70,6 +69,7 @@ public class StoreTest {
 
         assertEquals(rating, store.getStoreRatingByUser(userId).getRating(), "Rating should be added successfully");
     }
+
     @Test
     void addStoreProductRating_ValidRating_ShouldSucceed() {
         int userId = 1;
@@ -80,8 +80,10 @@ public class StoreTest {
 
         store.addStoreProductRating(userId, productId, rating, comment);
 
-        assertEquals(rating, store.getStoreProductRating(userId, productId).getRating(), "Product rating should be added successfully");
+        assertEquals(rating, store.getStoreProductRating(userId, productId).getRating(),
+                "Product rating should be added successfully");
     }
+
     @Test
     void addStoreProductRating_ProductNotFound_ShouldThrow() {
         int userId = 1;
@@ -92,16 +94,14 @@ public class StoreTest {
         IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
                 () -> store.addStoreProductRating(userId, productId, rating, comment),
-                "Expected addStoreProductRating to throw if the product is not found"
-        );
+                "Expected addStoreProductRating to throw if the product is not found");
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> store.getStoreProductRating(userId, productId),
-                "Expected getStoreProductRating to throw if the product is not found"
-        );
+                "Expected getStoreProductRating to throw if the product is not found");
     }
-    
+
     // Test receiving message from user
     @Test
     void receivingMessageFromUser_ValidMessage_ShouldSucceed() {
@@ -110,40 +110,50 @@ public class StoreTest {
 
         store.receivingMessage(userId, message);
 
-        assertEquals(message, store.getMessagesFromUsers(founderId).peek().getValue(), "Message should be received successfully");
+        assertEquals(message, store.getMessagesFromUsers(founderId).peek().getValue(),
+                "Message should be received successfully");
     }
+
     // Test sending message to user
     @Test
     void sendMessageToUser_ValidOwner_ShouldSucceed() {
         int userId = 1;
         String message = "Hello, this is a test message.";
-        store.sendMessage(founderId,userId, message);
+        store.sendMessage(founderId, userId, message);
 
-        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(), "Message should be sent successfully");
+        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(),
+                "Message should be sent successfully");
     }
+
     @Test
     void sendMessageToUser_ValidManagerPermission_ShouldSucceed() {
         int userId = 1;
         int managerId = 2;
-        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY)); // Assuming null permissions for simplicity
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY)); // Assuming null
+                                                                                                     // permissions for
+                                                                                                     // simplicity
         String message = "Hello, this is a test message.";
-        store.sendMessage(managerId,userId, message);
+        store.sendMessage(managerId, userId, message);
 
-        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(), "Message should be sent successfully");
+        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(),
+                "Message should be sent successfully");
     }
+
     @Test
     void sendMessageToUser_InValidManagerPermission_ShouldThrow() {
         int userId = 1;
         int managerId = 2;
-        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.DISCOUNT_POLICY)); // Assuming null permissions for simplicity
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.DISCOUNT_POLICY)); // Assuming null
+                                                                                                      // permissions for
+                                                                                                      // simplicity
         String message = "Hello, this is a test message.";
 
         IllegalArgumentException thrown = assertThrows(
-            IllegalArgumentException.class,
-            () -> store.sendMessage(managerId, userId, message),
-            "Expected sendMessage to throw if the owner is invalid"
-    );
-}
+                IllegalArgumentException.class,
+                () -> store.sendMessage(managerId, userId, message),
+                "Expected sendMessage to throw if the owner is invalid");
+    }
+
     @Test
     void sendMessageToUser_InvalidOwner_ShouldThrow() {
         int invalidOwnerId = 99;
@@ -153,10 +163,10 @@ public class StoreTest {
         IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
                 () -> store.sendMessage(invalidOwnerId, userId, message),
-                "Expected sendMessage to throw if the owner is invalid"
-        );
+                "Expected sendMessage to throw if the owner is invalid");
 
-        assertTrue(store.getMessagesFromStore(founderId).isEmpty(), "No message should be sent if the owner is invalid");
+        assertTrue(store.getMessagesFromStore(founderId).isEmpty(),
+                "No message should be sent if the owner is invalid");
     }
 
     @Test
@@ -180,6 +190,7 @@ public class StoreTest {
         });
         assertTrue(thrown.getMessage().contains("insufficient permissions"));
     }
+
     @Test
     void addAuctionProduct_AsManagerWithInventoryPermission_Success() {
         store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.INVENTORY));
@@ -194,6 +205,7 @@ public class StoreTest {
         });
         assertTrue(thrown.getMessage().contains("insufficient permissions"));
     }
+
     @Test
     void addAuctionProduct_AlreadyExists_Fails() {
         store.addAuctionProduct(founderId, productId, 50.0, 7);
@@ -202,6 +214,7 @@ public class StoreTest {
         });
         assertTrue(thrown.getMessage().contains("already"));
     }
+
     @Test
     void addAuctionProduct_ZeroDays_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -209,6 +222,7 @@ public class StoreTest {
         });
         assertTrue(thrown.getMessage().contains("must be greater than 0"));
     }
+
     @Test
     void addAuctionProduct_NegativeDays_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -216,6 +230,7 @@ public class StoreTest {
         });
         assertTrue(thrown.getMessage().contains("must be greater than 0"));
     }
+
     @Test
     void addAuctionProduct_NegativeBasePrice_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
@@ -267,49 +282,42 @@ public class StoreTest {
     }
 
     @Test
-    void addAuctionProduct_ManagerWithoutInventoryPermission_Fails() {
-        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY));
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-            store.addAuctionProduct(managerId, productId, 50.0, 7);
-        });
-        assertTrue(thrown.getMessage().contains("insufficient permissions"));
-    }
-
-    @Test
-    void addManagerPermissions_asFatherRequest_success(){
+    void addManagerPermissions_asFatherRequest_success() {
         int noPermsId = 999;
         store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY));
-        assertDoesNotThrow(() -> store.addManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.REQUESTS_REPLY)));
-        assertTrue(store.getStoreManagers(founderId).get(noPermsId).equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY)));
+        assertDoesNotThrow(() -> store.addManagerPermissions(founderId, noPermsId,
+                List.of(StoreManagerPermission.REQUESTS_REPLY)));
+        assertTrue(store.getStoreManagers(founderId).get(noPermsId)
+                .equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY)));
     }
 
     @Test
-    void addManagerPermissions_notOwnerRequest_shouldThrow(){
+    void addManagerPermissions_notOwnerRequest_shouldThrow() {
         int noPermsId = 999;
         store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.DISCOUNT_POLICY));
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                    () -> store.addManagerPermissions(noPermsId, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.addManagerPermissions(noPermsId, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
         assertTrue(thrown.getMessage().contains("is not a valid store owner "));
         assertTrue(!store.getStoreManagers(founderId).get(noPermsId).contains(StoreManagerPermission.INVENTORY));
     }
 
     @Test
-    void addManagerPermissions_notManagerYet_shouldThrow(){
+    void addManagerPermissions_notManagerYet_shouldThrow() {
         int noPermsId = 999;
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                    () -> store.addManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.addManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
         assertTrue(thrown.getMessage().contains("is not a valid store manager "));
         assertTrue(store.getStoreManagers(founderId).get(noPermsId) == null);
     }
 
     @Test
-    void addManagerPermissions_notFatherRequest_shouldThrow(){
+    void addManagerPermissions_notFatherRequest_shouldThrow() {
         int noPermsId = 999;
         store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.DISCOUNT_POLICY));
         int tmp_owner = 1010;
         store.addStoreOwner(founderId, tmp_owner);
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                        () -> store.addManagerPermissions(tmp_owner, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.addManagerPermissions(tmp_owner, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
         assertTrue(thrown.getMessage().contains(" appointor can change/remove"));
         assertTrue(!store.getStoreManagers(founderId).get(noPermsId).contains(StoreManagerPermission.INVENTORY));
         assertTrue(store.getStoreManagers(founderId).get(noPermsId).contains(StoreManagerPermission.DISCOUNT_POLICY));
@@ -317,65 +325,80 @@ public class StoreTest {
     }
 
     @Test
-    void removeManagerPermissions_asFatherRequest_success(){
+    void removeManagerPermissions_asFatherRequest_success() {
         int noPermsId = 999;
-        store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY));
-        assertDoesNotThrow(() -> store.removeManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.REQUESTS_REPLY)));
+        store.addStoreManager(founderId, noPermsId,
+                List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY));
+        assertDoesNotThrow(() -> store.removeManagerPermissions(founderId, noPermsId,
+                List.of(StoreManagerPermission.REQUESTS_REPLY)));
         assertTrue(store.getStoreManagers(founderId).get(noPermsId).contains(StoreManagerPermission.INVENTORY));
         assertTrue(!store.getStoreManagers(founderId).get(noPermsId).contains(StoreManagerPermission.REQUESTS_REPLY));
     }
-    
+
     @Test
-    void removeManagerPermissions_notOwnerRequest_shouldThrow(){
+    void removeManagerPermissions_notOwnerRequest_shouldThrow() {
         int noPermsId = 999;
-        store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY));
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                        () -> store.removeManagerPermissions(noPermsId, noPermsId, List.of(StoreManagerPermission.REQUESTS_REPLY)));
+        store.addStoreManager(founderId, noPermsId,
+                List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.removeManagerPermissions(noPermsId, noPermsId,
+                        List.of(StoreManagerPermission.REQUESTS_REPLY)));
         assertTrue(thrown.getMessage().contains("is not a valid store owner"));
-        assertTrue(store.getStoreManagers(founderId).get(noPermsId).equals(List.of(StoreManagerPermission.INVENTORY,StoreManagerPermission.REQUESTS_REPLY)));        
+        assertTrue(store.getStoreManagers(founderId).get(noPermsId)
+                .equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.REQUESTS_REPLY)));
     }
 
     @Test
-    void removeManagerPermissions_notManagerYet_shouldThrow(){
+    void removeManagerPermissions_notManagerYet_shouldThrow() {
         int noPermsId = 999;
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                        () -> store.removeManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.REQUESTS_REPLY)));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.removeManagerPermissions(founderId, noPermsId,
+                        List.of(StoreManagerPermission.REQUESTS_REPLY)));
         assertTrue(thrown.getMessage().contains("is not a valid store manager"));
         assertTrue(store.getStoreManagers(founderId).get(noPermsId) == null);
     }
 
     @Test
-    void removeManagerPermissions_notFatherRequest_shouldThrow(){
+    void removeManagerPermissions_notFatherRequest_shouldThrow() {
         int noPermsId = 999;
-        store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
+        store.addStoreManager(founderId, noPermsId,
+                List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
         int tmp_owner = 1010;
         store.addStoreOwner(founderId, tmp_owner);
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                        () -> store.removeManagerPermissions(tmp_owner, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.removeManagerPermissions(tmp_owner, noPermsId, List.of(StoreManagerPermission.INVENTORY)));
         assertTrue(thrown.getMessage().contains(" appointor can change/remove"));
-        assertTrue(store.getStoreManagers(founderId).get(noPermsId).equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
+        assertTrue(store.getStoreManagers(founderId).get(noPermsId)
+                .equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
 
     }
 
     @Test
-    void removeManagerPermissions_managerDoesNotHavePerm_shouldThrow(){
+    void removeManagerPermissions_managerDoesNotHavePerm_shouldThrow() {
         int noPermsId = 999;
-        store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                        () -> store.removeManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.DISCOUNT_POLICY, StoreManagerPermission.PURCHASE_POLICY)));
+        store.addStoreManager(founderId, noPermsId,
+                List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.removeManagerPermissions(founderId, noPermsId,
+                        List.of(StoreManagerPermission.DISCOUNT_POLICY, StoreManagerPermission.PURCHASE_POLICY)));
         assertTrue(thrown.getMessage().contains("can not remove permission: PURCHASE_POLICY"));
-        assertTrue(store.getStoreManagers(founderId).get(noPermsId).equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
+        assertTrue(store.getStoreManagers(founderId).get(noPermsId)
+                .equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
     }
 
     @Test
-    void removeManagerPermissions_managersPermsLeftEmpty_shouldThrow(){
+    void removeManagerPermissions_managersPermsLeftEmpty_shouldThrow() {
         int noPermsId = 999;
-        store.addStoreManager(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, 
-                                        () -> store.removeManagerPermissions(founderId, noPermsId, List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
+        store.addStoreManager(founderId, noPermsId,
+                List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
+                () -> store.removeManagerPermissions(founderId, noPermsId,
+                        List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
         assertTrue(thrown.getMessage().contains("permissions can not be empty"));
-        assertTrue(store.getStoreManagers(founderId).get(noPermsId).equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
+        assertTrue(store.getStoreManagers(founderId).get(noPermsId)
+                .equals(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY)));
     }
+
     @Test
     void getStoreOwners_ValidRequest_ShouldSucceed() {
         int userId = 1;
@@ -386,4 +409,3 @@ public class StoreTest {
         assertTrue(owners.contains(userId), "User should be in the list of store owners");
     }
 }
-
