@@ -76,6 +76,37 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    public synchronized void addToBasket(int userId, int productId, int storeId, int quantity) {
+        StoreProductDTO product;
+        try {
+            if(this.storeService.isStoreOpen(storeId)) {
+                logger.info("System Service - Store is open: " + storeId);
+            } else {
+                logger.error("System Service - Store is closed: " + storeId);
+                throw new IllegalArgumentException("Store is closed");
+            }
+            product = this.storeService.getProductFromStore(productId, storeId);
+            if( product.getQuantity() < quantity) {
+                logger.error("System Service - Not enough product in store: " + productId + " from store: " + storeId);
+                throw new IllegalArgumentException("Not enough product in store");
+            }
+            if (!this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            } 
+            this.storeService.removeProductFromStore(storeId, productId, quantity);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding to basket: " + e.getMessage());
+            throw new IllegalArgumentException("Error during adding to basket: " + e.getMessage());
+        }
+        this.userService.addToBasket(userId, storeId, product);
+        logger.info("System Service - User added product to basket: " + productId + " from store: " + storeId + " by user: "
+                + userId + " with quantity: " + quantity);
+    } 
+
+    @Override
     public void ratingStore(int storeId, int userId, double rating, String comment) {
         try {
             if (this.userService.didPurchaseStore(userId, storeId)) {

@@ -7,6 +7,7 @@ import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Cart {
+
     private List<Basket> baskets;
 
     public Cart() {
@@ -17,16 +18,23 @@ public class Cart {
         baskets.clear();
     }
 
-    public boolean addProduct(int storeID, StoreProductDTO product) {
+    public void addProduct(int storeID, StoreProductDTO product) {
         for (Basket basket : baskets) {
             if (basket.getStoreID() == storeID) {
                 basket.addProduct(product);
-                return true;
             }
         }
         Basket newBasket = new Basket(storeID);
         newBasket.addProduct(product);
         baskets.add(newBasket);
-        return true;
+    }
+
+    public Basket getBasket(int storeID) {
+        for (Basket basket : baskets) {
+            if (basket.getStoreID() == storeID) {
+                return basket;
+            }
+        }
+        return null;
     }
 }

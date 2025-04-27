@@ -59,4 +59,6 @@ public interface ISystemService {
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
 
+    void addToBasket(int userId, int productId, int storeId, int quantity);
+
 }
