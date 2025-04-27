@@ -85,13 +85,13 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Store is closed: " + storeId);
                 throw new IllegalArgumentException("Store is closed");
             }
-            product = this.storeService.decrementProductQuantity(productId, storeId);
             if (!this.userService.isUserLoggedIn(userId)) {
                 logger.info("System Service - User is logged in: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 throw new IllegalArgumentException("User is not logged in");
             }
+            product = this.storeService.decrementProductQuantity(productId, storeId);
         } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
             throw new IllegalArgumentException("Error during adding to basket: " + e.getMessage());
