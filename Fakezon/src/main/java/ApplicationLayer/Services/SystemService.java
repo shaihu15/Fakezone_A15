@@ -91,7 +91,7 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - User is not logged in: " + userId);
                 throw new IllegalArgumentException("User is not logged in");
             }
-            product = this.storeService.decrementProductQuantity(productId, storeId);
+            product = this.storeService.decrementProductQuantity(productId, storeId, quantity);
         } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
             throw new IllegalArgumentException("Error during adding to basket: " + e.getMessage());
