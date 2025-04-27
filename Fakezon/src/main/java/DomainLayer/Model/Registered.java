@@ -127,4 +127,6 @@ public class Registered extends User {
     public UserDTO toDTO() {
         return new UserDTO(userID, email, age);
     }
+
+    
 }
