@@ -29,7 +29,10 @@ import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
@@ -38,10 +41,12 @@ public class SystemService implements ISystemService {
     private IStoreService storeService;
     private IProductService productService;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
-            IProductRepository productRepository) {
-        this.storeService = new StoreService(storeRepository);
+            IProductRepository productRepository, ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
+        this.storeService = new StoreService(storeRepository, publisher);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
         this.deliveryService = new DeliveryAdapter();
@@ -51,7 +56,9 @@ public class SystemService implements ISystemService {
 
     // Overloaded constructor for testing purposes
     public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
-            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService) {
+            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
+            ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
         this.storeService = storeService;
         this.userService = userService;
         this.productService = productService;

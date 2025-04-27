@@ -8,6 +8,8 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 import static org.mockito.Mockito.*;
 
@@ -16,11 +18,13 @@ class StoreServiceTest {
     private IStoreRepository storeRepository;
     private StoreService storeService;
     private Store mockStore;
+    private ApplicationEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
+        publisher = mock(ApplicationEventPublisher.class);
         storeRepository = new StoreRepository(); // Assuming StoreRepository is a concrete implementation of IStoreRepository
-        storeService = new StoreService(storeRepository);
+        storeService = new StoreService(storeRepository, publisher);
         mockStore = mock(Store.class);
     }
 

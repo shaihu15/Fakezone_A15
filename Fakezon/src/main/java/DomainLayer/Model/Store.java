@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.lang3.ObjectUtils.Null;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
 import java.util.AbstractMap.SimpleEntry;
+
+@Component
 public class Store {
 
     private String name;
@@ -31,9 +33,10 @@ public class Store {
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; //HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; //HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private final ApplicationEventPublisher publisher;
 
     
-    public Store(String name, int founderID) {
+    public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
         this.storeOwners = new ArrayList<>();
         //storeOwners.put(founderID, new StoreOwner(founderID, name));
@@ -51,6 +54,7 @@ public class Store {
         this.storeManagers = new HashMap<>(); //HASH userID to store manager
         this.messagesFromUsers = new LinkedList<>();
         this.messagesFromStore = new Stack<>();
+        this.publisher = publisher;
     }
 
     public String getName() {

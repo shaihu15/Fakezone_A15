@@ -31,6 +31,8 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Store;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 public class SystemServiceAcceptanceTest {
     private IStoreRepository storeRepository;
@@ -55,6 +57,7 @@ public class SystemServiceAcceptanceTest {
     private IUserService userService;
     private IDelivery deliveryService;
     private IPayment paymentService;
+    private ApplicationEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
@@ -65,10 +68,11 @@ public class SystemServiceAcceptanceTest {
         authenticatorService = mock(IAuthenticator.class);
         deliveryService = mock(IDelivery.class);
         paymentService = mock(IPayment.class);
+        publisher = mock(ApplicationEventPublisher.class);
 
         // Inject the mocked services using the overloaded constructor
         systemService = new SystemService(storeService, userService, productService, deliveryService,
-                authenticatorService, paymentService);
+                authenticatorService, paymentService, publisher);
 
     }
 
