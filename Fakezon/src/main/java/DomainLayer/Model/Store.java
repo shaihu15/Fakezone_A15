@@ -251,7 +251,7 @@ public class Store {
         if(perms == null || perms.isEmpty()){
             throw new IllegalArgumentException("Permissions list is empty");
         }
-        storeManagers.put(appointee, perms);
+        storeManagers.put(appointee, new ArrayList<>(perms));
         rolesTree.addNode(appointor, appointee);
     }
 
