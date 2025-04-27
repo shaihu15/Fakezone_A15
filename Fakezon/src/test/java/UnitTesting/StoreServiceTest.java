@@ -8,6 +8,10 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import ApplicationLayer.DTO.StoreRolesDTO;
+
+import DomainLayer.Enums.StoreManagerPermission;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -167,9 +171,47 @@ class StoreServiceTest {
             storeService.sendMessageToUser(invalidFounderId, storeId, userId, message);
         }, "Expected sendMessageToUser to throw if the founder ID is invalid");
     }
-    
-
-
+    @Test
+    void testGetStoreRoles_AsFounder_Success() {
+        int founderId = 1;
+        String storeName = "Test Store5";
+        int storeId = storeService.addStore(founderId, storeName);
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        int newOwnerId = 2;
+        int managerId = 3;
+        storeService.addStoreOwner(storeId,founderId, newOwnerId);// Add a new owner
+        // Define permissions for the manager
+        List<StoreManagerPermission> permissions = List.of(StoreManagerPermission.VIEW_ROLES);
+        storeService.addStoreManager(storeId, founderId, managerId, permissions);// Add a manager with permissions
+        StoreRolesDTO storeRolesDTO = storeService.getStoreRoles(storeId, founderId);
+        // Validate the response
+        assertNotNull(storeRolesDTO, "Store roles should not be null for the founder");
+        assertEquals(storeId, storeRolesDTO.getStoreId(), "Store ID should match the requested store ID");
+        assertEquals(storeName, storeRolesDTO.getStoreName(), "Store name should match the expected value");
+        assertEquals(founderId, storeRolesDTO.getFounderId(), "Founder ID should match the expected value");
+        // Check owners list
+        assertTrue(storeRolesDTO.getStoreOwners().contains(founderId), "Founder should be in the list of store owners");
+        assertTrue(storeRolesDTO.getStoreOwners().contains(newOwnerId), "New owner should be in the list of store owners");
+        // Check managers list and permissions
+        assertTrue(storeRolesDTO.getStoreManagers().containsKey(managerId), "Manager should be in the list of store managers");
+        assertEquals(permissions, storeRolesDTO.getStoreManagers().get(managerId), "Manager permissions should match the expected value");
+    }
+    @Test
+    void testGetStoreRoles_UnauthorizedUser_ShouldFailAndThrow() {
+        int founderId = 1;
+        String storeName = "Test Store6";
+        // Create the store
+        int storeId = storeService.addStore(founderId, storeName);
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        int unauthorizedUserId = 99; // Not a founder, owner, or manager
+        // Try to get roles using an unauthorized user
+        assertThrows(IllegalArgumentException.class, () -> {
+            storeService.getStoreRoles(storeId, unauthorizedUserId);
+        });
+        // String expectedMessagePart = "not authorized"; // Adjust based on your actual exception message
+        // assertTrue(exception.getMessage().toLowerCase().contains(expectedMessagePart), 
+        //     "Exception message should indicate unauthorized access");
+    }
 
 
 
