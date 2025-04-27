@@ -365,7 +365,7 @@ public class StoreService implements IStoreService {
         return toStoreProductDTO(product);
     }
     @Override
-    public StoreProductDTO decrementProductQuantity(int productId, int storeId) {
+    public StoreProductDTO decrementProductQuantity(int productId, int storeId,int quantity) {
         Store store = storeRepository.findById(storeId);
         StoreProductDTO prod;
         if (store == null) {
@@ -373,7 +373,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         try {
-            prod = store.decrementProductQuantity(productId);
+            prod = store.decrementProductQuantity(productId,quantity);
             
         } catch (Exception e) {
             logger.error("decrementProductQuantity - Product not found: " + productId);

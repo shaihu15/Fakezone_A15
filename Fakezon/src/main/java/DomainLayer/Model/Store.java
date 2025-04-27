@@ -437,7 +437,7 @@ public class Store implements IStore {
         return new Node[] {fatherNode, childNode};
     }
     @Override
-    public synchronized StoreProductDTO decrementProductQuantity(int productId) {
+    public synchronized StoreProductDTO decrementProductQuantity(int productId,int quantity) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'decrementProductQuantity'");
     }

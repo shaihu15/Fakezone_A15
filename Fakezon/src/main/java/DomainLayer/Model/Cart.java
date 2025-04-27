@@ -19,10 +19,10 @@ public class Cart {
     }
 
     public void addProduct(int storeID, StoreProductDTO product) {
-        for (Basket basket : baskets) {
-            if (basket.getStoreID() == storeID) {
-                basket.addProduct(product);
-            }
+        Basket basket = getBasket(storeID);
+        if (basket != null) {
+            basket.addProduct(product);
+            return;
         }
         Basket newBasket = new Basket(storeID);
         newBasket.addProduct(product);

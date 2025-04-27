@@ -81,7 +81,7 @@ public interface IStore {
 
     void removeStoreManager(int requesterId, int toRemoveId);
 
-    StoreProductDTO decrementProductQuantity(int productId);
+    StoreProductDTO decrementProductQuantity(int productId, int quantity);
 
     boolean isOwner(int userId);
 
