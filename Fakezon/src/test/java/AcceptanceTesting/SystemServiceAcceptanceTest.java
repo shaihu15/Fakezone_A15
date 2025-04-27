@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -20,17 +22,30 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Services.ProductService;
+import ApplicationLayer.Services.StoreService;
 import ApplicationLayer.Services.SystemService;
+import ApplicationLayer.Services.UserService;
+
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Product;
+import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Repositories.ProductRepository;
+import InfrastructureLayer.Repositories.StoreRepository;
+import InfrastructureLayer.Repositories.UserRepository;
 
 public class SystemServiceAcceptanceTest {
     private IStoreRepository storeRepository;

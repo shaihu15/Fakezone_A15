@@ -1,22 +1,21 @@
 package ApplicationLayer.Services;
 
-import DomainLayer.IRepository.IStoreRepository;
-
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.stream.Collectors;
-import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import DomainLayer.Enums.StoreManagerPermission;
+
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IStoreService;
+import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
@@ -147,7 +146,7 @@ public class StoreService implements IStoreService {
     public void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType) {}
 
     @Override
-    public void removeProductFromStore(int storeId, int requesterId, int productId) {}
+    public  void removeProductFromStore(int storeId, int requesterId, int productId) {}
 
     @Override
     public void addStoreRating(int storeId, int userId, double rating, String comment) {
@@ -363,6 +362,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Manager not found");
         }
     }
+    @Override
     public StoreProductDTO getProductFromStore(int productId, int storeId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
@@ -375,6 +375,24 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Product not found");
         }
         return toStoreProductDTO(product);
+    }
+    @Override
+    public StoreProductDTO decrementProductQuantity(int productId, int storeId,int quantity) {
+        Store store = storeRepository.findById(storeId);
+        StoreProductDTO prod;
+        if (store == null) {
+            logger.error("decrementProductQuantity - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try {
+            prod = store.decrementProductQuantity(productId,quantity);
+            
+        } catch (Exception e) {
+            logger.error("decrementProductQuantity - Product not found: " + productId);
+            throw new IllegalArgumentException("Product not found");
+        }
+        logger.info("Product quantity decremented: " + productId + " in store: " + storeId);
+        return prod;
     }
 
 }

@@ -34,8 +34,6 @@ public class Product implements IProduct {
             this.storesIds = storesIds;
         }
     }
-    
-
 
     @Override
     public int getId() {

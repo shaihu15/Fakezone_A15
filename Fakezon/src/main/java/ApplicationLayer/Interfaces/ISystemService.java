@@ -62,4 +62,6 @@ public interface ISystemService {
     
     StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 
+    void addToBasket(int userId, int productId, int storeId, int quantity);
+
 }
