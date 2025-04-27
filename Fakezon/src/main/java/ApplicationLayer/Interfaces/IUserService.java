@@ -9,6 +9,7 @@ import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
+import ApplicationLayer.DTO.StoreProductDTO;
 
 public interface IUserService {
     Optional<Registered> getUserByUserName(String userName);
@@ -17,7 +18,7 @@ public interface IUserService {
 
     List<Registered> getAllUsers();
 
-    UserDTO registerUser(String email, String password, LocalDate dateOfBirth); 
+    UserDTO registerUser(String email, String password, LocalDate dateOfBirth);
 
     void deleteUser(String userName);// need?
 
@@ -49,8 +50,6 @@ public interface IUserService {
 
     UserDTO addUser(String password, String email, LocalDate dateOfBirth); // add a new user
 
-    void guestRegister(String userName, String password, String email, int UserId, LocalDate dateOfBirth); // authanticate
-                                                                                                           // a guest
-                                                                                                           // user
+    void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
 }

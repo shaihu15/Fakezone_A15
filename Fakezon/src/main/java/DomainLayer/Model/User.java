@@ -1,5 +1,6 @@
 package DomainLayer.Model;
 
+import ApplicationLayer.DTO.StoreProductDTO;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -31,6 +32,14 @@ public class User {
     public boolean logout() {
         cart.clear();
         return true;
+    }
+
+    public void addToBasket(int storeId, StoreProductDTO product) {
+        cart.addProduct(storeId, product);
+    }
+
+    public Basket getBasket(int storeId) {
+        return cart.getBasket(storeId);
     }
 
 }
