@@ -85,7 +85,7 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Store is closed: " + storeId);
                 throw new IllegalArgumentException("Store is closed");
             }
-            product = this.storeService.getProductFromStore(productId, storeId);
+            product = this.storeService.decrementProductQuantity(productId, storeId);
             if( product.getQuantity() < quantity) {
                 logger.error("System Service - Not enough product in store: " + productId + " from store: " + storeId);
                 throw new IllegalArgumentException("Not enough product in store");
@@ -96,7 +96,6 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - User is not logged in: " + userId);
                 throw new IllegalArgumentException("User is not logged in");
             } 
-            this.storeService.removeProductFromStore(storeId, productId, quantity);
         } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
             throw new IllegalArgumentException("Error during adding to basket: " + e.getMessage());

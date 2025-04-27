@@ -144,7 +144,7 @@ public class StoreService implements IStoreService {
     public void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, String productType) {}
 
     @Override
-    public synchronized void removeProductFromStore(int storeId, int requesterId, int productId) {}
+    public  void removeProductFromStore(int storeId, int requesterId, int productId) {}
 
     @Override
     public void addStoreRating(int storeId, int userId, double rating, String comment) {
@@ -363,6 +363,24 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Product not found");
         }
         return toStoreProductDTO(product);
+    }
+    @Override
+    public StoreProductDTO decrementProductQuantity(int productId, int storeId) {
+        Store store = storeRepository.findById(storeId);
+        StoreProductDTO prod;
+        if (store == null) {
+            logger.error("decrementProductQuantity - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try {
+            prod = store.decrementProductQuantity(productId);
+            
+        } catch (Exception e) {
+            logger.error("decrementProductQuantity - Product not found: " + productId);
+            throw new IllegalArgumentException("Product not found");
+        }
+        logger.info("Product quantity decremented: " + productId + " in store: " + storeId);
+        return prod;
     }
 
 }

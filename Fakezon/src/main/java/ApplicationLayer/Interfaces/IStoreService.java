@@ -38,10 +38,7 @@ public interface IStoreService {
             String productType);
 
     void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity,
-            String productType);
-
-    void removeProductFromStore(int storeId, int requesterId, int productId);
-    // List<IProductDTO> getProductsInStore(int storeId);
+            String productType);;
 
     // --- Ratings ---
     void addStoreRating(int storeId, int userId, double rating, String comment);
@@ -91,4 +88,10 @@ public interface IStoreService {
     Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId, int storeId);
 
     Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId);
+
+    StoreProductDTO decrementProductQuantity(int productId, int storeId);
+
+    void removeProductFromStore(int storeId, int requesterId, int productId);
+
+
 }

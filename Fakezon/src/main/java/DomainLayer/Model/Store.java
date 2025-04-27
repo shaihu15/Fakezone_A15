@@ -10,10 +10,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
 
+import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Interfaces.IStore;
 import DomainLayer.Model.helpers.*;
 import java.util.AbstractMap.SimpleEntry;
-public class Store {
+public class Store implements IStore {
 
     private String name;
     private int storeID;
@@ -52,15 +54,16 @@ public class Store {
         this.messagesFromUsers = new LinkedList<>();
         this.messagesFromStore = new Stack<>();
     }
-
+    @Override
     public String getName() {
         return name;
     }
-    
+    @Override
     public int getId(){
         return storeID;
     }
     //precondition: user is logged in and  previously made a purchase from the store - cheaked by service layer
+    @Override
     public void addRating(int userID, double rating, String comment) {
         if (Sratings.containsKey(userID)) {
             Sratings.get(userID).updateRating(rating, comment);
@@ -68,6 +71,7 @@ public class Store {
             Sratings.put(userID, new StoreRating(userID, rating, comment));
         }
     }
+    @Override
     public void addStoreProductRating(int userID, int productID, double rating, String comment) {
         if (storeProducts.containsKey(productID)) {
             storeProducts.get(productID).addRating(userID, rating, comment);
@@ -75,10 +79,12 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
+    @Override
     public void addStoreProduct(int productID, String name, double basePrice, int quantity) {
         storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
     }
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
+    @Override
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
         if(isOwner(userID) || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))){
             purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
@@ -89,6 +95,7 @@ public class Store {
 
     
     //To Do: change the paramers of the function and decide on the structure of purchase policy and discount policy
+    @Override
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
         if(isOwner(userID) || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))){
             discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
@@ -97,6 +104,7 @@ public class Store {
             throw new IllegalArgumentException("User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    @Override
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd) {
         if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.INVENTORY))){
             throw new IllegalArgumentException("User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
@@ -109,6 +117,7 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
+    @Override
     public boolean addBidToAuctionProduct(int requesterId, int productID, double bidAmount) {
         if(auctionProducts.containsKey(productID)){
             return auctionProducts.get(productID).addBid(requesterId, bidAmount);
@@ -117,6 +126,7 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
+    @Override
     public void isValidPurchaseAction(int requesterId, int productID) {
         if(auctionProducts.containsKey(productID)){
             AuctionProduct auctionProduct = auctionProducts.get(productID);
@@ -132,10 +142,11 @@ public class Store {
         }
     }
     
-
+    @Override
     public void receivingMessage(int userID, String message) {
         messagesFromUsers.add(new SimpleEntry<>(userID, message));
     }
+    @Override
     public void sendMessage(int managerId, int userID, String message) {
         if(isOwner(managerId) || (isManager(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
             messagesFromStore.push(new SimpleEntry<>(userID, message));
@@ -144,6 +155,7 @@ public class Store {
             throw new IllegalArgumentException("User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    @Override
     public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId) {
         if(isOwner(managerId) || (isManager(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
             return messagesFromUsers;
@@ -152,6 +164,7 @@ public class Store {
             throw new IllegalArgumentException("User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
         }
     }
+    @Override
     public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId) {
         if (isOwner(managerId) || (isManager(managerId) && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))){
             return messagesFromStore;
@@ -160,19 +173,23 @@ public class Store {
         }
     }
 
-    
+    @Override
     public HashMap<Integer, StoreProduct> getStoreProducts() {
         return storeProducts;
     }
+    @Override
     public HashMap<Integer, StoreRating> getRatings() {
         return Sratings;
     }
+    @Override
     public HashMap<Integer, PurchasePolicy> getPurchasePolicies() {
         return purchasePolicies;
     }
+    @Override
     public HashMap<Integer, DiscountPolicy> getDiscountPolicies() {
         return discountPolicies;
     }
+    @Override
     public List<Integer> getStoreOwners(int requesterId) {
         if(isOwner(requesterId) || (isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
             return new ArrayList<>(storeOwners); // copy of store owners
@@ -189,7 +206,7 @@ public class Store {
         }
         return copy;
     }
-
+    @Override
     public HashMap<Integer,List<StoreManagerPermission>> getStoreManagers(int requesterId){
         if(isOwner(requesterId) || (isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES) )){
             return copyStoreManagersMap();
@@ -199,6 +216,7 @@ public class Store {
         }
     }
     //TO DO: Send Approval Request
+    @Override
     public void addStoreOwner(int appointor, int appointee){
         if(!isOwner(appointor)){
             throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
@@ -232,15 +250,15 @@ public class Store {
     // public void declineStoreOwner(int appointee){
     //     pendingOwners.remove(appointee);
     // }
-
+    @Override
     public boolean isOwner(int userId){
         return storeOwners.contains(userId);
     }
-
+    @Override
     public boolean isManager(int userId){
         return storeManagers.containsKey(userId);
     }
-
+    @Override
     public void addStoreManager(int appointor, int appointee, List<StoreManagerPermission> perms){
         if(!isOwner(appointor)){
             throw new IllegalArgumentException("Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
@@ -254,7 +272,7 @@ public class Store {
         storeManagers.put(appointee, perms);
         rolesTree.addNode(appointor, appointee);
     }
-
+    @Override
     public void addManagerPermissions(int requesterId, int managerId, List<StoreManagerPermission> perms){
         if(!isOwner(requesterId)){
             throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
@@ -269,7 +287,7 @@ public class Store {
                 currentPerms.add(perm);
         }
     }
-
+    @Override
     public void removeManagerPermissions(int requesterId, int managerId, List<StoreManagerPermission> toRemove){
         if(!isOwner(requesterId)){
             throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
@@ -292,10 +310,11 @@ public class Store {
             throw new IllegalArgumentException("permissions can not be empty. reseting manager: " + managerId + " permissions to original");
         }
     }
-
+    @Override
     public int getStoreFounderID() {
         return storeFounderID;
     }
+    @Override
     public void closeStore(int requesterId) {
         if(requesterId == this.storeFounderID){
             if(!this.isOpen){
@@ -308,6 +327,7 @@ public class Store {
             throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
         }
     }
+    @Override
     public StoreRating getStoreRatingByUser(int userID) {
         if (Sratings.containsKey(userID)) {
             return Sratings.get(userID);
@@ -315,6 +335,7 @@ public class Store {
             throw new IllegalArgumentException("User with ID: " + userID + " has not rated the store yet.");
         }
     }
+    @Override
     public ProductRating getStoreProductRating(int userID, int productID) {
         if (storeProducts.containsKey(productID)) {
             return storeProducts.get(productID).getRatingByUser(userID);
@@ -322,13 +343,15 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
+    @Override
     public void openStore() {
         this.isOpen = true;
     }
+    @Override
     public boolean isOpen() {
         return isOpen;
     }
-
+    @Override
     public double getAverageRating() {
         double sum = 0;
         for (StoreRating rating : Sratings.values()) {
@@ -336,6 +359,7 @@ public class Store {
         }
         return sum / Sratings.size();
     }
+    @Override
     public StoreProduct getStoreProduct(int productID) {
         if (storeProducts.containsKey(productID)) {
             return storeProducts.get(productID);
@@ -343,7 +367,7 @@ public class Store {
             throw new IllegalArgumentException("Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
-
+    @Override
     public void removeStoreOwner(int requesterId, int toRemoveId){
         if(!isOwner(requesterId)){
             throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
@@ -360,6 +384,7 @@ public class Store {
             fatherNode.removeChild(childNode); //remove child & all descendants from the actual tree
     }
 
+    @Override
     public void removeStoreManager(int requesterId, int toRemoveId){
         if(!isOwner(requesterId)){
             throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
@@ -376,7 +401,7 @@ public class Store {
         storeManagers.remove(toRemoveId);
         fatherNode.removeChild(childNode);//remove child from the actual tree
     }
-
+    
     private void removeAllChildrenRoles(Node toRemove){
         List<Node> children = toRemove.getAllDescendants();
         for(Node child : children){
@@ -410,6 +435,11 @@ public class Store {
             throw new IllegalArgumentException("Only " + childId + "'s appointor can change/remove their permissions");
         }
         return new Node[] {fatherNode, childNode};
+    }
+    @Override
+    public synchronized StoreProductDTO decrementProductQuantity(int productId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'decrementProductQuantity'");
     }
 
 }
