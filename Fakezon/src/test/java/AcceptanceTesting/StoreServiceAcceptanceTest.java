@@ -425,6 +425,16 @@ public class StoreServiceAcceptanceTest {
     }
 
     @Test
+    void removeStoreOwner_isFounder_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                storeService.removeStoreOwner(storeId, founderId, founderId));
+        assertTrue(ex.getMessage().contains("Can not remove Store Founder"));
+        assertTrue(owners.equals(storeService.getStoreOwners(storeId, founderId)));
+    }
+
+    @Test
     void removeStoreManager_success(){
         when(storeRepository.findById(storeId)).thenReturn(store);
         int tmp_owner = 30;
