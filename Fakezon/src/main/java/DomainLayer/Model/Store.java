@@ -581,7 +581,7 @@ public class Store implements IStore {
         }
         storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
         return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    storeProduct.getQuantity(), storeProduct.getAverageRating());
+                    quantity, storeProduct.getAverageRating());
     }
 
 }
