@@ -346,15 +346,15 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during user access store: " + e.getMessage());
-            return null;
+            return new Response<>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
             logger.info("System service - user trying to view procuct " + keyword);
             return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
+            return new Response<>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
-        return null;
     }
 
     private int addProduct(String productName, String productDescription) {
