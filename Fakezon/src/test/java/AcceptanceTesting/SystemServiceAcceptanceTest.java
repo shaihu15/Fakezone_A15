@@ -46,6 +46,8 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 public class SystemServiceAcceptanceTest {
     private IStoreRepository storeRepository;
@@ -70,6 +72,7 @@ public class SystemServiceAcceptanceTest {
     private IUserService userService;
     private IDelivery deliveryService;
     private IPayment paymentService;
+    private ApplicationEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
@@ -80,10 +83,11 @@ public class SystemServiceAcceptanceTest {
         authenticatorService = mock(IAuthenticator.class);
         deliveryService = mock(IDelivery.class);
         paymentService = mock(IPayment.class);
+        publisher = mock(ApplicationEventPublisher.class);
 
         // Inject the mocked services using the overloaded constructor
         systemService = new SystemService(storeService, userService, productService, deliveryService,
-                authenticatorService, paymentService);
+                authenticatorService, paymentService, publisher);
 
     }
 
@@ -147,7 +151,7 @@ public class SystemServiceAcceptanceTest {
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act
-        ProductDTO result = systemService.getProduct(productId);
+        ProductDTO result = systemService.getProduct(productId).getData();
 
         // Assert
         assertNotNull(result);

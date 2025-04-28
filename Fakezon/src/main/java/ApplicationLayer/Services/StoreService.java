@@ -21,14 +21,19 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
+
 import ApplicationLayer.DTO.StoreRolesDTO;
 
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private final ApplicationEventPublisher publisher;
 
-    public StoreService(IStoreRepository storeRepository) {
+    public StoreService(IStoreRepository storeRepository, ApplicationEventPublisher publisher) {
         this.storeRepository = storeRepository;
+        this.publisher = publisher;
     }
 
     // should store service catch the errors? who's printing to console??
@@ -318,7 +323,7 @@ public class StoreService implements IStoreService {
             logger.error("openStore - Store name already exists: " + storeName);
             throw new IllegalArgumentException("Store name already exists");
         }
-        Store store = new Store(storeName, userId);
+        Store store = new Store(storeName, userId, publisher);
         int storeId = store.getId();
         logger.info("openStore - New store ID: " + storeId);
 
