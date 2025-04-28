@@ -75,4 +75,12 @@ public interface ISystemService {
     Response<String> closeStoreByFounder(int storeId, int userId);
 
 
+    void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void removeProductFromStore(int storeId, int requesterId, int productId);
+    
+    void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
 }

@@ -49,5 +49,12 @@ public class AuctionProduct extends StoreProduct {
 
     }
 
+    public void addDays(int days){
+        if(days <= 0){
+            throw new IllegalArgumentException("Added days must be greater than 0");
+        }
+        daysToEnd += days;
+    }
+
     
 }

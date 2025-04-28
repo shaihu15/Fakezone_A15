@@ -70,6 +70,7 @@
 			<groupId>org.springframework.session</groupId>
 			<artifactId>spring-session-core</artifactId>
 		</dependency>
+
 		<!-- Thymeleaf template engine for rendering HTML templates -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
