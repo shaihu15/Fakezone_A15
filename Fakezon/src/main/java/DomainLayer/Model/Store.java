@@ -299,6 +299,7 @@ public class Store {
     public int getStoreFounderID() {
         return storeFounderID;
     }
+
     public void closeStore(int requesterId) {
         if(requesterId == this.storeFounderID){
             if(!this.isOpen){

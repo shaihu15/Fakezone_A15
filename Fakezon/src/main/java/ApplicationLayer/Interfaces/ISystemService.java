@@ -7,6 +7,7 @@ import java.util.Set;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
@@ -37,7 +38,7 @@ public interface ISystemService {
 
     StoreProductDTO getProductFromStore(int productId, int storeId);
 
-    ProductDTO getProduct(int productId);
+    Response<ProductDTO> getProduct(int productId);
 
     void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import ApplicationLayer.Response;
 import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,14 +240,15 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public ProductDTO getProduct(int productId) {
+    public Response<ProductDTO> getProduct(int productId) {
         try {
             logger.info("System service - user trying to view procuct " + productId);
-            return this.productService.viewProduct(productId);
+            ProductDTO productDTO = this.productService.viewProduct(productId);
+            return new Response<ProductDTO>(productDTO, "Product retrieved successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Error during getting product", false);
         }
-        return null;
     }
 
     @Override

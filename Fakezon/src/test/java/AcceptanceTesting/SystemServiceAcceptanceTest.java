@@ -136,7 +136,7 @@ public class SystemServiceAcceptanceTest {
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act
-        ProductDTO result = systemService.getProduct(productId);
+        ProductDTO result = systemService.getProduct(productId).getData();
 
         // Assert
         assertNotNull(result);

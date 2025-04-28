@@ -9,7 +9,9 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
 import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +26,7 @@ public class Registered extends User {
     private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
+    private  Queue<Integer> storesToClose;
 
     public Registered(String email, String password, LocalDate dateOfBirth) {
         super();
@@ -36,7 +39,7 @@ public class Registered extends User {
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new LinkedList<>();
-
+        storesToClose = new LinkedList<>();
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
@@ -52,9 +55,24 @@ public class Registered extends User {
         messagesFromUser.push(new SimpleEntry<>(storeID, message));
 
     }
-    @EventListener
     public void receivingMessageFromStore(int storeID, String message) {
         messagesFromStore.add(new SimpleEntry<>(storeID, message));
+    }
+
+    private boolean shouldHandle(ClosingStoreEvent event) {
+        if(this.roles.get(event.getId()).getRoleName() == RoleName.STORE_OWNER) {
+            return true;
+        }
+        return false;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandle(#event)")
+    public void handleCloseStore(ClosingStoreEvent event) {
+        if(!isLoggedIn) {
+            storesToClose.add(event.getId());
+            return;
+        }
+        // your logic to send to UI
     }
 
     public List<SimpleEntry<Integer, String>> getMessagesFromUser() {
