@@ -238,10 +238,7 @@ public class SystemService implements ISystemService {
                     logger.info(
                             "System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
                                     + " with message: " + message);
-                    this.userService.receivingMessageFromStore(userToAnswer, storeId, message);
-                    logger.info("System Service - User received message from store: " + storeId + " to user: "
-                            + userToAnswer
-                            + " with message: " + message);
+                    
                 } else {
                     logger.error("System Service - Store is closed: " + storeId);
                     throw new IllegalArgumentException("Store is closed");
@@ -496,6 +493,23 @@ public class SystemService implements ISystemService {
             this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
         } catch (Exception e) {
             logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<String> closeStoreByFounder(int storeId, int userId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                this.storeService.closeStore(storeId, userId);
+                logger.info("System Service - User closed store: " + storeId + " by user: " + userId);
+                return new Response<String>("Store closed successfully","Store closed successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<String>(null, "User is not logged in",false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during closing store: " + e.getMessage());
+            return new Response<String>(null, "Error during closing store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
 

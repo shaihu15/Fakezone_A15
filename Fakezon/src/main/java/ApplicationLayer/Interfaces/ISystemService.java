@@ -69,4 +69,7 @@ public interface ISystemService {
 
     void addToBasket(int userId, int productId, int storeId, int quantity);
 
+    Response<String> closeStoreByFounder(int storeId, int userId);
+
+
 }
