@@ -2,11 +2,10 @@ package DomainLayer.Model;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Cart {
+
     private List<Basket> baskets;
 
     public Cart() {
@@ -17,16 +16,23 @@ public class Cart {
         baskets.clear();
     }
 
-    public boolean addProduct(int storeID, StoreProductDTO product) {
-        for (Basket basket : baskets) {
-            if (basket.getStoreID() == storeID) {
-                basket.addProduct(product);
-                return true;
-            }
+    public void addProduct(int storeID, StoreProductDTO product) {
+        Basket basket = getBasket(storeID);
+        if (basket != null) {
+            basket.addProduct(product);
+            return;
         }
         Basket newBasket = new Basket(storeID);
         newBasket.addProduct(product);
         baskets.add(newBasket);
-        return true;
+    }
+
+    public Basket getBasket(int storeID) {
+        for (Basket basket : baskets) {
+            if (basket.getStoreID() == storeID) {
+                return basket;
+            }
+        }
+        return null;
     }
 }

@@ -1,22 +1,22 @@
 package ApplicationLayer.Services;
 
 import java.time.LocalDate;
-
-import ApplicationLayer.Interfaces.IUserService;
-
-import DomainLayer.Model.Order;
-import DomainLayer.Model.Registered;
-import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.IRepository.IUserRepository;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ApplicationLayer.DTO.UserDTO;
+import org.springframework.context.annotation.Bean;
+import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.DTO.StoreProductDTO;
+
+import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Model.Order;
+import DomainLayer.Model.Registered;
 
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
@@ -113,8 +113,6 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Error during login: " + e.getMessage());
         }
     }
-
-
 
     @Override
     public void addRole(int userID, int storeID, IRegisteredRole role) {
@@ -230,6 +228,7 @@ public class UserService implements IUserService {
         return null;
     }
 
+    @Override
     public boolean isUserLoggedIn(int userID) {
         Optional<Registered> user = userRepository.findById(userID);
         if (user.isPresent()) {
@@ -264,23 +263,6 @@ public class UserService implements IUserService {
         }
     }
 
-    @Override
-    public void receivingMessageFromStore(int userID, int storeID, String message) {
-        Optional<Registered> user = userRepository.findById(userID);
-        if (user.isPresent()) {
-            try {
-                user.get().receivingMessageFromStore(storeID, message);
-                logger.info("Message received from store: " + storeID + " to user: " + userID);
-            } catch (Exception e) {
-                // Handle exception if needed
-                logger.error("Error during receiving message: " + e.getMessage());
-                System.out.println("Error during receiving message: " + e.getMessage());
-            }
-        } else {
-            logger.error("User not found: " + userID);
-            throw new IllegalArgumentException("User not found");
-        }
-    }
 
     @Override
     public UserDTO addUser(String password, String email, LocalDate dateOfBirth) {
@@ -299,7 +281,21 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void guestRegister(String userName, String password, String email, int UserId, LocalDate dateOfBirth) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void addToBasket(int userId, int storeId, StoreProductDTO product) {
+        Optional<Registered> user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            try {
+                user.get().addToBasket(storeId, product);
+                logger.info("Product added to basket: " + product.getName() + " from store: " + storeId + " by user: "
+                        + userId);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during add to basket: " + e.getMessage());
+                logger.error("Error during add to basket: " + e.getMessage());
+            }
+        } else {
+            logger.error("User not found: " + userId);
+            throw new IllegalArgumentException("User not found");
+        }
     }
 }

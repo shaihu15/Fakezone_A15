@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -20,17 +22,32 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Services.ProductService;
+import ApplicationLayer.Services.StoreService;
 import ApplicationLayer.Services.SystemService;
+import ApplicationLayer.Services.UserService;
+
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Product;
+import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Repositories.ProductRepository;
+import InfrastructureLayer.Repositories.StoreRepository;
+import InfrastructureLayer.Repositories.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 public class SystemServiceAcceptanceTest {
     private IStoreRepository storeRepository;
@@ -55,6 +72,7 @@ public class SystemServiceAcceptanceTest {
     private IUserService userService;
     private IDelivery deliveryService;
     private IPayment paymentService;
+    private ApplicationEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
@@ -65,10 +83,11 @@ public class SystemServiceAcceptanceTest {
         authenticatorService = mock(IAuthenticator.class);
         deliveryService = mock(IDelivery.class);
         paymentService = mock(IPayment.class);
+        publisher = mock(ApplicationEventPublisher.class);
 
         // Inject the mocked services using the overloaded constructor
         systemService = new SystemService(storeService, userService, productService, deliveryService,
-                authenticatorService, paymentService);
+                authenticatorService, paymentService, publisher);
 
     }
 
@@ -132,7 +151,7 @@ public class SystemServiceAcceptanceTest {
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act
-        ProductDTO result = systemService.getProduct(productId);
+        ProductDTO result = systemService.getProduct(productId).getData();
 
         // Assert
         assertNotNull(result);
