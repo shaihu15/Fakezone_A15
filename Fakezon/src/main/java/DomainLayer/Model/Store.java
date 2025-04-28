@@ -20,7 +20,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
-import org.springframework.security.access.method.P;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
@@ -484,34 +483,9 @@ public class Store implements IStore {
     // TO DO: Send Approval Request
     @Override
     public void addStoreOwner(int appointor, int appointee) {
-
-        if (!isOwner(appointor)) {
-            throw new IllegalArgumentException(
-                    "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
-        }
-        if (isOwner(appointee)) {
-            throw new IllegalArgumentException(
-                    "User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
-        }
-        // relevant after notifs
-        /*
-         * if(pendingOwners.containsKey(appointee)){
-         * throw new IllegalArgumentException("Already waiting for User with ID: " +
-         * appointee + "'s approval");
-         * }
-         */
-        // pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS
-        // IMPLEMENTED
-
-        if (isManager(appointee)) {
-            Node appointeeNode = rolesTree.getNode(appointee);
-            Node appointorNode = rolesTree.getNode(appointor);
-            if (!appointorNode.getChildren().contains(appointeeNode)) {
-
         rolesLock.lock();
         try{
             if (!isOwner(appointor)) {
-
                 throw new IllegalArgumentException(
                         "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
             }
@@ -547,6 +521,7 @@ public class Store implements IStore {
             throw e;
         }
     }
+    
 
     // ***will be relevant when observer/able is implemented***
     // public void approvalStoreOwner(int appointee){
@@ -742,7 +717,6 @@ public class Store implements IStore {
         }
     }
 
-    @Override
     public void removeStoreOwner(int requesterId, int toRemoveId) {
         rolesLock.lock();
         try{
@@ -764,14 +738,9 @@ public class Store implements IStore {
             if (requesterId != toRemoveId)
                 fatherNode.removeChild(childNode); // remove child & all descendants from the actual tree
         }
-
-        if (toRemoveId == this.storeFounderID) {
-            throw new IllegalArgumentException("Can not remove Store Founder");
-
         catch(Exception e){
             rolesLock.unlock();
             throw e;
-
         }
         rolesLock.unlock();
     }
@@ -790,32 +759,17 @@ public class Store implements IStore {
             Node fatherNode = nodesArr[0];
             Node childNode = nodesArr[1];
             if (!childNode.getChildren().isEmpty()) {
-                throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should
-                                                                                                                    // not
-                                                                                                                    // happen
-                                                                                                                    // -
-                                                                                                                    // just
-                                                                                                                    // for
-                                                                                                                    // debugging
-                                                                                                                    // purposes
+                throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree");
             }
             storeManagers.remove(toRemoveId);
             fatherNode.removeChild(childNode);// remove child from the actual tree
         }
-        Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
-        Node fatherNode = nodesArr[0];
-        Node childNode = nodesArr[1];
-        if (!childNode.getChildren().isEmpty()) {
-            throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should not happen - just for debugging purposes
-
         catch(Exception e){
             rolesLock.unlock();
             throw e;
-
         }
         rolesLock.unlock();
     }
-
     private void removeAllChildrenRoles(Node toRemove) {
         List<Node> children = toRemove.getAllDescendants();
         for (Node child : children) {
@@ -864,7 +818,7 @@ public class Store implements IStore {
         }
         storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
         return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating());
+                    quantity, storeProduct.getAverageRating(), storeProduct.getStoreId());
     }
 
     private boolean hasInventoryPermissions(int id){
