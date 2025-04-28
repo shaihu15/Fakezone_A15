@@ -8,6 +8,8 @@ import java.util.Stack;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
+
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
@@ -25,7 +27,7 @@ public class Registered extends User {
     private String email;
     private String password;
     private int age;
-    private HashMap<Integer, Order> orders; // orderId -> Order
+    private HashMap<Integer, OrderDTO> orders; // orderId -> Order
     private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
@@ -161,8 +163,11 @@ public class Registered extends User {
         return roles; // system admin (storeID = -1)or store owner
     }
 
-    public HashMap<Integer, Order> getOrders() {
+    public HashMap<Integer, OrderDTO> getOrders() {
         return orders; // userID -> Order
+    }
+    public void saveOrder(OrderDTO order) {
+        orders.put(order.getOrderId(), order);
     }
 
     public boolean isLoggedIn() {
