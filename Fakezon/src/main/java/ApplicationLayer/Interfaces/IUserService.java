@@ -46,7 +46,6 @@ public interface IUserService {
 
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
 
-    void receivingMessageFromStore(int userID, int storeID, String message); // receive message from store
 
     UserDTO addUser(String password, String email, LocalDate dateOfBirth); // add a new user
 

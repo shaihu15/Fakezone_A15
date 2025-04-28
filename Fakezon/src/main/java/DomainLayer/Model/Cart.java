@@ -2,8 +2,6 @@ package DomainLayer.Model;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Cart {

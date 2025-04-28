@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import ApplicationLayer.Response;
+import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,10 @@ import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.ErrorType;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -39,10 +44,12 @@ public class SystemService implements ISystemService {
     private IStoreService storeService;
     private IProductService productService;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
-            IProductRepository productRepository) {
-        this.storeService = new StoreService(storeRepository);
+            IProductRepository productRepository, ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
+        this.storeService = new StoreService(storeRepository, publisher);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
         this.deliveryService = new DeliveryAdapter();
@@ -52,7 +59,9 @@ public class SystemService implements ISystemService {
 
     // Overloaded constructor for testing purposes
     public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
-            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService) {
+            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
+            ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
         this.storeService = storeService;
         this.userService = userService;
         this.productService = productService;
@@ -229,10 +238,7 @@ public class SystemService implements ISystemService {
                     logger.info(
                             "System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
                                     + " with message: " + message);
-                    this.userService.receivingMessageFromStore(userToAnswer, storeId, message);
-                    logger.info("System Service - User received message from store: " + storeId + " to user: "
-                            + userToAnswer
-                            + " with message: " + message);
+                    
                 } else {
                     logger.error("System Service - Store is closed: " + storeId);
                     throw new IllegalArgumentException("Store is closed");
@@ -260,14 +266,21 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public ProductDTO getProduct(int productId) {
+    public Response<ProductDTO> getProduct(int productId) {
         try {
             logger.info("System service - user trying to view procuct " + productId);
-            return this.productService.viewProduct(productId);
+            ProductDTO productDTO = this.productService.viewProduct(productId);
+            return new Response<ProductDTO>(productDTO, "Product retrieved successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Invalid input: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Invalid input", false, ErrorType.INVALID_INPUT);
+        } catch (NullPointerException e) {
+            logger.error("System Service - Null pointer encountered: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Unexpected null value", false, ErrorType.INTERNAL_ERROR);
         } catch (Exception e) {
-            logger.error("System Service - Error during getting product: " + e.getMessage());
+            logger.error("System Service - General error: " + e.getMessage());
+            return new Response<ProductDTO>(null, "An unexpected error occurred", false, ErrorType.INTERNAL_ERROR);
         }
-        return null;
     }
 
     @Override
@@ -460,6 +473,43 @@ public class SystemService implements ISystemService {
             logger.error("System service - failed to add owner to store " + e.getMessage());
             userService.removeRole(ownerId, storeId); // reverting
             throw e;
+        }
+    }
+    @Override
+    public void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd) {
+        try {
+            logger.info("System service - user " + requesterId + " trying to add auction product " + productID
+                    + " to store: " + storeId);
+            this.storeService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, daysToEnd);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding auction product to store: " + e.getMessage());
+        }
+    }
+    @Override
+    public void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
+        try {
+            logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
+                    + productID + " in store: " + storeId);
+            this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Response<String> closeStoreByFounder(int storeId, int userId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                this.storeService.closeStore(storeId, userId);
+                logger.info("System Service - User closed store: " + storeId + " by user: " + userId);
+                return new Response<String>("Store closed successfully","Store closed successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<String>(null, "User is not logged in",false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during closing store: " + e.getMessage());
+            return new Response<String>(null, "Error during closing store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
 

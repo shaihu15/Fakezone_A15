@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -19,9 +20,15 @@ import DomainLayer.Model.StoreOwner;
 import ApplicationLayer.DTO.StoreRolesDTO;
 
 public interface IStoreService {
-        int addStore(int userId, String storeName);
 
-        int updateStore(int storeId, int requesterId, String name);
+  void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+
+  void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
+    List<AuctionProductDTO> getAuctionProductsFromStore(int storeId);
+
+  int addStore(int userId, String storeName);
+
+  int updateStore(int storeId, int requesterId, String name);
 
         void deleteStore(int storeId, int requesterId);
 
@@ -104,5 +111,4 @@ public interface IStoreService {
         void removeProductFromStore(int storeId, int requesterId, int productId);
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
-
 }

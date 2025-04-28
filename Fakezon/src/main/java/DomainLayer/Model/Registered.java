@@ -9,8 +9,16 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
 import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.helpers.AssignmentEvent;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+@Component
 public class Registered extends User {
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
@@ -21,6 +29,7 @@ public class Registered extends User {
     private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
+    private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
 
     public Registered(String email, String password, LocalDate dateOfBirth) {
         super();
@@ -33,7 +42,7 @@ public class Registered extends User {
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new LinkedList<>();
-
+        assignmentMessages = new LinkedList<>();
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
@@ -50,9 +59,53 @@ public class Registered extends User {
 
     }
 
-    public void receivingMessageFromStore(int storeID, String message) {
-        messagesFromStore.add(new SimpleEntry<>(storeID, message));
+    private boolean shouldHandleClosingStore(ClosingStoreEvent event) {
+        if(!roles.containsKey(event.getId())) {
+            return false;
+        }
+        return true;
     }
+
+    @EventListener(condition = "#root.target.shouldHandleClosingStore(#event)")
+    public void handleCloseStore(ClosingStoreEvent event) {
+        if(!isLoggedIn) {
+            this.messagesFromStore.add(new SimpleEntry<>(event.getId(), "Store " + event.getId() + " is now close."));
+            return;
+        }
+        // your logic to send to UI
+    }
+    private boolean shouldHandleResposeFromStore(ResponseFromStoreEvent event) {
+        if(event.getUserId() != this.userID) {
+            return false;
+        }
+        return true;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandleResposeFromStore(#event)")
+    public void handleResposeFromStore(ResponseFromStoreEvent event) {
+        if(!isLoggedIn) {
+            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), event.getMessage()));
+            return;
+        }
+        // your logic to send to UI
+    }
+    private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
+        if(event.getUserId() != this.userID) {
+            return false;
+        }
+        return true;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandleAssignmentEvent(#event)")
+    public void handleAssignmentEvent(AssignmentEvent event) {
+        if(!isLoggedIn) {
+            this.assignmentMessages.add(new SimpleEntry<>(event.getStoreId(), "Please approve or decline this role: " + event.getRoleName()+
+            " for store " + event.getStoreId()));
+            return;
+        }
+        // your logic to send to UI
+    }
+
 
     public List<SimpleEntry<Integer, String>> getMessagesFromUser() {
         return messagesFromUser;

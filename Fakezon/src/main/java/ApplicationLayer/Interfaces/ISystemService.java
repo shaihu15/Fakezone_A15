@@ -7,6 +7,7 @@ import java.util.Set;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
@@ -38,7 +39,7 @@ public interface ISystemService {
 
     StoreProductDTO getProductFromStore(int productId, int storeId);
 
-    ProductDTO getProduct(int productId);
+    Response<ProductDTO> getProduct(int productId);
 
     void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
 
@@ -60,10 +61,17 @@ public interface ISystemService {
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
     
+    void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    
+    void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
+    
     StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 
     void addToBasket(int userId, int productId, int storeId, int quantity);
 
     List<StoreProductDTO> viewCart(int userId); // returns a list of products in the cart
+
+    Response<String> closeStoreByFounder(int storeId, int userId);
+
 
 }

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
 
@@ -36,9 +38,11 @@ public class Store implements IStore {
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; // HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private final ApplicationEventPublisher publisher;
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
 
-    public Store(String name, int founderID) {
+
+    public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
         this.storeOwners = new ArrayList<>();
         // storeOwners.put(founderID, new StoreOwner(founderID, name));
@@ -56,6 +60,7 @@ public class Store implements IStore {
         this.storeManagers = new HashMap<>(); // HASH userID to store manager
         this.messagesFromUsers = new LinkedList<>();
         this.messagesFromStore = new Stack<>();
+        this.publisher = publisher;
     }
 
     @Override
@@ -83,6 +88,15 @@ public class Store implements IStore {
     public void addStoreProductRating(int userID, int productID, double rating, String comment) {
         if (storeProducts.containsKey(productID)) {
             storeProducts.get(productID).addRating(userID, rating, comment);
+        } else {
+            throw new IllegalArgumentException(
+                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
+   @Override
+    public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
+        if (auctionProducts.containsKey(productID)) {
+            return auctionProducts.get(productID).addBid(requesterId, bidAmount);
         } else {
             throw new IllegalArgumentException(
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
@@ -129,6 +143,22 @@ public class Store implements IStore {
         }
         if (storeProducts.containsKey(productID)) {
             StoreProduct storeProduct = storeProducts.get(productID);
+            if (storeProduct.getQuantity() <= 0) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
+            }
+            if (auctionProducts.containsKey(productID)) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " is already an auction product in store ID: " + storeID);
+            }
+            if (basePrice <= 0) {
+                throw new IllegalArgumentException("Base price must be greater than 0 for auction product with ID: "
+                        + productID + " in store ID: " + storeID);
+            }
+            if (daysToEnd <= 0) {
+                throw new IllegalArgumentException("Days to end must be greater than 0 for auction product with ID: "
+                        + productID + " in store ID: " + storeID);
+            }
             auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
         } else {
             throw new IllegalArgumentException(
@@ -162,6 +192,10 @@ public class Store implements IStore {
         }
     }
 
+    public List<AuctionProduct> getAuctionProducts() {
+        return new ArrayList<>(auctionProducts.values());
+    }
+
     @Override
     public void receivingMessage(int userID, String message) {
         messagesFromUsers.add(new SimpleEntry<>(userID, message));
@@ -172,6 +206,8 @@ public class Store implements IStore {
         if (isOwner(managerId) || (isManager(managerId)
                 && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
             messagesFromStore.push(new SimpleEntry<>(userID, message));
+            this.publisher.publishEvent(new ResponseFromStoreEvent(this.storeID, userID, message));
+
         } else {
             throw new IllegalArgumentException(
                     "User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
@@ -273,6 +309,7 @@ public class Store implements IStore {
          */
         // pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS
         // IMPLEMENTED
+        
         if (isManager(appointee)) {
             Node appointeeNode = rolesTree.getNode(appointee);
             Node appointorNode = rolesTree.getNode(appointor);
@@ -320,7 +357,7 @@ public class Store implements IStore {
         if (perms == null || perms.isEmpty()) {
             throw new IllegalArgumentException("Permissions list is empty");
         }
-        storeManagers.put(appointee, perms);
+        storeManagers.put(appointee, new ArrayList<>(perms));
         rolesTree.addNode(appointor, appointee);
     }
 
@@ -375,6 +412,7 @@ public class Store implements IStore {
         return storeFounderID;
     }
 
+
     @Override
     public void closeStore(int requesterId) {
         if (requesterId == this.storeFounderID) {
@@ -382,7 +420,8 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Store: " + storeID + " is already closed");
             }
             this.isOpen = false;
-            // TODO: ADD NOTIFICATIONS SENDING
+            this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
+
         } else {
             throw new IllegalArgumentException(
                     "Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);

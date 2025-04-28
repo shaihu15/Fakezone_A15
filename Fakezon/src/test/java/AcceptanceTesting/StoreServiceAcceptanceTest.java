@@ -8,6 +8,8 @@ import DomainLayer.Enums.StoreManagerPermission;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,12 +25,15 @@ public class StoreServiceAcceptanceTest {
     private int storeId = 1;
     private int founderId = 10;
     private int noPermsId = 20;
+    private ApplicationEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
+        publisher = mock(ApplicationEventPublisher.class);
         storeRepository = mock(IStoreRepository.class);
-        store = new Store("Test Store", founderId);
-        storeService = new StoreService(storeRepository);
+        store = new Store("Test Store", founderId, publisher);
+        storeService = new StoreService(storeRepository, publisher);
+        
     }
 
     @Test
