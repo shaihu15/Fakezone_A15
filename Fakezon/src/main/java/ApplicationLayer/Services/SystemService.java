@@ -1,6 +1,7 @@
 package ApplicationLayer.Services;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -539,6 +540,17 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during viewing cart: " + e.getMessage());
             throw new IllegalArgumentException("Error during viewing cart: " + e.getMessage());
         }
+    }
+
+    private OrderDTO createOrderDTO(Order order) {
+        List<ProductDTO> productDTOS = new ArrayList<>();
+        for (int productId : order.getProductIds()) {
+            ProductDTO productDTO = this.productService.viewProduct(productId);
+            productDTOS.add(productDTO);
+        }
+        return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), productDTOS,
+                order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
+
     }
 
     // // Example of a system service method that uses the authenticator service
