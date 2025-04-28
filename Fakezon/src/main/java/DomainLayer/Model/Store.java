@@ -720,6 +720,9 @@ public class Store implements IStore {
             if (!isOwner(toRemoveId)) {
                 throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store owner");
             }
+            if(toRemoveId == storeFounderID){
+                throw new IllegalArgumentException("Can not remove Store Founder");
+            }
             Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
             Node fatherNode = nodesArr[0];
             Node childNode = nodesArr[1];
