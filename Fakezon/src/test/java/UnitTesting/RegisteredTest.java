@@ -2,12 +2,16 @@ package UnitTesting;
 
 import java.time.LocalDate;
 
+import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import ApplicationLayer.DTO.OrderDTO;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -131,6 +135,21 @@ public class RegisteredTest {
         registeredUser.sendMessageToStore(storeID, message);
         assertEquals(message, registeredUser.getMessagesFromUser().get(0).getValue(),
                 "Message should be received successfully");
+    }
+
+    @Test
+    void givenOrderInOrders_whenGetOrders_returnTrue() {
+        int orderID = 1;
+        OrderDTO order = mock(OrderDTO.class);
+        when(order.getOrderId()).thenReturn(orderID);
+        registeredUser.saveOrder(order);
+        assertEquals(order.getOrderId(), registeredUser.getOrders().get(orderID).getOrderId(),
+                "Order should be retrieved successfully");
+    }
+    @Test
+    void givenNoOrderInOrders_whenGetOrders_returnTrue() {
+        assertEquals(0, registeredUser.getOrders().size(),
+                "Orders should be empty initially");
     }
 
 }

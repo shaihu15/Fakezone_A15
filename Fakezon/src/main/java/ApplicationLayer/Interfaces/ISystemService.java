@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -29,7 +30,7 @@ public interface ISystemService {
 
     void ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
 
-    HashMap<Integer, Order> getOrdersByUser(int userId); // userID -> OrderDTO
+    Response<List<OrderDTO>> getOrdersByUser(int userId); // userID -> OrderDTO
 
     void sendMessageToStore(int userId, int storeId, String message); // send message to store
 
@@ -68,6 +69,8 @@ public interface ISystemService {
     StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 
     void addToBasket(int userId, int productId, int storeId, int quantity);
+
+    List<StoreProductDTO> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
