@@ -34,6 +34,7 @@ import InfrastructureLayer.Adapters.PaymentAdapter;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.ErrorType;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -273,9 +274,15 @@ public class SystemService implements ISystemService {
             logger.info("System service - user trying to view procuct " + productId);
             ProductDTO productDTO = this.productService.viewProduct(productId);
             return new Response<ProductDTO>(productDTO, "Product retrieved successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Invalid input: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Invalid input", false, ErrorType.INVALID_INPUT);
+        } catch (NullPointerException e) {
+            logger.error("System Service - Null pointer encountered: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Unexpected null value", false, ErrorType.INTERNAL_ERROR);
         } catch (Exception e) {
-            logger.error("System Service - Error during getting product: " + e.getMessage());
-            return new Response<ProductDTO>(null, "Error during getting product", false);
+            logger.error("System Service - General error: " + e.getMessage());
+            return new Response<ProductDTO>(null, "An unexpected error occurred", false, ErrorType.INTERNAL_ERROR);
         }
     }
 
