@@ -1,8 +1,9 @@
 package DomainLayer.Model;
 
 import ApplicationLayer.DTO.StoreProductDTO;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class User {
     protected boolean isLoggedIn;
@@ -40,6 +41,12 @@ public class User {
 
     public Basket getBasket(int storeId) {
         return cart.getBasket(storeId);
+    }
+
+    public List<StoreProductDTO> viewCart() {
+        List<StoreProductDTO> products = cart.getAllProducts();
+        return products;
+
     }
 
 }

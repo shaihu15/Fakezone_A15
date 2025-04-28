@@ -64,4 +64,6 @@ public interface ISystemService {
 
     void addToBasket(int userId, int productId, int storeId, int quantity);
 
+    List<StoreProductDTO> viewCart(int userId); // returns a list of products in the cart
+
 }

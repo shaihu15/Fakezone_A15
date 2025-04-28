@@ -341,6 +341,7 @@ public class SystemService implements ISystemService {
         }
         return -1;
     }
+
     @Override
     public StoreRolesDTO getStoreRoles(int storeId, int userId) {
         try {
@@ -355,7 +356,6 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during getting store roles: " + e.getMessage());
         }
     }
-
 
     @Override
     public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
@@ -460,6 +460,22 @@ public class SystemService implements ISystemService {
             logger.error("System service - failed to add owner to store " + e.getMessage());
             userService.removeRole(ownerId, storeId); // reverting
             throw e;
+        }
+    }
+
+    @Override
+    public List<StoreProductDTO> viewCart(int userId) {
+        try {
+            logger.info("System service - user " + userId + " trying to view cart");
+            if (this.userService.isUserLoggedIn(userId)) {
+                return this.userService.viewCart(userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during viewing cart: " + e.getMessage());
+            throw new IllegalArgumentException("Error during viewing cart: " + e.getMessage());
         }
     }
 
