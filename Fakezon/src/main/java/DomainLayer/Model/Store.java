@@ -9,10 +9,18 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
+
+import org.apache.commons.lang3.ObjectUtils.Null;
+import org.springframework.security.access.method.P;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
@@ -41,6 +49,9 @@ public class Store implements IStore {
     private static final AtomicInteger idCounter = new AtomicInteger(0);
     private final ApplicationEventPublisher publisher;
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
+    private final ReentrantLock rolesLock = new ReentrantLock();    // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED BOTH!
+    private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED BOTH
+
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
@@ -86,9 +97,12 @@ public class Store implements IStore {
 
     @Override
     public void addStoreProductRating(int userID, int productID, double rating, String comment) {
+        productsLock.lock();
         if (storeProducts.containsKey(productID)) {
             storeProducts.get(productID).addRating(userID, rating, comment);
+            productsLock.unlock();
         } else {
+            productsLock.unlock();
             throw new IllegalArgumentException(
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
@@ -96,82 +110,205 @@ public class Store implements IStore {
 
     @Override
     public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
+        productsLock.lock();
         if (auctionProducts.containsKey(productID)) {
-            return auctionProducts.get(productID).addBid(requesterId, bidAmount);
+            boolean ans = auctionProducts.get(productID).addBid(requesterId, bidAmount);
+            productsLock.unlock();
+            return ans;
         } else {
+            productsLock.unlock();
             throw new IllegalArgumentException(
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
 
     @Override
-    public void addStoreProduct(int productID, String name, double basePrice, int quantity) {
+    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
+        rolesLock.lock();
+        productsLock.lock();
+        try{
+            if(!hasInventoryPermissions(requesterId)){
+                throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+            }
+            if(storeProducts.containsKey(productID)){
+                throw new IllegalArgumentException("Product " + productID + " is already in store " + storeID);
+            }
+            if(quantity <= 0){
+                throw new IllegalArgumentException("Product's quantity must be greater than 0");
+            }
+            if(basePrice <= 0){
+                throw new IllegalArgumentException("Product's base price must be greater than 0");
+            }
+            if(name == null || name.length() <= 0){
+                throw new IllegalArgumentException("Product's name can not be empty");
+            }
+        }
+        catch(Exception e){
+            productsLock.unlock();
+            rolesLock.unlock();
+            throw e;
+        }
         storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
+        productsLock.unlock();
+        rolesLock.unlock();
     }
+    public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity){
+        rolesLock.lock();
+        productsLock.lock();
+        try{
+            if(!hasInventoryPermissions(requesterId)){
+                throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+            }
+            if(!storeProducts.containsKey(productID)){
+                throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
+            }
+            if(quantity <= 0){
+                throw new IllegalArgumentException("Product's quantity must be greater than 0");
+            }
+            if(basePrice <= 0){
+                throw new IllegalArgumentException("Product's base price must be greater than 0");
+            }
+            if(name == null || name.length() <= 0){
+                throw new IllegalArgumentException("Product's name can not be empty");
+            }
+        }
+        catch(Exception e){
+            productsLock.unlock();
+            rolesLock.unlock();
+            throw e;
+        }
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity)); //overrides old product
+        productsLock.unlock();
+        rolesLock.unlock();
+    }
+    public void removeStoreProduct(int requesterId, int productID){
+        rolesLock.lock();
+        productsLock.lock();
+        try{
+            if(!hasInventoryPermissions(requesterId)){
+                throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+            }
+            if(!storeProducts.containsKey(productID)){
+                throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
+            }
+        }
+        catch(Exception e){
+            productsLock.unlock();
+            rolesLock.unlock();
+            throw e;
+        }
+        if(auctionProducts.containsKey(productID)){
+            auctionProducts.remove(productID);
+        }
+        storeProducts.remove(productID);
+        productsLock.unlock();
+        rolesLock.unlock();
+    }
+
+    public void addAuctionProductDays(int requesterId, int productId, int daysToAdd){
+        rolesLock.lock();
+        productsLock.lock();
+        try{
+            if(!hasInventoryPermissions(requesterId)){
+                throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+            }
+            if(!auctionProducts.containsKey(productId)){
+                throw new IllegalArgumentException("Product "+ productId + " not on Auction in store " + storeID);
+            }
+            auctionProducts.get(productId).addDays(daysToAdd); //throws if daysToAdd <= 0, gets caught in service
+            productsLock.unlock();
+            rolesLock.unlock();
+        }
+        catch(Exception e){
+            productsLock.unlock();
+            rolesLock.unlock();
+            throw e;
+        }
+    }
+
 
     // To Do: change the paramers of the function and decide on the structure of
     // purchase policy and discount policy
     @Override
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
+        rolesLock.lock();
         if (isOwner(userID)
                 || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))) {
             purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
         } else {
+            rolesLock.unlock();
             throw new IllegalArgumentException(
                     "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }
+        rolesLock.unlock();
     }
 
     // To Do: change the paramers of the function and decide on the structure of
     // purchase policy and discount policy
     @Override
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
+        rolesLock.lock();
         if (isOwner(userID)
                 || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
             discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
         } else {
+            rolesLock.unlock();
             throw new IllegalArgumentException(
                     "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
         }
+        rolesLock.unlock();
     }
 
     @Override
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd) {
-        if (!isOwner(requesterId) && !(isManager(requesterId)
-                && storeManagers.get(requesterId).contains(StoreManagerPermission.INVENTORY))) {
-            throw new IllegalArgumentException(
-                    "User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
-        }
-        if (storeProducts.containsKey(productID)) {
-            StoreProduct storeProduct = storeProducts.get(productID);
-            if (storeProduct.getQuantity() <= 0) {
+        rolesLock.lock();
+        productsLock.lock();
+        try{
+            if(!hasInventoryPermissions(requesterId)){
+                throw new IllegalArgumentException("User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+            }
+            if (storeProducts.containsKey(productID)) {
+                StoreProduct storeProduct = storeProducts.get(productID);
+                if (storeProduct.getQuantity() <= 0) {
+                    throw new IllegalArgumentException(
+                            "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
+                }
+                if (auctionProducts.containsKey(productID)) {
+                    throw new IllegalArgumentException(
+                            "Product with ID: " + productID + " is already an auction product in store ID: " + storeID);
+                }
+                if (basePrice <= 0) {
+                    throw new IllegalArgumentException("Base price must be greater than 0 for auction product with ID: "
+                            + productID + " in store ID: " + storeID);
+                }
+                if (daysToEnd <= 0) {
+                    throw new IllegalArgumentException("Days to end must be greater than 0 for auction product with ID: "
+                            + productID + " in store ID: " + storeID);
+                }
+                auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
+            } else {
                 throw new IllegalArgumentException(
-                        "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
+                        "Product with ID: " + productID + " does not exist in store ID: " + storeID);
             }
-            if (auctionProducts.containsKey(productID)) {
-                throw new IllegalArgumentException(
-                        "Product with ID: " + productID + " is already an auction product in store ID: " + storeID);
-            }
-            if (basePrice <= 0) {
-                throw new IllegalArgumentException("Base price must be greater than 0 for auction product with ID: "
-                        + productID + " in store ID: " + storeID);
-            }
-            if (daysToEnd <= 0) {
-                throw new IllegalArgumentException("Days to end must be greater than 0 for auction product with ID: "
-                        + productID + " in store ID: " + storeID);
-            }
-            auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
-        } else {
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
+        catch(Exception e){
+            productsLock.unlock();
+            rolesLock.unlock();
+            throw e;
+        }
+        productsLock.unlock();
+        rolesLock.unlock();
     }
 
     @Override
     public boolean addBidToAuctionProduct(int requesterId, int productID, double bidAmount) {
+        productsLock.lock();
         if (auctionProducts.containsKey(productID)) {
-            return auctionProducts.get(productID).addBid(requesterId, bidAmount);
+            boolean ans = auctionProducts.get(productID).addBid(requesterId, bidAmount);
+            productsLock.unlock();
+            return ans;
         } else {
+            productsLock.unlock();
             throw new IllegalArgumentException(
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
@@ -179,22 +316,33 @@ public class Store implements IStore {
 
     @Override
     public void isValidPurchaseAction(int requesterId, int productID) {
-        if (auctionProducts.containsKey(productID)) {
-            AuctionProduct auctionProduct = auctionProducts.get(productID);
-            if (auctionProduct.getDaysToEnd() <= 0) {
-                throw new IllegalArgumentException("Auction for product with ID: " + productID + " has ended.");
+        productsLock.lock();
+        try{
+            if (auctionProducts.containsKey(productID)) {
+                AuctionProduct auctionProduct = auctionProducts.get(productID);
+                if (auctionProduct.getDaysToEnd() <= 0) {
+                    throw new IllegalArgumentException("Auction for product with ID: " + productID + " has ended.");
+                }
+                if (auctionProduct.getUserIDHighestBid() != requesterId) {
+                    throw new IllegalArgumentException("User with ID: " + requesterId
+                            + " is not the highest bidder for product with ID: " + productID);
+                }
+            } else {
+                throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
             }
-            if (auctionProduct.getUserIDHighestBid() != requesterId) {
-                throw new IllegalArgumentException("User with ID: " + requesterId
-                        + " is not the highest bidder for product with ID: " + productID);
-            }
-        } else {
-            throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
         }
+        catch(Exception e){
+            productsLock.unlock();
+            throw e;
+        }
+        productsLock.unlock();
     }
 
     public List<AuctionProduct> getAuctionProducts() {
-        return new ArrayList<>(auctionProducts.values());
+        productsLock.lock();
+        List<AuctionProduct> prods = new ArrayList<>(auctionProducts.values());
+        productsLock.unlock();
+        return prods;
     }
 
     @Override
@@ -204,36 +352,60 @@ public class Store implements IStore {
 
     @Override
     public void sendMessage(int managerId, int userID, String message) {
-        if (isOwner(managerId) || (isManager(managerId)
-                && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-            messagesFromStore.push(new SimpleEntry<>(userID, message));
-            this.publisher.publishEvent(new ResponseFromStoreEvent(this.storeID, userID, message));
+        rolesLock.lock();
+        try{
+            if (isOwner(managerId) || (isManager(managerId)
+                    && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
+                messagesFromStore.push(new SimpleEntry<>(userID, message));
+                this.publisher.publishEvent(new ResponseFromStoreEvent(this.storeID, userID, message));
 
-        } else {
-            throw new IllegalArgumentException(
-                    "User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
+            } else {
+                throw new IllegalArgumentException(
+                        "User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
     }
 
     @Override
     public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId) {
-        if (isOwner(managerId) || (isManager(managerId)
-                && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-            return messagesFromUsers;
-        } else {
-            throw new IllegalArgumentException(
-                    "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
+        rolesLock.lock();
+        try{
+            if (isOwner(managerId) || (isManager(managerId)
+                    && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
+                        
+                rolesLock.unlock();
+                return messagesFromUsers;
+            } else {
+                throw new IllegalArgumentException(
+                        "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
     }
 
     @Override
     public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId) {
-        if (isOwner(managerId) || (isManager(managerId)
-                && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-            return messagesFromStore;
-        } else {
-            throw new IllegalArgumentException(
-                    "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
+        rolesLock.lock();
+        try{
+            if (isOwner(managerId) || (isManager(managerId)
+                    && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
+                rolesLock.unlock();
+                return messagesFromStore;
+            } else {
+                throw new IllegalArgumentException(
+                        "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
     }
 
@@ -259,17 +431,27 @@ public class Store implements IStore {
 
     @Override
     public List<Integer> getStoreOwners(int requesterId) {
-        if (isOwner(requesterId) || (isManager(requesterId)
-                && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))) {
-            return new ArrayList<>(storeOwners); // copy of store owners
-        } else {
-            logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
-            throw new IllegalArgumentException(
-                    "User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+        rolesLock.lock();
+        try{
+            if (isOwner(requesterId) || (isManager(requesterId)
+                    && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))) {
+                List<Integer> ownersCopy = new ArrayList<>(storeOwners); // copy of store owners
+                rolesLock.unlock();
+                return ownersCopy;
+            } else {
+                logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
+                throw new IllegalArgumentException(
+                        "User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
     }
 
     // so the list won't change outside of Store and mess with the hashmap
+    // DO NOT ACCESS WITHOUT ROLESLOCK ACQUIRED
     private HashMap<Integer, List<StoreManagerPermission>> copyStoreManagersMap() {
         HashMap<Integer, List<StoreManagerPermission>> copy = new HashMap<>();
         for (Integer id : storeManagers.keySet()) {
@@ -280,19 +462,29 @@ public class Store implements IStore {
 
     @Override
     public HashMap<Integer, List<StoreManagerPermission>> getStoreManagers(int requesterId) {
-        if (isOwner(requesterId) || (isManager(requesterId)
-                && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))) {
-            return copyStoreManagersMap();
-        } else {
-            logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
-            throw new IllegalArgumentException(
-                    "User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+        rolesLock.lock();
+        try{
+            if (isOwner(requesterId) || (isManager(requesterId)
+                    && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))) {
+                HashMap<Integer, List<StoreManagerPermission>> managersCopy = copyStoreManagersMap();
+                rolesLock.unlock();
+                return managersCopy;
+            } else {
+                logger.warn("User {} tried to access store roles without permission for store {}", requesterId, storeID);
+                throw new IllegalArgumentException(
+                        "User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
     }
 
     // TO DO: Send Approval Request
     @Override
     public void addStoreOwner(int appointor, int appointee) {
+
         if (!isOwner(appointor)) {
             throw new IllegalArgumentException(
                     "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
@@ -315,14 +507,45 @@ public class Store implements IStore {
             Node appointeeNode = rolesTree.getNode(appointee);
             Node appointorNode = rolesTree.getNode(appointor);
             if (!appointorNode.getChildren().contains(appointeeNode)) {
+
+        rolesLock.lock();
+        try{
+            if (!isOwner(appointor)) {
+
                 throw new IllegalArgumentException(
-                        "Only the manager with id: " + appointee + "'s appointor can reassign them as Owner");
+                        "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
             }
-            storeManagers.remove(appointee); // how should reappointing a manager affect the tree?? right now - only
-                                             // their father can re-assign them
+            if (isOwner(appointee)) {
+                throw new IllegalArgumentException(
+                        "User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
+            }
+            // relevant after notifs
+            /*
+            * if(pendingOwners.containsKey(appointee)){
+            * throw new IllegalArgumentException("Already waiting for User with ID: " +
+            * appointee + "'s approval");
+            * }
+            */
+            // pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS
+            // IMPLEMENTED
+            
+            if (isManager(appointee)) {
+                Node appointeeNode = rolesTree.getNode(appointee);
+                Node appointorNode = rolesTree.getNode(appointor);
+                if (!appointorNode.getChildren().contains(appointeeNode)) {
+                    throw new IllegalArgumentException(
+                            "Only the manager with id: " + appointee + "'s appointor can reassign them as Owner");
+                }
+                storeManagers.remove(appointee); // how should reappointing a manager affect the tree?? right now - only
+                                                // their father can re-assign them
+            }
+            storeOwners.add(appointee);
+            rolesTree.addNode(appointor, appointee);
         }
-        storeOwners.add(appointee);
-        rolesTree.addNode(appointor, appointee);
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
+        }
     }
 
     // ***will be relevant when observer/able is implemented***
@@ -335,6 +558,7 @@ public class Store implements IStore {
     // public void declineStoreOwner(int appointee){
     // pendingOwners.remove(appointee);
     // }
+    
     @Override
     public boolean isOwner(int userId) {
         return storeOwners.contains(userId);
@@ -347,65 +571,89 @@ public class Store implements IStore {
 
     @Override
     public void addStoreManager(int appointor, int appointee, List<StoreManagerPermission> perms) {
-        if (!isOwner(appointor)) {
-            throw new IllegalArgumentException(
-                    "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
+        rolesLock.lock();
+        try{
+            if (!isOwner(appointor)) {
+                throw new IllegalArgumentException(
+                        "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
+            }
+            if (isManager(appointee) || isOwner(appointee)) {
+                throw new IllegalArgumentException(
+                        "User with ID: " + appointee + " is already a store manager/owner for store with ID: " + storeID);
+            }
+            if (perms == null || perms.isEmpty()) {
+                throw new IllegalArgumentException("Permissions list is empty");
+            }
+            storeManagers.put(appointee, new ArrayList<>(perms));
+            rolesTree.addNode(appointor, appointee);
         }
-        if (isManager(appointee) || isOwner(appointee)) {
-            throw new IllegalArgumentException(
-                    "User with ID: " + appointee + " is already a store manager/owner for store with ID: " + storeID);
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
-        if (perms == null || perms.isEmpty()) {
-            throw new IllegalArgumentException("Permissions list is empty");
-        }
-        storeManagers.put(appointee, new ArrayList<>(perms));
-        rolesTree.addNode(appointor, appointee);
+        rolesLock.unlock();
     }
 
     @Override
     public void addManagerPermissions(int requesterId, int managerId, List<StoreManagerPermission> perms) {
-        if (!isOwner(requesterId)) {
-            throw new IllegalArgumentException(
-                    "Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
+        rolesLock.lock();
+        try{
+            if (!isOwner(requesterId)) {
+                throw new IllegalArgumentException(
+                        "Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
+            }
+            if (!isManager(managerId)) {
+                throw new IllegalArgumentException(
+                        "Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
+            }
+            checkNodesValidity(requesterId, managerId); // no need to hold the nodes here
+            List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
+            for (StoreManagerPermission perm : perms) {
+                if (!currentPerms.contains(perm))
+                    currentPerms.add(perm);
+            }
         }
-        if (!isManager(managerId)) {
-            throw new IllegalArgumentException(
-                    "Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
-        checkNodesValidity(requesterId, managerId); // no need to hold the nodes here
-        List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
-        for (StoreManagerPermission perm : perms) {
-            if (!currentPerms.contains(perm))
-                currentPerms.add(perm);
-        }
+        rolesLock.unlock();
     }
 
     @Override
     public void removeManagerPermissions(int requesterId, int managerId, List<StoreManagerPermission> toRemove) {
-        if (!isOwner(requesterId)) {
-            throw new IllegalArgumentException(
-                    "Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
-        }
-        if (!isManager(managerId)) {
-            throw new IllegalArgumentException(
-                    "Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
-        }
-        checkNodesValidity(requesterId, managerId); // no need to hold the nodes here
-        List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
-        List<StoreManagerPermission> copyCurrentPerms = new ArrayList<>(currentPerms);
-        for (StoreManagerPermission perm : toRemove) {
-            if (!currentPerms.contains(perm)) {
-                storeManagers.put(managerId, copyCurrentPerms); // restore initial perms because method failed
-                throw new IllegalArgumentException("can not remove permission: " + perm + " because manager: "
-                        + managerId + " does not have it. permissions reseted to original");
+        rolesLock.lock();
+        try{
+            if (!isOwner(requesterId)) {
+                throw new IllegalArgumentException(
+                        "Requester ID: " + requesterId + " is not a valid store owner for store ID: " + storeID);
             }
-            currentPerms.remove(perm);
+            if (!isManager(managerId)) {
+                throw new IllegalArgumentException(
+                        "Manager ID: " + requesterId + " is not a valid store manager for store ID: " + storeID);
+            }
+            checkNodesValidity(requesterId, managerId); // no need to hold the nodes here
+            List<StoreManagerPermission> currentPerms = storeManagers.get(managerId);
+            List<StoreManagerPermission> copyCurrentPerms = new ArrayList<>(currentPerms);
+            for (StoreManagerPermission perm : toRemove) {
+                if (!currentPerms.contains(perm)) {
+                    storeManagers.put(managerId, copyCurrentPerms); // restore initial perms because method failed
+                    throw new IllegalArgumentException("can not remove permission: " + perm + " because manager: "
+                            + managerId + " does not have it. permissions reseted to original");
+                }
+                currentPerms.remove(perm);
+            }
+            if (currentPerms.isEmpty()) {
+                storeManagers.put(managerId, copyCurrentPerms); // restore initial perms because method failed
+                throw new IllegalArgumentException(
+                        "permissions can not be empty. reseting manager: " + managerId + " permissions to original");
+            }
         }
-        if (currentPerms.isEmpty()) {
-            storeManagers.put(managerId, copyCurrentPerms); // restore initial perms because method failed
-            throw new IllegalArgumentException(
-                    "permissions can not be empty. reseting manager: " + managerId + " permissions to original");
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
         }
+        rolesLock.unlock();
     }
 
     @Override
@@ -439,11 +687,20 @@ public class Store implements IStore {
 
     @Override
     public ProductRating getStoreProductRating(int userID, int productID) {
-        if (storeProducts.containsKey(productID)) {
-            return storeProducts.get(productID).getRatingByUser(userID);
-        } else {
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        productsLock.lock();
+        try{
+            if (storeProducts.containsKey(productID)) {
+                ProductRating rating = storeProducts.get(productID).getRatingByUser(userID);
+                productsLock.unlock();
+                return rating;
+            } else {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            productsLock.unlock();
+            throw e;
         }
     }
 
@@ -468,51 +725,95 @@ public class Store implements IStore {
 
     @Override
     public StoreProduct getStoreProduct(int productID) {
-        if (storeProducts.containsKey(productID)) {
-            return storeProducts.get(productID);
-        } else {
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        productsLock.lock();
+        try{
+            if (storeProducts.containsKey(productID)) {
+                StoreProduct prod =  storeProducts.get(productID);
+                productsLock.unlock();
+                return prod;
+            } else {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+            }
+        }
+        catch(Exception e){
+            productsLock.unlock();
+            throw e;
         }
     }
 
     @Override
     public void removeStoreOwner(int requesterId, int toRemoveId) {
-        if (!isOwner(requesterId)) {
-            throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
+        rolesLock.lock();
+        try{
+            if (!isOwner(requesterId)) {
+                throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
+            }
+            if (!isOwner(toRemoveId)) {
+                throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store owner");
+            }
+            if(toRemoveId == storeFounderID){
+                throw new IllegalArgumentException("Can not remove Store Founder");
+            }
+            Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
+            Node fatherNode = nodesArr[0];
+            Node childNode = nodesArr[1];
+            storeOwners.remove(Integer.valueOf(childNode.getId())); // WRAPPED AS INTEGER BECAUSE OTHERWISE JAVA WANTS TO
+                                                                    // REMOVE AS INDEX - DO NOT CHANGE!!
+            removeAllChildrenRoles(childNode); // remove all children from their respective roles list/hashmap
+            if (requesterId != toRemoveId)
+                fatherNode.removeChild(childNode); // remove child & all descendants from the actual tree
         }
-        if (!isOwner(toRemoveId)) {
-            throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store owner");
-        }
+
         if (toRemoveId == this.storeFounderID) {
             throw new IllegalArgumentException("Can not remove Store Founder");
+
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
+
         }
-        Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
-        Node fatherNode = nodesArr[0];
-        Node childNode = nodesArr[1];
-        storeOwners.remove(Integer.valueOf(childNode.getId())); // WRAPPED AS INTEGER BECAUSE OTHERWISE JAVA WANTS TO
-                                                                // REMOVE AS INDEX - DO NOT CHANGE!!
-        removeAllChildrenRoles(childNode); // remove all children from their respective roles list/hashmap
-        if (requesterId != toRemoveId)
-            fatherNode.removeChild(childNode); // remove child & all descendants from the actual tree
+        rolesLock.unlock();
     }
 
     @Override
     public void removeStoreManager(int requesterId, int toRemoveId) {
-        if (!isOwner(requesterId)) {
-            throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
-        }
-        if (!isManager(toRemoveId)) {
-            throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store manager");
+        rolesLock.lock();
+        try{
+            if (!isOwner(requesterId)) {
+                throw new IllegalArgumentException("User with id: " + requesterId + " is not a valid store owner");
+            }
+            if (!isManager(toRemoveId)) {
+                throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store manager");
+            }
+            Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
+            Node fatherNode = nodesArr[0];
+            Node childNode = nodesArr[1];
+            if (!childNode.getChildren().isEmpty()) {
+                throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should
+                                                                                                                    // not
+                                                                                                                    // happen
+                                                                                                                    // -
+                                                                                                                    // just
+                                                                                                                    // for
+                                                                                                                    // debugging
+                                                                                                                    // purposes
+            }
+            storeManagers.remove(toRemoveId);
+            fatherNode.removeChild(childNode);// remove child from the actual tree
         }
         Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
         Node fatherNode = nodesArr[0];
         Node childNode = nodesArr[1];
         if (!childNode.getChildren().isEmpty()) {
             throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should not happen - just for debugging purposes
+
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
+
         }
-        storeManagers.remove(toRemoveId);
-        fatherNode.removeChild(childNode);// remove child from the actual tree
+        rolesLock.unlock();
     }
 
     private void removeAllChildrenRoles(Node toRemove) {
@@ -548,13 +849,26 @@ public class Store implements IStore {
         if (requesterId != childId && !fatherNode.isChild(childNode)) {
             throw new IllegalArgumentException("Only " + childId + "'s appointor can change/remove their permissions");
         }
-        return new Node[] { fatherNode, childNode };
+        return new Node[] {fatherNode, childNode};
     }
 
     @Override
     public synchronized StoreProductDTO decrementProductQuantity(int productId, int quantity) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'decrementProductQuantity'");
+        StoreProduct storeProduct = storeProducts.get(productId);
+        if (storeProduct == null) {
+            throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
+                    + storeID);
+        }
+        if (storeProduct.getQuantity() < quantity) {
+            throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+        }
+        storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
+        return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
+                    quantity, storeProduct.getAverageRating());
+    }
+
+    private boolean hasInventoryPermissions(int id){
+        return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
     }
 
     @Override
@@ -599,5 +913,6 @@ public class Store implements IStore {
     }
         return amount;
     }
+
 
 }

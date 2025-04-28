@@ -42,19 +42,18 @@ public interface ISystemService {
 
     Response<ProductDTO> getProduct(int productId);
 
-    void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
+    Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
 
-    void deleteProduct(int productId);
+    Response<Boolean> deleteProduct(int productId);
 
-    String guestRegister(String email, String password, String dobInput);
-
-    List<ProductDTO> searchByKeyword(String token, String keyword);
-
-    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
-            List<StoreManagerPermission> perms);
-
-    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
-            List<StoreManagerPermission> toRemove);
+   
+    String guestRegister(String email, String password,String dobInput);
+    
+    Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
+    
+    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
+    
+    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
 
     void removeStoreManager(int storeId, int requesterId, int managerId);
 
@@ -76,7 +75,17 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
+
     Response<String> puchseCart(int userId, String paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails); // purchase the cart
+
+    void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void removeProductFromStore(int storeId, int requesterId, int productId);
+    
+    void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
 }

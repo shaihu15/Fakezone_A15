@@ -43,12 +43,10 @@ public interface IStoreService {
         StoreProductDTO getProductFromStore(int productId, int storeId);
 
         // --- Product Management ---
-        void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity,
-                        String productType);
+        void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity);
 
         void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice,
-                        int quantity,
-                        String productType);;
+                        int quantity);
 
         // --- Ratings ---
         void addStoreRating(int storeId, int userId, double rating, String comment);
@@ -107,4 +105,8 @@ public interface IStoreService {
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
         double calcAmount(Cart cart);
+  
+        void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
+
 }

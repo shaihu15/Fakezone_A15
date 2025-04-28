@@ -1,6 +1,7 @@
 package ApplicationLayer.Services;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -67,7 +68,8 @@ public class ProductService implements IProductService {
     public ProductDTO viewProduct(int productId) {
         try {
             IProduct product = productRepository.getProductById(productId);
-            return new ProductDTO(product.getName(), product.getDescription());
+            Set<Integer> prodcutStoresIds = new HashSet<>(product.getStoresIds());
+            return new ProductDTO(product.getName(), product.getDescription(), productId, prodcutStoresIds);
         } catch (IllegalArgumentException e) {
             logger.error("While trying to view, recived error {}", e);
             throw e;
@@ -81,7 +83,7 @@ public class ProductService implements IProductService {
         try {
             Collection<IProduct> products = productRepository.searchProducts(keyword);
             List<ProductDTO> productDTOs = products.stream()
-                .map(product -> new ProductDTO(product.getName(), product.getDescription()))
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(), new HashSet<>(product.getStoresIds())))
                 .toList();
             return productDTOs;
         } catch (Exception e) {

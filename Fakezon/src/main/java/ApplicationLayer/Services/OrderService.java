@@ -64,16 +64,10 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public OrderDTO viewOrder(int orderId) {
+    public IOrder viewOrder(int orderId) {
         try {
-
             IOrder order = orderRepository.getOrder(orderId);
-            Collection<ProductDTO> products = new ArrayList<>();
-            for (Integer productId : order.getProductIds()) {
-                products.add(new ProductDTO(productId.toString(), order.getState().toString()));
-            }
-            return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), products, order.getState().toString(),
-                    order.getAddress(), order.getPaymentMethod().toString());
+            return order;
         } catch (IllegalArgumentException e) {
             logger.error("While trying to view, recived error {}", e);
             throw e;
@@ -127,23 +121,16 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public List<OrderDTO> getOrdersByStoreId(int storeId) {
+    public List<IOrder> getOrdersByStoreId(int storeId) {
         Collection<IOrder> orders = orderRepository.getAllOrders();
-        List<OrderDTO> orderDTOs = new ArrayList<>();
-        for (IOrder order : orders) {
-            if (order.getStoreId() == storeId) {
-                Collection<ProductDTO> products = new ArrayList<>();
-                for (Integer productId : order.getProductIds()) {
-                    products.add(new ProductDTO(productId.toString(), order.getState().toString()));
-                }
-
-                OrderDTO orderDTO = new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(),
-                        products, order.getState().toString(), order.getAddress(),
-                        order.getPaymentMethod().toString());
-                orderDTOs.add(orderDTO);
+        List<IOrder> storeOrders = new ArrayList<>();
+        for(IOrder order : orders) {
+            if(order.getStoreId() == storeId) {
+                storeOrders.add(order);
             }
-
         }
-        return orderDTOs;
+        return storeOrders;
+
+
     }
 }

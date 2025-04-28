@@ -151,7 +151,7 @@ public class SystemServiceAcceptanceTest {
 
         // Arrange
         int productId = 1;
-        ProductDTO mockProduct = new ProductDTO("Test Product", "Description");
+        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId);
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act
@@ -169,13 +169,13 @@ public class SystemServiceAcceptanceTest {
         String token = "validToken";
         String keyword = "Test";
         List<ProductDTO> mockProducts = Arrays.asList(
-                new ProductDTO("Test Product 1", "Description 1"),
-                new ProductDTO("Test Product 2", "Description 2"));
+                new ProductDTO("Test Product 1", "Description 1", 1, null),
+                new ProductDTO("Test Product 2", "Description 2", 2, null));
         when(authenticatorService.isValid(token)).thenReturn(true);
         when(productService.searchProducts(keyword)).thenReturn(mockProducts);
 
         // Act
-        List<ProductDTO> result = systemService.searchByKeyword(token, keyword);
+        List<ProductDTO> result = systemService.searchByKeyword(token, keyword).getData();
 
         // Assert
         assertNotNull(result);
@@ -193,7 +193,7 @@ public class SystemServiceAcceptanceTest {
         when(productService.searchProducts(keyword)).thenThrow(new RuntimeException("Search failed"));
 
         // Act
-        List<ProductDTO> result = systemService.searchByKeyword(token, keyword);
+        List<ProductDTO> result = systemService.searchByKeyword(token, keyword).getData();
 
         // Assert
         assertNull(result);
