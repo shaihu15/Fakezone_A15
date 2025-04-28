@@ -104,12 +104,12 @@ public class OrderServiceTest {
         when(mockOrder.getPaymentMethod()).thenReturn(PaymentMethod.CREDIT_CARD);
         when(orderRepository.getOrder(1)).thenReturn(mockOrder);
 
-        OrderDTO orderDTO = orderService.viewOrder(1);
+        IOrder orderDTO = orderService.viewOrder(1);
 
-        assertEquals(1, orderDTO.getOrderId());
-        assertEquals("PENDING", orderDTO.getOrderState());
+        assertEquals(1, orderDTO.getId());
+        assertEquals("PENDING", orderDTO.getState().toString());
         assertEquals("123 Main St", orderDTO.getAddress());
-        assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod());
+        assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod().toString());
     }
 
     @Test
@@ -173,17 +173,17 @@ public class OrderServiceTest {
         when(orderRepository.getAllOrders()).thenReturn(Arrays.asList(mockOrder1, mockOrder2));
 
         // Call the method
-        List<OrderDTO> result = orderService.getOrdersByStoreId(10);
+        List<IOrder> result = orderService.getOrdersByStoreId(10);
 
         // Verify the result
         assertEquals(1, result.size());
-        OrderDTO orderDTO = result.get(0);
-        assertEquals(1, orderDTO.getOrderId());
+        IOrder orderDTO = result.get(0);
+        assertEquals(1, orderDTO.getId());
         assertEquals(101, orderDTO.getUserId());
         assertEquals(10, orderDTO.getStoreId());
-        assertEquals(2, orderDTO.getProducts().size());
-        assertEquals("PENDING", orderDTO.getOrderState());
+        assertEquals(2, orderDTO.getProductIds().size());
+        assertEquals("PENDING", orderDTO.getState().toString());
         assertEquals("123 Main St", orderDTO.getAddress());
-        assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod());
+        assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod().toString());
     }
 }

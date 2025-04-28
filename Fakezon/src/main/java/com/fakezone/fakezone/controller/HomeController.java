@@ -1,26 +1,35 @@
 package com.fakezone.fakezone.controller;
 
+import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Response;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import ApplicationLayer.Services.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import ApplicationLayer.Services.SystemService;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
 
-@Controller
+
+@RestController
+@RequestMapping("/api/")
 public class HomeController {
 
-    private final SystemService systemService;
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    @Autowired
-    public HomeController(SystemService systemService){
-        this.systemService = systemService;
-    }
 
     @GetMapping("/")
-    public Response<String> home() {
-        return new Response<String>("home", "Welcome to the home page!", true);
+    public ResponseEntity<Response<String>> home() {
+        try{
+            Response<String> test = new Response<String>("home", "Welcome to the home page!", true);
+            return ResponseEntity.ok(test);
+        }
+        catch (Exception e){
+            logger.error("Error in home controller: {}", e.getMessage());
+            Response<String> test = new Response<String>(null, "An error occurred at the controller level ", false, ErrorType.INTERNAL_ERROR);
+            return ResponseEntity.status(500).body(test);
+        }
     }
 
 }
