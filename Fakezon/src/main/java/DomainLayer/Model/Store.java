@@ -206,6 +206,8 @@ public class Store implements IStore {
         if (isOwner(managerId) || (isManager(managerId)
                 && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
             messagesFromStore.push(new SimpleEntry<>(userID, message));
+            this.publisher.publishEvent(new ResponseFromStoreEvent(this.storeID, userID, message));
+
         } else {
             throw new IllegalArgumentException(
                     "User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
@@ -307,6 +309,7 @@ public class Store implements IStore {
          */
         // pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS
         // IMPLEMENTED
+        
         if (isManager(appointee)) {
             Node appointeeNode = rolesTree.getNode(appointee);
             Node appointorNode = rolesTree.getNode(appointor);

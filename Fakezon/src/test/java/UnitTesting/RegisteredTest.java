@@ -123,14 +123,6 @@ public class RegisteredTest {
         assertTrue(registeredUser.didPurchaseProduct(storeID, productID), "User should have purchased the product");
     }
 
-    @Test
-    void givenValidMessageFromStore_whenGetMessagesFromStore_returnTrue() {
-        int storeID = 1;
-        String message = "Hello, this is a test message.";
-        registeredUser.receivingMessageFromStore(storeID, message);
-        assertEquals(message, registeredUser.getMessagesFromStore().get(0).getValue(),
-                "Message should be received successfully");
-    }
 
     @Test
     void givenValidMessageFromUser_whenGetMessagesFromUser_returnTrue() {

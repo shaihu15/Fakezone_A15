@@ -263,23 +263,6 @@ public class UserService implements IUserService {
         }
     }
 
-    @Override
-    public void receivingMessageFromStore(int userID, int storeID, String message) {
-        Optional<Registered> user = userRepository.findById(userID);
-        if (user.isPresent()) {
-            try {
-                user.get().receivingMessageFromStore(storeID, message);
-                logger.info("Message received from store: " + storeID + " to user: " + userID);
-            } catch (Exception e) {
-                // Handle exception if needed
-                logger.error("Error during receiving message: " + e.getMessage());
-                System.out.println("Error during receiving message: " + e.getMessage());
-            }
-        } else {
-            logger.error("User not found: " + userID);
-            throw new IllegalArgumentException("User not found");
-        }
-    }
 
     @Override
     public UserDTO addUser(String password, String email, LocalDate dateOfBirth) {
