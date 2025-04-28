@@ -111,4 +111,6 @@ public interface IStoreService {
         void removeProductFromStore(int storeId, int requesterId, int productId);
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
+
+        void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
 }

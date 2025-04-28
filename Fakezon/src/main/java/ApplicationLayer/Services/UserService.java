@@ -320,4 +320,79 @@ public class UserService implements IUserService {
         }
         return null;
     }
+
+    @Override
+    public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+        Optional<Registered> Registered = userRepository.findById(userID);
+        if (Registered.isPresent()) {
+
+            try {
+                HashMap<Integer, String> messages = Registered.get().getAllMessages();
+                if (messages.isEmpty()) {
+                    logger.info("No messages found for user: " + userID);
+                    return new Response<>(null, "No messages found", false);
+                }
+                logger.info("Messages retrieved for user: " + userID);
+                return new Response<>(messages, "Messages retrieved successfully", true);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get messages: " + e.getMessage());
+                logger.error("Error during get messages: " + e.getMessage());
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false);
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            return new Response<>(null, "User not found", false);
+        }
+    }
+
+    @Override
+    public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
+        Optional<Registered> Registered = userRepository.findById(userID);
+        if (Registered.isPresent()) {
+
+            try {
+                HashMap<Integer, String> messages = Registered.get().getAssignmentMessages();
+                if (messages.isEmpty()) {
+                    logger.info("No messages found for user: " + userID);
+                    return new Response<>(null, "No messages found", false);
+                }
+                logger.info("Messages retrieved for user: " + userID);
+                return new Response<>(messages, "Messages retrieved successfully", true);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get messages: " + e.getMessage());
+                logger.error("Error during get messages: " + e.getMessage());
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false);
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            return new Response<>(null, "User not found", false);
+        }
+    }
+
+    @Override
+    public Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID) {
+        Optional<Registered> Registered = userRepository.findById(userID);
+        if (Registered.isPresent()) {
+
+            try {
+                HashMap<Integer, String> messages = Registered.get().getAuctionEndedMessages();
+                if (messages.isEmpty()) {
+                    logger.info("No messages found for user: " + userID);
+                    return new Response<>(null, "No messages found", false);
+                }
+                logger.info("Messages retrieved for user: " + userID);
+                return new Response<>(messages, "Messages retrieved successfully", true);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get messages: " + e.getMessage());
+                logger.error("Error during get messages: " + e.getMessage());
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false);
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            return new Response<>(null, "User not found", false);
+        }
+    }
 }

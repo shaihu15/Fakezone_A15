@@ -74,5 +74,8 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
-
+    Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+    Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
 }
