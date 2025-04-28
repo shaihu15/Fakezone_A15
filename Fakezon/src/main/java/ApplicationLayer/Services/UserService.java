@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import ApplicationLayer.DTO.UserDTO;
 import org.springframework.context.annotation.Bean;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 import DomainLayer.IRepository.IRegisteredRole;
@@ -205,6 +207,7 @@ public class UserService implements IUserService {
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during check purchase: " + e.getMessage());
+                logger.error("Error during check purchase: " + e.getMessage());
             }
         } else {
             throw new IllegalArgumentException("User not found");
@@ -213,19 +216,22 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public HashMap<Integer, Order> getOrdersByUser(int userID) {
+    public Response<List<OrderDTO>> getOrdersByUser(int userID) {
         Optional<Registered> user = userRepository.findById(userID);
         if (user.isPresent()) {
             try {
-                return user.get().getOrders();
+                List<OrderDTO> orders = user.get().getOrders().values().stream().toList();
+                return new Response<>(orders, "Orders retrieved successfully", true);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during get orders: " + e.getMessage());
+                logger.error("Error during get orders: " + e.getMessage());
+                return new Response<>(null, "Error during get orders: " + e.getMessage(), false);
             }
         } else {
-            throw new IllegalArgumentException("User not found");
+            logger.error("User not found: " + userID);
+            return new Response<>(null, "User not found", false);
         }
-        return null;
     }
 
     @Override

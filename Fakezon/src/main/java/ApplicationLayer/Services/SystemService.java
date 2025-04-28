@@ -10,11 +10,13 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
+import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -23,6 +25,7 @@ import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
+import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
@@ -31,6 +34,8 @@ import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -43,28 +48,31 @@ public class SystemService implements ISystemService {
     private IUserService userService;
     private IStoreService storeService;
     private IProductService productService;
+    private IOrderService orderService;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
     private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
-            IProductRepository productRepository, ApplicationEventPublisher publisher) {
+            IProductRepository productRepository, IOrderRepository orderRepository,ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         this.storeService = new StoreService(storeRepository, publisher);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
+        this.orderService = new OrderService(orderRepository);
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
 
     // Overloaded constructor for testing purposes
-    public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
+    public SystemService(IStoreService storeService, IUserService userService, IProductService productService, IOrderService orderService,
             IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
             ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         this.storeService = storeService;
         this.userService = userService;
         this.productService = productService;
+        this.orderService = orderService;
         this.deliveryService = deliveryService;
         this.authenticatorService = authenticatorService;
         this.paymentService = paymentService;
@@ -189,18 +197,18 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public HashMap<Integer, Order> getOrdersByUser(int userId) {
+    public Response<List<OrderDTO>> getOrdersByUser(int userId) {
         try {
             if (!this.userService.isUserLoggedIn(userId)) {
                 logger.error("System Service - User is not logged in: " + userId);
-                throw new IllegalArgumentException("User is not logged in");
+                return new Response<List<OrderDTO>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
-            HashMap<Integer, Order> orders = this.userService.getOrdersByUser(userId);
             logger.info("System Service - User orders retrieved: " + userId);
-            return orders;
+            return this.userService.getOrdersByUser(userId);
         } catch (Exception e) {
             logger.error("System Service - Error during retrieving user orders: " + e.getMessage());
-            throw new IllegalArgumentException("Error during retrieving user orders: " + e.getMessage());
+            return new Response<List<OrderDTO>>(null, "Error during retrieving user orders: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR);
         }
     }
 

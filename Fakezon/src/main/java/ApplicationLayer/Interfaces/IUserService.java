@@ -9,6 +9,8 @@ import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
+import ApplicationLayer.Response;
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 public interface IUserService {
@@ -42,8 +44,8 @@ public interface IUserService {
 
     boolean didPurchaseProduct(int userID, int storeID, int productID); // check if the user purchased from the product
 
-    HashMap<Integer, Order> getOrdersByUser(int userID); // userID -> Order
-
+    Response<List<OrderDTO>> getOrdersByUser(int userID); // get all the orders of the user
+    
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
 
 

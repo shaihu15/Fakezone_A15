@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
@@ -70,8 +71,10 @@ public class SystemServiceAcceptanceTest {
     private int founder2Id = 20;
     private IStoreService storeService;
     private IUserService userService;
+    private IOrderService orderService;
     private IDelivery deliveryService;
     private IPayment paymentService;
+
     private ApplicationEventPublisher publisher;
 
     @BeforeEach
@@ -80,13 +83,14 @@ public class SystemServiceAcceptanceTest {
         storeService = mock(IStoreService.class);
         userService = mock(IUserService.class);
         productService = mock(IProductService.class);
+        orderService = mock(IOrderService.class);
         authenticatorService = mock(IAuthenticator.class);
         deliveryService = mock(IDelivery.class);
         paymentService = mock(IPayment.class);
         publisher = mock(ApplicationEventPublisher.class);
 
         // Inject the mocked services using the overloaded constructor
-        systemService = new SystemService(storeService, userService, productService, deliveryService,
+        systemService = new SystemService(storeService, userService, productService,orderService, deliveryService,
                 authenticatorService, paymentService, publisher);
 
     }
