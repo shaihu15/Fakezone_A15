@@ -104,13 +104,9 @@ public class OrderServiceTest {
         when(mockOrder.getPaymentMethod()).thenReturn(PaymentMethod.CREDIT_CARD);
         when(orderRepository.getOrder(1)).thenReturn(mockOrder);
 
-        List<ProductDTO> products = Arrays.asList(new ProductDTO("Product1", "Description1"));
-        OrderDTO orderDTO = orderService.viewOrder(1, "User1", "Store1", products);
+        OrderDTO orderDTO = orderService.viewOrder(1);
 
         assertEquals(1, orderDTO.getOrderId());
-        assertEquals("User1", orderDTO.getUserName());
-        assertEquals("Store1", orderDTO.getStoreName());
-        assertEquals(products, orderDTO.getProducts());
         assertEquals("PENDING", orderDTO.getOrderState());
         assertEquals("123 Main St", orderDTO.getAddress());
         assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod());
@@ -121,7 +117,7 @@ public class OrderServiceTest {
         doThrow(new IllegalArgumentException("Order not found")).when(orderRepository).getOrder(1);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            orderService.viewOrder(1, "User1", "Store1", Collections.emptyList());
+            orderService.viewOrder(1);
         });
 
         assertEquals("Order not found", exception.getMessage());
@@ -150,5 +146,44 @@ public class OrderServiceTest {
 
         assertEquals(1, orderIds.size());
         assertTrue(orderIds.contains(1));
+    }
+
+    @Test
+    void givenStoreId_WhenGetOrdersByStoreId_ThenReturnsMatchingOrders() {
+        // Mock orders
+        IOrder mockOrder1 = mock(IOrder.class);
+        IOrder mockOrder2 = mock(IOrder.class);
+
+        when(mockOrder1.getId()).thenReturn(1);
+        when(mockOrder1.getUserId()).thenReturn(101);
+        when(mockOrder1.getStoreId()).thenReturn(10);
+        when(mockOrder1.getProductIds()).thenReturn(Arrays.asList(1, 2));
+        when(mockOrder1.getState()).thenReturn(OrderState.PENDING);
+        when(mockOrder1.getAddress()).thenReturn("123 Main St");
+        when(mockOrder1.getPaymentMethod()).thenReturn(PaymentMethod.CREDIT_CARD);
+
+        when(mockOrder2.getId()).thenReturn(2);
+        when(mockOrder2.getUserId()).thenReturn(102);
+        when(mockOrder2.getStoreId()).thenReturn(20);
+        when(mockOrder2.getProductIds()).thenReturn(Collections.singletonList(3));
+        when(mockOrder2.getState()).thenReturn(OrderState.SHIPPED);
+        when(mockOrder2.getAddress()).thenReturn("456 Elm St");
+        when(mockOrder2.getPaymentMethod()).thenReturn(PaymentMethod.CASH_ON_DELIVERY);
+
+        when(orderRepository.getAllOrders()).thenReturn(Arrays.asList(mockOrder1, mockOrder2));
+
+        // Call the method
+        List<OrderDTO> result = orderService.getOrdersByStoreId(10);
+
+        // Verify the result
+        assertEquals(1, result.size());
+        OrderDTO orderDTO = result.get(0);
+        assertEquals(1, orderDTO.getOrderId());
+        assertEquals(101, orderDTO.getUserId());
+        assertEquals(10, orderDTO.getStoreId());
+        assertEquals(2, orderDTO.getProducts().size());
+        assertEquals("PENDING", orderDTO.getOrderState());
+        assertEquals("123 Main St", orderDTO.getAddress());
+        assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod());
     }
 }
