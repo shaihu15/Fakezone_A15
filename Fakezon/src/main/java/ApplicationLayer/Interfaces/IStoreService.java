@@ -22,7 +22,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 public interface IStoreService {
 
   void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
-    
+
   void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     List<AuctionProductDTO> getAuctionProductsFromStore(int storeId);
 

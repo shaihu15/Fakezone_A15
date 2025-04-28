@@ -8,6 +8,8 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
 
 import DomainLayer.Enums.StoreManagerPermission;
@@ -20,11 +22,13 @@ class StoreServiceTest {
     private IStoreRepository storeRepository;
     private StoreService storeService;
     private Store mockStore;
+    private ApplicationEventPublisher publisher;
 
     @BeforeEach
     void setUp() {
+        publisher = mock(ApplicationEventPublisher.class);
         storeRepository = new StoreRepository(); // Assuming StoreRepository is a concrete implementation of IStoreRepository
-        storeService = new StoreService(storeRepository);
+        storeService = new StoreService(storeRepository, publisher);
         mockStore = mock(Store.class);
     }
 
@@ -171,7 +175,7 @@ class StoreServiceTest {
             storeService.sendMessageToUser(invalidFounderId, storeId, userId, message);
         }, "Expected sendMessageToUser to throw if the founder ID is invalid");
     }
-  
+
     @Test
     void testGetStoreRoles_AsFounder_Success() {
         int founderId = 1;
@@ -210,7 +214,7 @@ class StoreServiceTest {
             storeService.getStoreRoles(storeId, unauthorizedUserId);
         });
         // String expectedMessagePart = "not authorized"; // Adjust based on your actual exception message
-        // assertTrue(exception.getMessage().toLowerCase().contains(expectedMessagePart), 
+        // assertTrue(exception.getMessage().toLowerCase().contains(expectedMessagePart),
         //     "Exception message should indicate unauthorized access");
     }
 

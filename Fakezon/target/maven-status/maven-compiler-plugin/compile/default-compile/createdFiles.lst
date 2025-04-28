@@ -13,7 +13,9 @@ DomainLayer\Model\SystemAdministrator.class
 ApplicationLayer\DTO\StoreDTO.class
 DomainLayer\Model\Basket.class
 DomainLayer\Model\Registered.class
+ApplicationLayer\Services\AppConfig.class
 InfrastructureLayer\Adapters\AuthenticatorAdapter.class
+InfrastructureLayer\Security\PasswordEncoder.class
 ApplicationLayer\Services\SystemService.class
 DomainLayer\Interfaces\IPayment.class
 DomainLayer\Model\UnassignedRole.class
@@ -26,6 +28,7 @@ ApplicationLayer\DTO\ProductDTO.class
 ApplicationLayer\DTO\StoreProductDTO.class
 ApplicationLayer\Interfaces\IUserService.class
 DomainLayer\Model\RegisteredRole.class
+DomainLayer\Model\AuctionProduct.class
 DomainLayer\Model\StoreOwner.class
 DomainLayer\Model\Product.class
 DomainLayer\Enums\StoreManagerPermission.class
@@ -50,11 +53,14 @@ DomainLayer\IRepository\IRegisteredRole.class
 DomainLayer\Model\User.class
 DomainLayer\Model\Store.class
 DomainLayer\Interfaces\IDelivery.class
+ApplicationLayer\DTO\AuctionProductDTO.class
 ApplicationLayer\DTO\OrderDTO.class
 ApplicationLayer\Interfaces\ISystemService.class
 DomainLayer\Model\StoreManager.class
 ApplicationLayer\Interfaces\IProductService.class
+DomainLayer\Model\helpers\ClosingStoreEvent.class
 InfrastructureLayer\Repositories\ProductRepository.class
 ApplicationLayer\Services\StoreService.class
 ApplicationLayer\Services\ProductService.class
+InfrastructureLayer\Security\TokenService.class
 InfrastructureLayer\Repositories\UserRepository.class

@@ -5,6 +5,9 @@ import DomainLayer.Model.Store;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
+import static org.mockito.Mockito.*;
 
 import java.lang.management.ManagementPermission;
 import java.util.List;
@@ -14,13 +17,14 @@ public class StoreTest {
     private int founderId = 10;
     private int storeId = 1;
     private int managerId = 3;
-
+    private ApplicationEventPublisher publisher;
     private int productId = 10;
     private int nonExistingProductId = 99;
 
     @BeforeEach
     void setUp() {
-        store = new Store("Test Store", founderId);
+        publisher = mock(ApplicationEventPublisher.class);
+        store = new Store("Test Store", founderId, publisher);
         store.addStoreProduct(productId, "Test Product", 100.0, 5);
 
     }

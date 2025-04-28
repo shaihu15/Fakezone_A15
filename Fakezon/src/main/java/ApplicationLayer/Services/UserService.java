@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.UserDTO;
+import org.springframework.context.annotation.Bean;
 import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.DTO.StoreProductDTO;
 

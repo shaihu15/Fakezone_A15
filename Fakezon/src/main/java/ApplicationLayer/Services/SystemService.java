@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import ApplicationLayer.Response;
+import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,10 @@ import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.ErrorType;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -39,10 +44,12 @@ public class SystemService implements ISystemService {
     private IStoreService storeService;
     private IProductService productService;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
-            IProductRepository productRepository) {
-        this.storeService = new StoreService(storeRepository);
+            IProductRepository productRepository, ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
+        this.storeService = new StoreService(storeRepository, publisher);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
         this.deliveryService = new DeliveryAdapter();
@@ -52,7 +59,9 @@ public class SystemService implements ISystemService {
 
     // Overloaded constructor for testing purposes
     public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
-            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService) {
+            IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
+            ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
         this.storeService = storeService;
         this.userService = userService;
         this.productService = productService;
@@ -260,14 +269,21 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public ProductDTO getProduct(int productId) {
+    public Response<ProductDTO> getProduct(int productId) {
         try {
             logger.info("System service - user trying to view procuct " + productId);
-            return this.productService.viewProduct(productId);
+            ProductDTO productDTO = this.productService.viewProduct(productId);
+            return new Response<ProductDTO>(productDTO, "Product retrieved successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Invalid input: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Invalid input", false, ErrorType.INVALID_INPUT);
+        } catch (NullPointerException e) {
+            logger.error("System Service - Null pointer encountered: " + e.getMessage());
+            return new Response<ProductDTO>(null, "Unexpected null value", false, ErrorType.INTERNAL_ERROR);
         } catch (Exception e) {
-            logger.error("System Service - Error during getting product: " + e.getMessage());
+            logger.error("System Service - General error: " + e.getMessage());
+            return new Response<ProductDTO>(null, "An unexpected error occurred", false, ErrorType.INTERNAL_ERROR);
         }
-        return null;
     }
 
     @Override

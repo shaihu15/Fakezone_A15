@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
 
@@ -36,9 +38,11 @@ public class Store implements IStore {
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; // HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private final ApplicationEventPublisher publisher;
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
 
-    public Store(String name, int founderID) {
+
+    public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
         this.storeOwners = new ArrayList<>();
         // storeOwners.put(founderID, new StoreOwner(founderID, name));
@@ -56,6 +60,7 @@ public class Store implements IStore {
         this.storeManagers = new HashMap<>(); // HASH userID to store manager
         this.messagesFromUsers = new LinkedList<>();
         this.messagesFromStore = new Stack<>();
+        this.publisher = publisher;
     }
 
     @Override
@@ -404,6 +409,7 @@ public class Store implements IStore {
         return storeFounderID;
     }
 
+
     @Override
     public void closeStore(int requesterId) {
         if (requesterId == this.storeFounderID) {
@@ -411,7 +417,8 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Store: " + storeID + " is already closed");
             }
             this.isOpen = false;
-            // TODO: ADD NOTIFICATIONS SENDING
+            this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
+
         } else {
             throw new IllegalArgumentException(
                     "Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);
