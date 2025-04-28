@@ -10,7 +10,10 @@ import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Registered extends User {
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
@@ -49,7 +52,7 @@ public class Registered extends User {
         messagesFromUser.push(new SimpleEntry<>(storeID, message));
 
     }
-
+    @EventListener
     public void receivingMessageFromStore(int storeID, String message) {
         messagesFromStore.add(new SimpleEntry<>(storeID, message));
     }

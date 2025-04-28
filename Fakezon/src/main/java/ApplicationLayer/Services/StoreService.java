@@ -23,7 +23,7 @@ import DomainLayer.Model.StoreProduct;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-@Component
+
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);

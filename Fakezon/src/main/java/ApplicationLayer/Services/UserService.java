@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import ApplicationLayer.DTO.UserDTO;
+import org.springframework.context.annotation.Bean;
 
 public class UserService implements IUserService {
     private final IUserRepository userRepository;

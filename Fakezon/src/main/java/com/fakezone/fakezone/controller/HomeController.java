@@ -13,7 +13,6 @@ public class HomeController {
 
     @Autowired
     public HomeController(SystemService systemService){
-        System.out.println("Test");
         this.systemService = systemService;
 
     }

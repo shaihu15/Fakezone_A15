@@ -14,7 +14,6 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.*;
 import java.util.AbstractMap.SimpleEntry;
 
-@Component
 public class Store {
 
     private String name;
@@ -306,7 +305,8 @@ public class Store {
                 throw new IllegalArgumentException("Store: " + storeID + " is already closed");
             }
             this.isOpen = false;
-            //TODO: ADD NOTIFICATIONS SENDING
+            this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
+
         }
         else{
             throw new IllegalArgumentException("Requester ID: " + requesterId + " is not a Store Founder of store: " + storeID);

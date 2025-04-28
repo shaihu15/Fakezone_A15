@@ -14,6 +14,7 @@ import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
+import org.springframework.context.annotation.Bean;
 
 public interface IStoreService {
     int addStore(int userId, String storeName);

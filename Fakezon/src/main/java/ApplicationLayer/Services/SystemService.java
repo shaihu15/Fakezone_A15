@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,6 @@ import InfrastructureLayer.Adapters.PaymentAdapter;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-@Component
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
