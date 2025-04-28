@@ -571,8 +571,17 @@ public class Store implements IStore {
 
     @Override
     public synchronized StoreProductDTO decrementProductQuantity(int productId, int quantity) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'decrementProductQuantity'");
+        StoreProduct storeProduct = storeProducts.get(productId);
+        if (storeProduct == null) {
+            throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
+                    + storeID);
+        }
+        if (storeProduct.getQuantity() < quantity) {
+            throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+        }
+        storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
+        return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
+                    storeProduct.getQuantity(), storeProduct.getAverageRating());
     }
 
 }
