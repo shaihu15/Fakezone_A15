@@ -1,5 +1,6 @@
 DomainLayer\Model\ProductRating.class
 ApplicationLayer\Services\OrderService.class
+DomainLayer\Model\helpers\AssignmentEvent.class
 DomainLayer\Model\helpers\Tree.class
 DomainLayer\Interfaces\IAuthenticator.class
 DomainLayer\Model\StoreProduct.class
@@ -9,6 +10,7 @@ DomainLayer\Model\StoreRating.class
 ApplicationLayer\Interfaces\IOrderService.class
 DomainLayer\Model\Cart.class
 com\fakezone\fakezone\FakezoneApplication.class
+ApplicationLayer\Response.class
 DomainLayer\Model\SystemAdministrator.class
 ApplicationLayer\DTO\StoreDTO.class
 DomainLayer\Model\Basket.class
@@ -34,16 +36,21 @@ DomainLayer\Model\Product.class
 DomainLayer\Enums\StoreManagerPermission.class
 com\fakezone\fakezone\controller\HomeController.class
 DomainLayer\Model\Order.class
+DomainLayer\Interfaces\IStore.class
 DomainLayer\IRepository\IStoreRepository.class
 DomainLayer\Enums\OrderState.class
+ApplicationLayer\DTO\StoreRolesDTO.class
 DomainLayer\IRepository\IUserRepository.class
 DomainLayer\Enums\PaymentMethod.class
 DomainLayer\Enums\RoleName.class
 ApplicationLayer\Services\UserService.class
 DomainLayer\Model\helpers\Node.class
+uml.puml
+ApplicationLayer\Enums\ErrorType.class
 DomainLayer\Interfaces\IOrder.class
 InfrastructureLayer\Repositories\OrderRepository.class
 DomainLayer\Model\DiscountPolicy.class
+DomainLayer\Model\helpers\ResponseFromStoreEvent.class
 InfrastructureLayer\Adapters\ExternalPaymentSystem.class
 DomainLayer\Model\StoreFounder.class
 DomainLayer\Interfaces\IProduct.class

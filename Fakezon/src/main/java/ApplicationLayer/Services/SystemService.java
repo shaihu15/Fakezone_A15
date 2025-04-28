@@ -284,22 +284,26 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
+    public Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
             logger.info("System service - user trying to update procuct " + productId);
             this.productService.updateProduct(productId, productName, productDescription, storesIds);
+            return new Response<>(true, "Product updated successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during updating product: " + e.getMessage());
+            return new Response<>(false, "Error during updating product", false, ErrorType.INTERNAL_ERROR);
         }
     }
 
     @Override
-    public void deleteProduct(int productId) {
+    public Response<Boolean> deleteProduct(int productId) {
         try {
             logger.info("System service - user trying to delete procuct " + productId);
             this.productService.deleteProduct(productId);
+            return new Response<>(true, "Product deleted successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during deleting product: " + e.getMessage());
+            return new Response<>(false, "Error during deleting product", false, ErrorType.INTERNAL_ERROR);
         }
     }
 
@@ -324,7 +328,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public List<ProductDTO> searchByKeyword(String token, String keyword) {
+    public Response<List<ProductDTO>> searchByKeyword(String token, String keyword) {
         try {
             if (!this.authenticatorService.isValid(token)) {
                 logger.error("System Service - Token is not valid: " + token);
@@ -338,7 +342,7 @@ public class SystemService implements ISystemService {
         }
         try {
             logger.info("System service - user trying to view procuct " + keyword);
-            return this.productService.searchProducts(keyword);
+            return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
         }

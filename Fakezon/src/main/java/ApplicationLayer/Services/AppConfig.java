@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.Interfaces.ISystemService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
@@ -28,7 +29,7 @@ public class AppConfig {
     }
 
     @Bean
-    public SystemService systemService(ApplicationEventPublisher eventPublisher, IStoreRepository storeRepository, IProductRepository productRepository, IUserRepository userRepository) {
+    public ISystemService systemService(ApplicationEventPublisher eventPublisher, IStoreRepository storeRepository, IProductRepository productRepository, IUserRepository userRepository) {
         return new SystemService(storeRepository, userRepository, productRepository, eventPublisher);
     }
 }
