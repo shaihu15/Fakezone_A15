@@ -41,10 +41,14 @@ public class UserTest {
     void testViewCart() {
         // Arrange
         int storeId = 1;
+        int storeId2 = 2;
         StoreProductDTO product1 = new StoreProductDTO(101, "Product 1", 10.0, 2, 4.5);
         StoreProductDTO product2 = new StoreProductDTO(102, "Product 2", 20.0, 1, 5.0);
+
+
         user.addToBasket(storeId, product1);
-        user.addToBasket(storeId, product2);
+        user.addToBasket(storeId2, product2);
+
 
         // Act
         List<StoreProductDTO> cartProducts = user.viewCart();
