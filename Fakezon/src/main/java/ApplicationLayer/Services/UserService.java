@@ -298,4 +298,20 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User not found");
         }
     }
+
+    @Override
+    public List<StoreProductDTO> viewCart(int userId) {
+        Optional<Registered> user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            try {
+                return user.get().viewCart();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during view cart: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        return null;
+    }
 }

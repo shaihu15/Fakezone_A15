@@ -51,4 +51,6 @@ public interface IUserService {
 
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
+    List<StoreProductDTO> viewCart(int userId);
+
 }

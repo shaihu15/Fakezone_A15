@@ -63,4 +63,4 @@ InfrastructureLayer\Repositories\ProductRepository.class
 ApplicationLayer\Services\StoreService.class
 ApplicationLayer\Services\ProductService.class
 InfrastructureLayer\Security\TokenService.class
-InfrastructureLayer\Repositories\UserRepository.class
+
