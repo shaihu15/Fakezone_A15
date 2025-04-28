@@ -13,6 +13,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
+import ApplicationLayer.DTO.StoreRolesDTO;
 
 public interface ISystemService {
     // Access to core services
@@ -59,5 +60,13 @@ public interface ISystemService {
     void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
+    
+    void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    
+    void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
+    
+    StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
+
+    void addToBasket(int userId, int productId, int storeId, int quantity);
 
 }
