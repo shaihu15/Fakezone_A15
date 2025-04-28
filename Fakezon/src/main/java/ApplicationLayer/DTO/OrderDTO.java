@@ -11,11 +11,11 @@ public class OrderDTO {
     @JsonProperty("orderId")
     private final int orderId;
 
-    @JsonProperty("userName")
-    private final String userName;
+    @JsonProperty("userId")
+    private final int userId;
 
-    @JsonProperty("storeName")
-    private final String storeName;
+    @JsonProperty("storeId")
+    private final int storeId;
 
     @JsonProperty("products")
     private final Collection<ProductDTO> products;
@@ -29,10 +29,10 @@ public class OrderDTO {
     @JsonProperty("paymentMethod")
     private final String paymentMethod;
 
-    public OrderDTO(int orderId, String userName, String storeName, Collection<ProductDTO> products, String orderState, String address, String paymentMethod) {
+    public OrderDTO(int orderId, int userId, int storeId, Collection<ProductDTO> products, String orderState, String address, String paymentMethod) {
         this.orderId = orderId;
-        this.userName = userName;
-        this.storeName = storeName;
+        this.userId = userId;
+        this.storeId = storeId;
         this.products = products;
         this.orderState = orderState;
         this.address = address;
@@ -41,11 +41,11 @@ public class OrderDTO {
     public int getOrderId() {
         return orderId;
     }
-    public String getUserName() {
-        return userName;
+    public int getUserId() {
+        return userId;
     }
-    public String getStoreName() {
-        return storeName;
+    public int getStoreId() {
+        return storeId;
     }
     public Collection<ProductDTO> getProducts() {
         return products;
