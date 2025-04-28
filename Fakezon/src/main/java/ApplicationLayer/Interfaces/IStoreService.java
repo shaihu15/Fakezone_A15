@@ -9,15 +9,9 @@ import java.util.Stack;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-import DomainLayer.Enums.StoreManagerPermission;
-
-import DomainLayer.Model.DiscountPolicy;
-import DomainLayer.Model.Product;
-import DomainLayer.Model.PurchasePolicy;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.StoreManager;
-import DomainLayer.Model.StoreOwner;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.Cart;
 
 public interface IStoreService {
 
@@ -111,4 +105,6 @@ public interface IStoreService {
         void removeProductFromStore(int storeId, int requesterId, int productId);
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
+
+        double calcAmount(Cart cart);
 }

@@ -9,7 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.UserDTO;
+
 import org.springframework.context.annotation.Bean;
+
 import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
@@ -19,6 +21,8 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
+import DomainLayer.Model.Cart;  
 
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
@@ -236,7 +240,7 @@ public class UserService implements IUserService {
 
     @Override
     public boolean isUserLoggedIn(int userID) {
-        Optional<Registered> user = userRepository.findById(userID);
+        Optional<User> user = userRepository.findAllById(userID);
         if (user.isPresent()) {
             try {
                 return user.get().isLoggedIn();
@@ -288,7 +292,7 @@ public class UserService implements IUserService {
 
     @Override
     public void addToBasket(int userId, int storeId, StoreProductDTO product) {
-        Optional<Registered> user = userRepository.findById(userId);
+        Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
                 user.get().addToBasket(storeId, product);
@@ -307,7 +311,7 @@ public class UserService implements IUserService {
 
     @Override
     public List<StoreProductDTO> viewCart(int userId) {
-        Optional<Registered> user = userRepository.findById(userId);
+        Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
                 return user.get().viewCart();
@@ -319,5 +323,38 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User not found");
         }
         return null;
+    }
+
+    @Override
+    public Cart getUserCart(int userId) {
+        Optional<User> user = userRepository.findAllById(userId);
+        if (user.isPresent()) {
+            try {
+                return user.get().getCart();
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get cart: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        return null;
+    }
+
+    @Override
+    public void saveCartOrder(int userId) {
+        Optional<User> user = userRepository.findAllById(userId);
+        if (user.isPresent()) {
+            try {
+                user.get().saveCartOrder();
+                logger.info("Order saved for user: " + userId);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during save order: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+        
     }
 }

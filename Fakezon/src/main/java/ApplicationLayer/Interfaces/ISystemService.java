@@ -24,7 +24,7 @@ public interface ISystemService {
 
     IPayment getPaymentService();
 
-    StoreDTO userAccessStore(String token , int storeId);
+    StoreDTO userAccessStore(String token, int storeId);
 
     void ratingStore(int storeId, int userId, double rating, String comment);
 
@@ -46,26 +46,28 @@ public interface ISystemService {
 
     void deleteProduct(int productId);
 
-    String guestRegister(String email, String password,String dobInput);
-    
+    String guestRegister(String email, String password, String dobInput);
+
     List<ProductDTO> searchByKeyword(String token, String keyword);
-    
-    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
-    
-    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
+
+    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
+            List<StoreManagerPermission> perms);
+
+    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
+            List<StoreManagerPermission> toRemove);
 
     void removeStoreManager(int storeId, int requesterId, int managerId);
-    
+
     void removeStoreOwner(int storeId, int requesterId, int ownerId);
 
     void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
 
     void addStoreOwner(int storeId, int requesterId, int ownerId);
-    
+
     void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
-    
+
     void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
-    
+
     StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
 
     void addToBasket(int userId, int productId, int storeId, int quantity);
@@ -74,5 +76,7 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
-
+    Response<String> puchseCart(int userId, String paymentMethod, String deliveryMethod,
+            String cardNumber, String cardHolder, String expDate, String cvv, String address,
+            String recipient, String packageDetails); // purchase the cart
 }

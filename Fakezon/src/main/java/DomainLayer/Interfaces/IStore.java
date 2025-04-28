@@ -11,6 +11,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.StoreRating;
 import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.PurchasePolicy;
+import DomainLayer.Model.Basket;
 import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.ProductRating;
 
@@ -90,4 +91,6 @@ public interface IStore {
     ProductRating getStoreProductRating(int userID, int productID);
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
+
+    double calcAmount(Basket basket);
 }

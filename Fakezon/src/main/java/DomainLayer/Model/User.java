@@ -1,27 +1,35 @@
 package DomainLayer.Model;
 
-import ApplicationLayer.DTO.StoreProductDTO;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 
 public class User {
     protected boolean isLoggedIn;
     protected int userID;
-    Cart cart;
+    protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
+    protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
+    protected Cart cart;
     private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public User() {
         this.userID = idCounter.incrementAndGet(); // auto-increment userID
         this.cart = new Cart();
         this.isLoggedIn = false;
-
+        this.orders = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
     }
 
     public boolean isRegistered() {
         return false;
     }
-
+    public boolean isLoggedIn() {
+        return isLoggedIn;
+    }
     public Cart getCart() {
         return cart;
     }
@@ -47,6 +55,21 @@ public class User {
         List<StoreProductDTO> products = cart.getAllProducts();
         return products;
 
+    }
+
+    public void saveCartOrder() {
+        List<StoreProductDTO> products = cart.getAllProducts();
+        for (StoreProductDTO product : products) {
+            int storeId = product.getStoreId();
+            if (!productsPurchase.containsKey(storeId)) {
+                productsPurchase.put(storeId, new ArrayList<>());
+            }
+            productsPurchase.get(storeId).add(product.getProductId());
+        }
+    }
+
+    public int getUserId() {
+        return userID;
     }
 
 }

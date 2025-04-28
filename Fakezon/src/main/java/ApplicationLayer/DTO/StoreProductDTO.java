@@ -18,12 +18,15 @@ public class StoreProductDTO {
     @JsonProperty("quantity")
     private final int quantity;
 
+    @JsonProperty("storeId")
+    private final int storeId;
 
     @JsonProperty("averageRating")
     private final double averageRating;
 
     public StoreProductDTO(int productId, String name, double basePrice, int quantity,
-            double averageRating) {
+            double averageRating, int storeId) {
+        this.storeId = storeId;
         this.productId = productId;
         this.name = name;
         this.basePrice = basePrice;
@@ -37,7 +40,11 @@ public class StoreProductDTO {
         this.basePrice = storeProduct.getBasePrice();
         this.quantity = storeProduct.getQuantity();
         this.averageRating = storeProduct.getAverageRating(); // Assuming getAverageRating() returns a double
+        this.storeId = storeProduct.getStoreId(); // Assuming StoreProduct has a method to get store ID
+    }
 
+    public int getStoreId() {
+        return storeId;
     }
 
     public int getProductId() {

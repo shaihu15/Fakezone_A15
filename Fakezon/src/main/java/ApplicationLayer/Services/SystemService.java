@@ -31,6 +31,7 @@ import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
+import DomainLayer.Model.Cart;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -536,6 +537,48 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during viewing cart: " + e.getMessage());
         }
     }
+
+    @Override
+    public Response<String> puchseCart(int userId, String paymentMethod, String deliveryMethod,
+            String cardNumber, String cardHolder, String expDate, String cvv, String address,
+            String recipient, String packageDetails) {
+        double price = 0;
+        try{
+            logger.info("System service - user " + userId + " trying to purchase cart");
+            if (!this.userService.isUserLoggedIn(userId)) {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            Cart cart = this.userService.getUserCart(userId);
+            price = this.storeService.calcAmount(cart);
+           logger.info("System Service - User "+userId + "cart price: " + price);
+            
+        }
+        catch (Exception e) {
+            logger.error("System Service - Error during purchase cart: " + e.getMessage());
+            return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+        try {
+            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, price);
+            logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
+        } catch (Exception e) {
+            logger.error("System Service - Error during payment: " + e.getMessage());
+            return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+        try {
+            this.deliveryService.deliver(address, recipient, packageDetails);
+            logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
+            
+        } catch (Exception e) {
+            this.paymentService.refund(cardNumber,price);
+            logger.error("System Service - Error during delivery: " + e.getMessage());
+            logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder + " at card number: " + cardNumber);
+        }
+        
+        return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true);
+
+    }
+    
 
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {

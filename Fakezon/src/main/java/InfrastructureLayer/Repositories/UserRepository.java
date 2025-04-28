@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public class UserRepository implements IUserRepository {
     private Map<Integer, Registered> users;
@@ -55,6 +56,11 @@ public class UserRepository implements IUserRepository {
             throw new IllegalArgumentException("User with ID " + user.getUserID() + " already exists.");
         }
         users.put(user.getUserID(), user);
+    }
+
+    @Override
+    public Optional<User> findAllById(int userID) {
+        return Optional.ofNullable(users.get(userID));
     }
 
 }

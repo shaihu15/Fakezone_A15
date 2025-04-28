@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
 import ApplicationLayer.Response;
@@ -54,5 +55,9 @@ public interface IUserService {
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
     List<StoreProductDTO> viewCart(int userId);
+
+    Cart getUserCart(int userId); // get the user's cart
+
+    void saveCartOrder(int userId);
 
 }

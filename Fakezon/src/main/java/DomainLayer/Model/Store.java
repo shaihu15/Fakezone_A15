@@ -1,24 +1,25 @@
 package DomainLayer.Model;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
-import org.apache.commons.lang3.ObjectUtils.Null;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
-import DomainLayer.Model.helpers.*;
-import java.util.AbstractMap.SimpleEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.Node;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.Tree;
 
 public class Store implements IStore {
 
@@ -40,7 +41,6 @@ public class Store implements IStore {
     private static final AtomicInteger idCounter = new AtomicInteger(0);
     private final ApplicationEventPublisher publisher;
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
-
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
@@ -93,7 +93,8 @@ public class Store implements IStore {
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
-   @Override
+
+    @Override
     public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
         if (auctionProducts.containsKey(productID)) {
             return auctionProducts.get(productID).addBid(requesterId, bidAmount);
@@ -309,7 +310,7 @@ public class Store implements IStore {
          */
         // pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS
         // IMPLEMENTED
-        
+
         if (isManager(appointee)) {
             Node appointeeNode = rolesTree.getNode(appointee);
             Node appointorNode = rolesTree.getNode(appointor);
@@ -412,7 +413,6 @@ public class Store implements IStore {
         return storeFounderID;
     }
 
-
     @Override
     public void closeStore(int requesterId) {
         if (requesterId == this.storeFounderID) {
@@ -484,7 +484,7 @@ public class Store implements IStore {
         if (!isOwner(toRemoveId)) {
             throw new IllegalArgumentException("User with id: " + toRemoveId + " is not a valid store owner");
         }
-        if(toRemoveId == this.storeFounderID){
+        if (toRemoveId == this.storeFounderID) {
             throw new IllegalArgumentException("Can not remove Store Founder");
         }
         Node[] nodesArr = checkNodesValidity(requesterId, toRemoveId);
@@ -509,14 +509,7 @@ public class Store implements IStore {
         Node fatherNode = nodesArr[0];
         Node childNode = nodesArr[1];
         if (!childNode.getChildren().isEmpty()) {
-            throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should
-                                                                                                                // not
-                                                                                                                // happen
-                                                                                                                // -
-                                                                                                                // just
-                                                                                                                // for
-                                                                                                                // debugging
-                                                                                                                // purposes
+            throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should not happen - just for debugging purposes
         }
         storeManagers.remove(toRemoveId);
         fatherNode.removeChild(childNode);// remove child from the actual tree
@@ -547,24 +540,10 @@ public class Store implements IStore {
         Node fatherNode = rolesTree.getNode(requesterId);
         Node childNode = rolesTree.getNode(childId);
         if (fatherNode == null) {
-            throw new IllegalArgumentException("Could Not Find fatherNode in rolesTree (id: " + requesterId + ")"); // should
-                                                                                                                    // not
-                                                                                                                    // happen
-                                                                                                                    // -
-                                                                                                                    // just
-                                                                                                                    // for
-                                                                                                                    // debugging
-                                                                                                                    // purposes
+            throw new IllegalArgumentException("Could Not Find fatherNode in rolesTree (id: " + requesterId + ")"); // should not happen - just for debugging purposes
         }
         if (childNode == null) {
-            throw new IllegalArgumentException("Could Not Find childNode in rolesTree (id: " + requesterId + ")"); // should
-                                                                                                                   // not
-                                                                                                                   // happen
-                                                                                                                   // -
-                                                                                                                   // just
-                                                                                                                   // for
-                                                                                                                   // debugging
-                                                                                                                   // purposes
+            throw new IllegalArgumentException("Could Not Find childNode in rolesTree (id: " + requesterId + ")"); // should not happen - just for debugging purposes
         }
         if (requesterId != childId && !fatherNode.isChild(childNode)) {
             throw new IllegalArgumentException("Only " + childId + "'s appointor can change/remove their permissions");
@@ -576,6 +555,49 @@ public class Store implements IStore {
     public synchronized StoreProductDTO decrementProductQuantity(int productId, int quantity) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'decrementProductQuantity'");
+    }
+
+    @Override
+    public double calcAmount(Basket basket) {
+        List<StoreProductDTO> products = basket.getProducts();
+        double amount = 0;
+        for (StoreProductDTO product : products) {
+            if (!storeProducts.containsKey(product.getProductId())) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + product.getProductId() + " does not exist in store ID: " + storeID);
+            }
+            int id = product.getProductId();
+            if (this.purchasePolicies.containsKey(id)) {
+                PurchasePolicy policy = this.purchasePolicies.get(id);
+                if (!policy.canPurchase(id, name, product.getQuantity())) {
+                    throw new IllegalArgumentException(
+                            "Purchase policy for product with ID: " + id + " is not valid for the current basket.");
+                }
+            }
+
+            boolean isDiscountApplicable = true;
+            DiscountPolicy discountPolicy = this.discountPolicies.get(id);
+            if(discountPolicy == null) {
+                isDiscountApplicable = false;
+            }
+            if (discountPolicy!= null) {
+                DiscountPolicy policy = this.discountPolicies.get(id);
+                List<DiscountCondition> conditions = policy.getConditions();
+                for(DiscountCondition condition : conditions) {
+                    if(products.stream().filter(p -> p.getProductId() == condition.getTriggerProductId()).count() < condition.getTriggerQuantity()) {
+                        isDiscountApplicable = false;
+                        break;
+                    }
+                }  
+            }
+            if(isDiscountApplicable) {
+                discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+            } else {
+                amount += product.getBasePrice() * product.getQuantity();
+            }
+    }
+        return amount;
     }
 
 }

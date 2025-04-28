@@ -25,7 +25,7 @@ public class UserTest {
     void testAddToBasket() {
         // Arrange
         int storeId = 1;
-        StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5);
+        StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5,1);
 
         // Act
         user.addToBasket(storeId, product);
@@ -42,8 +42,8 @@ public class UserTest {
         // Arrange
         int storeId = 1;
         int storeId2 = 2;
-        StoreProductDTO product1 = new StoreProductDTO(101, "Product 1", 10.0, 2, 4.5);
-        StoreProductDTO product2 = new StoreProductDTO(102, "Product 2", 20.0, 1, 5.0);
+        StoreProductDTO product1 = new StoreProductDTO(101, "Product 1", 10.0, 2, 4.5, 1);
+        StoreProductDTO product2 = new StoreProductDTO(102, "Product 2", 20.0, 1, 5.0,2);
 
 
         user.addToBasket(storeId, product1);
@@ -62,7 +62,7 @@ public class UserTest {
     void testClearCart() {
         // Arrange
         int storeId = 1;
-        StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5);
+        StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5,1);
         user.addToBasket(storeId, product);
 
         // Act
@@ -77,7 +77,7 @@ public class UserTest {
     void testLogout() {
         // Arrange
         int storeId = 1;
-        StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5);
+        StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5,1);
         user.addToBasket(storeId, product);
 
         // Act

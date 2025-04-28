@@ -1,24 +1,23 @@
 package DomainLayer.Model;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.AbstractMap.SimpleEntry;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
-import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
-
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 @Component
 public class Registered extends User {
@@ -27,8 +26,6 @@ public class Registered extends User {
     private String email;
     private String password;
     private int age;
-    private HashMap<Integer, OrderDTO> orders; // orderId -> Order
-    private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
@@ -37,8 +34,6 @@ public class Registered extends User {
         super();
         this.email = email;
         this.password = password;
-        this.orders = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
         this.roles = new HashMap<>();
         this.isLoggedIn = true;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
