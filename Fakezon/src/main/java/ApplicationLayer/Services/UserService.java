@@ -314,4 +314,11 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User not found");
         }
     }
+
+    public UserDTO convertUserToDTO(Registered user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        return user.toDTO();
+    }    
 }
