@@ -8,6 +8,7 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Gatherer.Integrator;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.ObjectUtils.Null;
 import org.springframework.security.access.method.P;
 
 import ApplicationLayer.DTO.StoreProductDTO;
+import DomainLayer.Enums.RoleName;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
 import DomainLayer.Model.helpers.*;
@@ -45,6 +47,8 @@ public class Store implements IStore {
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
     private final ReentrantLock rolesLock = new ReentrantLock();    // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED BOTH!
     private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED BOTH
+    private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
+    private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
@@ -65,6 +69,8 @@ public class Store implements IStore {
         this.messagesFromUsers = new LinkedList<>();
         this.messagesFromStore = new Stack<>();
         this.publisher = publisher;
+        this.pendingManagersPerms = new HashMap<>();
+        this.pendingManagers = new HashMap<>();
     }
 
     @Override
@@ -473,7 +479,6 @@ public class Store implements IStore {
         }
     }
 
-    // TO DO: Send Approval Request
     @Override
     public void addStoreOwner(int appointor, int appointee) {
         rolesLock.lock();
@@ -486,28 +491,23 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
             }
-            // relevant after notifs
-            /*
-            * if(pendingOwners.containsKey(appointee)){
-            * throw new IllegalArgumentException("Already waiting for User with ID: " +
-            * appointee + "'s approval");
-            * }
-            */
-            // pendingOwners.put(appointee, appointor); TO DO WHEN OBSERVER/ABLE IS
-            // IMPLEMENTED
-            
+            if(pendingManagers.containsKey(appointee)){
+                throw new IllegalArgumentException("Already pending user " + appointee + " approval for managment");
+            }
+            if(pendingOwners.containsKey(appointee)){
+                throw new IllegalArgumentException("Already pending user " + appointee + " approval for ownership");
+            }
             if (isManager(appointee)) {
                 Node appointeeNode = rolesTree.getNode(appointee);
                 Node appointorNode = rolesTree.getNode(appointor);
-                if (!appointorNode.getChildren().contains(appointeeNode)) {
+                if (!appointorNode.isChild(appointeeNode)) {
                     throw new IllegalArgumentException(
                             "Only the manager with id: " + appointee + "'s appointor can reassign them as Owner");
                 }
-                storeManagers.remove(appointee); // how should reappointing a manager affect the tree?? right now - only
-                                                // their father can re-assign them
             }
-            storeOwners.add(appointee);
-            rolesTree.addNode(appointor, appointee);
+            pendingOwners.put(appointee, appointor);
+            rolesLock.unlock();
+            this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_OWNER));
         }
         catch(Exception e){
             rolesLock.unlock();
@@ -515,17 +515,33 @@ public class Store implements IStore {
         }
     }
 
-    // ***will be relevant when observer/able is implemented***
-    // public void approvalStoreOwner(int appointee){
-    // int appointor = pendingOwners.get(appointee);
-    // pendingOwners.remove(appointee);
-    // storeOwners.add(appointee);
-    // rolesTree.addNode(appointor, appointee);
-    // }
-    // public void declineStoreOwner(int appointee){
-    // pendingOwners.remove(appointee);
-    // }
-    
+    private void acceptStoreOwner(int appointor, int appointee){
+        if (!isOwner(appointor)) { // could happen - removing assignment
+            pendingOwners.remove(appointee);
+            throw new IllegalArgumentException(
+                    "Appointor ID: " + appointor + " is no longer a valid store owner for store ID: " + storeID);
+        }
+        if (isOwner(appointee)) { // shouldn't happen theoratically
+            pendingOwners.remove(appointee); 
+            throw new IllegalArgumentException(
+                    "User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
+        }
+        pendingOwners.remove(appointee);
+        storeOwners.add(appointee);
+        if(!isManager(appointee))
+            rolesTree.addNode(appointor, appointee);
+        storeManagers.remove(appointee); // does nothing if they're not a manager
+        this.publisher.publishEvent(new ResponseFromStoreEvent(storeID, appointor, "User " + appointee + " approved your ownership assignment"));
+        this.publisher.publishEvent(new ResponseFromStoreEvent(storeID, appointee, "Successfully added ownership permissions for store " + storeID));
+
+    }
+
+    private void declineStoreOwner(int appointor, int appointee){
+        pendingOwners.remove(appointee);
+        if(storeOwners.contains(appointor))
+            this.publisher.publishEvent(new ResponseFromStoreEvent(storeID, appointor, "User " + appointee + " declined your ownership assignment"));
+    }
+
     @Override
     public boolean isOwner(int userId) {
         return storeOwners.contains(userId);
@@ -548,17 +564,102 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User with ID: " + appointee + " is already a store manager/owner for store with ID: " + storeID);
             }
+            if(pendingManagers.containsKey(appointee)){
+                throw new IllegalArgumentException("Already pending user " + appointee + " approval for managment");
+            }
+            if(pendingOwners.containsKey(appointee)){
+                throw new IllegalArgumentException("Already pending user " + appointee + " approval for ownership");
+            }
             if (perms == null || perms.isEmpty()) {
                 throw new IllegalArgumentException("Permissions list is empty");
             }
-            storeManagers.put(appointee, new ArrayList<>(perms));
-            rolesTree.addNode(appointor, appointee);
+            pendingManagersPerms.put(appointee, new ArrayList<>(perms));
+            pendingManagers.put(appointee, appointor);
+            rolesLock.unlock();
+            this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_MANAGER));
         }
         catch(Exception e){
             rolesLock.unlock();
             throw e;
         }
-        rolesLock.unlock();
+    }
+
+    private void acceptStoreManager(int appointor, int appointee){
+        if (!isOwner(appointor)) { // could happen - removing assignment
+            pendingManagers.remove(appointee);
+            pendingManagersPerms.remove(appointee);
+            throw new IllegalArgumentException(
+                    "Appointor ID: " + appointor + " is no longer a valid store owner for store ID: " + storeID);
+        }
+        if (isOwner(appointee) || isManager(appointee)) { // shouldn't happen theoratically
+            pendingManagers.remove(appointee);
+            pendingManagersPerms.remove(appointee);
+            throw new IllegalArgumentException(
+                    "User with ID: " + appointee + " is already a store owner/manager for store with ID: " + storeID);
+        }
+        List<StoreManagerPermission> perms = pendingManagersPerms.remove(appointee);
+        pendingManagers.remove(appointee);
+        if(perms.isEmpty())
+            throw new IllegalArgumentException("Permissions can not be empty"); // shouldn't happen
+        storeManagers.put(appointee, perms);
+        rolesTree.addNode(appointor, appointee);
+        this.publisher.publishEvent(new ResponseFromStoreEvent(storeID, appointor, "User " + appointee + " approved your managment assignment for store " + storeID));
+        this.publisher.publishEvent(new ResponseFromStoreEvent(storeID, appointee, "Successfully added managment permissions for store " + storeID));
+    }
+
+    private void declineStoreManager(int appointor, int appointee){
+        pendingManagers.remove(appointee);
+        pendingManagersPerms.remove(appointee);
+        if(storeOwners.contains(appointor))
+            this.publisher.publishEvent(new ResponseFromStoreEvent(storeID, appointor, "User " + appointee + " declined your ownership assignment"));
+    }
+
+    @Override
+    public void acceptAssignment(int userId){
+        rolesLock.lock();
+        try{
+            boolean ownership = pendingOwners.containsKey(userId);
+            boolean managment = pendingManagers.containsKey(userId);
+            if(ownership && managment){ // shouldn't happen
+                throw new IllegalArgumentException("User " + userId + " pending for both ownership and managment"); 
+            }
+            if(!(ownership || managment)){
+                throw new IllegalArgumentException("User " + userId + " has no pending assignments");
+            }
+            if(ownership)
+                acceptStoreOwner(pendingOwners.get(userId), userId);
+            else
+                acceptStoreManager(pendingManagers.get(userId), userId);
+            rolesLock.unlock();
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
+        }
+    }
+
+    @Override
+    public void declineAssignment(int userId){
+        rolesLock.lock();
+        try{
+            boolean ownership = pendingOwners.containsKey(userId);
+            boolean managment = pendingManagers.containsKey(userId);
+            if(ownership && managment){ // shouldn't happen
+                throw new IllegalArgumentException("User " + userId + " pending for both ownership and managment"); 
+            }
+            if(!(ownership || managment)){
+                throw new IllegalArgumentException("User " + userId + " has no pending assignments");
+            }
+            if(ownership)
+                declineStoreOwner(pendingOwners.get(userId), userId);
+            else
+                declineStoreManager(pendingManagers.get(userId), userId);
+            rolesLock.unlock();
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
+        }
     }
 
     @Override
@@ -841,5 +942,28 @@ public class Store implements IStore {
         return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
     }
 
+    @Override
+    public List<Integer> getPendingOwners(int requesterId){
+        rolesLock.lock();
+        if(!isOwner(requesterId)){
+            rolesLock.unlock();
+            throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
+        }
+        List<Integer> pending = new ArrayList<>(pendingOwners.keySet());
+        rolesLock.unlock();
+        return pending;
+    }
+
+    @Override
+    public List<Integer> getPendingManagers(int requesterId){
+        rolesLock.lock();
+        if(!isOwner(requesterId)){
+            rolesLock.unlock();
+            throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
+        }
+        List<Integer> pending = new ArrayList<>(pendingManagers.keySet());
+        rolesLock.unlock();
+        return pending;
+    }
 
 }

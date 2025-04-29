@@ -618,6 +618,74 @@ public class SystemService implements ISystemService {
 
     }
 
+    @Override
+    public Response<String> acceptAssignment(int storeId, int userId){
+        try{
+            logger.info("system service - user " + userId + " trying to accept assignment for store " + storeId);
+            storeService.acceptAssignment(storeId, userId);
+            return new Response<String>("success", "success", true);
+        }
+        catch(IllegalArgumentException e){
+            logger.error("system service - acceptAssignment failed: " + e.getMessage());
+            return new Response<String>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        }
+        catch(Exception e){
+            logger.error("system service - acceptAssignment failed: " + e.getMessage());
+            return new Response<String>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<String> declineAssignment(int storeId, int userId){
+        try{
+            logger.info("system service - user " + userId + " trying to decline assignment for store " + storeId);
+            storeService.declineAssignment(storeId, userId);
+            return new Response<String>("success", "success", true);
+        }
+        catch(IllegalArgumentException e){
+            logger.error("system service - declineAssignment failed: " + e.getMessage());
+            return new Response<String>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        }
+        catch(Exception e){
+            logger.error("system service - declineAssignment failed: " + e.getMessage());
+            return new Response<String>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<Integer>> getPendingOwners(int storeId, int requesterId){
+        try{
+            logger.info("system service - user " + requesterId + " trying to get pending owners for store " + storeId);
+            List<Integer> pending = storeService.getPendingOwners(storeId, requesterId);
+            return new Response<List<Integer>>(pending, "success", true);
+        }
+        catch(IllegalArgumentException e){
+            logger.error("system service - getPendingOwners failed: " + e.getMessage());
+            return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        }
+        catch(Exception e){
+            logger.error("system service - getPendingOwners failed: " + e.getMessage());
+            return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<List<Integer>> getPendingManagers(int storeId, int requesterId){
+        try{
+            logger.info("system service - user " + requesterId + " trying to get pending managers for store " + storeId);
+            List<Integer> pending = storeService.getPendingManagers(storeId, requesterId);
+            return new Response<List<Integer>>(pending, "success", true);
+        }
+        catch(IllegalArgumentException e){
+            logger.error("system service - getPendingManagers failed: " + e.getMessage());
+            return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        }
+        catch(Exception e){
+            logger.error("system service - getPendingManagers failed: " + e.getMessage());
+            return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
     // if (authenticatorService.isValid(sessionToken)) {
