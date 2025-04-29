@@ -25,7 +25,7 @@ public class StoreTest {
     void setUp() {
         publisher = mock(ApplicationEventPublisher.class);
         store = new Store("Test Store", founderId, publisher);
-        store.addStoreProduct(productId, "Test Product", 100.0, 5);
+        store.addStoreProduct(founderId ,productId, "Test Product", 100.0, 5);
 
     }
 
@@ -78,7 +78,7 @@ public class StoreTest {
     void addStoreProductRating_ValidRating_ShouldSucceed() {
         int userId = 1;
         int productId = 1;
-        store.addStoreProduct(productId, "Test Product", 10.0, 100);
+        store.addStoreProduct(founderId, productId, "Test Product", 10.0, 100);
         double rating = 4.5;
         String comment = "Great product!";
 

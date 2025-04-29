@@ -44,4 +44,8 @@ public class Response<T> {
         return success;
     }
 
+    public ErrorType getErrorType() {
+        return errorType;
+    }
+
 }

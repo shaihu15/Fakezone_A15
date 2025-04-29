@@ -42,13 +42,13 @@ public interface ISystemService {
 
     Response<ProductDTO> getProduct(int productId);
 
-    void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
+    Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
 
-    void deleteProduct(int productId);
+    Response<Boolean> deleteProduct(int productId);
 
     String guestRegister(String email, String password,String dobInput);
     
-    List<ProductDTO> searchByKeyword(String token, String keyword);
+    Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
     
     void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
     
@@ -78,4 +78,13 @@ public interface ISystemService {
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
+
+    void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    void removeProductFromStore(int storeId, int requesterId, int productId);
+    
+    void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
 }
