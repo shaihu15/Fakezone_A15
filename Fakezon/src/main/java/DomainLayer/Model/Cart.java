@@ -35,4 +35,12 @@ public class Cart {
         }
         return null;
     }
+
+    public List<StoreProductDTO> getAllProducts() {
+        List<StoreProductDTO> allProducts = new ArrayList<>();
+        for (Basket basket : baskets) {
+            allProducts.addAll(basket.getProducts());
+        }
+        return allProducts;
+    }
 }

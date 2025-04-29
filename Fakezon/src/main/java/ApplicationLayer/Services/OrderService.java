@@ -1,6 +1,7 @@
 package ApplicationLayer.Services;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -63,13 +64,10 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public OrderDTO viewOrder(int orderId, String userName, String storeName, List<ProductDTO> products) {
+    public IOrder viewOrder(int orderId) {
         try {
-
             IOrder order = orderRepository.getOrder(orderId);
-
-            return new OrderDTO(order.getId(), userName, storeName, products, order.getState().toString(),
-                    order.getAddress(), order.getPaymentMethod().toString());
+            return order;
         } catch (IllegalArgumentException e) {
             logger.error("While trying to view, recived error {}", e);
             throw e;
@@ -120,5 +118,19 @@ public class OrderService implements IOrderService {
             logger.error("While trying to get product ids, recived error {}", e);
             throw e;
         }
+    }
+
+    @Override
+    public List<IOrder> getOrdersByStoreId(int storeId) {
+        Collection<IOrder> orders = orderRepository.getAllOrders();
+        List<IOrder> storeOrders = new ArrayList<>();
+        for(IOrder order : orders) {
+            if(order.getStoreId() == storeId) {
+                storeOrders.add(order);
+            }
+        }
+        return storeOrders;
+
+
     }
 }

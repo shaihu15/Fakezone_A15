@@ -1,6 +1,7 @@
 package ApplicationLayer.Services;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -10,11 +11,13 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
+import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -23,6 +26,7 @@ import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
+import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
@@ -31,6 +35,8 @@ import DomainLayer.Model.StoreOwner;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -43,28 +49,31 @@ public class SystemService implements ISystemService {
     private IUserService userService;
     private IStoreService storeService;
     private IProductService productService;
+    private IOrderService orderService;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
     private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
-            IProductRepository productRepository, ApplicationEventPublisher publisher) {
+            IProductRepository productRepository, IOrderRepository orderRepository,ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         this.storeService = new StoreService(storeRepository, publisher);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
+        this.orderService = new OrderService(orderRepository);
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
     }
 
     // Overloaded constructor for testing purposes
-    public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
+    public SystemService(IStoreService storeService, IUserService userService, IProductService productService, IOrderService orderService,
             IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
             ApplicationEventPublisher publisher) {
         this.publisher = publisher;
         this.storeService = storeService;
         this.userService = userService;
         this.productService = productService;
+        this.orderService = orderService;
         this.deliveryService = deliveryService;
         this.authenticatorService = authenticatorService;
         this.paymentService = paymentService;
@@ -189,18 +198,18 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public HashMap<Integer, Order> getOrdersByUser(int userId) {
+    public Response<List<OrderDTO>> getOrdersByUser(int userId) {
         try {
             if (!this.userService.isUserLoggedIn(userId)) {
                 logger.error("System Service - User is not logged in: " + userId);
-                throw new IllegalArgumentException("User is not logged in");
+                return new Response<List<OrderDTO>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
-            HashMap<Integer, Order> orders = this.userService.getOrdersByUser(userId);
             logger.info("System Service - User orders retrieved: " + userId);
-            return orders;
+            return this.userService.getOrdersByUser(userId);
         } catch (Exception e) {
             logger.error("System Service - Error during retrieving user orders: " + e.getMessage());
-            throw new IllegalArgumentException("Error during retrieving user orders: " + e.getMessage());
+            return new Response<List<OrderDTO>>(null, "Error during retrieving user orders: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR);
         }
     }
 
@@ -238,10 +247,7 @@ public class SystemService implements ISystemService {
                     logger.info(
                             "System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
                                     + " with message: " + message);
-                    this.userService.receivingMessageFromStore(userToAnswer, storeId, message);
-                    logger.info("System Service - User received message from store: " + storeId + " to user: "
-                            + userToAnswer
-                            + " with message: " + message);
+                    
                 } else {
                     logger.error("System Service - Store is closed: " + storeId);
                     throw new IllegalArgumentException("Store is closed");
@@ -287,22 +293,26 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
+    public Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
             logger.info("System service - user trying to update procuct " + productId);
             this.productService.updateProduct(productId, productName, productDescription, storesIds);
+            return new Response<>(true, "Product updated successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during updating product: " + e.getMessage());
+            return new Response<>(false, "Error during updating product", false, ErrorType.INTERNAL_ERROR);
         }
     }
 
     @Override
-    public void deleteProduct(int productId) {
+    public Response<Boolean> deleteProduct(int productId) {
         try {
             logger.info("System service - user trying to delete procuct " + productId);
             this.productService.deleteProduct(productId);
+            return new Response<>(true, "Product deleted successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during deleting product: " + e.getMessage());
+            return new Response<>(false, "Error during deleting product", false, ErrorType.INTERNAL_ERROR);
         }
     }
 
@@ -327,7 +337,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public List<ProductDTO> searchByKeyword(String token, String keyword) {
+    public Response<List<ProductDTO>> searchByKeyword(String token, String keyword) {
         try {
             if (!this.authenticatorService.isValid(token)) {
                 logger.error("System Service - Token is not valid: " + token);
@@ -337,15 +347,15 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during user access store: " + e.getMessage());
-            return null;
+            return new Response<>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
             logger.info("System service - user trying to view procuct " + keyword);
-            return this.productService.searchProducts(keyword);
+            return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
+            return new Response<>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
-        return null;
     }
 
     private int addProduct(String productName, String productDescription) {
@@ -357,6 +367,7 @@ public class SystemService implements ISystemService {
         }
         return -1;
     }
+
     @Override
     public StoreRolesDTO getStoreRoles(int storeId, int userId) {
         try {
@@ -371,7 +382,6 @@ public class SystemService implements ISystemService {
             throw new IllegalArgumentException("Error during getting store roles: " + e.getMessage());
         }
     }
-
 
     @Override
     public void addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
@@ -497,6 +507,115 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
         }
+    }
+
+    @Override
+    public Response<String> closeStoreByFounder(int storeId, int userId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                this.storeService.closeStore(storeId, userId);
+                logger.info("System Service - User closed store: " + storeId + " by user: " + userId);
+                return new Response<String>("Store closed successfully","Store closed successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<String>(null, "User is not logged in",false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during closing store: " + e.getMessage());
+            return new Response<String>(null, "Error during closing store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    @Override
+    public void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity){
+        String name = null;
+        try{
+            logger.info("System service - user " + requesterId + " trying to add product " + productId + " to store " + storeId);
+            name = productService.viewProduct(productId).getName();
+        }
+        catch (Exception e){
+            logger.error("System service - failed to fetch product " + e.getMessage());
+            throw e;
+        }
+        try{
+            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity);
+        }
+        catch (Exception e){
+            logger.error("System service - failed to add product to store " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity){
+        String name = null;
+        try{
+            logger.info("System service - user " + requesterId + " trying to update product " + productId +" in store " + storeId);
+            name = productService.viewProduct(productId).getName();
+        }
+        catch (Exception e){
+            logger.error("System service - failed to fetch product " + e.getMessage());
+            throw e;
+        }
+        try{
+            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity);
+        }
+        catch (Exception e){
+            logger.error("System service - failed to update product in store " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void removeProductFromStore(int storeId, int requesterId, int productId){
+        try {
+            logger.info("System service - user " + requesterId + " trying to remove product " + productId + " from store " + storeId);
+            storeService.removeProductFromStore(storeId, requesterId, productId);
+        } 
+        catch (Exception e) {
+            logger.info("System service - failed to remove product from store " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd){
+        try{
+            logger.info("System service - user " + requesterId + " trying to add store auction product days");
+            storeService.addStoreAuctionProductDays(storeId, requesterId, productId, daysToAdd);
+        }
+        catch (Exception e) {
+            logger.info("System service - failed to add auction product days  " + e.getMessage());
+            throw e;
+        }
+    }
+
+   
+
+    @Override
+    public List<StoreProductDTO> viewCart(int userId) {
+        try {
+            logger.info("System service - user " + userId + " trying to view cart");
+            if (this.userService.isUserLoggedIn(userId)) {
+                return this.userService.viewCart(userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                throw new IllegalArgumentException("User is not logged in");
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during viewing cart: " + e.getMessage());
+            throw new IllegalArgumentException("Error during viewing cart: " + e.getMessage());
+        }
+    }
+
+    private OrderDTO createOrderDTO(Order order) {
+        List<ProductDTO> productDTOS = new ArrayList<>();
+        for (int productId : order.getProductIds()) {
+            ProductDTO productDTO = this.productService.viewProduct(productId);
+            productDTOS.add(productDTO);
+        }
+        return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), productDTOS,
+                order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
+
     }
 
     // // Example of a system service method that uses the authenticator service

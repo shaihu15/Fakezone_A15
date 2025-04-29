@@ -23,7 +23,7 @@ public interface IStore {
 
     void addStoreProductRating(int userID, int productID, double rating, String comment);
 
-    void addStoreProduct(int productID, String name, double basePrice, int quantity);
+    void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
 
     void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy);
 
