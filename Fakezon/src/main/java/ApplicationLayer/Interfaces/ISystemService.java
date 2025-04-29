@@ -83,4 +83,6 @@ public interface ISystemService {
     
     void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
 
+    Response<List<OrderDTO>> getAllStoreOrders(int storeId, int userId);
+
 }

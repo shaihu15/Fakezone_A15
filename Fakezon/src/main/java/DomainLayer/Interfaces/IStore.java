@@ -90,4 +90,6 @@ public interface IStore {
     ProductRating getStoreProductRating(int userID, int productID);
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
+
+    boolean canViewOrders(int userId);
 }

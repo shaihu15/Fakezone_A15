@@ -544,4 +544,14 @@ public class StoreService implements IStoreService {
         return prod;
     }
 
+    @Override
+    public boolean canViewOrders(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("canViewOrders - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.canViewOrders(userId);
+    }
+
 }

@@ -26,6 +26,7 @@ import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
+import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
@@ -607,7 +608,7 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private OrderDTO createOrderDTO(Order order) {
+    private OrderDTO createOrderDTO(IOrder order) {
         List<ProductDTO> productDTOS = new ArrayList<>();
         for (int productId : order.getProductIds()) {
             ProductDTO productDTO = this.productService.viewProduct(productId);
@@ -616,6 +617,25 @@ public class SystemService implements ISystemService {
         return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), productDTOS,
                 order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
 
+    }
+
+    @Override
+    public Response<List<OrderDTO>> getAllStoreOrders(int storeId, int userId){
+        try{
+            logger.info("System service - user " + userId + " trying to get all orders from " + storeId);
+            if(!storeService.canViewOrders(storeId, userId)){
+                return new Response<List<OrderDTO>>(null, "user " + userId + " has insufficient permissions to view orders from store " + storeId, false, ErrorType.INVALID_INPUT);
+            }
+            List<IOrder> storeOrders = orderService.getOrdersByStoreId(storeId);
+            List<OrderDTO> storeOrdersDTOs = new ArrayList<>();
+            for(IOrder order : storeOrders){
+                storeOrdersDTOs.add(createOrderDTO(order));
+            }
+            return new Response<List<OrderDTO>>(storeOrdersDTOs, "success", true);
+        }
+        catch(Exception e){
+            return new Response<List<OrderDTO>>(null, e.getMessage(), false,ErrorType.INTERNAL_ERROR);
+        }
     }
 
     // // Example of a system service method that uses the authenticator service

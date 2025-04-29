@@ -112,4 +112,6 @@ public interface IStoreService {
 
         void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
 
+        boolean canViewOrders(int storeId, int userId);
+
 }

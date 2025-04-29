@@ -841,5 +841,11 @@ public class Store implements IStore {
         return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
     }
 
-
+    @Override
+    public boolean canViewOrders(int userId){
+        rolesLock.lock();
+        boolean ans = storeOwners.contains(userId) || (storeManagers.containsKey(userId) && storeManagers.get(userId).contains(StoreManagerPermission.VIEW_PURCHASES));
+        rolesLock.unlock();
+        return ans;
+    }
 }
