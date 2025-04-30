@@ -182,6 +182,7 @@ public class Registered extends User {
         return password;
     }
 
+    @Override
     public UserDTO toDTO() {
         return new UserDTO(userID, email, age);
     }
