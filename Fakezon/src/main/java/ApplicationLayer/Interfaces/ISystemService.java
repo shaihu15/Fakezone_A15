@@ -9,6 +9,7 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Response;
+import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
@@ -76,7 +77,7 @@ public interface ISystemService {
     Response<String> closeStoreByFounder(int storeId, int userId);
 
 
-    Response<String> puchseCart(int userId, String paymentMethod, String deliveryMethod,
+    Response<String> puchseCart(int userId, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails); // purchase the cart
 

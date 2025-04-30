@@ -852,8 +852,8 @@ public class Store implements IStore {
                 DiscountPolicy policy = this.discountPolicies.get(id);
                 List<DiscountCondition> conditions = policy.getConditions();
                 for(DiscountCondition condition : conditions) {
-                    if(products.stream().filter(p -> p.getProductId() == condition.getTriggerProductId()).count() < condition.getTriggerQuantity()) {
-                        isDiscountApplicable = false;
+                    if (products.stream().anyMatch(p -> p.getProductId() == condition.getTriggerProductId() && p.getQuantity() < condition.getTriggerQuantity())){ 
+                    isDiscountApplicable = false;
                         break;
                     }
                 }  

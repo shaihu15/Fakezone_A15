@@ -333,12 +333,12 @@ public class UserService implements IUserService {
                 return user.get().getCart();
             } catch (Exception e) {
                 // Handle exception if needed
-                System.out.println("Error during get cart: " + e.getMessage());
+                logger.error("Error during get user cart: " + e.getMessage());
+                throw new IllegalArgumentException("Error during get user cart: " + e.getMessage());
             }
         } else {
             throw new IllegalArgumentException("User not found");
         }
-        return null;
     }
 
     @Override

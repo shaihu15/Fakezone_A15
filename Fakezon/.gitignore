@@ -31,3 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
+
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+.idea/
+*.iml
+*.iws
+out/
+
+.vscode/
+
+*.log
+*.tmp
+*.swp
+
+frontend/generated/
