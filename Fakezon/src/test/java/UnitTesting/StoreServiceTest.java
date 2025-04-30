@@ -185,9 +185,11 @@ class StoreServiceTest {
         int newOwnerId = 2;
         int managerId = 3;
         storeService.addStoreOwner(storeId,founderId, newOwnerId);// Add a new owner
+        storeService.acceptAssignment(storeId, newOwnerId);
         // Define permissions for the manager
         List<StoreManagerPermission> permissions = List.of(StoreManagerPermission.VIEW_ROLES);
         storeService.addStoreManager(storeId, founderId, managerId, permissions);// Add a manager with permissions
+        storeService.acceptAssignment(storeId, managerId);
         StoreRolesDTO storeRolesDTO = storeService.getStoreRoles(storeId, founderId);
         // Validate the response
         assertNotNull(storeRolesDTO, "Store roles should not be null for the founder");

@@ -114,4 +114,12 @@ public interface IStoreService {
 
         boolean canViewOrders(int storeId, int userId);
 
+        void acceptAssignment(int storeId, int userId);
+
+        void declineAssignment(int storeId, int userId);
+        
+        List<Integer> getPendingOwners(int storeId, int requesterId);
+
+        List<Integer> getPendingManagers(int storeId, int requesterId);
+
 }
