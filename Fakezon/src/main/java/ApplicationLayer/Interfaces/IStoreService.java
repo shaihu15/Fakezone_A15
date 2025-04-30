@@ -110,6 +110,7 @@ public interface IStoreService {
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
+        void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
         void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
 
         void acceptAssignment(int storeId, int userId);

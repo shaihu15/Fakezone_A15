@@ -424,4 +424,5 @@ public class StoreTest {
 
         assertTrue(owners.contains(userId), "User should be in the list of store owners");
     }
+    
 }
