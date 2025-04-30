@@ -3,6 +3,13 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
 
 ### STS ###
 .apt_generated
@@ -31,3 +38,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### vaadin ###
+.idea/
+*.iml
+*.iws
+out/
+frontend/generated/
+

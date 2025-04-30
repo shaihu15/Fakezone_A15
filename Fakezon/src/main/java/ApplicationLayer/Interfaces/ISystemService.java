@@ -24,21 +24,21 @@ public interface ISystemService {
 
     IPayment getPaymentService();
 
-    StoreDTO userAccessStore(String token , int storeId);
+    Response<StoreDTO> userAccessStore(String token , int storeId);
 
-    void ratingStore(int storeId, int userId, double rating, String comment);
+    Response<Void> ratingStore(int storeId, int userId, double rating, String comment);
 
-    void ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
+    Response<Void> ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
 
     Response<List<OrderDTO>> getOrdersByUser(int userId); // userID -> OrderDTO
 
-    void sendMessageToStore(int userId, int storeId, String message); // send message to store
+    Response<Void> sendMessageToStore(int userId, int storeId, String message); // send message to store
 
-    void sendMessageToUser(int managerId, int storeId, int userToAnswer, String message); // send message to user
+    Response<Void> sendMessageToUser(int managerId, int storeId, int userToAnswer, String message); // send message to user
 
-    void addStore(int userId, String storeName);
+    Response<Void> addStore(int userId, String storeName);
 
-    StoreProductDTO getProductFromStore(int productId, int storeId);
+    Response<StoreProductDTO> getProductFromStore(int productId, int storeId);
 
     Response<ProductDTO> getProduct(int productId);
 
@@ -46,31 +46,31 @@ public interface ISystemService {
 
     Response<Boolean> deleteProduct(int productId);
 
-    String guestRegister(String email, String password,String dobInput);
+    Response<String> guestRegister(String email, String password,String dobInput);
     
     Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
     
-    void addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
+    Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
     
-    void removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
+    Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
 
-    void removeStoreManager(int storeId, int requesterId, int managerId);
+    Response<Void> removeStoreManager(int storeId, int requesterId, int managerId);
     
-    void removeStoreOwner(int storeId, int requesterId, int ownerId);
+    Response<Void> removeStoreOwner(int storeId, int requesterId, int ownerId);
 
-    void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
+    Response<Void> addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms);
 
-    void addStoreOwner(int storeId, int requesterId, int ownerId);
+    Response<Void> addStoreOwner(int storeId, int requesterId, int ownerId);
     
-    void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
     
-    void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
+    Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     
-    StoreRolesDTO getStoreRoles(int storeId, int userId); // owner gets store roles information
+    Response<StoreRolesDTO> getStoreRoles(int storeId, int userId); // owner gets store roles information
 
-    void addToBasket(int userId, int productId, int storeId, int quantity);
+    Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 
-    List<StoreProductDTO> viewCart(int userId); // returns a list of products in the cart
+    Response<List<StoreProductDTO>> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
@@ -78,13 +78,19 @@ public interface ISystemService {
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
+    Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
 
-    void addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+    Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
 
-    void updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
-
-    void removeProductFromStore(int storeId, int requesterId, int productId);
+    Response<Void> removeProductFromStore(int storeId, int requesterId, int productId);
     
-    void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+    Response<Void> addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+  
+    Response<String> acceptAssignment(int storeId, int userId);
 
+    Response<String> declineAssignment(int storeId, int userId);
+    
+    Response<List<Integer>> getPendingOwners(int storeId, int requesterId);
+
+    Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
 }

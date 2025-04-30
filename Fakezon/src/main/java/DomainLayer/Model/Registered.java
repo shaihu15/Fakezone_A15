@@ -77,10 +77,9 @@ public class Registered extends User {
 
     @EventListener(condition = "#root.target.shouldHandleClosingStore(#event)")
     public void handleCloseStore(ClosingStoreEvent event) {
-        if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getId(), "Store " + event.getId() + " is now close."));
-            return;
-        }
+        this.messagesFromStore.add(new SimpleEntry<>(event.getId(), "Store " + event.getId() + " is now close."));
+        return;
+        
         // your logic to send to UI
     }
     private boolean shouldHandleResposeFromStore(ResponseFromStoreEvent event) {
@@ -92,10 +91,9 @@ public class Registered extends User {
 
     @EventListener(condition = "#root.target.shouldHandleResposeFromStore(#event)")
     public void handleResposeFromStore(ResponseFromStoreEvent event) {
-        if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), event.getMessage()));
-            return;
-        }
+        this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), event.getMessage()));
+        return;
+        
         // your logic to send to UI
     }
     private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
@@ -107,11 +105,11 @@ public class Registered extends User {
 
     @EventListener(condition = "#root.target.shouldHandleAssignmentEvent(#event)")
     public void handleAssignmentEvent(AssignmentEvent event) {
-        if(!isLoggedIn) {
-            this.assignmentMessages.add(new SimpleEntry<>(event.getStoreId(), "Please approve or decline this role: " + event.getRoleName()+
-            " for store " + event.getStoreId()));
-            return;
-        }
+        
+        this.assignmentMessages.add(new SimpleEntry<>(event.getStoreId(), "Please approve or decline this role: " + event.getRoleName()+
+        " for store " + event.getStoreId()));
+        return;
+        
         // your logic to send to UI
     }
 
