@@ -81,4 +81,12 @@ public interface ISystemService {
     Response<Void> removeProductFromStore(int storeId, int requesterId, int productId);
     
     Response<Void> addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+  
+    Response<String> acceptAssignment(int storeId, int userId);
+
+    Response<String> declineAssignment(int storeId, int userId);
+    
+    Response<List<Integer>> getPendingOwners(int storeId, int requesterId);
+
+    Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
 }
