@@ -14,13 +14,13 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Services.AppConfig;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.Model.helpers.ApprovedBidOnAuctionEvent;
 import DomainLayer.Model.helpers.AssignmentEvent;
-import DomainLayer.Model.helpers.AuctionEndedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
-import DomainLayer.Model.helpers.DeclinedBidOnAuctionEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -142,13 +142,13 @@ public class Registered extends User {
     @EventListener(condition = "#root.target.shouldHandleAuctionFailedToOwnersEvent(#event)")
     public void handleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
         if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "Auction failed for product " + event.getProductID() +". Base price was " + event.getBasePrice()));
+            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "Auction failed for product " + event.getProductID() +". Base price was " + event.getBasePrice()+". "+event.getMessage()));
             return;
         }
         // your logic to send to UI
     }
 
-    private boolean shouldHandleApprovedBidOnAuctionEvent(ApprovedBidOnAuctionEvent event) {
+    private boolean shouldHandleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
         if(event.getUserIDHighestBid() != this.userID) {
             return false;
         }
@@ -156,7 +156,7 @@ public class Registered extends User {
     }
 
     @EventListener(condition = "#root.target.shouldHandleApprovedBidOnAuctionEvent(#event)")
-    public void handleApprovedBidOnAuctionEvent(ApprovedBidOnAuctionEvent event) {
+    public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
         if(!isLoggedIn) {
             this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We are pleased to inform you that your bid has won the auction on product: "+event.getProductID()+", at a price of: "+event.getCurrentHighestBid()+"! The product has been added to your shopping cart, please purchase it as soon as possible."));
             addToBasket(event.getStoreId(), event.getStoreProductDTO());
@@ -164,7 +164,7 @@ public class Registered extends User {
         }
         // your logic to send to UI
     }
-    private boolean shouldHandleDeclinedBidOnAuctionEvent(DeclinedBidOnAuctionEvent event) {
+    private boolean shouldHandleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
         if(event.getUserIDHighestBid() != this.userID) {
             return false;
         }
@@ -172,7 +172,7 @@ public class Registered extends User {
     }
 
     @EventListener(condition = "#root.target.shouldHandleDeclinedBidOnAuctionEvent(#event)")
-    public void handleDeclinedBidOnAuctionEvent(DeclinedBidOnAuctionEvent event) {
+    public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
         if(!isLoggedIn) {
             this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We regret to inform you that the offer for product: "+event.getProductID()+" was not approved by the store."));
             return;
@@ -197,10 +197,10 @@ public class Registered extends User {
         return auctionEndedMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
     }
     public HashMap<Integer, String> getAllMessages() {
-       HashMap<Integer, String> allMessages = new HashMap<>();
-        allMessages.putAll(messagesFromStore.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll));
-        allMessages.putAll(assignmentMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll));
-        allMessages.putAll(auctionEndedMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll));
+        HashMap<Integer, String> allMessages = new HashMap<>();
+        allMessages.putAll(getMessagesFromStore());
+        allMessages.putAll(getAssignmentMessages());
+        allMessages.putAll(getAuctionEndedMessages());
         return allMessages;
     }
 

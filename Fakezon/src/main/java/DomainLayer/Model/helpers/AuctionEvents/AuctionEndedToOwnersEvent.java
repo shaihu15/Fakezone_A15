@@ -1,4 +1,4 @@
-package DomainLayer.Model.helpers;
+package DomainLayer.Model.helpers.AuctionEvents;
 
 public class AuctionEndedToOwnersEvent {
     private final int storeId;

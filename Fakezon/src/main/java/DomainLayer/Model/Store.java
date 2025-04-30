@@ -19,6 +19,11 @@ import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
 import DomainLayer.Model.helpers.*;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
+
 import java.util.AbstractMap.SimpleEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -348,7 +353,7 @@ public class Store implements IStore {
                     this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID, auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                 }
                 else {
-                    this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID, auctionProduct.getBasePrice()));
+                    this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID, auctionProduct.getBasePrice(),"Auction failed, no bids were placed"));
                     auctionProducts.remove(productID);
                 }
             } else {
@@ -385,14 +390,18 @@ public class Store implements IStore {
     private void handeleIfApprovedAuction(AuctionProduct auctionProduct){
         if(auctionProduct.isApprovedByAllOwners()) {
             if(auctionProduct.getQuantity() <= 0) {
+                this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+                this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getBasePrice(),"Auction failed, out of stock"));
                 throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID() + " is out of stock in store ID: " + storeID);
             }
             auctionProduct.setQuantity(auctionProduct.getQuantity()-1);
-            this.publisher.publishEvent(new ApprovedBidOnAuctionEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO()));
+            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO()));
         }
     }
     private void handeleIfDeclinedAuction(AuctionProduct auctionProduct){
-        this.publisher.publishEvent(new DeclinedBidOnAuctionEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+        this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+        this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getBasePrice(),"Auction failed, declined by owners"));
+
         auctionProducts.remove(auctionProduct.getProductID());
 
     }

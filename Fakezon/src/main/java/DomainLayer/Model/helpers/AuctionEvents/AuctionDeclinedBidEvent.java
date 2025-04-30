@@ -1,21 +1,16 @@
-package DomainLayer.Model.helpers;
+package DomainLayer.Model.helpers.AuctionEvents;
 
-import ApplicationLayer.DTO.ProductDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
-
-public class ApprovedBidOnAuctionEvent {
+public class AuctionDeclinedBidEvent {
     private final int storeId;
     private final int productID;
     private final int userIDHighestBid;
     private final double currentHighestBid;
-    private final StoreProductDTO storeProductDTO;
 
-    public ApprovedBidOnAuctionEvent(int storeId, int productID, int userIDHighestBid, double currentHighestBid, StoreProductDTO storeProductDTO) {
+    public AuctionDeclinedBidEvent(int storeId, int productID, int userIDHighestBid, double currentHighestBid) {
         this.storeId = storeId;
         this.productID = productID;
         this.userIDHighestBid = userIDHighestBid;
         this.currentHighestBid = currentHighestBid;
-        this.storeProductDTO = storeProductDTO;
     }
 
     public int getStoreId(){
@@ -29,9 +24,6 @@ public class ApprovedBidOnAuctionEvent {
     }
     public int getProductID(){
         return this.productID;
-    }
-    public StoreProductDTO getStoreProductDTO(){
-        return this.storeProductDTO;
     }
 
 }
