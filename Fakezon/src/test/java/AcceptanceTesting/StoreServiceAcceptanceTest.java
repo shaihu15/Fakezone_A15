@@ -11,6 +11,7 @@ import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -110,12 +111,13 @@ public class StoreServiceAcceptanceTest {
         verify(storeRepository).findById(storeId);
     }
     @Test
-    void addStoreOwner_OwnerRequest_Success(){
+    void addStoreOwner_OwnerRequest_UserAccept_Success(){
         when(storeRepository.findById(storeId)).thenReturn(store);
         storeService.addStoreOwner(storeId, founderId, noPermsId);
+        storeService.acceptAssignment(storeId, noPermsId);
         List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
         assertTrue(owners.contains(noPermsId));
-        verify(storeRepository, times(2)).findById(storeId);
+        verify(storeRepository, times(3)).findById(storeId);
     }
 
     @Test
@@ -141,6 +143,7 @@ public class StoreServiceAcceptanceTest {
     void addStoreOwner_alreadyOwner_shouldThrow(){
         when(storeRepository.findById(storeId)).thenReturn(store);
         storeService.addStoreOwner(storeId, founderId, noPermsId);
+        storeService.acceptAssignment(storeId, noPermsId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.addStoreOwner(storeId, founderId, noPermsId));
 
@@ -148,13 +151,14 @@ public class StoreServiceAcceptanceTest {
     }
 
     @Test
-    void addStoreManager_ownerRequest_success(){
+    void addStoreManager_ownerRequestUserAccept_success(){
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         HashMap<Integer, List<StoreManagerPermission>> managers = storeService.getStoreManagers(storeId, founderId);
         assertTrue(managers.containsKey(noPermsId));
-        verify(storeRepository, times(2)).findById(storeId);
+        verify(storeRepository, times(3)).findById(storeId);
     }
 
     @Test
@@ -189,6 +193,7 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         assertTrue(storeService.getStoreManagers(storeId, founderId).containsKey(noPermsId));
         
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
@@ -202,11 +207,13 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         assertTrue(storeService.getStoreManagers(storeId, founderId).containsKey(noPermsId));
         storeService.addStoreOwner(storeId, founderId, noPermsId);
+        storeService.acceptAssignment(storeId, noPermsId);
         assertFalse(storeService.getStoreManagers(storeId, founderId).containsKey(noPermsId));
         assertTrue(storeService.getStoreOwners(storeId, founderId).contains(noPermsId));
-        verify(storeRepository,times(5)).findById(storeId);
+        verify(storeRepository,times(7)).findById(storeId);
     }
 
     @Test
@@ -214,9 +221,11 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         assertTrue(storeService.getStoreManagers(storeId, founderId).containsKey(noPermsId));
         int tempOwner = 1234;
         storeService.addStoreOwner(storeId, founderId, tempOwner);
+        storeService.acceptAssignment(storeId, tempOwner);
         assertTrue(storeService.getStoreOwners(storeId, founderId).contains(tempOwner));
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.addStoreOwner(storeId, tempOwner, noPermsId));
@@ -229,6 +238,7 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         List<StoreManagerPermission> newPerms = new ArrayList<>(List.of(StoreManagerPermission.DISCOUNT_POLICY));
         storeService.addStoreManagerPermissions(storeId, founderId, noPermsId, newPerms);
         List<StoreManagerPermission> returnedPerms = storeService.getStoreManagers(storeId, founderId).get(noPermsId);
@@ -237,7 +247,7 @@ public class StoreServiceAcceptanceTest {
         storeService.addStoreManagerPermissions(storeId, founderId, noPermsId, new ArrayList<>(List.of(StoreManagerPermission.DISCOUNT_POLICY))); // should succeed with no change
         List<StoreManagerPermission> returnedPerms2 = storeService.getStoreManagers(storeId, founderId).get(noPermsId);
         assertTrue(returnedPerms.equals(returnedPerms2));
-        verify(storeRepository, times(5)).findById(storeId);
+        verify(storeRepository, times(6)).findById(storeId);
     }
 
     @Test
@@ -245,6 +255,7 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         List<StoreManagerPermission> newPerms = new ArrayList<>(List.of(StoreManagerPermission.DISCOUNT_POLICY));
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.addStoreManagerPermissions(storeId, noPermsId, noPermsId, newPerms));
@@ -265,8 +276,10 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         int tmp_owner = 222;
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, tmp_owner, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.addStoreManagerPermissions(storeId, founderId, noPermsId, perms));
         assertTrue(ex.getMessage().contains("appointor can change/remove"));
@@ -277,10 +290,11 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         storeService.removeStoreManagerPermissions(storeId, founderId, noPermsId, new ArrayList<>(List.of(StoreManagerPermission.INVENTORY)));
         List<StoreManagerPermission> returnedPerms = storeService.getStoreManagers(storeId, founderId) .get(noPermsId);
         assertTrue(returnedPerms.equals(new ArrayList<>(List.of(StoreManagerPermission.DISCOUNT_POLICY))));
-        verify(storeRepository, times(3)).findById(storeId);
+        verify(storeRepository, times(4)).findById(storeId);
     }
 
     @Test
@@ -288,6 +302,7 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.DISCOUNT_POLICY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreManagerPermissions(storeId, noPermsId, noPermsId, new ArrayList<>(List.of(StoreManagerPermission.INVENTORY))));
         assertTrue(ex.getMessage().contains("not a valid store owner"));
@@ -307,13 +322,14 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.PURCHASE_POLICY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreManagerPermissions(storeId, founderId, noPermsId, new ArrayList<>(List.of(StoreManagerPermission.INVENTORY ,StoreManagerPermission.DISCOUNT_POLICY))));
         assertTrue(ex.getMessage().contains("can not remove permission"));
         List<StoreManagerPermission> returnedPerms = storeService.getStoreManagers(storeId, founderId).get(noPermsId);
         boolean equal = returnedPerms.size() == 2 && returnedPerms.contains(StoreManagerPermission.INVENTORY) && returnedPerms.contains(StoreManagerPermission.PURCHASE_POLICY); // should reset to original perms on failure
         assertTrue(equal);
-        verify(storeRepository,times(3)).findById(storeId);
+        verify(storeRepository,times(4)).findById(storeId);
     }
 
     @Test
@@ -321,13 +337,14 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.PURCHASE_POLICY));
         storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreManagerPermissions(storeId, founderId, noPermsId, new ArrayList<>(perms)));
         assertTrue(ex.getMessage().contains("permissions can not be empty"));
         List<StoreManagerPermission> returnedPerms = storeService.getStoreManagers(storeId, founderId).get(noPermsId);
         boolean equal = returnedPerms.size() == 2 && returnedPerms.contains(StoreManagerPermission.INVENTORY) && returnedPerms.contains(StoreManagerPermission.PURCHASE_POLICY); // should reset to original perms on failure
         assertTrue(equal);
-        verify(storeRepository,times(3)).findById(storeId);
+        verify(storeRepository,times(4)).findById(storeId);
     }
 
     @Test
@@ -335,8 +352,10 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         int tmp_owner = 222;
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY, StoreManagerPermission.PURCHASE_POLICY));
         storeService.addStoreManager(storeId, tmp_owner, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         List<StoreManagerPermission> permsToRemove = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreManagerPermissions(storeId, founderId, noPermsId, permsToRemove));
@@ -352,9 +371,13 @@ public class StoreServiceAcceptanceTest {
         int tmp_mngr2 = 60;
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         storeService.addStoreOwner(storeId, tmp_owner, tmp_owner2);
+        storeService.acceptAssignment(storeId, tmp_owner2);
         storeService.addStoreManager(storeId, tmp_owner2, tmp_mngr, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr);
         storeService.addStoreManager(storeId, tmp_owner2, tmp_mngr2, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr2);
         storeService.removeStoreOwner(storeId, founderId, tmp_owner);
         List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
         HashMap<Integer,List<StoreManagerPermission>> managers = storeService.getStoreManagers(storeId, founderId);
@@ -363,7 +386,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(!managers.containsKey(tmp_mngr));
         assertTrue(!managers.containsKey(tmp_mngr));
         assertTrue(owners.contains(founderId) && owners.size() == 1);
-        verify(storeRepository,times(7)).findById(storeId);
+        verify(storeRepository,times(11)).findById(storeId);
     }
     
     @Test
@@ -375,9 +398,13 @@ public class StoreServiceAcceptanceTest {
         int tmp_mngr2 = 60;
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         storeService.addStoreOwner(storeId, tmp_owner, tmp_owner2);
+        storeService.acceptAssignment(storeId, tmp_owner2);
         storeService.addStoreManager(storeId, tmp_owner2, tmp_mngr, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr);
         storeService.addStoreManager(storeId, tmp_owner2, tmp_mngr2, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr2);
         storeService.removeStoreOwner(storeId, tmp_owner, tmp_owner);
         List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
         HashMap<Integer,List<StoreManagerPermission>> managers = storeService.getStoreManagers(storeId, founderId);
@@ -386,7 +413,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(!managers.containsKey(tmp_mngr));
         assertTrue(!managers.containsKey(tmp_mngr));
         assertTrue(owners.contains(founderId) && owners.size() == 1);
-        verify(storeRepository,times(7)).findById(storeId);
+        verify(storeRepository,times(11)).findById(storeId);
     }
 
     @Test
@@ -394,6 +421,7 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         int tmp_owner = 30;
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreOwner(storeId, noPermsId, tmp_owner));
@@ -416,7 +444,9 @@ public class StoreServiceAcceptanceTest {
         when(storeRepository.findById(storeId)).thenReturn(store);
         int tmp_owner = 30;
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         storeService.addStoreOwner(storeId, tmp_owner, noPermsId);
+        storeService.acceptAssignment(storeId, noPermsId);
         List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreOwner(storeId, founderId, noPermsId));
@@ -443,9 +473,13 @@ public class StoreServiceAcceptanceTest {
         int tmp_mngr2 = 60;
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         storeService.addStoreOwner(storeId, tmp_owner, tmp_owner2);
+        storeService.acceptAssignment(storeId, tmp_owner2);
         storeService.addStoreManager(storeId, tmp_owner2, tmp_mngr, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr);
         storeService.addStoreManager(storeId, tmp_owner2, tmp_mngr2, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr2);
         List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
         storeService.removeStoreManager(storeId, tmp_owner2, tmp_mngr2);
         HashMap<Integer,List<StoreManagerPermission>> managers = storeService.getStoreManagers(storeId, founderId);
@@ -454,7 +488,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(managers.containsKey(tmp_mngr));
         assertTrue(owners.equals(storeService.getStoreOwners(storeId, founderId)));
         assertTrue(!managers.containsKey(tmp_mngr2));
-        verify(storeRepository,times(8)).findById(storeId);
+        verify(storeRepository,times(12)).findById(storeId);
     }
 
     @Test
@@ -463,6 +497,7 @@ public class StoreServiceAcceptanceTest {
         int tmp_mngr = 30;
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreManager(storeId, founderId, tmp_mngr, perms);
+        storeService.acceptAssignment(storeId, tmp_mngr);
         HashMap<Integer,List<StoreManagerPermission>> managers = storeService.getStoreManagers(storeId, founderId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreManager(storeId, noPermsId, tmp_mngr));
@@ -484,11 +519,170 @@ public class StoreServiceAcceptanceTest {
         int tmp_owner = 30;
         List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
         storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
         storeService.addStoreManager(storeId, tmp_owner, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
         HashMap<Integer,List<StoreManagerPermission>> managers = storeService.getStoreManagers(storeId, founderId);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
                 storeService.removeStoreManager(storeId, founderId, noPermsId));
         assertTrue(ex.getMessage().contains("appointor can change/remove"));
         assertTrue(managers.equals(storeService.getStoreManagers(storeId, founderId)));
+    }
+
+    @Test
+    void addStoreOwner_OwnerRequestUserPending_success(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        storeService.addStoreOwner(storeId, founderId, noPermsId);
+        List<Integer> pending = storeService.getPendingOwners(storeId, founderId);
+        assertTrue(pending.contains(noPermsId));
+        List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
+        assertTrue(owners.equals(List.of(founderId)));
+        verify(storeRepository, times(3)).findById(storeId);
+    }
+
+    @Test
+    void declineAssignment_ForOwner_OwnerRequestUserDecline_success(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        storeService.addStoreOwner(storeId, founderId, noPermsId);
+        List<Integer> pending = storeService.getPendingOwners(storeId, founderId);
+        assertTrue(pending.contains(noPermsId));
+        storeService.declineAssignment(storeId, noPermsId);
+        List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
+        assertTrue(owners.equals(List.of(founderId)));
+        pending = storeService.getPendingOwners(storeId, founderId);
+        assertTrue(!pending.contains(noPermsId));
+        verify(storeRepository, times(5)).findById(storeId);
+    }
+
+    @Test
+    void acceptAssignment_ForOwner_OwnerRequestUserAccept_success(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        storeService.addStoreOwner(storeId, founderId, noPermsId);
+        storeService.acceptAssignment(storeId, noPermsId);
+        List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
+        assertTrue(owners.contains(noPermsId));
+        verify(storeRepository, times(3)).findById(storeId);
+    }
+
+    @Test
+    void addStoreManager_OwnerRequestUserPending_success(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        List<Integer> pending = storeService.getPendingManagers(storeId, founderId);
+        assertTrue(pending.contains(noPermsId));
+        List<Integer> owners = storeService.getStoreOwners(storeId, founderId);
+        assertTrue(owners.equals(List.of(founderId)));
+        verify(storeRepository, times(3)).findById(storeId);
+    }
+
+    @Test
+    void declineAssignment_ForManager_OwnerRequestUserDecline_success(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        List<Integer> pending = storeService.getPendingManagers(storeId, founderId);
+        assertTrue(pending.contains(noPermsId));
+        storeService.declineAssignment(storeId, noPermsId);
+        List<Integer> managers = new ArrayList<>(storeService.getStoreManagers(storeId, founderId).keySet());
+        assertTrue(managers.isEmpty());
+        pending = storeService.getPendingManagers(storeId, founderId);
+        assertTrue(!pending.contains(noPermsId));
+        verify(storeRepository, times(5)).findById(storeId);
+    }
+
+    @Test
+    void acceptAssignment_ForManager_OwnerRequestUserAccept_success(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        storeService.acceptAssignment(storeId, noPermsId);
+        List<Integer> managers = new ArrayList<>(storeService.getStoreManagers(storeId, founderId).keySet());
+        assertTrue(managers.contains(noPermsId));
+        verify(storeRepository, times(3)).findById(storeId);
+    }
+
+    @Test
+    void acceptAssignment_UserNotPending_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                             () -> storeService.acceptAssignment(storeId, noPermsId));
+        assertTrue(ex.getMessage().contains("User " + noPermsId + " has no pending assignments"));
+        assertTrue(!storeService.getStoreOwners(storeId, founderId).contains(noPermsId));
+        assertTrue(!storeService.getStoreManagers(storeId, founderId).containsKey(noPermsId));
+    }
+
+    @Test
+    void acceptAssignment_ForOwner_AppointorNoLongerOwner_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        int tmp_owner = 123;
+        storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
+        storeService.addStoreOwner(storeId, tmp_owner, noPermsId);
+        storeService.removeStoreOwner(storeId, founderId, tmp_owner);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                    () -> storeService.acceptAssignment(storeId, noPermsId));
+        assertTrue(ex.getMessage().contains("is no longer a valid store owner"));
+        assertTrue(!storeService.getStoreOwners(storeId, founderId).contains(noPermsId));
+        assertTrue(!storeService.getPendingOwners(storeId, founderId).contains(noPermsId));
+    }
+
+    @Test
+    void acceptAssignment_ForManager_AppointorNoLongerOwner_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        int tmp_owner = 123;
+        storeService.addStoreOwner(storeId, founderId, tmp_owner);
+        storeService.acceptAssignment(storeId, tmp_owner);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreManager(storeId, tmp_owner, noPermsId, perms);
+        storeService.removeStoreOwner(storeId, founderId, tmp_owner);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                    () -> storeService.acceptAssignment(storeId, noPermsId));
+        assertTrue(ex.getMessage().contains("is no longer a valid store owner"));
+        assertTrue(!storeService.getStoreManagers(storeId, founderId).containsKey(noPermsId));
+        assertTrue(!storeService.getPendingManagers(storeId, founderId).contains(noPermsId));
+    }
+    
+    @Test
+    void addStoreOwner_AppointeeAlreadyPendingManager_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                    () -> storeService.addStoreOwner(storeId, founderId, noPermsId));
+        assertTrue(ex.getMessage().contains("Already pending user " + noPermsId + " approval for managment"));
+        assertTrue(storeService.getPendingManagers(storeId, founderId).contains(noPermsId));
+    }
+
+    @Test
+    void addStoreOwner_AppointeeAlreadyPendingOwner_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        storeService.addStoreOwner(storeId, founderId, noPermsId);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                    () -> storeService.addStoreOwner(storeId, founderId, noPermsId));
+        assertTrue(ex.getMessage().contains("Already pending user " + noPermsId + " approval for ownership"));
+        assertTrue(storeService.getPendingOwners(storeId, founderId).contains(noPermsId));
+    }
+
+    @Test
+    void addStoreManager_AppointeeAlreadyPendingManager_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreManager(storeId, founderId, noPermsId, perms);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                    () -> storeService.addStoreManager(storeId, founderId, noPermsId, perms));
+        assertTrue(ex.getMessage().contains("Already pending user " + noPermsId + " approval for managment"));
+        assertTrue(storeService.getPendingManagers(storeId, founderId).contains(noPermsId));
+    }
+
+    @Test
+    void addStoreManager_AppointeeAlreadyPendingOwner_shouldThrow(){
+        when(storeRepository.findById(storeId)).thenReturn(store);
+        List<StoreManagerPermission> perms = new ArrayList<>(List.of(StoreManagerPermission.INVENTORY));
+        storeService.addStoreOwner(storeId, founderId, noPermsId);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                                    () -> storeService.addStoreManager(storeId, founderId, noPermsId, perms));
+        assertTrue(ex.getMessage().contains("Already pending user " + noPermsId + " approval for ownership"));
+        assertTrue(storeService.getPendingOwners(storeId, founderId).contains(noPermsId));
     }
 }

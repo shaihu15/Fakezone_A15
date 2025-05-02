@@ -1,12 +1,16 @@
 package DomainLayer.Model;
 
-import java.util.HashMap;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.UserDTO;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+
+import org.apache.commons.lang3.ObjectUtils.Null;
 
 public class User {
     protected boolean isLoggedIn;
@@ -70,6 +74,10 @@ public class User {
 
     public int getUserId() {
         return userID;
+    }
+
+        public UserDTO toDTO() {
+        return new UserDTO(userID, null, -1);
     }
 
 }

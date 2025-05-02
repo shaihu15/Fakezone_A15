@@ -5,14 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import ApplicationLayer.DTO.UserDTO;
-import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.Model.Cart;
-import DomainLayer.Model.Order;
-import DomainLayer.Model.Registered;
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Response;
+import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public interface IUserService {
     Optional<Registered> getUserByUserName(String userName);
@@ -59,5 +58,13 @@ public interface IUserService {
     Cart getUserCart(int userId); // get the user's cart
 
     void saveCartOrder(int userId);
+
+    UserDTO convertUserToDTO(User user);
+  
+    Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+  
+    Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+  
+    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
 
 }
