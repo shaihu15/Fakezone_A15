@@ -13,13 +13,18 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang3.ObjectUtils.Null;
-import org.springframework.security.access.method.P;
 
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
 import DomainLayer.Model.helpers.*;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
+
 import java.util.AbstractMap.SimpleEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,6 +123,8 @@ public class Store implements IStore {
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
+
+    
 
     @Override
     public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
@@ -342,11 +349,67 @@ public class Store implements IStore {
         return prods;
     }
 
+    public void handeleAuctionEnd(int productID) {
+        if (auctionProducts.containsKey(productID)) {
+            AuctionProduct auctionProduct = auctionProducts.get(productID);
+            if (auctionProduct.getDaysToEnd() <= 0) {
+                if(auctionProduct.getUserIDHighestBid() != -1) {
+                    auctionProduct.setOwnersToApprove(storeOwners);
+                    this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID, auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+                }
+                else {
+                    this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID, auctionProduct.getBasePrice(),"Auction failed, no bids were placed"));
+                    auctionProducts.remove(productID);
+                }
+            } else {
+                throw new IllegalArgumentException("Auction for product with ID: " + productID + " has not ended yet.");
+            }
+        } else {
+            throw new IllegalArgumentException(
+                    "Product with ID: " + productID + " is not an auction product in store ID: " + storeID);
+        }
+    }
+
     @Override
     public void receivingMessage(int userID, String message) {
         messagesFromUsers.add(new SimpleEntry<>(userID, message));
     }
 
+    public void receivedResponseForAuctionByOwner(int ownerId,int productID, boolean approved) {
+        if(!isOwner(ownerId))
+            throw new IllegalArgumentException("User with ID: " + ownerId + " is not a store owner");
+        if (auctionProducts.containsKey(productID)) {
+            AuctionProduct auctionProduct = auctionProducts.get(productID);
+            if (approved) {
+                auctionProduct.setBidApprovedByOwners(ownerId, true);
+                handeleIfApprovedAuction(auctionProduct);
+            } else {
+                auctionProduct.setBidApprovedByOwners(ownerId, false);
+                handeleIfDeclinedAuction(auctionProduct);
+            }
+        } else {
+            throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
+        }
+    }
+
+    private void handeleIfApprovedAuction(AuctionProduct auctionProduct){
+        if(auctionProduct.isApprovedByAllOwners()) {
+            if(auctionProduct.getQuantity() <= 0) {
+                this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+                this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getBasePrice(),"Auction failed, out of stock"));
+                throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID() + " is out of stock in store ID: " + storeID);
+            }
+            auctionProduct.setQuantity(auctionProduct.getQuantity()-1);
+            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO()));
+        }
+    }
+    private void handeleIfDeclinedAuction(AuctionProduct auctionProduct){
+        this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+        this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getBasePrice(),"Auction failed, declined by owners"));
+
+        auctionProducts.remove(auctionProduct.getProductID());
+
+    }
     @Override
     public void sendMessage(int managerId, int userID, String message) {
         rolesLock.lock();

@@ -626,7 +626,71 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private OrderDTO createOrderDTO(IOrder order) {
+
+	@Override
+	public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+		try{
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getAllMessages(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+	}
+
+	@Override
+	public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
+		try{
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getAssignmentMessages(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }	}
+
+	@Override
+	public Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID) {
+		try{
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getAuctionEndedtMessages(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    	}
+
+    @Override
+    public Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
+        try {
+            if (this.userService.isUserLoggedIn(requesterId)) {
+                this.storeService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
+                logger.info("System Service - User sent response for auction: " + productId + " in store: " + storeId
+                        + " by user: " + requesterId + " with accept: " + accept);
+                return new Response<String>("Response sent successfully", "Response sent successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during sending response for auction: " + e.getMessage());
+            return new Response<String>(null, "Error during sending response for auction: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }    
+    }
+
+
+    private OrderDTO createOrderDTO(Order order) {
         List<ProductDTO> productDTOS = new ArrayList<>();
         for (int productId : order.getProductIds()) {
             ProductDTO productDTO = this.productService.viewProduct(productId);
