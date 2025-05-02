@@ -1,6 +1,5 @@
 package ApplicationLayer.Interfaces;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -8,14 +7,13 @@ import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.Order;
-import ApplicationLayer.DTO.StoreRolesDTO;
 
 public interface ISystemService {
     // Access to core services
@@ -77,7 +75,7 @@ public interface ISystemService {
     Response<String> closeStoreByFounder(int storeId, int userId);
 
 
-    Response<String> puchseCart(int userId, PaymentMethod paymentMethod, String deliveryMethod,
+    Response<String> purchaseCart(int userId, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails); // purchase the cart
 

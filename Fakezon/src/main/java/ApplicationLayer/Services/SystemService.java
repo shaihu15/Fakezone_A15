@@ -610,17 +610,13 @@ public class SystemService implements ISystemService {
     }
   
     @Override
-    public Response<String> puchseCart(int userId, PaymentMethod paymentMethod, String deliveryMethod,
+    public Response<String> purchaseCart(int userId, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails) {
         double price = 0;
         Cart cart = null;
         try{
             logger.info("System service - user " + userId + " trying to purchase cart");
-            if (!this.userService.isUserLoggedIn(userId)) {
-                logger.error("System Service - User is not logged in: " + userId);
-                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
-            }
             cart = this.userService.getUserCart(userId);
             if(cart.getAllProducts().isEmpty()){
                 logger.error("System Service - Cart is empty: " + userId);
