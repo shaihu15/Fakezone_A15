@@ -122,4 +122,5 @@ public interface IStoreService {
         List<Integer> getPendingOwners(int storeId, int requesterId);
 
         List<Integer> getPendingManagers(int storeId, int requesterId);
+
 }
