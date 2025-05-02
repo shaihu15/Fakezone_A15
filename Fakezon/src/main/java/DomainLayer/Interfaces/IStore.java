@@ -90,4 +90,15 @@ public interface IStore {
     ProductRating getStoreProductRating(int userID, int productID);
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
+
+    boolean canViewOrders(int userId);
+
+    void acceptAssignment(int userId);
+
+    void declineAssignment(int userId);
+
+    List<Integer> getPendingOwners(int requesterId);
+
+    List<Integer> getPendingManagers(int requesterId);
+    
 }

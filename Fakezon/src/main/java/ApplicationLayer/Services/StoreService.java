@@ -544,4 +544,100 @@ public class StoreService implements IStoreService {
         return prod;
     }
 
+    @Override
+    public boolean canViewOrders(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("canViewOrders - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.canViewOrders(userId);
+    }
+
+    @Override
+    public void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("sendResponseForAuctionByOwner - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try {
+            store.receivedResponseForAuctionByOwner(requesterId, productId, accept);
+            logger.info("Response for auction sent by owner: " + requesterId + " for product: " + productId
+                    + " in store: " + storeId);
+        } catch (IllegalArgumentException e) {
+            logger.error("sendResponseForAuctionByOwner - Product not found: " + productId);
+            throw new IllegalArgumentException("Product not found");
+        }
+}
+
+    public void acceptAssignment(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("acceptAssignment - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            store.acceptAssignment(userId);
+            logger.info("User " + userId + " accepted assignment to store " + storeId);
+        }
+        catch(Exception e){
+            logger.error("acceptAssignment failed for user " + userId + " store " + storeId + " error: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public void declineAssignment(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("declineAssignment - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            store.declineAssignment(userId);
+            logger.info("User " + userId + " declined assignment to store " + storeId);
+        }
+        catch(Exception e){
+            logger.error("declineAssignment failed for user " + userId + " store " + storeId + " error: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public List<Integer> getPendingOwners(int storeId, int requesterId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getPendingOwners - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            List<Integer> pending = store.getPendingOwners(requesterId);
+            logger.info("getPendingOwners success store " + storeId + " user " + requesterId);
+            return pending;
+        }
+        catch (Exception e){
+            logger.error("getPendingOwners failure - " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public List<Integer> getPendingManagers(int storeId, int requesterId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getPendingManagers - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try{
+            List<Integer> pending = store.getPendingManagers(requesterId);
+            logger.info("getPendingManagers success store " + storeId + " user " + requesterId);
+            return pending;
+        }
+        catch (Exception e){
+            logger.error("getPendingManagers failure - " + e.getMessage());
+            throw e;
+        }
+    }
+
 }

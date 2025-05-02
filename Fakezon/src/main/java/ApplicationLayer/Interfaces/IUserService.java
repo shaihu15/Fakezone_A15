@@ -57,5 +57,11 @@ public interface IUserService {
     List<StoreProductDTO> viewCart(int userId);
 
     UserDTO convertUserToDTO(User user);
+  
+    Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+  
+    Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+  
+    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
 
 }
