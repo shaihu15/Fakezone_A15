@@ -8,11 +8,12 @@ import java.util.Stack;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.Basket;
 import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
-import DomainLayer.Model.StoreRating;
+import  DomainLayer.Model.StoreRating;
 
 public interface IStore {
     String getName();
@@ -94,7 +95,7 @@ public interface IStore {
     double calcAmount(Basket basket);
 
     boolean canViewOrders(int userId);
-
+  
     void acceptAssignment(int userId);
 
     void declineAssignment(int userId);

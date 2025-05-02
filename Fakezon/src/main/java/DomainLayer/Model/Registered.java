@@ -46,6 +46,8 @@ public class Registered extends User {
         messagesFromUser = new Stack<>();
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
+        auctionEndedMessages = new LinkedList<>();
+
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {

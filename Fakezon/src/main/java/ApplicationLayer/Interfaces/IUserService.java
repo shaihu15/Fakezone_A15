@@ -10,9 +10,9 @@ import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
-
 public interface IUserService {
     Optional<Registered> getUserByUserName(String userName);
 
