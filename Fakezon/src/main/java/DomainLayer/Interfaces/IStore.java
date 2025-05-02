@@ -91,6 +91,8 @@ public interface IStore {
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 
+    boolean canViewOrders(int userId);
+
     void acceptAssignment(int userId);
 
     void declineAssignment(int userId);

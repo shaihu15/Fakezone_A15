@@ -1005,6 +1005,12 @@ public class Store implements IStore {
     }
 
     @Override
+    public boolean canViewOrders(int userId){
+        rolesLock.lock();
+        boolean ans = storeOwners.contains(userId) || (storeManagers.containsKey(userId) && storeManagers.get(userId).contains(StoreManagerPermission.VIEW_PURCHASES));
+        rolesLock.unlock();
+        return ans;
+    }    @Override
     public List<Integer> getPendingOwners(int requesterId){
         rolesLock.lock();
         if(!isOwner(requesterId)){

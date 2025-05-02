@@ -113,6 +113,8 @@ public interface IStoreService {
         void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
         void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
 
+        boolean canViewOrders(int storeId, int userId);
+
         void acceptAssignment(int storeId, int userId);
 
         void declineAssignment(int storeId, int userId);
@@ -120,4 +122,5 @@ public interface IStoreService {
         List<Integer> getPendingOwners(int storeId, int requesterId);
 
         List<Integer> getPendingManagers(int storeId, int requesterId);
+
 }
