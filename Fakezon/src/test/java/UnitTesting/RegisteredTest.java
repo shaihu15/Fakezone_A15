@@ -133,7 +133,7 @@ public class RegisteredTest {
         int storeID = 1;
         String message = "Hello, this is a test message.";
         registeredUser.sendMessageToStore(storeID, message);
-        assertEquals(message, registeredUser.getMessagesFromUser().get(0).getValue(),
+        assertEquals(message, registeredUser.getMessagesFromUser().get(storeID),
                 "Message should be received successfully");
     }
 
@@ -151,5 +151,15 @@ public class RegisteredTest {
         assertEquals(0, registeredUser.getOrders().size(),
                 "Orders should be empty initially");
     }
+    @Test
+    void givenValidOrder_whenSaveOrder_returnTrue() {
+        OrderDTO order = mock(OrderDTO.class);
+        int orderID = 1;
+        when(order.getOrderId()).thenReturn(orderID);
+        registeredUser.saveOrder(order);
+        assertEquals(order, registeredUser.getOrders().get(orderID),
+                "Order should be saved successfully");
+    }
+
 
 }

@@ -54,5 +54,7 @@ public interface IUserService {
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
     List<StoreProductDTO> viewCart(int userId);
-
+    Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
 }
