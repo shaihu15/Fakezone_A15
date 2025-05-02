@@ -1,9 +1,12 @@
 package DomainLayer.Model;
 
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.UserDTO;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.commons.lang3.ObjectUtils.Null;
 
 public class User {
     protected boolean isLoggedIn;
@@ -47,6 +50,10 @@ public class User {
         List<StoreProductDTO> products = cart.getAllProducts();
         return products;
 
+    }
+
+        public UserDTO toDTO() {
+        return new UserDTO(userID, null, -1);
     }
 
 }

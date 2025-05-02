@@ -19,6 +19,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
@@ -320,6 +321,14 @@ public class UserService implements IUserService {
         }
         return null;
     }
+
+
+    public UserDTO convertUserToDTO(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        return user.toDTO();
+    }    
 
     @Override
     public Response<HashMap<Integer, String>> getAllMessages(int userID) {

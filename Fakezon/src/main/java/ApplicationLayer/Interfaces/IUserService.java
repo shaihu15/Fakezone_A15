@@ -9,6 +9,7 @@ import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -54,7 +55,13 @@ public interface IUserService {
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
     List<StoreProductDTO> viewCart(int userId);
+
+    UserDTO convertUserToDTO(User user);
+  
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+  
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+  
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+
 }
