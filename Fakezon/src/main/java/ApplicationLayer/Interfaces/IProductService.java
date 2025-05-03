@@ -10,6 +10,7 @@ public interface IProductService {
     int addProduct(String productName, String productDescription); // other parameters can be added as needed
     void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds); // other parameters can be added as needed
     void deleteProduct(int productId);
+    List<ProductDTO> getAllProducts();
     ProductDTO viewProduct(int productId); 
     List<ProductDTO> searchProducts(String keyword);
     void addProductsToStore(int storeId, Collection<Integer> productsIds);

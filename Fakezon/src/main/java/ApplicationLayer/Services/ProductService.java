@@ -65,6 +65,22 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    public List<ProductDTO> getAllProducts() {
+        try {
+            Collection<IProduct> products = productRepository.getAllProducts();
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(), new HashSet<>(product.getStoresIds())))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to get all products, received error {}", e);
+            throw e;
+        } finally {
+            logger.info("All products were retrieved");
+        }
+    }
+
+    @Override
     public ProductDTO viewProduct(int productId) {
         try {
             IProduct product = productRepository.getProductById(productId);
