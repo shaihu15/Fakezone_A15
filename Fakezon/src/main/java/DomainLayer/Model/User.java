@@ -15,14 +15,14 @@ import org.apache.commons.lang3.ObjectUtils.Null;
 
 public class User {
     protected boolean isLoggedIn;
-    protected int userID;
+    protected int userId;
     protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
     protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     protected Cart cart;
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
+    protected static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public User() {
-        this.userID = idCounter.incrementAndGet(); // auto-increment userID
+        this.userId = idCounter.incrementAndGet(); // auto-increment userID
         this.cart = new Cart();
         this.isLoggedIn = false;
         this.orders = new HashMap<>();
@@ -74,11 +74,14 @@ public class User {
     }
 
     public int getUserId() {
-        return userID;
+        return userId;
     }
 
         public UserDTO toDTO() {
-        return new UserDTO(userID, null, -1);
+        return new UserDTO(userId, null, -1);
+    }
+    public void setUserId(int userId) { ///this one is only for testing purposes, will 
+        this.userId = userId;
     }
 
 }

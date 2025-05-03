@@ -20,7 +20,7 @@ public interface IUserService {
 
     List<Registered> getAllUsers();
 
-    UserDTO registerUser(String email, String password, LocalDate dateOfBirth);
+    UserDTO registerUser(String email, String password, LocalDate dateOfBirth, String country); // add a new user
 
     void deleteUser(String userName);// need?
 
@@ -49,7 +49,7 @@ public interface IUserService {
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
 
 
-    UserDTO addUser(String password, String email, LocalDate dateOfBirth); // add a new user
+    UserDTO addUser(String password, String email, LocalDate dateOfBirth, String country); // add a new user
 
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
@@ -66,5 +66,7 @@ public interface IUserService {
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
   
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+
+    Optional<User> getAnyUserById(int Id); // get any user by id, guest or registered
 
 }

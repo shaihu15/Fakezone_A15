@@ -37,8 +37,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO registerUser(String email, String password, LocalDate dateOfBirth) {
-        Registered user = new Registered(email, password, dateOfBirth);
+    public UserDTO registerUser(String email, String password, LocalDate dateOfBirth, String country) {
+        Registered user = new Registered(email, password, dateOfBirth, country);
         // Check if the user already exists
         Optional<Registered> existingUser = userRepository.findByUserName(email);
         if (existingUser.isPresent()) {
@@ -270,10 +270,10 @@ public class UserService implements IUserService {
 
 
     @Override
-    public UserDTO addUser(String password, String email, LocalDate dateOfBirth) {
+    public UserDTO addUser(String password, String email, LocalDate dateOfBirth, String country) {
         Registered user;
         try {
-            user = new Registered(email, password, dateOfBirth);
+            user = new Registered(email, password, dateOfBirth, country);
             userRepository.addUser(user);
             logger.info("User added: " + email);
         } catch (Exception e) {
@@ -433,6 +433,17 @@ public class UserService implements IUserService {
         } else {
             logger.error("User not found: " + userID);
             return new Response<>(null, "User not found", false);
+        }
+    }
+
+    @Override
+    public Optional<User> getAnyUserById(int Id) {
+        Optional<User> user = userRepository.findAllById(Id);
+        if (user.isPresent()) {
+            return user;
+        } else {
+            logger.error("User not found: " + Id);
+            throw new IllegalArgumentException("User not found");
         }
     }
 }

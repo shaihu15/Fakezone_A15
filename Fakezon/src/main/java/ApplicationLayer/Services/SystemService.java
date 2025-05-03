@@ -4,10 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import ApplicationLayer.Response;
 import InfrastructureLayer.Repositories.StoreRepository;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,8 @@ import DomainLayer.Model.Cart;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import DomainLayer.Model.User;
+import java.util.Arrays;
 
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
@@ -323,7 +327,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<String> guestRegister(String email, String password, String dateOfBirth) {
+    public Response<String> guestRegister(String email, String password, String dateOfBirth, String country) {
         logger.info("System service - user trying to register " + email);
         LocalDate dateOfBirthLocalDate;
         try {
@@ -332,7 +336,13 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
             return new Response<>(null, "Invalid date of birth format. Expected format: YYYY-MM-DD", false, ErrorType.INVALID_INPUT);
         }
-        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
+        if(isValidCountryCode(country)) {
+            logger.info("System Service - Country code is valid: " + country);
+        } else {
+            logger.error("System Service - Invalid country code: " + country);
+            return new Response<>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
+        }
+        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR);
@@ -673,7 +683,7 @@ public class SystemService implements ISystemService {
     	}
   
     @Override
-    public Response<String> purchaseCart(int userId, PaymentMethod paymentMethod, String deliveryMethod,
+    public Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails) {
         double price = 0;
@@ -685,7 +695,18 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Cart is empty: " + userId);
                 return new Response<String>(null, "Cart is empty", false, ErrorType.INVALID_INPUT);
             }
-            price = this.storeService.calcAmount(cart);
+            if(isValidCountryCode(country)) {
+                logger.info("System Service - Country code is valid: " + country);
+            } else {
+                logger.error("System Service - Invalid country code: " + country);
+                return new Response<String>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
+            }
+            Optional<User> user = this.userService.getAnyUserById(userId);
+            if(!user.isPresent()){
+                logger.error("System Service - User not found: " + userId);
+                return new Response<String>(null, "User not found", false, ErrorType.INVALID_INPUT);
+            }
+            price = this.storeService.calcAmount(cart,dob);
            logger.info("System Service - User "+userId + "cart price: " + price);
             
         }
@@ -701,7 +722,7 @@ public class SystemService implements ISystemService {
             return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
-            this.deliveryService.deliver(address, recipient, packageDetails);
+            this.deliveryService.deliver(country, address, recipient, packageDetails);
             logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
             
         } catch (Exception e) {
@@ -721,14 +742,14 @@ public class SystemService implements ISystemService {
                 this.storeService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
                 logger.info("System Service - User sent response for auction: " + productId + " in store: " + storeId
                         + " by user: " + requesterId + " with accept: " + accept);
-                return new Response<String>("Response sent successfully", "Response sent successfully", true);
+                return new Response<>("Response sent successfully", "Response sent successfully", true);
             } else {
                 logger.error("System Service - User is not logged in: " + requesterId);
-                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during sending response for auction: " + e.getMessage());
-            return new Response<String>(null, "Error during sending response for auction: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+            return new Response<>(null, "Error during sending response for auction: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }    
     }
 
@@ -830,7 +851,11 @@ public class SystemService implements ISystemService {
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
-
+    // county Validation method
+    private boolean isValidCountryCode(String code) {
+        String[] isoCountries = Locale.getISOCountries();
+        return Arrays.asList(isoCountries).contains(code);
+    }
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
     // if (authenticatorService.isValid(sessionToken)) {

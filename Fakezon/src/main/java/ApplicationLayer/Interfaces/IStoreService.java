@@ -13,6 +13,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.User;
+import java.time.LocalDate;
 
 public interface IStoreService {
 
@@ -105,7 +106,7 @@ public interface IStoreService {
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
-        double calcAmount(User user,Cart cart);
+        double calcAmount(Cart cart, LocalDate dobInput);
   
         void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
         void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);

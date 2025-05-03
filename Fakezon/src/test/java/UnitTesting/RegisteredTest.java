@@ -22,12 +22,13 @@ public class RegisteredTest {
     private String email = "email@com";
     private String password = "password1234";
     private int userID;
+    private String country = "IL";
 
     @BeforeEach
     void setUp() {
         LocalDate dateOfBirth = LocalDate.of(2000, 1, 1); // Example date of birth
-        registeredUser = new Registered(email, password, dateOfBirth);
-        userID = registeredUser.getUserID();
+        registeredUser = new Registered(email, password, dateOfBirth,country);
+        userID = registeredUser.getUserId();
     }
 
     @Test

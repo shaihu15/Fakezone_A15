@@ -1,5 +1,6 @@
 package DomainLayer.Interfaces;
 
+import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.List;
@@ -93,7 +94,7 @@ public interface IStore {
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 
-    double calcAmount(User user,Basket basket);
+    double calcAmount(Basket basket, LocalDate dob);
 
     boolean canViewOrders(int userId);
   

@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.HashMap;
@@ -545,7 +546,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public double calcAmount(User user,Cart cart) {
+    public double calcAmount(Cart cart, LocalDate dob) {
         double totalAmount = 0;
 
         for (Basket basket : cart.getBaskets()) {
@@ -556,7 +557,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             double basketAmount;
-            basketAmount = store.calcAmount(user,basket);
+            basketAmount = store.calcAmount(basket,dob);
             totalAmount += basketAmount;
             logger.info("basket amount calculated: " +basketAmount + " in store: " + id);
 

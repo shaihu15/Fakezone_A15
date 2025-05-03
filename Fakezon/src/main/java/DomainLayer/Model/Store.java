@@ -27,6 +27,7 @@ import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 import DomainLayer.Model.helpers.Tree;
+import java.time.LocalDate;
 
 public class Store implements IStore {
 
@@ -981,7 +982,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public double calcAmount(User user,Basket basket) {
+    public double calcAmount(Basket basket, LocalDate dob) {
         List<StoreProductDTO> products = basket.getProducts();
         double amount = 0;
         for (StoreProductDTO product : products) {
@@ -992,7 +993,7 @@ public class Store implements IStore {
             int productId = product.getProductId();
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
-                if (!policy.canPurchase(user, productId, product.getQuantity())) {
+                if (!policy.canPurchase(dob, productId, product.getQuantity())) {
                     throw new IllegalArgumentException(
                             "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
                 }

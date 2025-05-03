@@ -1,24 +1,38 @@
 package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
+import org.mockito.InjectMocks;
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Services.UserService;
 import DomainLayer.Model.User;
+import InfrastructureLayer.Repositories.UserRepository;
+import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Basket;
+import org.mockito.Mockito;
+import java.time.LocalDate;
 
 public class UserTest {
 
+    private IUserRepository userRepository; // Mocked user repository
+    
+    private UserService userService; // Class under test
     private User user;
-
     @BeforeEach
     void setUp() {
         // Initialize a User object before each test
         user = new User();
+        userRepository = new UserRepository();
+        userService = new UserService(userRepository); // Initialize the UserService with the mocked repository
     }
 
     @Test
@@ -88,4 +102,5 @@ public class UserTest {
         List<StoreProductDTO> cartProducts = user.viewCart();
         assertTrue(cartProducts.isEmpty(), "Cart should be empty after logout");
     }
+    
 }

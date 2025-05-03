@@ -35,8 +35,8 @@ public class Registered extends User {
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> auctionEndedMessages; // storeID -> message
-
-    public Registered(String email, String password, LocalDate dateOfBirth) {
+    private String state;
+    public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super();
         this.email = email;
         this.password = password;
@@ -47,6 +47,7 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
+        this.state = state;
 
     }
 
@@ -79,7 +80,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleResposeFromStore(ResponseFromStoreEvent event) {
-        if(event.getUserId() != this.userID) {
+        if(event.getUserId() != this.userId) {
             return false;
         }
         return true;
@@ -93,7 +94,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
-        if(event.getUserId() != this.userID) {
+        if(event.getUserId() != this.userId) {
             return false;
         }
         return true;
@@ -143,7 +144,7 @@ public class Registered extends User {
     }
 
     private boolean shouldHandleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
-        if(event.getUserIDHighestBid() != this.userID) {
+        if(event.getUserIDHighestBid() != this.userId) {
             return false;
         }
         return true;
@@ -159,7 +160,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
-        if(event.getUserIDHighestBid() != this.userID) {
+        if(event.getUserIDHighestBid() != this.userId) {
             return false;
         }
         return true;
@@ -228,10 +229,6 @@ public class Registered extends User {
         return false;
     }
 
-    public int getUserID() {
-        return userID;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -265,7 +262,7 @@ public class Registered extends User {
 
     @Override
     public UserDTO toDTO() {
-        return new UserDTO(userID, email, age);
+        return new UserDTO(userId, email, age);
     }
 
     
