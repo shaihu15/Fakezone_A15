@@ -9,15 +9,11 @@ import java.util.Stack;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-import DomainLayer.Enums.StoreManagerPermission;
-
-import DomainLayer.Model.DiscountPolicy;
-import DomainLayer.Model.Product;
-import DomainLayer.Model.PurchasePolicy;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.StoreManager;
-import DomainLayer.Model.StoreOwner;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.Cart;
+import DomainLayer.Model.User;
+import java.time.LocalDate;
 
 public interface IStoreService {
 
@@ -110,8 +106,11 @@ public interface IStoreService {
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
+        double calcAmount(Cart cart, LocalDate dobInput);
+  
         void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
         void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
 
         boolean canViewOrders(int storeId, int userId);
 

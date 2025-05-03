@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import DomainLayer.Model.Cart;
 import ApplicationLayer.Interfaces.IOrderService;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
@@ -132,5 +133,22 @@ public class OrderService implements IOrderService {
         return storeOrders;
 
 
+    }
+
+    @Override
+    public void addOrderCart(Cart cart, int userId, String address, PaymentMethod paymentMethod) {
+        for (Basket basket : cart.getBaskets()) {
+            if (basket.getProducts().isEmpty()) {
+                logger.error("Basket is empty, cannot create order.");
+                throw new IllegalArgumentException("Basket is empty, cannot create order.");
+            }// not sopposed to be here, but just in case
+            List<Integer> productIds = basket.getProducts().stream()
+                .map(StoreProductDTO::getProductId)
+                .toList();
+            IOrder order = new Order(userId, OrderState.SHIPPED, productIds, basket.getStoreID(), address, paymentMethod);
+            orderRepository.addOrder(order);
+            logger.info("Order created with ID: {}", order.getId());
+        }
+      
     }
 }

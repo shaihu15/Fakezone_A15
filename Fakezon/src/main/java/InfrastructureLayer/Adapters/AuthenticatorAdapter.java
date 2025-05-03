@@ -23,10 +23,10 @@ public class AuthenticatorAdapter implements IAuthenticator {
     }
 
     @Override
-    public String register(String email, String password, LocalDate dateOfBirth) {
+    public String register(String email, String password, LocalDate dateOfBirth, String country) {
         try {
             logger.info("Registering user with email: {}", email);
-            UserDTO userDTO = userService.registerUser(email, password, dateOfBirth);
+            UserDTO userDTO = userService.registerUser(email, password, dateOfBirth, country);
             if (userDTO != null) {
                 logger.info("User registered successfully: {}", userDTO.getUserEmail());
                 // Generate a token for the registered user with userId
@@ -50,7 +50,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
             // Generate a token for the logged-in user
             Optional<Registered> user = userService.getUserByUserName(email);
             if (user.isPresent()) {
-                String token = tokenService.generateToken(user.get().getEmail(), user.get().getUserID());
+                String token = tokenService.generateToken(user.get().getEmail(), user.get().getUserId());
                 logger.info("User logged in successfully: {}", email);
                 return token;
             } else {

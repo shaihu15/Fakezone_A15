@@ -13,8 +13,8 @@ public class DeliveryAdapter implements IDelivery {
     }
 
     @Override
-    public boolean deliver(String address, String recipient, String packageDetails) {
-        logger.info("Attempting delivery to " + recipient + " at " + address + ": " + packageDetails);
+    public boolean deliver(String country, String address, String recipient, String packageDetails) {
+        logger.info("Attempting delivery to "+country+" to " + recipient + " at " + address + ": " + packageDetails);
         boolean result = externalSystem.sendPackage(address, recipient, packageDetails);
         if (result) {
             logger.info("Delivery succeeded for " + recipient);

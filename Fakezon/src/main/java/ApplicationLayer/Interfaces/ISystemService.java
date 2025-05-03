@@ -1,5 +1,6 @@
 package ApplicationLayer.Interfaces;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -8,13 +9,13 @@ import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Response;
+import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.Order;
-import ApplicationLayer.DTO.StoreRolesDTO;
 
 public interface ISystemService {
     // Access to core services
@@ -46,7 +47,7 @@ public interface ISystemService {
 
     Response<Boolean> deleteProduct(int productId);
 
-    Response<String> guestRegister(String email, String password,String dobInput);
+    Response<String> guestRegister(String email, String password,String dobInput, String country);
     
     Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
     
@@ -79,6 +80,10 @@ public interface ISystemService {
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
     Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+
+    Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
+            String cardNumber, String cardHolder, String expDate, String cvv, String address,
+            String recipient, String packageDetails); // purchase the cart
 
     Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
 
