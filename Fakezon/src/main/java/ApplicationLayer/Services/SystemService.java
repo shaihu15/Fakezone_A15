@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import ApplicationLayer.Response;
-import InfrastructureLayer.Repositories.StoreRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +28,6 @@ import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
@@ -37,9 +35,7 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
 
@@ -688,6 +684,46 @@ public class SystemService implements ISystemService {
         }    
     }
 
+    @Override
+    public Response<List<StoreProductDTO>> getTopRatedProducts(int limit) {
+        try {
+            logger.info("System service - fetching top " + limit + " rated products");
+            
+            // 1. Fetch all products
+            List<ProductDTO> allProducts = productService.getAllProducts();
+            
+            // 2. Create a list to store products with their ratings
+            List<StoreProductDTO> ratedProducts = new ArrayList<>();
+            
+            // 3. For each product, get its StoreProductDTO from each store it's in
+            for (ProductDTO product : allProducts) {
+                for (Integer storeId : product.getStoresIds()) {
+                    try {
+                        StoreProductDTO storeProduct = storeService.getProductFromStore(product.getId(), storeId);
+                        // Only add products that have ratings
+                        if (!Double.isNaN(storeProduct.getAverageRating())) {
+                            ratedProducts.add(storeProduct);
+                        }
+                    } catch (Exception e) {
+                        // Skip if product not found in store or other errors
+                        logger.warn("Could not retrieve product " + product.getId() + " from store " + storeId + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            // 4. Sort products by average rating (highest first)
+            ratedProducts.sort((p1, p2) -> Double.compare(p2.getAverageRating(), p1.getAverageRating()));
+            
+            // 5. Return top 'limit' products (or all if there are fewer than 'limit')
+            int resultSize = Math.min(limit, ratedProducts.size());
+            List<StoreProductDTO> topRatedProducts = ratedProducts.subList(0, resultSize);
+            
+            return new Response<>(topRatedProducts, "Top rated products retrieved successfully", true);
+        } catch (Exception e) {
+            logger.error("System Service - Error while fetching top rated products: " + e.getMessage());
+            return new Response<>(null, "Error fetching top rated products: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
 
     private OrderDTO createOrderDTO(IOrder order) {
         List<ProductDTO> productDTOS = new ArrayList<>();

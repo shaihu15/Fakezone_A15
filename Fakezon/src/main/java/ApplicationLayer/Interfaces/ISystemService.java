@@ -96,4 +96,6 @@ public interface ISystemService {
 
     Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
 
+    Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
+
 }
