@@ -24,6 +24,7 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import DomainLayer.Model.User;
 
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
@@ -544,7 +545,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public double calcAmount(Cart cart) {
+    public double calcAmount(User user,Cart cart) {
         double totalAmount = 0;
 
         for (Basket basket : cart.getBaskets()) {
@@ -555,7 +556,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             double basketAmount;
-            basketAmount = store.calcAmount(basket);
+            basketAmount = store.calcAmount(user,basket);
             totalAmount += basketAmount;
             logger.info("basket amount calculated: " +basketAmount + " in store: " + id);
 

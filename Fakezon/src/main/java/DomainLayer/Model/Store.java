@@ -981,7 +981,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public double calcAmount(Basket basket) {
+    public double calcAmount(User user,Basket basket) {
         List<StoreProductDTO> products = basket.getProducts();
         double amount = 0;
         for (StoreProductDTO product : products) {
@@ -989,22 +989,22 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "Product with ID: " + product.getProductId() + " does not exist in store ID: " + storeID);
             }
-            int id = product.getProductId();
-            if (this.purchasePolicies.containsKey(id)) {
-                PurchasePolicy policy = this.purchasePolicies.get(id);
-                if (!policy.canPurchase(id, name, product.getQuantity())) {
+            int productId = product.getProductId();
+            if (this.purchasePolicies.containsKey(productId)) {
+                PurchasePolicy policy = this.purchasePolicies.get(productId);
+                if (!policy.canPurchase(user, productId, product.getQuantity())) {
                     throw new IllegalArgumentException(
-                            "Purchase policy for product with ID: " + id + " is not valid for the current basket.");
+                            "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
                 }
             }
 
             boolean isDiscountApplicable = true;
-            DiscountPolicy discountPolicy = this.discountPolicies.get(id);
+            DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
             if(discountPolicy == null) {
                 isDiscountApplicable = false;
             }
             if (discountPolicy!= null) {
-                DiscountPolicy policy = this.discountPolicies.get(id);
+                DiscountPolicy policy = this.discountPolicies.get(productId);
                 List<DiscountCondition> conditions = policy.getConditions();
                 for(DiscountCondition condition : conditions) {
                     if (products.stream().anyMatch(p -> p.getProductId() == condition.getTriggerProductId() && p.getQuantity() < condition.getTriggerQuantity())){ 

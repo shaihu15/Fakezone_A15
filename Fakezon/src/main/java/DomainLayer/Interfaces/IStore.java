@@ -14,6 +14,7 @@ import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
 import  DomainLayer.Model.StoreRating;
+import DomainLayer.Model.User;
 
 public interface IStore {
     String getName();
@@ -92,7 +93,7 @@ public interface IStore {
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 
-    double calcAmount(Basket basket);
+    double calcAmount(User user,Basket basket);
 
     boolean canViewOrders(int userId);
   
