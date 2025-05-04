@@ -3,23 +3,15 @@ package UnitTesting;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.Model.Registered;
-import DomainLayer.Model.User;
 import InfrastructureLayer.Repositories.UserRepository;
-import java.lang.reflect.Field;
-import java.util.concurrent.atomic.AtomicInteger;
 
-@ExtendWith(MockitoExtension.class)
+
 
 public class UserRepositoryTest {
 

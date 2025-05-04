@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ApplicationLayer.DTO.BasketDTO;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.StoreProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +34,7 @@ public class OrderService implements IOrderService {
 
     @Override
     public int addOrder(Basket basket, int userId, String address, PaymentMethod paymentMethod) {
-        List<StoreProductDTO> products = basket.getProducts();
-        List<Integer> productIds = products.stream().map(product -> product.getProductId()).toList();
-        IOrder order = new Order(userId, OrderState.PENDING, productIds, basket.getStoreID(), address, paymentMethod);
+        IOrder order = new Order(userId, OrderState.PENDING, basket, address, paymentMethod);
         orderRepository.addOrder(order);
         return order.getId();
     }
@@ -41,10 +42,7 @@ public class OrderService implements IOrderService {
     @Override
     public int updateOrder(int orderId, Basket basket, Integer userId, String address, PaymentMethod paymentMethod) {
         try {
-            List<StoreProductDTO> products = basket.getProducts();
-            List<Integer> productIds = products.stream().map(product -> product.getProductId()).toList();
-            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, productIds, basket.getStoreID(),
-                    address, paymentMethod);
+            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, basket, address, paymentMethod);
             orderRepository.updateOrder(orderId, updatedOrder);
             return updatedOrder.getId();
 
@@ -76,16 +74,16 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public List<Integer> searchOrders(String keyword) {
-        List<Integer> orderIds = new ArrayList<>();
+    public List<IOrder> searchOrders(String keyword) {
+        List<IOrder> orders = new ArrayList<>();
         for (IOrder order : orderRepository.getAllOrders()) {
             if (order.getAddress().contains(keyword) || order.getState().toString().contains(keyword)
                     || order.getPaymentMethod().toString().contains(keyword)
                     || order.getProductIds().toString().contains(keyword)) {
-                orderIds.add(order.getId());
+                orders.add(order);
             }
         }
-        return orderIds;
+        return orders;
     }
 
     @Override
@@ -145,7 +143,7 @@ public class OrderService implements IOrderService {
             List<Integer> productIds = basket.getProducts().stream()
                 .map(StoreProductDTO::getProductId)
                 .toList();
-            IOrder order = new Order(userId, OrderState.SHIPPED, productIds, basket.getStoreID(), address, paymentMethod);
+            IOrder order = new Order(userId, OrderState.SHIPPED, basket, address, paymentMethod);
             orderRepository.addOrder(order);
             logger.info("Order created with ID: {}", order.getId());
         }

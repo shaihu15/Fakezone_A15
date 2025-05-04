@@ -57,8 +57,8 @@ public class ProductService implements IProductService {
             throw e;
         }
         try {
-            IProduct product = new Product(productId, productName, productDescription, existingProduct.getCategory(),storesIds);
-            productRepository.updateProduct(product);
+
+            productRepository.updateProduct(productId, productName, productDescription, storesIds);
             
         } catch (IllegalArgumentException e) {
             logger.error("While trying to update, recived error {}", e);
@@ -113,7 +113,7 @@ public class ProductService implements IProductService {
             for (Integer productId : productsIds) {
                 IProduct product = productRepository.getProductById(productId);
                 product.addStore(storeId);
-                productRepository.updateProduct(product);
+                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), new HashSet<>(product.getStoresIds()));
             }
         } catch (IllegalArgumentException e) {
             logger.error("While trying to add products to store, recived error {}", e);
@@ -129,7 +129,7 @@ public class ProductService implements IProductService {
             for (Integer productId : productIds) {
                 IProduct product = productRepository.getProductById(productId);
                 product.removeStore(storeId);
-                productRepository.updateProduct(product);
+                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), new HashSet<>(product.getStoresIds()));
                 List<Integer> storesIds = product.getStoresIds();
                 if (storesIds.isEmpty()) {
                     productRepository.deleteProduct(productId);
@@ -149,6 +149,15 @@ public class ProductService implements IProductService {
     public List<ProductDTO> getProductsByCategory(PCategory category) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getProductsByCategory'");
+    }
+    @Override
+    public IProduct getProduct(int productId) {
+        try {
+            return productRepository.getProductById(productId);
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to get product, recived error {}", e);
+            throw e;
+        }
     }
   
 }

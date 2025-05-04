@@ -42,12 +42,12 @@ public class ProductServiceTest {
         IProduct mockProduct = mock(IProduct.class);
         when(productRepository.getProductById(1)).thenReturn(mockProduct);
         productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
-        verify(productRepository, times(1)).updateProduct(any(IProduct.class));
+        verify(productRepository, times(1)).updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
     }
 
     @Test
     void givenNonExistingProduct_WhenUpdateProduct_ThenThrowsException() {
-        doThrow(new IllegalArgumentException("Product not found")).when(productRepository).updateProduct(any(IProduct.class));
+        doThrow(new IllegalArgumentException("Product not found")).when(productRepository).updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         });
@@ -120,6 +120,7 @@ public class ProductServiceTest {
         });
         assertEquals("Search failed", exception.getMessage());
     }
+
     @Test
     void givenValidStoreIdAndProductIds_WhenAddProductsToStore_ThenProductsAreUpdated() {
         // Arrange
@@ -128,8 +129,17 @@ public class ProductServiceTest {
         IProduct mockProduct1 = mock(IProduct.class);
         IProduct mockProduct2 = mock(IProduct.class);
 
+        // Mock product repository behavior
         when(productRepository.getProductById(1)).thenReturn(mockProduct1);
         when(productRepository.getProductById(2)).thenReturn(mockProduct2);
+
+        // Mock product behavior
+        when(mockProduct1.getId()).thenReturn(1);
+        when(mockProduct1.getName()).thenReturn("UpdatedProduct1");
+        when(mockProduct1.getDescription()).thenReturn("UpdatedDescription1");
+        when(mockProduct2.getId()).thenReturn(2);
+        when(mockProduct2.getName()).thenReturn("UpdatedProduct2");
+        when(mockProduct2.getDescription()).thenReturn("UpdatedDescription2");
 
         // Act
         productService.addProductsToStore(storeId, productIds);
@@ -137,8 +147,8 @@ public class ProductServiceTest {
         // Assert
         verify(mockProduct1, times(1)).addStore(storeId);
         verify(mockProduct2, times(1)).addStore(storeId);
-        verify(productRepository, times(1)).updateProduct(mockProduct1);
-        verify(productRepository, times(1)).updateProduct(mockProduct2);
+        verify(productRepository, times(1)).updateProduct(1, "UpdatedProduct1", "UpdatedDescription1", new HashSet<>());
+        verify(productRepository, times(1)).updateProduct(2, "UpdatedProduct2", "UpdatedDescription2", new HashSet<>());
     }
 
     @Test
@@ -155,6 +165,6 @@ public class ProductServiceTest {
 
         assertEquals("Product not found", exception.getMessage());
         verify(productRepository, times(1)).getProductById(1);
-        verify(productRepository, never()).updateProduct(any(IProduct.class));
+        verify(productRepository, never()).updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
     }
 }
