@@ -1,6 +1,8 @@
 package ApplicationLayer.Services;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,11 +32,6 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrder;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -44,7 +41,6 @@ import java.util.Arrays;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.method.P;
 import org.springframework.stereotype.Component;
-import ApplicationLayer.DTO.StoreRolesDTO;
 
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
@@ -271,6 +267,13 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during sending message to user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
+    public LocalDate parseDate(String dateString) {
+    try {
+        return LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
+    } catch (DateTimeParseException e) {
+        throw new IllegalArgumentException("Invalid date format: " + dateString);
+    }
+}
 
     @Override
     public Response<StoreProductDTO> getProductFromStore(int productId, int storeId) {
@@ -331,7 +334,7 @@ public class SystemService implements ISystemService {
         logger.info("System service - user trying to register " + email);
         LocalDate dateOfBirthLocalDate;
         try {
-            dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
+            dateOfBirthLocalDate = parseDate(dateOfBirth);
         } catch (Exception e) {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
             return new Response<>(null, "Invalid date of birth format. Expected format: YYYY-MM-DD", false, ErrorType.INVALID_INPUT);
