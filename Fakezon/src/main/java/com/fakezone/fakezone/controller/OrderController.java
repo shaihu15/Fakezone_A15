@@ -3,27 +3,45 @@ package com.fakezone.fakezone.controller;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
+import ApplicationLayer.RequestDataTypes.RequestOrderDataType;
 import ApplicationLayer.Response;
+import ApplicationLayer.Services.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
+
+@RestController
+@RequestMapping("/api/order")
 public class OrderController {
 
     public ISystemService systemService;
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     @Autowired
     public OrderController(ISystemService systemService) {
         this.systemService = systemService;
     }
 
-    public ResponseEntity<Response<Integer>> makeOrder(int userId, int storeId, Collection<Integer> products, String address, String paymentMethod, @RequestBody Request request){
+    @PostMapping("/makeOrder")
+    public ResponseEntity<Response<Integer>> makeOrder (@RequestBody Request<RequestOrderDataType> request){
         try{
-            Response<Integer> response = systemService.addOrder(userId, storeId, products, address, paymentMethod, request.getToken());
+            RequestOrderDataType requestData = request.getData();
+            Response<Integer> response = systemService.addOrder(
+                    requestData.getUserId(),
+                    requestData.getStoreId(),
+                    requestData.getProductsIds(),
+                    requestData.getAddress(),
+                    requestData.getPaymentMethod(),
+                    request.getToken()
+            );
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -31,13 +49,24 @@ public class OrderController {
             }
         }
         catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while making the order", false));
         }
     }
 
-    public ResponseEntity<Response<Integer>> updateOrder(int orderId, int userId, Collection<Integer> products, int storeId, String address, String paymentMethod, @RequestBody Request request){
+    @PutMapping("/updateOrder")
+    public ResponseEntity<Response<Integer>> updateOrder(@RequestBody Request<RequestOrderDataType> request){
         try{
-            Response<Integer> response = systemService.updateOrder(orderId, products, storeId, userId, address, paymentMethod, request.getToken());
+            RequestOrderDataType requestData = request.getData();
+            Response<Integer> response = systemService.updateOrder(
+                    requestData.getOrderId(),
+                    requestData.getProductsIds(),
+                    requestData.getStoreId(),
+                    requestData.getUserId(),
+                    requestData.getAddress(),
+                    requestData.getPaymentMethod(),
+                    request.getToken()
+            );
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -45,13 +74,15 @@ public class OrderController {
             }
         }
         catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while updating the order", false));
         }
     }
 
-    public ResponseEntity<Response<Boolean>> deleteOrder(int orderId, @RequestBody Request request){
+    @GetMapping("/deleteOrder/{orderId}")
+    public ResponseEntity<Response<Boolean>> deleteOrder(@PathVariable("orderId") int orderId, @RequestHeader("Authorization") String token){
         try{
-            Response<Boolean> response = systemService.deleteOrder(orderId, request.getToken());
+            Response<Boolean> response = systemService.deleteOrder(orderId, token);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -59,13 +90,15 @@ public class OrderController {
             }
         }
         catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while deleting the order", false));
         }
     }
 
-    public ResponseEntity<Response<OrderDTO>> viewOrder(int orderId, @RequestBody Request request){
+    @GetMapping("/viewOrder/{orderId}")
+    public ResponseEntity<Response<OrderDTO>> viewOrder(@PathVariable("orderId") int orderId,  @RequestHeader("Authorization") String token){
         try{
-            Response<OrderDTO> response = systemService.viewOrder(orderId, request.getToken());
+            Response<OrderDTO> response = systemService.viewOrder(orderId, token);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -73,13 +106,15 @@ public class OrderController {
             }
         }
         catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while viewing the order", false));
         }
     }
 
-    public ResponseEntity<Response<List<OrderDTO>>> searchOrders(String keyword, @RequestBody Request request){
+    @GetMapping("/searchOrders/{keyword}")
+    public ResponseEntity<Response<List<OrderDTO>>> searchOrders(@PathVariable("keyword") String keyword, @RequestHeader("Authorization") String token){
         try{
-            Response<List<OrderDTO>> response = systemService.searchOrders(keyword, request.getToken());
+            Response<List<OrderDTO>> response = systemService.searchOrders(keyword, token);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -87,13 +122,15 @@ public class OrderController {
             }
         }
         catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while searching for orders", false));
         }
     }
 
-    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByStoreId(int storeId, @RequestBody Request request){
+    @GetMapping("/getOrdersByUserId/{storeId}")
+    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByStoreId(@PathVariable("storeId") int storeId, @RequestHeader("Authorization") String token){
         try{
-            Response<List<OrderDTO>> response = systemService.getOrdersByStoreId(storeId, request.getToken());
+            Response<List<OrderDTO>> response = systemService.getOrdersByStoreId(storeId, token);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -101,9 +138,9 @@ public class OrderController {
             }
         }
         catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while getting orders by store ID", false));
         }
     }
-
 
 }
