@@ -1,5 +1,6 @@
 package ApplicationLayer.Interfaces;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -9,12 +10,13 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Response;
+import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.Order;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import DomainLayer.Interfaces.IProduct;
 
 public interface ISystemService {
     // Access to core services
@@ -89,4 +91,17 @@ public interface ISystemService {
     Response<List<Integer>> getPendingOwners(int storeId, int requesterId);
 
     Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
+
+    Response<Integer> addOrder(int userId, int storeId, Collection<Integer> products, String address, String paymentMethod, String token);
+
+    Response<Integer> updateOrder(int orderId, Collection<Integer> products, int storeID, Integer userId, String address, String paymentMethod, String token);
+
+    Response<Boolean> deleteOrder(int orderId, String token);
+
+    Response<OrderDTO> viewOrder(int orderId, String token);
+
+    Response<List<OrderDTO>> searchOrders(String keyword, String token);
+
+    Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token);
+
 }

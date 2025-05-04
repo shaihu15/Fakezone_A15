@@ -1,13 +1,13 @@
 package ApplicationLayer.Services;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import ApplicationLayer.Response;
+import DomainLayer.Enums.PaymentMethod;
+import DomainLayer.Interfaces.*;
 import InfrastructureLayer.Repositories.StoreRepository;
+import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +24,6 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
@@ -625,7 +621,7 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private OrderDTO createOrderDTO(Order order) {
+    private OrderDTO createOrderDTO(IOrder order) {
         List<ProductDTO> productDTOS = new ArrayList<>();
         for (int productId : order.getProductIds()) {
             ProductDTO productDTO = this.productService.viewProduct(productId);
@@ -702,6 +698,158 @@ public class SystemService implements ISystemService {
             logger.error("system service - getPendingManagers failed: " + e.getMessage());
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
+    }
+
+    @Override
+    public Response<Integer> addOrder(int userId, int storeId, Collection<Integer> products, String address, String paymentMethod, String token) {
+        try {
+            if(!this.isAuth(token)){
+                return new Response<>(-1, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            logger.info("System service - user " + userId + " trying to add order to store " + storeId);
+            if (this.userService.isUserLoggedIn(userId)) {
+                Collection <StoreProductDTO> storeProducts = new ArrayList<>();
+                for (Integer productId : products) {
+                    StoreProductDTO storeProduct = this.storeService.getProductFromStore(storeId, productId);
+                    if (storeProduct == null) {
+                        logger.error("System Service - Product not found in store: " + productId + " in store: " + storeId);
+                        return new Response<>(null, "Product not found in store", false, ErrorType.INVALID_INPUT);
+                    }
+                    storeProducts.add(storeProduct);
+                }
+                PaymentMethod payment = PaymentMethod.valueOf(paymentMethod);
+                int orderId = this.orderService.addOrder(storeProducts, storeId, userId, address, payment);
+                logger.info("System service - order " + orderId + " added successfully");
+                return new Response<>(orderId, "Order added successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding order: " + e.getMessage());
+            return new Response<>(null, "Error during adding order: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<Integer> updateOrder(int orderId, Collection<Integer> products, int storeID, Integer userId, String address, String paymentMethod, String token){
+        try {
+            if(!this.isAuth(token)){
+                return new Response<>(-1, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            logger.info("System service - user " + userId + " trying to update order " + orderId);
+            if (this.userService.isUserLoggedIn(userId)) {
+                for(Integer id : products){
+                    IProduct product = this.productService.getProduct(id);
+                    if (product == null) {
+                        logger.error("System Service - Product not found: " + id);
+                        return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT);
+                    }
+                }
+                int updatedOrderId = this.orderService.updateOrder(orderId, products, storeID, userId, address, PaymentMethod.valueOf(paymentMethod));
+                return new Response<>(updatedOrderId, "Order updated successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during updating order: " + e.getMessage());
+            return new Response<>(null, "Error during updating order: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    public Response<Boolean> deleteOrder(int orderId, String token) {
+        try {
+            if(!this.isAuth(token)){
+                return new Response<>(false, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            int userId = this.authenticatorService.getUserId(token);
+            if(this.userService.isUserLoggedIn(userId)) {
+                this.orderService.deleteOrder(orderId);
+                return new Response<>(true, "Order deleted successfully", true);
+            }
+            logger.error("System Service - User is not logged in: " + userId);
+            return new Response<>(false, "User is not logged in", false, ErrorType.INVALID_INPUT);
+
+        } catch (Exception e) {
+            logger.error("System Service - Error during deleting order: " + e.getMessage());
+            return new Response<>(false, "Error during deleting order", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<OrderDTO> viewOrder(int orderId, String token) {
+        try {
+            if(!this.isAuth(token)){
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            int userId = this.authenticatorService.getUserId(token);
+            if(this.userService.isUserLoggedIn(userId)) {
+                IOrder order = this.orderService.viewOrder(orderId);
+                OrderDTO orderDTO = createOrderDTO(order);
+                return new Response<>(orderDTO, "Order retrieved successfully", true);
+            }
+            logger.error("System Service - User is not logged in: " + userId);
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+
+        } catch (Exception e) {
+            logger.error("System Service - Error during viewing order: " + e.getMessage());
+            return new Response<>(null, "Error during viewing order", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<List<OrderDTO>> searchOrders(String keyword, String token) {
+        try {
+            if(!this.isAuth(token)){
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            int userId = this.authenticatorService.getUserId(token);
+            if(this.userService.isUserLoggedIn(userId)) {
+                List<IOrder> orders = this.orderService.searchOrders(keyword);
+                List<OrderDTO> orderDTOS = new ArrayList<>();
+                for (IOrder order : orders) {
+                    OrderDTO orderDTO = createOrderDTO(order);
+                    orderDTOS.add(orderDTO);
+                }
+                return new Response<>(orderDTOS, "Orders retrieved successfully", true);
+            }
+            logger.error("System Service - User is not logged in: " + userId);
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+
+        } catch (Exception e) {
+            logger.error("System Service - Error during searching orders: " + e.getMessage());
+            return new Response<>(null, "Error during searching orders", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token) {
+        try {
+            if(!this.isAuth(token)){
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+            int userId = this.authenticatorService.getUserId(token);
+            if(this.userService.isUserLoggedIn(userId)) {
+                List<IOrder> orders = this.orderService.getOrdersByStoreId(storeId);
+                List<OrderDTO> orderDTOS = new ArrayList<>();
+                for (IOrder order : orders) {
+                    OrderDTO orderDTO = createOrderDTO(order);
+                    orderDTOS.add(orderDTO);
+                }
+                return new Response<>(orderDTOS, "Orders retrieved successfully", true);
+            }
+            logger.error("System Service - User is not logged in: " + userId);
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting orders by store id: " + e.getMessage());
+            return new Response<>(null, "Error during getting orders by store id", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    private boolean isAuth(String token){
+        return this.authenticatorService.isValid(token);
     }
 
     // // Example of a system service method that uses the authenticator service

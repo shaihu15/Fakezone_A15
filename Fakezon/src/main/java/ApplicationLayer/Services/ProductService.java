@@ -130,5 +130,15 @@ public class ProductService implements IProductService {
             logger.info("Products with ids {} were added to store with id {}", productIds, storeId);
         }
     }
+
+    @Override
+    public IProduct getProduct(int productId) {
+        try {
+            return productRepository.getProductById(productId);
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to get product, recived error {}", e);
+            throw e;
+        }
+    }
   
 }
