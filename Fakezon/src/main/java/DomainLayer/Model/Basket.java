@@ -13,6 +13,10 @@ public class Basket {
         this.storeId = storeId;
         this.products = new ArrayList<>();
     }
+    public Basket(int storeId, List<StoreProductDTO> products) {
+        this.storeId = storeId;
+        this.products = products;
+    }
 
     public void addProduct(StoreProductDTO product) {
         products.add(product);

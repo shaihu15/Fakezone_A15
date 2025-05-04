@@ -6,11 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
-import ApplicationLayer.DTO.StoreDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.DTO.*;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -103,9 +99,9 @@ public interface ISystemService {
 
     Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
 
-    Response<Integer> addOrder(int userId, int storeId, Collection<Integer> products, String address, String paymentMethod, String token);
+    Response<Integer> addOrder(int userId, BasketDTO basket, String address, String paymentMethod, String token);
 
-    Response<Integer> updateOrder(int orderId, Collection<Integer> products, int storeID, Integer userId, String address, String paymentMethod, String token);
+    Response<Integer> updateOrder(int orderId, BasketDTO basket, Integer userId, String address, String paymentMethod, String token);
 
     Response<Boolean> deleteOrder(int orderId, String token);
 

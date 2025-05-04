@@ -47,7 +47,7 @@ public class OrderServiceTest {
         when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProduct));
         when(mockBasket.getStoreID()).thenReturn(101);
 
-        int orderId = orderService.addOrder(mockBasket.getProducts(), mockBasket.getStoreID(), 1, "123 Main St", PaymentMethod.CREDIT_CARD);
+        int orderId = orderService.addOrder(mockBasket,  1, "123 Main St", PaymentMethod.CREDIT_CARD);
         verify(orderRepository, times(1)).addOrder(any(IOrder.class));
         assertEquals(1, orderId); // Assuming the ID is generated as 1
     }
@@ -58,8 +58,7 @@ public class OrderServiceTest {
         when(mockProductDTO.getProductId()).thenReturn(1);
         when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProductDTO));
         int orderId = orderService.updateOrder(1,
-                mockBasket.getProducts().stream().map(product -> product.getProductId()).toList(),
-                mockBasket.getStoreID(), 1, "123 Main St", PaymentMethod.CREDIT_CARD);
+                mockBasket,1, "123 Main St", PaymentMethod.CREDIT_CARD);
 
         verify(orderRepository, times(1)).updateOrder(eq(1), any(IOrder.class));
         assertEquals(1, orderId);
@@ -76,7 +75,7 @@ public class OrderServiceTest {
 
         // Asserting the exception
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            orderService.updateOrder(1, mockBasket.getProducts().stream().map(product -> product.getProductId()).toList(), mockBasket.getStoreID(), 1, "123 Main St", PaymentMethod.CREDIT_CARD);
+            orderService.updateOrder(1, mockBasket, 1, "123 Main St", PaymentMethod.CREDIT_CARD);
         });
 
         assertEquals("Order not found", exception.getMessage());

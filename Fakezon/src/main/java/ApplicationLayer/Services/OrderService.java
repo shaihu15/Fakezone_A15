@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ApplicationLayer.DTO.BasketDTO;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.StoreProduct;
 import org.slf4j.Logger;
@@ -32,18 +33,16 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public int addOrder(Collection<StoreProductDTO> products, int storeId, int userId, String address, PaymentMethod paymentMethod) {
-        List<Integer> productIds = products.stream().map(product -> product.getProductId()).toList();
-        IOrder order = new Order(userId, OrderState.PENDING, productIds, storeId, address, paymentMethod);
+    public int addOrder(Basket basket, int userId, String address, PaymentMethod paymentMethod) {
+        IOrder order = new Order(userId, OrderState.PENDING, basket, address, paymentMethod);
         orderRepository.addOrder(order);
         return order.getId();
     }
 
     @Override
-    public int updateOrder(int orderId, Collection<Integer> productsIds, int storeID, Integer userId, String address, PaymentMethod paymentMethod) {
+    public int updateOrder(int orderId, Basket basket, Integer userId, String address, PaymentMethod paymentMethod) {
         try {
-            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, productsIds, storeID,
-                    address, paymentMethod);
+            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, basket, address, paymentMethod);
             orderRepository.updateOrder(orderId, updatedOrder);
             return updatedOrder.getId();
 
@@ -144,7 +143,7 @@ public class OrderService implements IOrderService {
             List<Integer> productIds = basket.getProducts().stream()
                 .map(StoreProductDTO::getProductId)
                 .toList();
-            IOrder order = new Order(userId, OrderState.SHIPPED, productIds, basket.getStoreID(), address, paymentMethod);
+            IOrder order = new Order(userId, OrderState.SHIPPED, basket, address, paymentMethod);
             orderRepository.addOrder(order);
             logger.info("Order created with ID: {}", order.getId());
         }

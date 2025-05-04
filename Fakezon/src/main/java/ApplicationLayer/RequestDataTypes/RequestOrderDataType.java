@@ -1,22 +1,22 @@
 package ApplicationLayer.RequestDataTypes;
 
+import ApplicationLayer.DTO.BasketDTO;
+
 import java.util.Collection;
 
 public class RequestOrderDataType {
     Integer orderId;
     Integer userId;
-    Integer storeId;
     String address;
     String paymentMethod;
-    Collection<Integer> productsIds;
+    BasketDTO basket;
 
-    public RequestOrderDataType(Integer orderId, Integer userId, Integer storeId, String address, String paymentMethod, Collection<Integer> productsIds) {
+    public RequestOrderDataType(Integer orderId, Integer userId, String address, String paymentMethod, BasketDTO basket) {
         this.orderId = orderId;
         this.userId = userId;
-        this.storeId = storeId;
+        this.basket = basket;
         this.address = address;
         this.paymentMethod = paymentMethod;
-        this.productsIds = productsIds;
     }
 
     public Integer getOrderId() {
@@ -25,16 +25,13 @@ public class RequestOrderDataType {
     public Integer getUserId() {
         return userId;
     }
-    public Integer getStoreId() {
-        return storeId;
-    }
     public String getAddress() {
         return address;
     }
     public String getPaymentMethod() {
         return paymentMethod;
     }
-    public Collection<Integer> getProductsIds() {
-        return productsIds;
+    public BasketDTO getBasket() {
+        return basket;
     }
 }

@@ -8,25 +8,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import ApplicationLayer.DTO.*;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.*;
-import InfrastructureLayer.Repositories.StoreRepository;
-import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
+import DomainLayer.Model.*;
+
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
-import ApplicationLayer.DTO.StoreDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
-import DomainLayer.Enums.PaymentMethod;
+
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
@@ -36,21 +33,13 @@ import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.Order;
-import DomainLayer.Model.StoreFounder;
-import DomainLayer.Model.StoreManager;
-import DomainLayer.Model.StoreOwner;
-import DomainLayer.Model.Cart;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
-import DomainLayer.Model.User;
+
 import java.util.Arrays;
 
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
-import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
 
 public class SystemService implements ISystemService {
@@ -862,24 +851,23 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Integer> addOrder(int userId, int storeId, Collection<Integer> products, String address, String paymentMethod, String token) {
+    public Response<Integer> addOrder(int userId, BasketDTO basketDTO, String address, String paymentMethod, String token) {
         try {
             if(!this.isAuth(token)){
                 return new Response<>(-1, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
-            logger.info("System service - user " + userId + " trying to add order to store " + storeId);
+            logger.info("System service - user " + userId + " trying to add order to store " + basketDTO.getStoreId());
             if (this.userService.isUserLoggedIn(userId)) {
-                Collection <StoreProductDTO> storeProducts = new ArrayList<>();
-                for (Integer productId : products) {
-                    StoreProductDTO storeProduct = this.storeService.getProductFromStore(storeId, productId);
+                for (Integer productId : basketDTO.getProducts().stream().map(product -> product.getProductId()).toList()) {
+                    StoreProductDTO storeProduct = this.storeService.getProductFromStore(basketDTO.getStoreId(), productId);
                     if (storeProduct == null) {
-                        logger.error("System Service - Product not found in store: " + productId + " in store: " + storeId);
+                        logger.error("System Service - Product not found in store: " + productId + " in store: " + basketDTO.getStoreId());
                         return new Response<>(null, "Product not found in store", false, ErrorType.INVALID_INPUT);
                     }
-                    storeProducts.add(storeProduct);
+
                 }
                 PaymentMethod payment = PaymentMethod.valueOf(paymentMethod);
-                int orderId = this.orderService.addOrder(storeProducts, storeId, userId, address, payment);
+                int orderId = this.orderService.addOrder(new Basket(basketDTO.getStoreId(), basketDTO.getProducts()), userId, address, payment);
                 logger.info("System service - order " + orderId + " added successfully");
                 return new Response<>(orderId, "Order added successfully", true);
             } else {
@@ -893,12 +881,13 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Integer> updateOrder(int orderId, Collection<Integer> products, int storeID, Integer userId, String address, String paymentMethod, String token){
+    public Response<Integer> updateOrder(int orderId, BasketDTO basket, Integer userId, String address, String paymentMethod, String token){
         try {
             if(!this.isAuth(token)){
                 return new Response<>(-1, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
             logger.info("System service - user " + userId + " trying to update order " + orderId);
+            List<Integer> products =  basket.getProducts().stream().map(product -> product.getProductId()).toList();
             if (this.userService.isUserLoggedIn(userId)) {
                 for(Integer id : products){
                     IProduct product = this.productService.getProduct(id);
@@ -907,7 +896,7 @@ public class SystemService implements ISystemService {
                         return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT);
                     }
                 }
-                int updatedOrderId = this.orderService.updateOrder(orderId, products, storeID, userId, address, PaymentMethod.valueOf(paymentMethod));
+                int updatedOrderId = this.orderService.updateOrder(orderId, new Basket(basket.getStoreId(), basket.getProducts()), userId, address, PaymentMethod.valueOf(paymentMethod));
                 return new Response<>(updatedOrderId, "Order updated successfully", true);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);

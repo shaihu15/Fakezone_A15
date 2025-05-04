@@ -34,8 +34,7 @@ public class OrderController {
             RequestOrderDataType requestData = request.getData();
             Response<Integer> response = systemService.addOrder(
                     requestData.getUserId(),
-                    requestData.getStoreId(),
-                    requestData.getProductsIds(),
+                    requestData.getBasket(),
                     requestData.getAddress(),
                     requestData.getPaymentMethod(),
                     request.getToken()
@@ -58,8 +57,7 @@ public class OrderController {
             RequestOrderDataType requestData = request.getData();
             Response<Integer> response = systemService.updateOrder(
                     requestData.getOrderId(),
-                    requestData.getProductsIds(),
-                    requestData.getStoreId(),
+                    requestData.getBasket(),
                     requestData.getUserId(),
                     requestData.getAddress(),
                     requestData.getPaymentMethod(),

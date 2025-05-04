@@ -10,14 +10,20 @@ import java.util.Collection;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Model.Order;
+import DomainLayer.Model.Basket;
+import ApplicationLayer.DTO.StoreProductDTO;
 
 public class OrderTest {
     private Order order;
 
     @BeforeEach
     void setUp() {
-        Collection<Integer> productIds = Arrays.asList(1, 2, 3);
-        order = new Order(1, 101, OrderState.PENDING, productIds, 201, "123 Main St", PaymentMethod.CREDIT_CARD);
+        Basket basket = new Basket(1, Arrays.asList(
+                new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1),
+                new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1),
+                new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1)
+        ));
+        order = new Order(1, 101, OrderState.PENDING, basket, "123 Main St", PaymentMethod.CREDIT_CARD);
     }
 
     @Test
@@ -32,7 +38,7 @@ public class OrderTest {
 
     @Test
     void givenValidOrder_WhenGetStoreId_ThenReturnsCorrectStoreId() {
-        assertEquals(201, order.getStoreId());
+        assertEquals(1, order.getStoreId());
     }
 
     @Test
@@ -70,8 +76,12 @@ public class OrderTest {
 
     @Test
     void givenCashOnDeliveryOrder_WhenSetPaymentMethod_ThenPaymentMethodIsUpdated() {
-        order = new Order(1, 101, OrderState.PENDING, Arrays.asList(1, 2, 3), 201, "123 Main St", PaymentMethod.CASH_ON_DELIVERY);
-        order.setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+        Basket basket = new Basket(1, Arrays.asList(
+                new StoreProductDTO(1, "Product1", 10.0, 0, 0.0, 201),
+                new StoreProductDTO(2, "Product2", 15.0, 0, 0.0, 201),
+                new StoreProductDTO(3, "Product3", 20.0, 0, 0.0, 201)
+        ));
+        order = new Order(1, 101, OrderState.PENDING, basket, "123 Main St", PaymentMethod.CASH_ON_DELIVERY);        order.setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
         assertEquals(PaymentMethod.CASH_ON_DELIVERY, order.getPaymentMethod());
     }
 

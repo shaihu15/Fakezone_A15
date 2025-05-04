@@ -3,6 +3,7 @@ package ApplicationLayer.Interfaces;
 import java.util.Collection;
 import java.util.List;
 
+import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -14,8 +15,8 @@ import DomainLayer.Model.Cart;
 import DomainLayer.Model.Order;
 
 public interface IOrderService {
-    int addOrder(Collection<StoreProductDTO> products, int storeId, int userId, String address, PaymentMethod paymentMethod);
-    int updateOrder(int orderId, Collection<Integer> productsIds, int storeID, Integer userId, String address, PaymentMethod paymentMethod); // other parameters can be added as needed
+    int addOrder(Basket basket, int userId, String address, PaymentMethod paymentMethod);
+    int updateOrder(int orderId, Basket basket, Integer userId, String address, PaymentMethod paymentMethod); // other parameters can be added as needed
     void deleteOrder(int orderId);
     IOrder viewOrder(int orderId);
     List<IOrder> searchOrders(String keyword);
