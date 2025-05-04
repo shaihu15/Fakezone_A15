@@ -1,7 +1,7 @@
 package DomainLayer.Interfaces;
 
 public interface IPayment {
-    boolean pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount);
+    boolean pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount, String country);
 
     boolean refund(String cardNumber, double amount);
 }

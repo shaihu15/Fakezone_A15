@@ -982,7 +982,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public double calcAmount(Basket basket, LocalDate dob) {
+    public double calcAmount(Basket basket, LocalDate dob,String country) {
         List<StoreProductDTO> products = basket.getProducts();
         double amount = 0;
         for (StoreProductDTO product : products) {
@@ -993,7 +993,7 @@ public class Store implements IStore {
             int productId = product.getProductId();
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
-                if (!policy.canPurchase(dob, productId, product.getQuantity())) {
+                if (!policy.canPurchase(dob, productId, product.getQuantity(), country)) {
                     throw new IllegalArgumentException(
                             "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
                 }

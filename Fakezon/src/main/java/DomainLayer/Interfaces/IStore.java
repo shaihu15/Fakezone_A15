@@ -94,7 +94,7 @@ public interface IStore {
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 
-    double calcAmount(Basket basket, LocalDate dob);
+    double calcAmount(Basket basket, LocalDate dob,String country);
 
     boolean canViewOrders(int userId);
   

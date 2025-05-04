@@ -706,7 +706,7 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - User not found: " + userId);
                 return new Response<String>(null, "User not found", false, ErrorType.INVALID_INPUT);
             }
-            price = this.storeService.calcAmount(cart,dob);
+            price = this.storeService.calcAmount(cart,dob,country);
            logger.info("System Service - User "+userId + "cart price: " + price);
             
         }
@@ -715,7 +715,7 @@ public class SystemService implements ISystemService {
             return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
-            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, price);
+            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, price, country);
             logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
         } catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());

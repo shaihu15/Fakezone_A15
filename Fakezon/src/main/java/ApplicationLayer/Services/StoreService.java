@@ -546,7 +546,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public double calcAmount(Cart cart, LocalDate dob) {
+    public double calcAmount(Cart cart, LocalDate dob,String country) {
         double totalAmount = 0;
 
         for (Basket basket : cart.getBaskets()) {
@@ -557,7 +557,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             double basketAmount;
-            basketAmount = store.calcAmount(basket,dob);
+            basketAmount = store.calcAmount(basket,dob,country);
             totalAmount += basketAmount;
             logger.info("basket amount calculated: " +basketAmount + " in store: " + id);
 

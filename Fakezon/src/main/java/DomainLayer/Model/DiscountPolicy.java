@@ -8,7 +8,9 @@ public abstract class DiscountPolicy {
     private String description;
     private List<DiscountCondition> conditions; // Condition object to check if the discount policy is applicable
     private double discountPrecentegeAmount;
-    public DiscountPolicy(int policyID, String policyName, String description,List<DiscountCondition> conditions, double discountPrecentegeAmount) {
+    private String country; // The country where the discount policy is applicable
+    public DiscountPolicy(int policyID, String policyName, String description,List<DiscountCondition> conditions, double discountPrecentegeAmount,String country) {
+        this.country = country;
         this.policyID = policyID;
         this.policyName = policyName;
         this.description = description;

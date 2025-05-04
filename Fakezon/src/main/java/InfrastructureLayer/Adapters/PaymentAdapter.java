@@ -14,9 +14,9 @@ public class PaymentAdapter implements IPayment {
     }
 
     @Override
-    public boolean pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount) {
+    public boolean pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount, String country) {
         logger.info("Attempting payment for " + cardHolder + ", amount: " + amount);
-        boolean result = externalSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        boolean result = externalSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount,country);
         if (result) {
             logger.info("Payment succeeded for " + cardHolder);
             return true;
@@ -42,7 +42,7 @@ public class PaymentAdapter implements IPayment {
 
 // Mock external system and backlog for demonstration
 class ExternalPaymentSystem {
-    public boolean processPayment(String cardNumber, String cardHolder, String expDate, String cvv, double amount) {
+    public boolean processPayment(String cardNumber, String cardHolder, String expDate, String cvv, double amount, String country) {
         // Simulate always successful payment
         return true;
     }

@@ -6,7 +6,9 @@ public abstract class PurchasePolicy {
     private int policyID;
     private String policyName;
     private String description;
-    public PurchasePolicy(int policyID, String policyName, String description) {
+    private String country; // The country where the policy is applicable
+    public PurchasePolicy(int policyID, String policyName, String description,String country) {
+        this.country = country;
         this.policyID = policyID;
         this.policyName = policyName;
         this.description = description;
@@ -22,6 +24,6 @@ public abstract class PurchasePolicy {
     }
 
     
-    public abstract boolean canPurchase(LocalDate dob, int productID, int quantity); // may not be needing the whole user object, just the id and age
+    public abstract boolean canPurchase(LocalDate dob, int productID, int quantity,String Country); // may not be needing the whole user object, just the id and age
 
 }
