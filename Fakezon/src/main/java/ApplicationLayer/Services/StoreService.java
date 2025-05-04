@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,20 +12,20 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import DomainLayer.Enums.StoreManagerPermission;
-import ApplicationLayer.DTO.AuctionProductDTO;
+import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Interfaces.IStoreService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
-
-import ApplicationLayer.DTO.StoreRolesDTO;
+import DomainLayer.Model.User;
 
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
@@ -545,6 +546,52 @@ public class StoreService implements IStoreService {
     }
 
     @Override
+    public double calcAmount(Cart cart, LocalDate dob) {
+        double totalAmount = 0;
+
+        for (Basket basket : cart.getBaskets()) {
+            int id = basket.getStoreID();
+            Store store = storeRepository.findById(id);
+            if (store == null) {
+                logger.error("calcAmount - Store not found: " + id);
+                throw new IllegalArgumentException("Store not found");
+            }
+            double basketAmount;
+            basketAmount = store.calcAmount(basket,dob);
+            totalAmount += basketAmount;
+            logger.info("basket amount calculated: " +basketAmount + " in store: " + id);
+
+        }
+        return totalAmount;
+    }
+
+    @Override
+    public boolean canViewOrders(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("canViewOrders - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.canViewOrders(userId);
+    }
+
+    @Override
+    public void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("sendResponseForAuctionByOwner - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        try {
+            store.receivedResponseForAuctionByOwner(requesterId, productId, accept);
+            logger.info("Response for auction sent by owner: " + requesterId + " for product: " + productId
+                    + " in store: " + storeId);
+        } catch (IllegalArgumentException e) {
+            logger.error("sendResponseForAuctionByOwner - Product not found: " + productId);
+            throw new IllegalArgumentException("Product not found");
+        }
+}
+
     public void acceptAssignment(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
         if (store == null) {

@@ -1,6 +1,7 @@
 package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -55,16 +56,17 @@ public class AuthenticatorAdapterTest {
         LocalDate dateOfBirth = LocalDate.of(1990, 1, 1);
         UserDTO mockUserDTO = new UserDTO(1, email, 33);
         String expectedToken = "valid-token-123";
+        String country = "IL";
         
-        when(mockUserService.registerUser(email, password, dateOfBirth)).thenReturn(mockUserDTO);
+        when(mockUserService.registerUser(email, password, dateOfBirth,country)).thenReturn(mockUserDTO);
         when(mockTokenService.generateToken(email, 1)).thenReturn(expectedToken);
         
         // Act
-        String actualToken = authenticatorAdapter.register(email, password, dateOfBirth);
+        String actualToken = authenticatorAdapter.register(email, password, dateOfBirth, country);
         
         // Assert
         assertEquals(expectedToken, actualToken);
-        verify(mockUserService).registerUser(email, password, dateOfBirth);
+        verify(mockUserService).registerUser(email, password, dateOfBirth,country);
         verify(mockTokenService).generateToken(email, 1);
     }
     
@@ -74,15 +76,15 @@ public class AuthenticatorAdapterTest {
         String email = "test@example.com";
         String password = "password123";
         LocalDate dateOfBirth = LocalDate.of(1990, 1, 1);
-        
-        when(mockUserService.registerUser(email, password, dateOfBirth)).thenReturn(null);
+        String country = "IL";
+        when(mockUserService.registerUser(email, password, dateOfBirth,country)).thenReturn(null);
         
         // Act
-        String token = authenticatorAdapter.register(email, password, dateOfBirth);
+        String token = authenticatorAdapter.register(email, password, dateOfBirth,country);
         
         // Assert
         assertNull(token);
-        verify(mockUserService).registerUser(email, password, dateOfBirth);
+        verify(mockUserService).registerUser(email, password, dateOfBirth,country);
         verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     
@@ -92,16 +94,17 @@ public class AuthenticatorAdapterTest {
         String email = "test@example.com";
         String password = "password123";
         LocalDate dateOfBirth = LocalDate.of(1990, 1, 1);
-        
-        when(mockUserService.registerUser(email, password, dateOfBirth))
+        String country = "IL";
+
+        when(mockUserService.registerUser(email, password, dateOfBirth,country))
             .thenThrow(new IllegalArgumentException("User already exists"));
         
         // Act
-        String token = authenticatorAdapter.register(email, password, dateOfBirth);
+        String token = authenticatorAdapter.register(email, password, dateOfBirth,country);
         
         // Assert
         assertNull(token);
-        verify(mockUserService).registerUser(email, password, dateOfBirth);
+        verify(mockUserService).registerUser(email, password, dateOfBirth,country);
         verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     
@@ -117,7 +120,7 @@ public class AuthenticatorAdapterTest {
         
         when(mockUserService.getUserByUserName(email)).thenReturn(optionalUser);
         when(mockUser.getEmail()).thenReturn(email);
-        when(mockUser.getUserID()).thenReturn(userId);
+        when(mockUser.getUserId()).thenReturn(userId);
         when(mockTokenService.generateToken(email, userId)).thenReturn(expectedToken);
         
         // Act

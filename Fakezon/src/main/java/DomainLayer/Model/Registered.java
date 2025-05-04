@@ -1,50 +1,54 @@
 package DomainLayer.Model;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.AbstractMap.SimpleEntry;
-
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.UserDTO;
-import DomainLayer.Enums.RoleName;
-import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.Model.helpers.AssignmentEvent;
-import DomainLayer.Model.helpers.ClosingStoreEvent;
-import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.helpers.AssignmentEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+
 @Component
 public class Registered extends User {
+
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
     private String email;
     private String password;
     private int age;
-    private HashMap<Integer, OrderDTO> orders; // orderId -> Order
-    private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
-
-    public Registered(String email, String password, LocalDate dateOfBirth) {
+    private Queue<SimpleEntry<Integer, String>> auctionEndedMessages; // storeID -> message
+    private String state;
+    public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super();
         this.email = email;
         this.password = password;
-        this.orders = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
         this.roles = new HashMap<>();
         this.isLoggedIn = true;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
+        auctionEndedMessages = new LinkedList<>();
+        this.state = state;
+
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
@@ -76,7 +80,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleResposeFromStore(ResponseFromStoreEvent event) {
-        if(event.getUserId() != this.userID) {
+        if(event.getUserId() != this.userId) {
             return false;
         }
         return true;
@@ -90,7 +94,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
-        if(event.getUserId() != this.userID) {
+        if(event.getUserId() != this.userId) {
             return false;
         }
         return true;
@@ -106,13 +110,93 @@ public class Registered extends User {
         // your logic to send to UI
     }
 
-
-    public List<SimpleEntry<Integer, String>> getMessagesFromUser() {
-        return messagesFromUser;
+    private boolean shouldHandleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
+        if(!roles.containsKey(event.getStoreId())) {
+            return false;
+        }
+        return true;
     }
 
-    public List<SimpleEntry<Integer, String>> getMessagesFromStore() {
-        return messagesFromStore.stream().toList();
+    @EventListener(condition = "#root.target.shouldHandleAuctionEndedToOwnersEvent(#event)")
+    public void handleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
+        if(!isLoggedIn) {
+            this.auctionEndedMessages.add(new SimpleEntry<>(event.getStoreId(), "Auction ended for product " + event.getProductID() +". Highest bid was " + event.getCurrentHighestBid() +
+            " by user " + event.getUserIDHighestBid()+". Please approve or decline this bid."));
+            return;
+        }
+        // your logic to send to UI
+    }
+
+    private boolean shouldHandleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
+        if(!roles.containsKey(event.getStoreId())) {
+            return false;
+        }
+        return true;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandleAuctionFailedToOwnersEvent(#event)")
+    public void handleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
+        if(!isLoggedIn) {
+            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "Auction failed for product " + event.getProductID() +". Base price was " + event.getBasePrice()+". "+event.getMessage()));
+            return;
+        }
+        // your logic to send to UI
+    }
+
+    private boolean shouldHandleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
+        if(event.getUserIDHighestBid() != this.userId) {
+            return false;
+        }
+        return true;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandleApprovedBidOnAuctionEvent(#event)")
+    public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
+        if(!isLoggedIn) {
+            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We are pleased to inform you that your bid has won the auction on product: "+event.getProductID()+", at a price of: "+event.getCurrentHighestBid()+"! The product has been added to your shopping cart, please purchase it as soon as possible."));
+            addToBasket(event.getStoreId(), event.getStoreProductDTO());
+            return;
+        }
+        // your logic to send to UI
+    }
+    private boolean shouldHandleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
+        if(event.getUserIDHighestBid() != this.userId) {
+            return false;
+        }
+        return true;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandleDeclinedBidOnAuctionEvent(#event)")
+    public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
+        if(!isLoggedIn) {
+            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We regret to inform you that the offer for product: "+event.getProductID()+" was not approved by the store."));
+            return;
+        }
+        // your logic to send to UI
+    }
+
+
+
+    public HashMap<Integer, String> getMessagesFromUser() {
+        return messagesFromUser.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+        
+    }
+
+    public HashMap<Integer, String> getMessagesFromStore() {
+        return messagesFromStore.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+    }
+    public HashMap<Integer, String> getAssignmentMessages() {
+        return assignmentMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+    }
+    public HashMap<Integer, String> getAuctionEndedMessages() {
+        return auctionEndedMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+    }
+    public HashMap<Integer, String> getAllMessages() {
+        HashMap<Integer, String> allMessages = new HashMap<>();
+        allMessages.putAll(getMessagesFromStore());
+        allMessages.putAll(getAssignmentMessages());
+        allMessages.putAll(getAuctionEndedMessages());
+        return allMessages;
     }
 
     @Override
@@ -143,10 +227,6 @@ public class Registered extends User {
             return productsPurchase.get(storeID).contains(productID);
         }
         return false;
-    }
-
-    public int getUserID() {
-        return userID;
     }
 
     public String getEmail() {
@@ -180,8 +260,9 @@ public class Registered extends User {
         return password;
     }
 
+    @Override
     public UserDTO toDTO() {
-        return new UserDTO(userID, email, age);
+        return new UserDTO(userId, email, age);
     }
 
     

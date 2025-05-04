@@ -66,5 +66,9 @@ public class StoreProduct {
         }
         this.quantity = quantity;
     }
+    public int getStoreId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getStoreId'");
+    }
 }
 

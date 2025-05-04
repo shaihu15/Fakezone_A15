@@ -10,10 +10,11 @@ import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Basket;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.Order;
 
 public interface IOrderService {
-    int addOrder(Collection<StoreProductDTO> products, int storeId, int userId, String address, PaymentMethod paymentMethod); // change the string To a busket object when the busket class is created
+    int addOrder(Collection<StoreProductDTO> products, int storeId, int userId, String address, PaymentMethod paymentMethod);
     int updateOrder(int orderId, Collection<Integer> productsIds, int storeID, Integer userId, String address, PaymentMethod paymentMethod); // other parameters can be added as needed
     void deleteOrder(int orderId);
     IOrder viewOrder(int orderId);
@@ -22,4 +23,5 @@ public interface IOrderService {
     int getOrderStoreId(int orderId);
     List<Integer> getOrderProductIds(int orderId);
     List<IOrder> getOrdersByStoreId(int storeId);
+    void addOrderCart(Cart cart, int userId, String address, PaymentMethod paymentMethod);
 }

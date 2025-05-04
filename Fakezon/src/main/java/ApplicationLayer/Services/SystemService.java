@@ -2,12 +2,18 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.*;
 import InfrastructureLayer.Repositories.StoreRepository;
 import org.apache.commons.compress.harmony.pack200.NewAttributeBands;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,17 +26,26 @@ import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
+import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
+import DomainLayer.Interfaces.IOrder;
+import DomainLayer.Interfaces.IOrderRepository;
+import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
+import DomainLayer.Model.Cart;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import DomainLayer.Model.User;
+import java.util.Arrays;
 
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
@@ -316,7 +331,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<String> guestRegister(String email, String password, String dateOfBirth) {
+    public Response<String> guestRegister(String email, String password, String dateOfBirth, String country) {
         logger.info("System service - user trying to register " + email);
         LocalDate dateOfBirthLocalDate;
         try {
@@ -325,7 +340,13 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
             return new Response<>(null, "Invalid date of birth format. Expected format: YYYY-MM-DD", false, ErrorType.INVALID_INPUT);
         }
-        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate);
+        if(isValidCountryCode(country)) {
+            logger.info("System Service - Country code is valid: " + country);
+        } else {
+            logger.error("System Service - Invalid country code: " + country);
+            return new Response<>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
+        }
+        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR);
@@ -621,6 +642,122 @@ public class SystemService implements ISystemService {
         }
     }
 
+	@Override
+	public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+		try{
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getAllMessages(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+	}
+
+	@Override
+	public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
+		try{
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getAssignmentMessages(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }	}
+
+	@Override
+	public Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID) {
+		try{
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getAuctionEndedtMessages(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    	}
+
+    @Override
+    public Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
+            String cardNumber, String cardHolder, String expDate, String cvv, String address,
+            String recipient, String packageDetails) {
+        double price = 0;
+        Cart cart = null;
+        try{
+            logger.info("System service - user " + userId + " trying to purchase cart");
+            cart = this.userService.getUserCart(userId);
+            if(cart.getAllProducts().isEmpty()){
+                logger.error("System Service - Cart is empty: " + userId);
+                return new Response<String>(null, "Cart is empty", false, ErrorType.INVALID_INPUT);
+            }
+            if(isValidCountryCode(country)) {
+                logger.info("System Service - Country code is valid: " + country);
+            } else {
+                logger.error("System Service - Invalid country code: " + country);
+                return new Response<String>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
+            }
+            Optional<User> user = this.userService.getAnyUserById(userId);
+            if(!user.isPresent()){
+                logger.error("System Service - User not found: " + userId);
+                return new Response<String>(null, "User not found", false, ErrorType.INVALID_INPUT);
+            }
+            price = this.storeService.calcAmount(cart,dob);
+           logger.info("System Service - User "+userId + "cart price: " + price);
+
+        }
+        catch (Exception e) {
+            logger.error("System Service - Error during purchase cart: " + e.getMessage());
+            return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+        try {
+            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, price);
+            logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
+        } catch (Exception e) {
+            logger.error("System Service - Error during payment: " + e.getMessage());
+            return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+        try {
+            this.deliveryService.deliver(country, address, recipient, packageDetails);
+            logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
+
+        } catch (Exception e) {
+            this.paymentService.refund(cardNumber,price);
+            logger.error("System Service - Error during delivery: " + e.getMessage());
+            logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder + " at card number: " + cardNumber);
+        }
+        this.orderService.addOrderCart(cart, userId, address, paymentMethod);
+        return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true);
+
+    }
+
+    @Override
+    public Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
+        try {
+            if (this.userService.isUserLoggedIn(requesterId)) {
+                this.storeService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
+                logger.info("System Service - User sent response for auction: " + productId + " in store: " + storeId
+                        + " by user: " + requesterId + " with accept: " + accept);
+                return new Response<>("Response sent successfully", "Response sent successfully", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during sending response for auction: " + e.getMessage());
+            return new Response<>(null, "Error during sending response for auction: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+
     private OrderDTO createOrderDTO(IOrder order) {
         List<ProductDTO> productDTOS = new ArrayList<>();
         for (int productId : order.getProductIds()) {
@@ -630,6 +767,25 @@ public class SystemService implements ISystemService {
         return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), productDTOS,
                 order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
 
+    }
+
+    @Override
+    public Response<List<OrderDTO>> getAllStoreOrders(int storeId, int userId){
+        try{
+            logger.info("System service - user " + userId + " trying to get all orders from " + storeId);
+            if(!storeService.canViewOrders(storeId, userId)){
+                return new Response<List<OrderDTO>>(null, "user " + userId + " has insufficient permissions to view orders from store " + storeId, false, ErrorType.INVALID_INPUT);
+            }
+            List<IOrder> storeOrders = orderService.getOrdersByStoreId(storeId);
+            List<OrderDTO> storeOrdersDTOs = new ArrayList<>();
+            for(IOrder order : storeOrders){
+                storeOrdersDTOs.add(createOrderDTO(order));
+            }
+            return new Response<List<OrderDTO>>(storeOrdersDTOs, "success", true);
+        }
+        catch(Exception e){
+            return new Response<List<OrderDTO>>(null, e.getMessage(), false,ErrorType.INTERNAL_ERROR);
+        }
     }
 
     @Override
@@ -698,6 +854,11 @@ public class SystemService implements ISystemService {
             logger.error("system service - getPendingManagers failed: " + e.getMessage());
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
+    }
+    // county Validation method
+    private boolean isValidCountryCode(String code) {
+        String[] isoCountries = Locale.getISOCountries();
+        return Arrays.asList(isoCountries).contains(code);
     }
 
     @Override

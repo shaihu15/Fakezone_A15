@@ -1,18 +1,21 @@
 package DomainLayer.Interfaces;
 
+import java.time.LocalDate;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.AbstractMap.SimpleEntry;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.StoreManagerPermission;
-import DomainLayer.Model.StoreRating;
-import DomainLayer.Model.StoreProduct;
-import DomainLayer.Model.PurchasePolicy;
+import DomainLayer.Model.Basket;
 import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.ProductRating;
+import DomainLayer.Model.PurchasePolicy;
+import DomainLayer.Model.StoreProduct;
+import  DomainLayer.Model.StoreRating;
+import DomainLayer.Model.User;
 
 public interface IStore {
     String getName();
@@ -91,6 +94,10 @@ public interface IStore {
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 
+    double calcAmount(Basket basket, LocalDate dob);
+
+    boolean canViewOrders(int userId);
+  
     void acceptAssignment(int userId);
 
     void declineAssignment(int userId);
