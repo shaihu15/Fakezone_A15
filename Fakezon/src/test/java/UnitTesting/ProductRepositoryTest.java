@@ -48,7 +48,7 @@ public class ProductRepositoryTest {
     void givenExistingProduct_WhenUpdateProduct_ThenProductIsUpdated() {
         repository.addProduct(product1);
         when(product1.getName()).thenReturn("UpdatedProduct1");
-        repository.updateProduct(product1);
+        repository.updateProduct(product1.getId(), "UpdatedProduct1", null, null);
         IProduct updatedProduct = repository.getProductById(1);
         assertEquals("UpdatedProduct1", updatedProduct.getName());
     }
@@ -56,7 +56,7 @@ public class ProductRepositoryTest {
     @Test
     void givenNonExistingProduct_WhenUpdateProduct_ThenThrowsException() {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.updateProduct(product1);
+            repository.updateProduct(product1.getId(), "UpdatedProduct1", null, null);
         });
         assertEquals("Product not found in the repository.", exception.getMessage());
     }
