@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public class UserRepository implements IUserRepository {
     private Map<Integer, Registered> users;
@@ -18,7 +19,7 @@ public class UserRepository implements IUserRepository {
     @Override
     public Optional<Registered> findByUserName(String email) {
         return users.values().stream()
-                .filter(user -> user.getEmail().equals(email))
+                .filter(user -> user.getEmail().equals(email) && user instanceof Registered)
                 .findFirst();
     }
     @Override
@@ -35,7 +36,7 @@ public class UserRepository implements IUserRepository {
     public void deleteByUserName(String email) {
         Optional<Registered> user = findByUserName(email);
         if (user.isPresent()) {
-            users.remove(user.get().getUserID());
+            users.remove(user.get().getUserId());
         } else {
             throw new IllegalArgumentException("User not found");
         }
@@ -43,18 +44,26 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public void update(Registered user) {
-        if (!users.containsKey(user.getUserID())) {
-            throw new IllegalArgumentException("User with ID " + user.getUserID() + " does not exist.");
+        if (!users.containsKey(user.getUserId())) {
+            throw new IllegalArgumentException("User with ID " + user.getUserId() + " does not exist.");
         }
-        users.put(user.getUserID(), user); // update existing
+        users.put(user.getUserId(), user); // update existing
     }
 
     @Override
     public void addUser(Registered user) {
-        if (users.containsKey(user.getUserID())) {
-            throw new IllegalArgumentException("User with ID " + user.getUserID() + " already exists.");
+        System.out.println("Adding user with ID: " + user.getUserId());
+        if (users.containsKey(user.getUserId())) {
+            throw new IllegalArgumentException("User with ID " + user.getUserId() + " already exists.");
         }
-        users.put(user.getUserID(), user);
+        System.out.println("User with ID " + user.getUserId() + " does not exist in the repository. Proceeding to add.");
+        users.put(user.getUserId(), user);
+    }
+
+
+    @Override
+    public Optional<User> findAllById(int userID) {
+        return Optional.ofNullable(users.get(userID));
     }
 
 }

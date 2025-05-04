@@ -3,7 +3,7 @@ package DomainLayer.Interfaces;
 import java.time.LocalDate;
 
 public interface IAuthenticator {
-    String register(String email, String password, LocalDate dateOfBirth);
+    String register(String email, String password, LocalDate dateOfBirth, String country);
 
     String login(String email, String password);
 

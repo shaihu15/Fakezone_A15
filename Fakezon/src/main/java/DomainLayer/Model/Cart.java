@@ -16,6 +16,9 @@ public class Cart {
         baskets.clear();
     }
 
+    public List<Basket> getBaskets() {
+        return baskets;
+    }
     public void addProduct(int storeID, StoreProductDTO product) {
         Basket basket = getBasket(storeID);
         if (basket != null) {

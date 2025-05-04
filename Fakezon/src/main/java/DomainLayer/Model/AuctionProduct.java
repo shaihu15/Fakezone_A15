@@ -66,9 +66,8 @@ public class AuctionProduct extends StoreProduct {
     }
 
     public StoreProductDTO toDTO() {
-        return new StoreProductDTO(this.getSproductID(), this.getName(), this.getCurrentHighestBid(), 1,
-                this.getAverageRating());
-                //only one product in auction, so quantity = 1
+        return new StoreProductDTO(this.getSproductID(), this.getName(), this.getBasePrice(), this.getQuantity(),
+                this.getAverageRating(), this.getStoreId()); 
     }
 
     public void addDays(int days){
