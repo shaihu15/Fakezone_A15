@@ -1,40 +1,36 @@
 package DomainLayer.Model;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
-import org.apache.commons.lang3.ObjectUtils.Null;
-//import org.springframework.security.access.method.P;
-
-
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
-import DomainLayer.Model.helpers.*;
+import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.Node;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.Tree;
+import java.time.LocalDate;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import java.util.AbstractMap.SimpleEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Store implements IStore {
 
     private String name;
