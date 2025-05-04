@@ -1,6 +1,9 @@
 package ApplicationLayer.Interfaces;
 
 import java.util.AbstractMap.SimpleEntry;
+
+import org.springframework.security.access.method.P;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
@@ -10,6 +13,7 @@ import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.User;
@@ -45,7 +49,7 @@ public interface IStoreService {
         StoreProductDTO getProductFromStore(int productId, int storeId);
 
         // --- Product Management ---
-        void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity);
+        void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category);
 
         void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice,
                         int quantity);

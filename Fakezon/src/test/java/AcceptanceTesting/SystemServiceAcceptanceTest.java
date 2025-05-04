@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -174,7 +175,7 @@ public class SystemServiceAcceptanceTest {
 
         // Arrange
         int productId = 1;
-        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId);
+        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId,null);
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act

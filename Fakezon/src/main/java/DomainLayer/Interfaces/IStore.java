@@ -2,12 +2,16 @@ package DomainLayer.Interfaces;
 
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
+
+import org.springframework.security.access.method.P;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.DiscountPolicy;
@@ -26,7 +30,7 @@ public interface IStore {
 
     void addStoreProductRating(int userID, int productID, double rating, String comment);
 
-    void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
+    void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category);
 
     void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy);
 
@@ -105,5 +109,6 @@ public interface IStore {
     List<Integer> getPendingOwners(int requesterId);
 
     List<Integer> getPendingManagers(int requesterId);
+    void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
     
 }

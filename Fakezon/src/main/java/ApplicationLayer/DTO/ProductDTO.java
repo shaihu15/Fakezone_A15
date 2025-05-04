@@ -1,7 +1,14 @@
 package ApplicationLayer.DTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import ApplicationLayer.Enums.PCategory;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Product;
+
 import java.util.Set;
+import java.util.Locale.Category;
+
+import org.springframework.security.access.method.P;
 
 
 public class ProductDTO {
@@ -18,19 +25,30 @@ public class ProductDTO {
     @JsonProperty("storeIds")
     private Set<Integer> storeIds;
 
+    @JsonProperty("category")
+    private PCategory category;
 
-    public ProductDTO(String name, String description, int id, Set<Integer> storeIds) {
+
+    public ProductDTO(String name, String description, int id,PCategory category, Set<Integer> storeIds) {
         this.name = name;
         this.description = description;
         this.storeIds = storeIds;
         this.id = id;
+        this.category = category;
     }
-    public ProductDTO(String name, String description, int id) {
+    public ProductDTO(String name, String description, int id,PCategory category) {
+        this.category = category;
         this.name = name;
         this.description = description;
         this.storeIds = null;
         this.id = id;
 
+    }
+    public ProductDTO(IProduct product, Set<Integer> storeIds) {
+        this.name = product.getName();
+        this.description = product.getDescription();
+        this.storeIds = storeIds;
+        this.id = product.getId();
     }
 
     public Set<Integer> getStoresIds() {
@@ -55,6 +73,9 @@ public class ProductDTO {
     public String setDescription(String description) {
         this.description = description;
         return description;
+    }
+    public PCategory getCategory() {
+        return category;
     }
 
 

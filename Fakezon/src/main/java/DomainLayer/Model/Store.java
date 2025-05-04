@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
@@ -128,7 +129,7 @@ public class Store implements IStore {
     
 
     @Override
-    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
+    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -153,11 +154,12 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, category)); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
     }
-    public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity){
+    @Override
+    public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -182,7 +184,8 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity)); //overrides old product
+        StoreProduct storeProduct = storeProducts.get(productID);
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
     }
@@ -974,7 +977,7 @@ public class Store implements IStore {
         }
         storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
         return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating(), storeProduct.getStoreId());
+                    quantity, storeProduct.getAverageRating(), storeProduct.getStoreId(), storeProduct.getCategory());
     }
 
     private boolean hasInventoryPermissions(int id){

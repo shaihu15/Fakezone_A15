@@ -3,8 +3,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale.Category;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
 
 
@@ -14,20 +16,24 @@ public class Product implements IProduct {
     private String name;
     private String description;
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private PCategory category; 
     private Set<Integer> storesIds; // List of store IDs where the product is available
 
-    public Product(String name, String description) {
+    public Product(String name, String description,PCategory category) {
         this.id = idCounter.incrementAndGet();
         this.name = name;
         this.description = description;
+        this.category = category;
         this.storesIds = new HashSet<>();
         this.storesIds = new HashSet<>();
         
     }
 
-    public Product(int id, String name, String description, Set<Integer> storesIds) {
+    public Product(int id, String name, String description,PCategory category, Set<Integer> storesIds) {
         this.id = id;
         this.name = name;
+        this.description = description;
+        this.category = category;
        if (storesIds == null) {
             this.storesIds = new HashSet<>();
         } else {
@@ -85,6 +91,10 @@ public class Product implements IProduct {
             this.storesIds.remove(storesIds);
         }
         
+    }
+    @Override
+    public PCategory getCategory() {
+        return category;
     }
 
 }
