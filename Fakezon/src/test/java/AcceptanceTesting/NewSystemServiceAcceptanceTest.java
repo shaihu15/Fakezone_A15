@@ -83,6 +83,6 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().toString();
         String country = Locale.getDefault().getCountry();
         Response<String> result = systemService.guestRegister(email, password, birthDate, country);
-        assertTrue(true);
+        assertTrue(result.isSuccess());
     }
 }
