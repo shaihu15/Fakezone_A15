@@ -55,7 +55,8 @@ public class NewSystemServiceAcceptanceTest {
     private IOrderService orderService;
     private String systemAdmainEmail = "SystemAdmain@gmail.com";
     private String systemAdmainPassword = "IAmTheSystemAdmain";
-    private String systemAdmainCountry = Locale.getDefault().getCountry();
+    private String systemAdmainCountry = "IL";
+
     private LocalDate systemAdmainBirthDate = LocalDate.of(2000, 1, 1);
 
     @BeforeEach
@@ -81,9 +82,10 @@ public class NewSystemServiceAcceptanceTest {
         String email = "user@gmail.com";
         String password = "password123";
         String birthDate = LocalDate.now().toString();
-        String country = Locale.getDefault().getCountry();
+        String country = "IL";
         Response<String> result = systemService.guestRegister(email, password, birthDate, country);
         System.out.println("Result: " + result.getMessage()+ " " + result.isSuccess());
+        System.out.println("Result: " + Locale.getDefault().getCountry());
         // assertTrue(result.isSuccess());
         assertEquals("Guest registered successfully", result.getMessage());
     }
