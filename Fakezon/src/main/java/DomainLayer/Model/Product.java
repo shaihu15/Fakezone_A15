@@ -21,7 +21,6 @@ public class Product implements IProduct {
         this.name = name;
         this.description = description;
         this.storesIds = new HashSet<>();
-        this.storesIds = new HashSet<>();
         
     }
 
