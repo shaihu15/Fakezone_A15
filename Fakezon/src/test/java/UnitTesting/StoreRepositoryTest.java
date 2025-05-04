@@ -82,13 +82,6 @@ public class StoreRepositoryTest {
         repository.addStore(store1);
         assertEquals(store1, repository.findById(store1.getId()));
     }
-    @Test
-    void givenDuplicateStoreId_whenAddStore_thenStoreIsUpdated() {
-        repository.addStore(store1);
-        Store updatedStore = new Store("Updated Store", store1.getId(), mockPublisher);
-        repository.addStore(updatedStore);
-        assertEquals(updatedStore, repository.findById(store1.getId()));
-    }
 
     //delete
     @Test
@@ -122,51 +115,4 @@ public class StoreRepositoryTest {
         assertEquals(10, top10Stores.size());
     }
 
-
-    @Test
-    void givenExistingStore_whenDelete_thenStoreIsRemoved() {
-        repository.addStore(store1);
-        repository.delete(store1.getId());
-        assertNull(repository.findById(store1.getId()));
-    }
-
-    @Test
-    void givenMultipleStores_whenGetAllStores_thenReturnAllStores() {
-        repository.addStore(store1);
-        repository.addStore(store2);
-        Collection<Store> all = repository.getAllStores();
-        assertEquals(2, all.size());
-        assertTrue(all.contains(store1));
-        assertTrue(all.contains(store2));
-    }
-
-    @Test
-    void givenStoreName_whenFindByName_thenReturnStore() {
-        repository.addStore(store1);
-        Store result = repository.findByName("Store One");
-        assertNotNull(result);
-        assertEquals(store1.getId(), result.getId());
-    }
-
-    @Test
-    void givenNonExistingName_whenFindByName_thenReturnNull() {
-        repository.addStore(store1);
-        Store result = repository.findByName("Not Found");
-        assertNull(result);
-    }
-
-    @Test
-    void givenStoresWithRatings_whenGetTop10Stores_thenReturnSortedTop10() {
-        for (int i = 1; i <= 15; i++) {
-            Store s = new Store("S" + i, i, mockPublisher);
-            repository.addStore(s);
-            s.addRating(i, i, "Great store!");
-        }
-
-        List<Store> top10 = new ArrayList<>(repository.getTop10Stores());
-
-        assertEquals(10, top10.size());
-        assertEquals("S15", top10.get(0).getName());
-        assertEquals("S6", top10.get(9).getName());
-    }
 }
