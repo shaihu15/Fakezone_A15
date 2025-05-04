@@ -1,12 +1,21 @@
 package UnitTesting;
 
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.AuctionProduct;
 import DomainLayer.Model.Store;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 import java.lang.management.ManagementPermission;
@@ -424,5 +433,6 @@ public class StoreTest {
 
         assertTrue(owners.contains(userId), "User should be in the list of store owners");
     }
+   
     
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -26,6 +27,9 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import java.util.AbstractMap.SimpleEntry;
 import org.slf4j.Logger;
@@ -55,6 +59,7 @@ public class Store implements IStore {
     private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED BOTH
     private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
     private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
+    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
@@ -292,6 +297,12 @@ public class Store implements IStore {
                             + productID + " in store ID: " + storeID);
                 }
                 auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
+                scheduler.schedule(() -> {
+                    handleAuctionEnd(productID);
+                    //auctionProducts.remove(productID);
+                }, daysToEnd, TimeUnit.DAYS);
+        
+                
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
@@ -351,7 +362,7 @@ public class Store implements IStore {
         return prods;
     }
 
-    public void handeleAuctionEnd(int productID) {
+    public void handleAuctionEnd(int productID) {
         if (auctionProducts.containsKey(productID)) {
             AuctionProduct auctionProduct = auctionProducts.get(productID);
             if (auctionProduct.getDaysToEnd() <= 0) {
