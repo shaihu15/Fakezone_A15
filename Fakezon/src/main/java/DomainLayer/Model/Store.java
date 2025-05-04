@@ -847,6 +847,9 @@ public class Store implements IStore {
 
     @Override
     public double getAverageRating() {
+        if (Sratings == null || Sratings.isEmpty()) {
+            return 0;
+        }
         double sum = 0;
         for (StoreRating rating : Sratings.values()) {
             sum += rating.getRating();
