@@ -366,10 +366,19 @@ public class SystemService implements ISystemService {
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR);
-        } else {
-            logger.info("System service - user registered successfully " + email);
-            return new Response<>(token, "Guest registered successfully", true);
         }
+        logger.info("System Service - User got token successfully: " + email); 
+        try{
+            LocalDate dob = parseDate(dateOfBirth);
+            this.userService.addUser(password, email, dob, country);
+        }
+        catch (Exception e) {
+            logger.error("System Service - Invalid date format: " + dateOfBirth);
+            return new Response<>(null, "Invalid date format", false, ErrorType.INVALID_INPUT);
+        }
+        logger.info("System Service - User registered successfully: " + email);
+
+        return new Response<> ( null, "Guest registered successfully", true);
         
     }
 
