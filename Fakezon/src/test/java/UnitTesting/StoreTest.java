@@ -14,8 +14,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+
+import ApplicationLayer.Enums.PCategory;
+
 import static org.mockito.Mockito.*;
 
 import java.lang.management.ManagementPermission;
@@ -34,7 +38,7 @@ public class StoreTest {
     void setUp() {
         publisher = mock(ApplicationEventPublisher.class);
         store = new Store("Test Store", founderId, publisher);
-        store.addStoreProduct(founderId ,productId, "Test Product", 100.0, 5);
+        store.addStoreProduct(founderId ,productId, "Test Product", 100.0, 5, PCategory.ELECTRONICS);
 
     }
 
@@ -87,7 +91,7 @@ public class StoreTest {
     void addStoreProductRating_ValidRating_ShouldSucceed() {
         int userId = 1;
         int productId = 1;
-        store.addStoreProduct(founderId, productId, "Test Product", 10.0, 100);
+        store.addStoreProduct(founderId, productId, "Test Product", 10.0, 100, PCategory.ELECTRONICS);
         double rating = 4.5;
         String comment = "Great product!";
 

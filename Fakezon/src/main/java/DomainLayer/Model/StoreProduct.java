@@ -3,20 +3,26 @@ package DomainLayer.Model;
 import java.util.HashMap;
 import java.util.Map;
 
+import ApplicationLayer.Enums.PCategory;
+
+import java.util.Locale.Category;
+
 
 public class StoreProduct {
     private int SproductID;
     private String name;
     private double basePrice;
     private int quantity;
+    private PCategory category;
     private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
 
 
-   public StoreProduct(int SproductID, String name, double basePrice, int quantity) {
+   public StoreProduct(int SproductID, String name, double basePrice, int quantity,PCategory category) {
         this.SproductID = SproductID;
         this.name = name;
         this.basePrice = basePrice;
         this.quantity = quantity;
+        this.category = category;
     }
     public StoreProduct(StoreProduct storeProduct) {
         this.SproductID = storeProduct.SproductID;
@@ -36,6 +42,9 @@ public class StoreProduct {
     }
     public synchronized int getQuantity() {
         return quantity;
+    }
+    public PCategory getCategory() {
+        return category;
     }
    
     //precondition: user is logged in and User has purchased the product - cheaked by service layer

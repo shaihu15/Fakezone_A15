@@ -77,7 +77,7 @@ public interface ISystemService {
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
-    Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
+    Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity,String category); // add product to store
 
     Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
@@ -98,6 +98,8 @@ public interface ISystemService {
     Response<List<Integer>> getPendingOwners(int storeId, int requesterId);
 
     Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
+
+    Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
 
     Response<Integer> addOrder(int userId, BasketDTO basket, String address, String paymentMethod, String token);
 

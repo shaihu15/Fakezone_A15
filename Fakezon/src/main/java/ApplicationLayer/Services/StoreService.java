@@ -13,11 +13,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.method.P;
 
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IStoreService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
@@ -151,7 +153,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity) {
+    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category) {
         try{
             logger.info("Store Service - User " + requesterId + " trying to add store product " + productId + " to store "+ storeId);
             Store store = storeRepository.findById(storeId);
@@ -159,7 +161,7 @@ public class StoreService implements IStoreService {
                 logger.error("Store Service - addProductToStore - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            store.addStoreProduct(requesterId, productId, name, basePrice, quantity);
+            store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
         }
         catch (Exception e){
             logger.error("StoreService - failed to add store product " + e.getMessage());
