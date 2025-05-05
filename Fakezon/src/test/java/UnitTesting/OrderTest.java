@@ -12,6 +12,7 @@ import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.Basket;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 
 public class OrderTest {
     private Order order;
@@ -19,9 +20,9 @@ public class OrderTest {
     @BeforeEach
     void setUp() {
         Basket basket = new Basket(1, Arrays.asList(
-                new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1),
-                new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1),
-                new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1)
+                new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1, PCategory.FASHION),
+                new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1, PCategory.FASHION),
+                new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1, PCategory.FASHION)
         ));
         order = new Order(1, 101, OrderState.PENDING, basket, "123 Main St", PaymentMethod.CREDIT_CARD);
     }
@@ -77,9 +78,9 @@ public class OrderTest {
     @Test
     void givenCashOnDeliveryOrder_WhenSetPaymentMethod_ThenPaymentMethodIsUpdated() {
         Basket basket = new Basket(1, Arrays.asList(
-                new StoreProductDTO(1, "Product1", 10.0, 0, 0.0, 201),
-                new StoreProductDTO(2, "Product2", 15.0, 0, 0.0, 201),
-                new StoreProductDTO(3, "Product3", 20.0, 0, 0.0, 201)
+                new StoreProductDTO(1, "Product1", 10.0, 0, 0.0, 201, PCategory.GARDEN),
+                new StoreProductDTO(2, "Product2", 15.0, 0, 0.0, 201, PCategory.GARDEN),
+                new StoreProductDTO(3, "Product3", 20.0, 0, 0.0, 201, PCategory.GARDEN)
         ));
         order = new Order(1, 101, OrderState.PENDING, basket, "123 Main St", PaymentMethod.CASH_ON_DELIVERY);        order.setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
         assertEquals(PaymentMethod.CASH_ON_DELIVERY, order.getPaymentMethod());

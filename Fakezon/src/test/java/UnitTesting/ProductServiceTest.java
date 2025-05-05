@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.access.method.P;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 import ApplicationLayer.Services.ProductService;
@@ -30,12 +32,15 @@ public class ProductServiceTest {
 
     @Test
     void givenValidProductDetails_WhenAddProduct_ThenProductIsAdded() {
-        productService.addProduct("Product1", "Description1");
+        productService.addProduct("Product1", "Description1",PCategory.ELECTRONICS);
         verify(productRepository, times(1)).addProduct(any(IProduct.class));
     }
 
     @Test
     void givenValidProductDetails_WhenUpdateProduct_ThenProductIsUpdated() {
+        productService.addProduct("Product1", "Description1",PCategory.ELECTRONICS);
+        IProduct mockProduct = mock(IProduct.class);
+        when(productRepository.getProductById(1)).thenReturn(mockProduct);
         productService.updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
         verify(productRepository, times(1)).updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
     }

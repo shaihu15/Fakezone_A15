@@ -5,14 +5,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IProductService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Product;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class ProductService implements IProductService {
@@ -27,10 +28,10 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public int addProduct(String productName, String productDescription) {
+    public int addProduct(String productName, String productDescription,PCategory category) {
         try {
             
-            IProduct productToAdd = new Product(productName, productDescription);
+            IProduct productToAdd = new Product(productName, productDescription,category);
             productRepository.addProduct(productToAdd);
             return productToAdd.getId();
             
@@ -43,7 +44,19 @@ public class ProductService implements IProductService {
 
     @Override
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
+        IProduct existingProduct = null;
+        try{
+            existingProduct = productRepository.getProductById(productId);
+            if (existingProduct == null) {
+                throw new IllegalArgumentException("Product not found");
+            }
+        }
+        catch (IllegalArgumentException e) {
+            logger.error("While trying to update, recived error {}", e);
+            throw e;
+        }
         try {
+
             productRepository.updateProduct(productId, productName, productDescription, storesIds);
             
         } catch (IllegalArgumentException e) {
@@ -64,11 +77,27 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    public List<ProductDTO> getAllProducts() {
+        try {
+            Collection<IProduct> products = productRepository.getAllProducts();
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory() ,new HashSet<>(product.getStoresIds())))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to get all products, received error {}", e);
+            throw e;
+        } finally {
+            logger.info("All products were retrieved");
+        }
+    }
+
+    @Override
     public ProductDTO viewProduct(int productId) {
         try {
             IProduct product = productRepository.getProductById(productId);
             Set<Integer> prodcutStoresIds = new HashSet<>(product.getStoresIds());
-            return new ProductDTO(product.getName(), product.getDescription(), productId, prodcutStoresIds);
+            return new ProductDTO(product, prodcutStoresIds);
         } catch (IllegalArgumentException e) {
             logger.error("While trying to view, recived error {}", e);
             throw e;
@@ -82,7 +111,7 @@ public class ProductService implements IProductService {
         try {
             Collection<IProduct> products = productRepository.searchProducts(keyword);
             List<ProductDTO> productDTOs = products.stream()
-                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(), new HashSet<>(product.getStoresIds())))
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory(), new HashSet<>(product.getStoresIds())))
                 .toList();
             return productDTOs;
         } catch (Exception e) {
@@ -130,6 +159,12 @@ public class ProductService implements IProductService {
         }
     }
 
+
+    @Override
+    public List<ProductDTO> getProductsByCategory(PCategory category) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getProductsByCategory'");
+    }
     @Override
     public IProduct getProduct(int productId) {
         try {

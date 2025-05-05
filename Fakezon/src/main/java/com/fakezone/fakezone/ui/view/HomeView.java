@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.vaadin.flow.component.html.Main;
 
-@Route("/") // This maps to "/"
+@Route(value = "", layout = MainLayout.class)
 public class HomeView extends Main {
 
     public HomeView() {

@@ -67,7 +67,7 @@ public class AuctionProduct extends StoreProduct {
 
     public StoreProductDTO toDTO() {
         return new StoreProductDTO(this.getSproductID(), this.getName(), this.getBasePrice(), this.getQuantity(),
-                this.getAverageRating(), this.getStoreId()); 
+                this.getAverageRating(), this.getStoreId(), this.getCategory()); 
     }
 
     public void addDays(int days){
