@@ -48,3 +48,10 @@ out/
 *.swp
 
 frontend/generated/
+
+
+# Vaadin build and generated files
+/.vaadin/
+/node_modules/
+/frontend/generated/
+/target/

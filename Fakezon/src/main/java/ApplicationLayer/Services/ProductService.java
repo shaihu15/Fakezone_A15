@@ -4,7 +4,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Locale.Category;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Enums.PCategory;
@@ -12,9 +14,6 @@ import ApplicationLayer.Interfaces.IProductService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Product;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class ProductService implements IProductService {
@@ -75,6 +74,22 @@ public class ProductService implements IProductService {
             throw e;
         }
 
+    }
+
+    @Override
+    public List<ProductDTO> getAllProducts() {
+        try {
+            Collection<IProduct> products = productRepository.getAllProducts();
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory() ,new HashSet<>(product.getStoresIds())))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to get all products, received error {}", e);
+            throw e;
+        } finally {
+            logger.info("All products were retrieved");
+        }
     }
 
     @Override

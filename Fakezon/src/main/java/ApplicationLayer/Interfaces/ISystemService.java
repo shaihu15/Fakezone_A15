@@ -99,6 +99,8 @@ public interface ISystemService {
 
     Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
 
+    Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
+
     Response<Integer> addOrder(int userId, BasketDTO basket, String address, String paymentMethod, String token);
 
     Response<Integer> updateOrder(int orderId, BasketDTO basket, Integer userId, String address, String paymentMethod, String token);
