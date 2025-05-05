@@ -1,10 +1,12 @@
 package ApplicationLayer.Services;
 
 import ApplicationLayer.Interfaces.ISystemService;
+import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IOrderRepository;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
@@ -33,9 +35,18 @@ public class AppConfig {
     public IOrderRepository orderRepository() {
         return new OrderRepository();
     }
+    @Bean
+    public IUserService userService(IUserRepository userRepository) {
+        return new UserService(userRepository);
+    }
 
     @Bean
     public ISystemService systemService(ApplicationEventPublisher eventPublisher, IStoreRepository storeRepository, IProductRepository productRepository, IUserRepository userRepository, IOrderRepository orderRepository) {
         return new SystemService(storeRepository, userRepository, productRepository,orderRepository, eventPublisher);
+    }
+
+    @Bean
+    public AuthenticatorAdapter authenticatorAdapter(IUserService userService) {
+        return new AuthenticatorAdapter(userService);
     }
 }
