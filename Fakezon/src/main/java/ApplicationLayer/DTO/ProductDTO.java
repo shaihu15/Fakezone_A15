@@ -49,6 +49,7 @@ public class ProductDTO {
         this.description = product.getDescription();
         this.storeIds = storeIds;
         this.id = product.getId();
+        this.category = product.getCategory();
     }
 
     public Set<Integer> getStoresIds() {
