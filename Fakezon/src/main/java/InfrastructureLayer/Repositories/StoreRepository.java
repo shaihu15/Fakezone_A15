@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
@@ -51,6 +52,9 @@ public class StoreRepository implements IStoreRepository {
         return null; // Store not found
     }
 
-    
+    @Override
+    public Collection<Store> getTop10Stores() {
+       return stores.values().stream().sorted((s1, s2) -> Double.compare(s2.getAverageRating(), s1.getAverageRating())).limit(10).collect(Collectors.toList());
+    }
 
 }
