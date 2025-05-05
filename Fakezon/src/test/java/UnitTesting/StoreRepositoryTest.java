@@ -106,13 +106,25 @@ public class StoreRepositoryTest {
     @Test
     void givenStores_whenGetTop10Stores_thenReturnTop10Stores() {
         for (int i = 1; i <= 15; i++) {
-            Store store = new Store("Store " + i, i, mockPublisher);
-            store.addRating(i, i, "Great store!");
+            Store store = new Store("S" + i, i, mockPublisher); 
+            store.addRating(i, i, "Great store!"); 
             repository.addStore(store);
         }
-
-        Collection<Store> top10Stores = repository.getTop10Stores();
-        assertEquals(10, top10Stores.size());
+    
+        List<Store> top10 = new ArrayList<>(repository.getTop10Stores());
+    
+        assertEquals(10, top10.size());
+        assertEquals("S15", top10.get(0).getName()); 
+        assertEquals("S14", top10.get(1).getName()); 
+        assertEquals("S13", top10.get(2).getName());
+        assertEquals("S12", top10.get(3).getName());
+        assertEquals("S11", top10.get(4).getName());
+        assertEquals("S10", top10.get(5).getName());
+        assertEquals("S9", top10.get(6).getName()); 
+        assertEquals("S8", top10.get(7).getName());
+        assertEquals("S7", top10.get(8).getName());
+        assertEquals("S6", top10.get(9).getName()); 
     }
+    
 
 }
