@@ -598,27 +598,54 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity, String category) {
+    public Response<Void> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
         String name = null;
+        int productId;
+        PCategory categoryEnum = null;
+        boolean isNewProd = false; //used for reverting if the operation fails
         try{
-            logger.info("System service - user " + requesterId + " trying to add product " + productId + " to store " + storeId);
-            name = productService.viewProduct(productId).getName();
+            logger.info("System service - user " + requesterId + " trying to add product " + productName + " to store " + storeId);
+            List<ProductDTO> products = productService.getAllProducts();
+            ProductDTO product = null;
+            for(ProductDTO prod : products){
+                if(prod.getName().equals(productName)){
+                    product = prod;
+                    break;
+                }
+            }
+            categoryEnum = isCategoryValid(category);
+            if (categoryEnum == null) {
+                logger.error("System Service - Invalid category: " + category);
+                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT);
+            }
+            if(product == null){
+                isNewProd = true;
+                productId = productService.addProduct(productName, description, categoryEnum);
+                productService.addProductsToStore(storeId, List.of(productId));
+            }
+            else{
+                productId = product.getId();
+                if(!product.getDescription().equals(description) || !product.getCategory().toString().equals(category)){
+                    throw new IllegalArgumentException("Product description/category is different than expected");
+                }
+            }
+
         }
         catch (Exception e){
             logger.error("System service - failed to fetch product " + e.getMessage());
             return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try{
-            PCategory categoryEnum = isCategoryValid(category);
-            if (categoryEnum == null) {
-                logger.error("System Service - Invalid category: " + category);
-                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT);
-            }
+            
             storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity, categoryEnum);
             return new Response<>(null, "Product added to store successfully", true);
         }
         catch (Exception e){
             logger.error("System service - failed to add product to store " + e.getMessage());
+            if(isNewProd){ // reverting
+                productService.removeStoreFromProducts(storeId, List.of(productId));
+                productService.deleteProduct(productId);
+            }
             return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
