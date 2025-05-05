@@ -18,6 +18,8 @@ public class TokenService {
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000; // 5 hours
     private static final String USER_ID_CLAIM = "userId";
+    private static final String USER_ROLE_CLAIM = "role";
+    private static final long GUEST_TOKEN_VALIDITY = 2 * 60 * 60 * 1000; // 2 hours for guests
 
     @Value("${jwt.secret}")
     private String secretKey; // This should be set in application.properties
@@ -32,6 +34,36 @@ public class TokenService {
                 .signWith(key)
                 .compact();
         
+    }
+
+    /**
+     * Generate a token for guest users
+     * @return JWT token with guest role
+     */
+    public String generateGuestToken() {
+        String guestId = "guest-" + java.util.UUID.randomUUID().toString();
+        
+        return Jwts.builder()
+                .setSubject(guestId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + GUEST_TOKEN_VALIDITY))
+                .claim(USER_ROLE_CLAIM, "GUEST")
+                .signWith(key)
+                .compact();
+    }
+
+    /**
+     * Check if token belongs to a guest user
+     * @param token JWT token to check
+     * @return true if token is for a guest user
+     */
+    public boolean isGuestToken(String token) {
+        try {
+            String role = extractClaim(token, claims -> claims.get(USER_ROLE_CLAIM, String.class));
+            return "GUEST".equals(role);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // Validate token
