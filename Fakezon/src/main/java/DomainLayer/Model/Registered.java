@@ -1,29 +1,27 @@
 package DomainLayer.Model;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.AbstractMap.SimpleEntry;
-
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Services.AppConfig;
-import DomainLayer.Enums.RoleName;
-import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.Model.helpers.AssignmentEvent;
-import DomainLayer.Model.helpers.ClosingStoreEvent;
-import DomainLayer.Model.helpers.ResponseFromStoreEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.helpers.AssignmentEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
 @Component
 public class Registered extends User {
@@ -33,25 +31,24 @@ public class Registered extends User {
     private String email;
     private String password;
     private int age;
-    private HashMap<Integer, OrderDTO> orders; // orderId -> Order
-    private HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> auctionEndedMessages; // storeID -> message
-
-    public Registered(String email, String password, LocalDate dateOfBirth) {
+    private String state;
+    public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super();
         this.email = email;
         this.password = password;
-        this.orders = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
         this.roles = new HashMap<>();
         this.isLoggedIn = true;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
+        auctionEndedMessages = new LinkedList<>();
+        this.state = state;
+
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
@@ -83,7 +80,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleResposeFromStore(ResponseFromStoreEvent event) {
-        if(event.getUserId() != this.userID) {
+        if(event.getUserId() != this.userId) {
             return false;
         }
         return true;
@@ -97,7 +94,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
-        if(event.getUserId() != this.userID) {
+        if(event.getUserId() != this.userId) {
             return false;
         }
         return true;
@@ -147,7 +144,7 @@ public class Registered extends User {
     }
 
     private boolean shouldHandleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
-        if(event.getUserIDHighestBid() != this.userID) {
+        if(event.getUserIDHighestBid() != this.userId) {
             return false;
         }
         return true;
@@ -163,7 +160,7 @@ public class Registered extends User {
         // your logic to send to UI
     }
     private boolean shouldHandleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
-        if(event.getUserIDHighestBid() != this.userID) {
+        if(event.getUserIDHighestBid() != this.userId) {
             return false;
         }
         return true;
@@ -232,10 +229,6 @@ public class Registered extends User {
         return false;
     }
 
-    public int getUserID() {
-        return userID;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -269,7 +262,7 @@ public class Registered extends User {
 
     @Override
     public UserDTO toDTO() {
-        return new UserDTO(userID, email, age);
+        return new UserDTO(userId, email, age);
     }
 
     

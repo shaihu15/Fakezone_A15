@@ -27,9 +27,9 @@ public class ProductController {
         this.systemService = systemService;
     }
     @GetMapping("/getProduct/{id}")
-    public ResponseEntity<Response<ProductDTO>> getProdcut(@PathVariable("id") int id, @RequestBody Request request) {
+    public ResponseEntity<Response<ProductDTO>> getProdcut(@PathVariable("id") int id, @RequestHeader("Authorization") String token) {
         try{
-            logger.info("Received request to get product with ID: {} from user this request tocken of: {}", id, request.getToken());
+            logger.info("Received request to get product with ID: {} from user this request tocken of: {}", id, token);
             Response<ProductDTO> response = systemService.getProduct(id);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
@@ -46,7 +46,7 @@ public class ProductController {
 
     }
 
-    @PutMapping("/updateProduct/")
+    @PutMapping("/updateProduct")
     public ResponseEntity<Response<Boolean>> updateProduct(@RequestBody Request<ProductDTO> updatedProduct){
         try{
             ProductDTO productDTO = updatedProduct.getData();
@@ -68,11 +68,11 @@ public class ProductController {
         }
     }
 
-    @DeleteMapping("/deleteProduct/{id}")
-    public ResponseEntity<Response<Boolean>> deleteProduct(@PathVariable("id") int id, @RequestBody Request request) {
+    @DeleteMapping("/deleteProduct")
+    public ResponseEntity<Response<Boolean>> deleteProduct(@RequestBody Request<Integer> request) {
         try{
-            logger.info("Received request to delete product with ID: {} from user this request tocken of: {}", id, request.getToken());
-            Response<Boolean> response = systemService.deleteProduct(id);
+            logger.info("Received request to delete product with ID: {} from user this request tocken of: {}", request.getData(), request.getToken());
+            Response<Boolean> response = systemService.deleteProduct(request.getData());
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             }
@@ -87,12 +87,11 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/searchProducts/")
-    public ResponseEntity<Response<List<ProductDTO>>> searchProducts(@RequestBody Request<String> request){
+    @GetMapping("/searchProducts/{keyword}")
+    public ResponseEntity<Response<List<ProductDTO>>> searchProducts(@PathVariable("keyword") String keyword, @RequestHeader("Authorization") String token) {
         try{
-            String keyword = request.getData();
-            logger.info("Received request to search products with keyword: {} from user this request tocken of: {}", keyword, request.getToken());
-            Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword, request.getToken());
+            logger.info("Received request to search products with keyword: {} from user this request tocken of: {}", keyword, token);
+            Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword, token);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             }

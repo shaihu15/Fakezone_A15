@@ -4,12 +4,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ApplicationLayer.DTO.BasketDTO;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.StoreProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import DomainLayer.Model.Cart;
 import ApplicationLayer.Interfaces.IOrderService;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
@@ -30,9 +34,7 @@ public class OrderService implements IOrderService {
 
     @Override
     public int addOrder(Basket basket, int userId, String address, PaymentMethod paymentMethod) {
-        List<StoreProductDTO> products = basket.getProducts();
-        List<Integer> productIds = products.stream().map(product -> product.getProductId()).toList();
-        IOrder order = new Order(userId, OrderState.PENDING, productIds, basket.getStoreID(), address, paymentMethod);
+        IOrder order = new Order(userId, OrderState.PENDING, basket, address, paymentMethod);
         orderRepository.addOrder(order);
         return order.getId();
     }
@@ -40,10 +42,7 @@ public class OrderService implements IOrderService {
     @Override
     public int updateOrder(int orderId, Basket basket, Integer userId, String address, PaymentMethod paymentMethod) {
         try {
-            List<StoreProductDTO> products = basket.getProducts();
-            List<Integer> productIds = products.stream().map(product -> product.getProductId()).toList();
-            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, productIds, basket.getStoreID(),
-                    address, paymentMethod);
+            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, basket, address, paymentMethod);
             orderRepository.updateOrder(orderId, updatedOrder);
             return updatedOrder.getId();
 
@@ -75,16 +74,16 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public List<Integer> searchOrders(String keyword) {
-        List<Integer> orderIds = new ArrayList<>();
+    public List<IOrder> searchOrders(String keyword) {
+        List<IOrder> orders = new ArrayList<>();
         for (IOrder order : orderRepository.getAllOrders()) {
             if (order.getAddress().contains(keyword) || order.getState().toString().contains(keyword)
                     || order.getPaymentMethod().toString().contains(keyword)
                     || order.getProductIds().toString().contains(keyword)) {
-                orderIds.add(order.getId());
+                orders.add(order);
             }
         }
-        return orderIds;
+        return orders;
     }
 
     @Override
@@ -132,5 +131,22 @@ public class OrderService implements IOrderService {
         return storeOrders;
 
 
+    }
+
+    @Override
+    public void addOrderCart(Cart cart, int userId, String address, PaymentMethod paymentMethod) {
+        for (Basket basket : cart.getBaskets()) {
+            if (basket.getProducts().isEmpty()) {
+                logger.error("Basket is empty, cannot create order.");
+                throw new IllegalArgumentException("Basket is empty, cannot create order.");
+            }// not sopposed to be here, but just in case
+            List<Integer> productIds = basket.getProducts().stream()
+                .map(StoreProductDTO::getProductId)
+                .toList();
+            IOrder order = new Order(userId, OrderState.SHIPPED, basket, address, paymentMethod);
+            orderRepository.addOrder(order);
+            logger.info("Order created with ID: {}", order.getId());
+        }
+      
     }
 }

@@ -10,29 +10,26 @@ import DomainLayer.Interfaces.IOrder;
 public class Order implements IOrder{
     private final int orderId;
     private final int userId;
-    private final int storeId;
-    private final Collection<Integer> productIds;
+    private Basket basket;
     private OrderState orderState;
     private String address;
     private PaymentMethod paymentMethod;
     private static AtomicInteger idCounter = new AtomicInteger(0);
 
-    public Order(int userId, OrderState orderState, Collection<Integer> productIds, int storeId, String address, PaymentMethod paymentMethod) {
+    public Order(int userId, OrderState orderState, Basket basket, String address, PaymentMethod paymentMethod) {
         this.orderId = idCounter.incrementAndGet();
         this.userId = userId;
         this.orderState = orderState;
-        this.productIds = productIds;
-        this.storeId = storeId;
+        this.basket = basket;
         this.address = address;
         this.paymentMethod = paymentMethod;
     }
     
-    public Order(int id, int userId, OrderState orderState, Collection<Integer> productIds, int storeId, String address, PaymentMethod paymentMethod) {
+    public Order(int id, int userId, OrderState orderState, Basket basket, String address, PaymentMethod paymentMethod) {
         this.orderId = id;
         this.userId = userId;
         this.orderState = orderState;
-        this.productIds = productIds;
-        this.storeId = storeId;
+        this.basket = basket;
         this.address = address;
         this.paymentMethod = paymentMethod;
     }
@@ -47,10 +44,6 @@ public class Order implements IOrder{
         return userId;
     }
 
-    @Override
-    public int getStoreId() {
-        return storeId;
-    }
 
     @Override
     public OrderState getState() {
@@ -62,10 +55,6 @@ public class Order implements IOrder{
         this.orderState = orderState;
     }
 
-    @Override   
-    public Collection<Integer> getProductIds() {
-        return productIds;
-    }
 
     @Override
     public String getAddress() {
@@ -88,6 +77,21 @@ public class Order implements IOrder{
             throw new IllegalArgumentException("Payment method can only be changed if it is CASH_ON_DELIVERY.");
         }
         this.paymentMethod = paymentMethod;
+    }
+
+    @Override
+    public Basket getBasket() {
+        return basket;
+    }
+
+    @Override
+    public int getStoreId() {
+        return basket.getStoreID();
+    }
+
+    @Override
+    public Collection<Integer> getProductIds() {
+        return basket.getProducts().stream().map(product->product.getProductId()).toList();
     }
 
 

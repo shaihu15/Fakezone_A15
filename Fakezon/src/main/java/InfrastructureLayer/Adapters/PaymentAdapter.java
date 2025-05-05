@@ -27,14 +27,14 @@ public class PaymentAdapter implements IPayment {
     }
 
     @Override
-    public boolean refund(int paymentId, double amount) {
-        logger.info("Attempting refund for payment ID: " + paymentId + ", amount: " + amount);
-        boolean result = externalSystem.processRefund(paymentId, amount);
+    public boolean refund(String cardNumber, double amount) {
+        logger.info("Attempting refund for payment cardNumber: " + cardNumber + ", amount: " + amount);
+        boolean result = externalSystem.processRefund(cardNumber, amount);
         if (result) {
-            logger.info("Refund succeeded for payment ID: " + paymentId);
+            logger.info("Refund succeeded for payment ID: " + cardNumber);
             return true;
         } else {
-            logger.error("Refund failed for payment ID: " + paymentId);
+            logger.error("Refund failed for payment ID: " + cardNumber);
             return false;
         }
     }
@@ -46,7 +46,7 @@ class ExternalPaymentSystem {
         // Simulate always successful payment
         return true;
     }
-    public boolean processRefund(int paymentId, double amount) {
+    public boolean processRefund(String cardNumber, double amount) {
         // Simulate always successful refund
         return true;
     }

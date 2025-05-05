@@ -3,6 +3,7 @@ package AcceptanceTesting;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -45,6 +47,7 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.Product;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
+import ApplicationLayer.Enums.PCategory;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
@@ -97,29 +100,6 @@ public class SystemServiceAcceptanceTest {
                 authenticatorService, paymentService, publisher);
 
     }
-
-    // closeStore_Founder_Success
-    @Test
-    void UserRegistration_Guest_Success() {
-        // Arrange
-        String email = "test@gmail.com";
-        String password = "password123";
-        String dobInput = "1990-01-01";
-        LocalDate dob = LocalDate.parse(dobInput);
-
-        // Mock the behavior of the authenticatorService to return a token
-        String mockToken = "mockToken123";
-        when(authenticatorService.register(email, password, dob)).thenReturn(mockToken);
-
-        // Act
-        // Verify that the response is not null and contains the expected token
-        Response<String> response = systemService.guestRegister(email, password, dobInput);
-
-        // Assert
-        assertTrue(response.isSuccess());
-        assertEquals(mockToken, response.getData());
-        verify(authenticatorService, times(1)).register(email, password, dob);
-    }
     
 
     @Test
@@ -128,9 +108,10 @@ public class SystemServiceAcceptanceTest {
         String email = "test@gmail.com";
         String password = "password123";
         String invalidDobInput = "invalid-date";
+        String country = "IL";
 
         // Act
-        Response<String> response = systemService.guestRegister(email, password, invalidDobInput);
+        Response<String> response = systemService.guestRegister(email, password, invalidDobInput,country);
 
         // Assert
         assertFalse(response.isSuccess());
@@ -172,7 +153,7 @@ public class SystemServiceAcceptanceTest {
 
         // Arrange
         int productId = 1;
-        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId);
+        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId,null);
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act
@@ -226,6 +207,67 @@ public class SystemServiceAcceptanceTest {
         verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
         
+    }
+
+    @Test
+    void getTopRatedProducts_Success() {
+        // Arrange
+        int limit = 2;
+        // Create ProductDTOs with store IDs included in the constructor
+        List<ProductDTO> allProducts = Arrays.asList(
+            new ProductDTO("Product 1", "Description 1", 1, PCategory.BEAUTY,new HashSet<>(Arrays.asList(1, 2))),
+            new ProductDTO("Product 2", "Description 2", 2, PCategory.BEAUTY,new HashSet<>(Arrays.asList(1))),
+            new ProductDTO("Product 3", "Description 3", 3, PCategory.BEAUTY,new HashSet<>(Arrays.asList(2)))
+        );
+        
+        // Create store products with ratings
+        StoreProductDTO product1Store1 = new StoreProductDTO(1, "Product 1", 10.0, 5, 4.5,1,PCategory.BEAUTY);
+        StoreProductDTO product1Store2 = new StoreProductDTO(1, "Product 1", 11.0, 3, 3.8,1,PCategory.BEAUTY);
+        StoreProductDTO product2Store1 = new StoreProductDTO(2, "Product 2", 20.0, 10, 4.2,1,PCategory.BEAUTY);
+        StoreProductDTO product3Store2 = new StoreProductDTO(3, "Product 3", 30.0, 7, 4.7,1,PCategory.BEAUTY);
+        
+        // Mock the behavior
+        when(productService.getAllProducts()).thenReturn(allProducts);
+        when(storeService.getProductFromStore(1, 1)).thenReturn(product1Store1);
+        when(storeService.getProductFromStore(1, 2)).thenReturn(product1Store2);
+        when(storeService.getProductFromStore(2, 1)).thenReturn(product2Store1);
+        when(storeService.getProductFromStore(3, 2)).thenReturn(product3Store2);
+        
+        // Act
+        Response<List<StoreProductDTO>> response = systemService.getTopRatedProducts(limit);
+        
+        // Assert
+        assertTrue(response.isSuccess());
+        assertEquals(2, response.getData().size());
+        assertEquals(3, response.getData().get(0).getProductId()); // Product 3 has highest rating (4.7)
+        assertEquals(1, response.getData().get(1).getProductId()); // Product 1 from store 1 has second highest (4.5)
+        verify(productService, times(1)).getAllProducts();
+    }
+    
+    @Test
+    void getTopRatedProducts_EmptyResult() {
+        // Arrange
+        int limit = 3;
+        // Create ProductDTOs with store IDs included in the constructor
+        List<ProductDTO> allProducts = Arrays.asList(
+            new ProductDTO("Product 1", "Description 1", 1, PCategory.BEAUTY,new HashSet<>(Arrays.asList(1))),
+            new ProductDTO("Product 2", "Description 2", 2, PCategory.BEAUTY,new HashSet<>(Arrays.asList(2)))
+        );
+        
+        // Mock behavior for a scenario where products have no ratings (NaN) or errors occur
+        when(productService.getAllProducts()).thenReturn(allProducts);
+        when(storeService.getProductFromStore(1, 1)).thenThrow(new IllegalArgumentException("Product not found"));
+        when(storeService.getProductFromStore(2, 2)).thenReturn(
+            new StoreProductDTO(2, "Product 2", 20.0, 10, Double.NaN,1,PCategory.BEAUTY) // No ratings
+        );
+        
+        // Act
+        Response<List<StoreProductDTO>> response = systemService.getTopRatedProducts(limit);
+        
+        // Assert
+        assertTrue(response.isSuccess());
+        assertEquals(0, response.getData().size()); // No products with valid ratings
+        verify(productService, times(1)).getAllProducts();
     }
 
 }

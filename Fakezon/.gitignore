@@ -32,6 +32,30 @@ build/
 ### VS Code ###
 .vscode/
 
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### vaadin ###
+.idea/
+*.iml
+*.iws
+out/
+
+.vscode/
+
+*.log
+*.tmp
+*.swp
+
+frontend/generated/
+
+
+# Vaadin build and generated files
+/.vaadin/
+/node_modules/
+/frontend/generated/
+/target/
+
 # Vaadin build and generated files
 /.vaadin/
 /node_modules/
