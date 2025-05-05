@@ -489,9 +489,14 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         try {
-            store.addBidOnAuctionProduct(requesterId, productID, bid);
-            logger.info("Bid added to auction product in store: " + storeId + " by user: " + requesterId
+            if(store.addBidOnAuctionProduct(requesterId, productID, bid)){
+                logger.info("Bid added to auction product in store: " + storeId + " by user: " + requesterId
                     + " with product ID: " + productID + " and bid: " + bid);
+                }
+            else{
+                logger.error("addBidOnAuctionProductInStore - Bid not valid: " + bid);
+                throw new IllegalArgumentException("Bid not valid");
+            }
         } catch (IllegalArgumentException e) {
             logger.error("addBidOnAuctionProductInStore - Product not found: " + productID);
             throw new IllegalArgumentException("Product not found");

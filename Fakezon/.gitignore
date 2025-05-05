@@ -55,3 +55,9 @@ frontend/generated/
 /node_modules/
 /frontend/generated/
 /target/
+
+# Vaadin build and generated files
+/.vaadin/
+/node_modules/
+/frontend/generated/
+/target/

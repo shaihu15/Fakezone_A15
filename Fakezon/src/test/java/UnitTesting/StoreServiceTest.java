@@ -4,7 +4,7 @@ import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 import InfrastructureLayer.Repositories.StoreRepository;
-
+import ApplicationLayer.Enums.PCategory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -219,7 +219,113 @@ class StoreServiceTest {
         // assertTrue(exception.getMessage().toLowerCase().contains(expectedMessagePart),
         //     "Exception message should indicate unauthorized access");
     }
+    @Test
+    void testAddAuctionProductToStore_Success() {
+        int storeId = storeService.addStore(1, "AuctionStore1");
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        storeService.addProductToStore(storeId, 1, 101, "AuctionStore1",50.0,5,PCategory.ELECTRONICS);
+        // Adding an auction product to the store
+        assertDoesNotThrow(() ->
+            storeService.addAuctionProductToStore(storeId, 1, 101, 50.0, 5)
+        );
 
+        // Verify that the product was added successfully
+        List<ApplicationLayer.DTO.AuctionProductDTO> auctionProducts = storeService.getAuctionProductsFromStore(storeId);
+        assertNotNull(auctionProducts);
+        assertEquals(1, auctionProducts.size());
+        assertEquals(101, auctionProducts.get(0).getProductId());
+    }
+
+    @Test
+    void testAddAuctionProductToStore_StoreNotFound() {
+        int invalidStoreId = 999; // Assuming this store ID does not exist
+        assertThrows(IllegalArgumentException.class, () ->
+            storeService.addAuctionProductToStore(invalidStoreId, 1, 101, 50.0, 5)
+        );
+        
+    }
+
+    @Test
+    void testAddBidOnAuctionProductInStore_Success() {
+        int storeId = storeService.addStore(1, "AuctionStore2");
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        storeService.addProductToStore(storeId, 1, 102, "AuctionStore2",50.0,5,PCategory.ELECTRONICS);
+        // Adding an auction product to the store
+        storeService.addAuctionProductToStore(storeId, 1, 102, 50.0, 5);
+
+        // Adding a bid on the auction product
+        assertDoesNotThrow(() ->
+            storeService.addBidOnAuctionProductInStore(storeId, 1, 102, 55.0)
+        );
+    }
+
+    @Test
+    void testAddStoreAuctionProductDays_InvalidDays() {
+        int storeId = storeService.addStore(1, "AuctionStore3");
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+
+        // Adding an auction product with invalid days
+        assertThrows(IllegalArgumentException.class, () ->
+            storeService.addAuctionProductToStore(storeId, 1, 103, 50.0, -1)
+        );
+    }
+
+    @Test
+    void testSendResponseForAuctionByOwner_Success() {
+        int storeId = storeService.addStore(1, "AuctionStore4");
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        storeService.addProductToStore(storeId, 1, 104, "AuctionStore4",50.0,5,PCategory.ELECTRONICS);
+        // Adding an auction product to the store
+        storeService.addAuctionProductToStore(storeId, 1, 104, 50.0, 1);
+
+        // Sending a response for the auction
+        assertDoesNotThrow(() ->
+            storeService.sendResponseForAuctionByOwner(storeId, 1, 104, false)
+        );
+    }
+    @Test
+    void testSendResponseForAuctionByOwner_InvalidStoreId() {
+        int invalidStoreId = 999; // Assuming this store ID does not exist
+        assertThrows(IllegalArgumentException.class, () ->
+            storeService.sendResponseForAuctionByOwner(invalidStoreId, 1, 104, false)
+        );
+    }
+
+    @Test
+    void testGetAuctionProductsFromStore_Success() {
+        int storeId = storeService.addStore(1, "AuctionStore5");
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        storeService.addProductToStore(storeId, 1, 105, "AuctionStore5",50.0,5,PCategory.ELECTRONICS);
+        // Adding an auction product to the store
+        storeService.addAuctionProductToStore(storeId, 1, 105, 50.0, 5);
+
+        // Retrieving auction products from the store
+        List<ApplicationLayer.DTO.AuctionProductDTO> auctionProducts = storeService.getAuctionProductsFromStore(storeId);
+        assertNotNull(auctionProducts);
+        assertEquals(1, auctionProducts.size());
+        assertEquals(105, auctionProducts.get(0).getProductId());
+    }
+    @Test
+    void testGetAuctionProductsFromStore_StoreNotFound() {
+        int invalidStoreId = 999; // Assuming this store ID does not exist
+        assertThrows(IllegalArgumentException.class, () ->
+            storeService.getAuctionProductsFromStore(invalidStoreId)
+        );
+    }
+    @Test
+    void testAddBidOnAuctionProductInStore_BidTooLow() {
+        int storeId = storeService.addStore(1, "AuctionStore6");
+        assertTrue(storeId > 0, "Store ID should be a positive number");
+        storeService.addProductToStore(storeId, 1, 106, "AuctionStore6",50.0,5,PCategory.ELECTRONICS);
+        // Adding an auction product to the store
+        storeService.addAuctionProductToStore(storeId, 1, 106, 50.0, 5);
+        storeService.addBidOnAuctionProductInStore(storeId, 2, 106, 60.0);
+
+        // Attempting to bid lower than current highest bid
+        assertThrows(IllegalArgumentException.class, () ->
+            storeService.addBidOnAuctionProductInStore(storeId, 3, 106, 55.0)
+        );
+    }
 
 
 }
