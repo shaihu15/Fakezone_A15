@@ -3,7 +3,6 @@ package UnitTesting;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
 import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
@@ -17,8 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalDate;
-import java.util.HashMap;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
