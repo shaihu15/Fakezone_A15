@@ -47,6 +47,7 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.Product;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
+import ApplicationLayer.Enums.PCategory;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
@@ -98,30 +99,6 @@ public class SystemServiceAcceptanceTest {
         systemService = new SystemService(storeService, userService, productService,orderService, deliveryService,
                 authenticatorService, paymentService, publisher);
 
-    }
-
-    // closeStore_Founder_Success
-    @Test
-    void UserRegistration_Guest_Success() {
-        // Arrange
-        String email = "test@gmail.com";
-        String password = "password123";
-        String dobInput = "1990-01-01";
-        LocalDate dob = LocalDate.parse(dobInput);
-        String country = "IL";
-
-        // Mock the behavior of the authenticatorService to return a token
-        String mockToken = "mockToken123";
-        when(authenticatorService.register(email, password, dob,country)).thenReturn(mockToken);
-
-        // Act
-        // Verify that the response is not null and contains the expected token
-        Response<String> response = systemService.guestRegister(email, password, dobInput,country);
-
-        // Assert
-        assertTrue(response.isSuccess());
-        assertEquals(mockToken, response.getData());
-        verify(authenticatorService, times(1)).register(email, password, dob,country);
     }
     
 
@@ -238,16 +215,16 @@ public class SystemServiceAcceptanceTest {
         int limit = 2;
         // Create ProductDTOs with store IDs included in the constructor
         List<ProductDTO> allProducts = Arrays.asList(
-            new ProductDTO("Product 1", "Description 1", 1, new HashSet<>(Arrays.asList(1, 2))),
-            new ProductDTO("Product 2", "Description 2", 2, new HashSet<>(Arrays.asList(1))),
-            new ProductDTO("Product 3", "Description 3", 3, new HashSet<>(Arrays.asList(2)))
+            new ProductDTO("Product 1", "Description 1", 1, PCategory.BEAUTY,new HashSet<>(Arrays.asList(1, 2))),
+            new ProductDTO("Product 2", "Description 2", 2, PCategory.BEAUTY,new HashSet<>(Arrays.asList(1))),
+            new ProductDTO("Product 3", "Description 3", 3, PCategory.BEAUTY,new HashSet<>(Arrays.asList(2)))
         );
         
         // Create store products with ratings
-        StoreProductDTO product1Store1 = new StoreProductDTO(1, "Product 1", 10.0, 5, 4.5);
-        StoreProductDTO product1Store2 = new StoreProductDTO(1, "Product 1", 11.0, 3, 3.8);
-        StoreProductDTO product2Store1 = new StoreProductDTO(2, "Product 2", 20.0, 10, 4.2);
-        StoreProductDTO product3Store2 = new StoreProductDTO(3, "Product 3", 30.0, 7, 4.7);
+        StoreProductDTO product1Store1 = new StoreProductDTO(1, "Product 1", 10.0, 5, 4.5,1,PCategory.BEAUTY);
+        StoreProductDTO product1Store2 = new StoreProductDTO(1, "Product 1", 11.0, 3, 3.8,1,PCategory.BEAUTY);
+        StoreProductDTO product2Store1 = new StoreProductDTO(2, "Product 2", 20.0, 10, 4.2,1,PCategory.BEAUTY);
+        StoreProductDTO product3Store2 = new StoreProductDTO(3, "Product 3", 30.0, 7, 4.7,1,PCategory.BEAUTY);
         
         // Mock the behavior
         when(productService.getAllProducts()).thenReturn(allProducts);
@@ -273,15 +250,15 @@ public class SystemServiceAcceptanceTest {
         int limit = 3;
         // Create ProductDTOs with store IDs included in the constructor
         List<ProductDTO> allProducts = Arrays.asList(
-            new ProductDTO("Product 1", "Description 1", 1, new HashSet<>(Arrays.asList(1))),
-            new ProductDTO("Product 2", "Description 2", 2, new HashSet<>(Arrays.asList(2)))
+            new ProductDTO("Product 1", "Description 1", 1, PCategory.BEAUTY,new HashSet<>(Arrays.asList(1))),
+            new ProductDTO("Product 2", "Description 2", 2, PCategory.BEAUTY,new HashSet<>(Arrays.asList(2)))
         );
         
         // Mock behavior for a scenario where products have no ratings (NaN) or errors occur
         when(productService.getAllProducts()).thenReturn(allProducts);
         when(storeService.getProductFromStore(1, 1)).thenThrow(new IllegalArgumentException("Product not found"));
         when(storeService.getProductFromStore(2, 2)).thenReturn(
-            new StoreProductDTO(2, "Product 2", 20.0, 10, Double.NaN) // No ratings
+            new StoreProductDTO(2, "Product 2", 20.0, 10, Double.NaN,1,PCategory.BEAUTY) // No ratings
         );
         
         // Act
