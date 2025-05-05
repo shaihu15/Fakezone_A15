@@ -13,6 +13,7 @@ import java.util.HashMap;
 import DomainLayer.Interfaces.IOrder;
 import InfrastructureLayer.Repositories.OrderRepository;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Model.Order;
@@ -32,9 +33,9 @@ public class OrderRepositoryTest {
         repository = new OrderRepository(new HashMap<>());
 
         // Create mock StoreProductDTO objects with all required fields
-        StoreProductDTO product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1);
-        StoreProductDTO product2 = new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1);
-        StoreProductDTO product3 = new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1);
+        StoreProductDTO product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1,PCategory.ELECTRONICS);
+        StoreProductDTO product2 = new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1, PCategory.ELECTRONICS);
+        StoreProductDTO product3 = new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1, PCategory.ELECTRONICS);
 
         List<StoreProductDTO> products1 = Arrays.asList(product1, product2, product3);
         List<StoreProductDTO> products2 = Arrays.asList(product1, product2);
@@ -64,9 +65,9 @@ public class OrderRepositoryTest {
     void givenExistingOrder_WhenUpdateOrder_ThenOrderIsUpdated() {
         repository.addOrder(order1);
         Basket updatedBasket = new Basket(1, Arrays.asList(
-                new StoreProductDTO(7, "Product7", 30.0, 0, 0.0, 1),
-                new StoreProductDTO(8, "Product8", 40.0, 0, 0.0, 1),
-                new StoreProductDTO(9, "Product9", 50.0, 0, 0.0, 1)
+                new StoreProductDTO(7, "Product7", 30.0, 0, 0.0, 1, PCategory.ELECTRONICS),
+                new StoreProductDTO(8, "Product8", 40.0, 0, 0.0, 1, PCategory.ELECTRONICS),
+                new StoreProductDTO(9, "Product9", 50.0, 0, 0.0, 1, PCategory.ELECTRONICS)
         ));
         IOrder updatedOrder = new Order(1, 101, OrderState.SHIPPED, updatedBasket, "789 Pine St", PaymentMethod.CREDIT_CARD);
         repository.updateOrder(1, updatedOrder);        repository.updateOrder(1, updatedOrder);

@@ -1,6 +1,8 @@
 package ApplicationLayer.Services;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +12,8 @@ import java.util.Set;
 
 import ApplicationLayer.DTO.*;
 import ApplicationLayer.Response;
+import InfrastructureLayer.Repositories.StoreRepository;
+import javassist.bytecode.LineNumberAttribute.Pc;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.*;
 import DomainLayer.Model.*;
@@ -28,11 +32,6 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrder;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -40,7 +39,11 @@ import InfrastructureLayer.Adapters.PaymentAdapter;
 import java.util.Arrays;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.method.P;
+import org.springframework.stereotype.Component;
+
 import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Enums.PCategory;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -264,6 +267,13 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during sending message to user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
+    public LocalDate parseDate(String dateString) {
+    try {
+        return LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
+    } catch (DateTimeParseException e) {
+        throw new IllegalArgumentException("Invalid date format: " + dateString);
+    }
+}
 
     @Override
     public Response<StoreProductDTO> getProductFromStore(int productId, int storeId) {
@@ -324,7 +334,7 @@ public class SystemService implements ISystemService {
         logger.info("System service - user trying to register " + email);
         LocalDate dateOfBirthLocalDate;
         try {
-            dateOfBirthLocalDate = LocalDate.parse(dateOfBirth);
+            dateOfBirthLocalDate = parseDate(dateOfBirth);
         } catch (Exception e) {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
             return new Response<>(null, "Invalid date of birth format. Expected format: YYYY-MM-DD", false, ErrorType.INVALID_INPUT);
@@ -369,16 +379,39 @@ public class SystemService implements ISystemService {
     }
 
     //addProduct method should be with amount and store?
-    private Response<Integer> addProduct(String productName, String productDescription) {
+    private Response<Integer> addProduct(String productName, String productDescription, String category) {
         try {
+            if (productName == null || productDescription == null || category == null) {
+                logger.error("System Service - Invalid input: " + productName + " " + productDescription + " " + category);
+                return new Response<>(-1, "Invalid input", false, ErrorType.INVALID_INPUT);
+            }
+            PCategory categoryEnum = isCategoryValid(category);
+            if (categoryEnum == null) {
+                logger.error("System Service - Invalid category: " + category);
+                return new Response<>(-1, "Invalid category", false, ErrorType.INVALID_INPUT);
+            }
             logger.info("System service - user trying to add procuct " + productName);
-            int productId = this.productService.addProduct(productName, productDescription);
+            int productId = this.productService.addProduct(productName, productDescription,categoryEnum);
             return new Response<>(productId, "Product added successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during adding product: " + e.getMessage());
             return new Response<>(-1, "Error during adding product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         //return -1;
+    }
+
+    private PCategory isCategoryValid(String category) {
+        try {
+            for (PCategory c : PCategory.values()) {
+                if (c.name().equalsIgnoreCase(category)) {
+                    return c;
+                }
+            }
+            return null;
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Invalid category: " + category);
+            return null;
+        }
     }
 
     @Override
@@ -548,7 +581,7 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity){
+    public Response<Void> addProductToStore(int storeId, int requesterId, int productId, double basePrice, int quantity, String category) {
         String name = null;
         try{
             logger.info("System service - user " + requesterId + " trying to add product " + productId + " to store " + storeId);
@@ -559,7 +592,12 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try{
-            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity);
+            PCategory categoryEnum = isCategoryValid(category);
+            if (categoryEnum == null) {
+                logger.error("System Service - Invalid category: " + category);
+                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT);
+            }
+            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity, categoryEnum);
             return new Response<>(null, "Product added to store successfully", true);
         }
         catch (Exception e){
@@ -580,7 +618,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during updating product in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try{
-            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity);
+            storeService.updateProductInStore(storeId, requesterId, productId, name, basePrice, quantity);
             return new Response<>(null, "Product updated in store successfully", true);
         }
         catch (Exception e){
@@ -1012,4 +1050,5 @@ public class SystemService implements ISystemService {
     // throw new IllegalArgumentException("Invalid session token");
     // }
     // }
+
 }
