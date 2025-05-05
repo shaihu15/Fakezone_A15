@@ -58,21 +58,22 @@ public class StoreController {
     }
 
 
-    @PostMapping("/addProductToStore/{storeId}/{requesterId}/{productId}")
+    @PostMapping("/addProductToStore/{storeId}/{requesterId}")
     public ResponseEntity<Response<Void>> addProductToStore(@PathVariable("storeId") int storeId,
-                                                     @PathVariable("requesterId") int requesterId,
-                                                     @PathVariable("productId") int productId,
-                                                     @RequestParam("basePrice") double basePrice,
-                                                     @RequestParam("quantity") int quantity,
-                                                     @RequestParam("category") String category,
-                                                     @RequestHeader("Authorization") String token) {
+                                                            @PathVariable("requesterId") int requesterId,
+                                                            @RequestParam("productName") String productName,
+                                                            @RequestParam("description") String description,
+                                                            @RequestParam("basePrice") double basePrice,
+                                                            @RequestParam("quantity") int quantity,
+                                                            @RequestParam("category") String category,
+                                                            @RequestHeader("Authorization") String token) {
         try {
-            logger.info("Received request to add product {} to store {} by user {} with token {}", productId, storeId, requesterId, token);
+            logger.info("Received request to add product '{}' to store {} by user {} with token {}", productName, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addProductToStore(storeId, requesterId, productId, basePrice, quantity, category);
+            Response<Void> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }

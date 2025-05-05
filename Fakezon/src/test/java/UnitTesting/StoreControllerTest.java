@@ -91,21 +91,22 @@ class StoreControllerTest {
     void testAddProductToStore_Success() {
         int storeId = 1;
         int requesterId = 1;
-        int productId = 1;
+        String productName = "Test Product";
+        String description = "Test Description";
         double basePrice = 100.0;
         int quantity = 10;
         String category = "ELECTRONICS";
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addProductToStore(storeId, requesterId, productId, basePrice, quantity, category))
+        when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
                 .thenReturn(new Response<>(null, "Product added successfully", true));
 
-        ResponseEntity<Response<Void>> response = storeController.addProductToStore(storeId, requesterId, productId, basePrice, quantity, category, token);
+        ResponseEntity<Response<Void>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
-        verify(systemService, times(1)).addProductToStore(storeId, requesterId, productId, basePrice, quantity, category);
+        verify(systemService, times(1)).addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
     }
 
     @Test
