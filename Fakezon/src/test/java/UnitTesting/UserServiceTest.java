@@ -17,6 +17,7 @@ public class UserServiceTest {
 
     private UserService userService;
     private IUserRepository userRepository;
+    private String Country = "IL"; // Example country  
 
     @BeforeEach
     void setUp() {
@@ -26,13 +27,13 @@ public class UserServiceTest {
 
     @Test
     void testConvertUserToDTO_Success() {
-        Registered user = new Registered("test@example.com", "password123", LocalDate.of(2000, 1, 1));
+        Registered user = new Registered("test@example.com", "password123", LocalDate.of(2000, 1, 1),Country);
 
         UserDTO userDTO = userService.convertUserToDTO(user);
 
         assertNotNull(userDTO);
         assertEquals(user.getEmail(), userDTO.getUserEmail());
-        assertEquals(user.getUserID(), userDTO.getUserId());
+        assertEquals(user.getUserId(), userDTO.getUserId());
     }
 
     @Test

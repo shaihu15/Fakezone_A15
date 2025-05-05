@@ -1,35 +1,34 @@
 package DomainLayer.Model;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
-import org.apache.commons.lang3.ObjectUtils.Null;
-//import org.springframework.security.access.method.P;
-
-
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
-import DomainLayer.Model.helpers.*;
+import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
-
-import java.util.AbstractMap.SimpleEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.Node;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.Tree;
+import java.time.LocalDate;
 
 public class Store implements IStore {
 
@@ -112,7 +111,8 @@ public class Store implements IStore {
                     "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
-   @Override
+
+    @Override
     public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
         productsLock.lock();
         if (auctionProducts.containsKey(productID)) {
@@ -129,7 +129,7 @@ public class Store implements IStore {
     
 
     @Override
-    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
+    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -154,11 +154,12 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity));
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, category)); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
     }
-    public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity){
+    @Override
+    public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -183,7 +184,8 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity)); //overrides old product
+        StoreProduct storeProduct = storeProducts.get(productID);
+        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
     }
@@ -793,7 +795,6 @@ public class Store implements IStore {
         return storeFounderID;
     }
 
-
     @Override
     public void closeStore(int requesterId) {
         if (requesterId == this.storeFounderID) {
@@ -875,7 +876,6 @@ public class Store implements IStore {
         }
     }
 
-    @Override
     public void removeStoreOwner(int requesterId, int toRemoveId) {
         rolesLock.lock();
         try{
@@ -918,14 +918,7 @@ public class Store implements IStore {
             Node fatherNode = nodesArr[0];
             Node childNode = nodesArr[1];
             if (!childNode.getChildren().isEmpty()) {
-                throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree"); // should
-                                                                                                                    // not
-                                                                                                                    // happen
-                                                                                                                    // -
-                                                                                                                    // just
-                                                                                                                    // for
-                                                                                                                    // debugging
-                                                                                                                    // purposes
+                throw new IllegalArgumentException("Manager with id " + toRemoveId + " has children in rolesTree");
             }
             storeManagers.remove(toRemoveId);
             fatherNode.removeChild(childNode);// remove child from the actual tree
@@ -936,7 +929,6 @@ public class Store implements IStore {
         }
         rolesLock.unlock();
     }
-
     private void removeAllChildrenRoles(Node toRemove) {
         List<Node> children = toRemove.getAllDescendants();
         for (Node child : children) {
@@ -962,24 +954,10 @@ public class Store implements IStore {
         Node fatherNode = rolesTree.getNode(requesterId);
         Node childNode = rolesTree.getNode(childId);
         if (fatherNode == null) {
-            throw new IllegalArgumentException("Could Not Find fatherNode in rolesTree (id: " + requesterId + ")"); // should
-                                                                                                                    // not
-                                                                                                                    // happen
-                                                                                                                    // -
-                                                                                                                    // just
-                                                                                                                    // for
-                                                                                                                    // debugging
-                                                                                                                    // purposes
+            throw new IllegalArgumentException("Could Not Find fatherNode in rolesTree (id: " + requesterId + ")"); // should not happen - just for debugging purposes
         }
         if (childNode == null) {
-            throw new IllegalArgumentException("Could Not Find childNode in rolesTree (id: " + requesterId + ")"); // should
-                                                                                                                   // not
-                                                                                                                   // happen
-                                                                                                                   // -
-                                                                                                                   // just
-                                                                                                                   // for
-                                                                                                                   // debugging
-                                                                                                                   // purposes
+            throw new IllegalArgumentException("Could Not Find childNode in rolesTree (id: " + requesterId + ")"); // should not happen - just for debugging purposes
         }
         if (requesterId != childId && !fatherNode.isChild(childNode)) {
             throw new IllegalArgumentException("Only " + childId + "'s appointor can change/remove their permissions");
@@ -999,11 +977,54 @@ public class Store implements IStore {
         }
         storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
         return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating());
+                    quantity, storeProduct.getAverageRating(), storeProduct.getStoreId(), storeProduct.getCategory());
     }
 
     private boolean hasInventoryPermissions(int id){
         return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
+    }
+
+    @Override
+    public double calcAmount(Basket basket, LocalDate dob) {
+        List<StoreProductDTO> products = basket.getProducts();
+        double amount = 0;
+        for (StoreProductDTO product : products) {
+            if (!storeProducts.containsKey(product.getProductId())) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + product.getProductId() + " does not exist in store ID: " + storeID);
+            }
+            int productId = product.getProductId();
+            if (this.purchasePolicies.containsKey(productId)) {
+                PurchasePolicy policy = this.purchasePolicies.get(productId);
+                if (!policy.canPurchase(dob, productId, product.getQuantity())) {
+                    throw new IllegalArgumentException(
+                            "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
+                }
+            }
+
+            boolean isDiscountApplicable = true;
+            DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
+            if(discountPolicy == null) {
+                isDiscountApplicable = false;
+            }
+            if (discountPolicy!= null) {
+                DiscountPolicy policy = this.discountPolicies.get(productId);
+                List<DiscountCondition> conditions = policy.getConditions();
+                for(DiscountCondition condition : conditions) {
+                    if (products.stream().anyMatch(p -> p.getProductId() == condition.getTriggerProductId() && p.getQuantity() < condition.getTriggerQuantity())){ 
+                    isDiscountApplicable = false;
+                        break;
+                    }
+                }  
+            }
+            if(isDiscountApplicable) {
+                discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+            } else {
+                amount += product.getBasePrice() * product.getQuantity();
+            }
+    }
+        return amount;
     }
 
     @Override
