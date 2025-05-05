@@ -4,8 +4,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale.Category;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IProductService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
@@ -27,10 +29,10 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public int addProduct(String productName, String productDescription) {
+    public int addProduct(String productName, String productDescription,PCategory category) {
         try {
             
-            IProduct productToAdd = new Product(productName, productDescription);
+            IProduct productToAdd = new Product(productName, productDescription,category);
             productRepository.addProduct(productToAdd);
             return productToAdd.getId();
             
@@ -43,9 +45,20 @@ public class ProductService implements IProductService {
 
     @Override
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
+        IProduct existingProduct = null;
+        try{
+            existingProduct = productRepository.getProductById(productId);
+            if (existingProduct == null) {
+                throw new IllegalArgumentException("Product not found");
+            }
+        }
+        catch (IllegalArgumentException e) {
+            logger.error("While trying to update, recived error {}", e);
+            throw e;
+        }
         try {
-            IProduct product = new Product(productId, productName, productDescription, storesIds);
-            productRepository.updateProduct(product);
+
+            productRepository.updateProduct(productId, productName, productDescription, storesIds);
             
         } catch (IllegalArgumentException e) {
             logger.error("While trying to update, recived error {}", e);
@@ -85,7 +98,7 @@ public class ProductService implements IProductService {
         try {
             IProduct product = productRepository.getProductById(productId);
             Set<Integer> prodcutStoresIds = new HashSet<>(product.getStoresIds());
-            return new ProductDTO(product.getName(), product.getDescription(), productId, prodcutStoresIds);
+            return new ProductDTO(product, prodcutStoresIds);
         } catch (IllegalArgumentException e) {
             logger.error("While trying to view, recived error {}", e);
             throw e;
@@ -99,7 +112,7 @@ public class ProductService implements IProductService {
         try {
             Collection<IProduct> products = productRepository.searchProducts(keyword);
             List<ProductDTO> productDTOs = products.stream()
-                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(), new HashSet<>(product.getStoresIds())))
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory(), new HashSet<>(product.getStoresIds())))
                 .toList();
             return productDTOs;
         } catch (Exception e) {
@@ -116,7 +129,7 @@ public class ProductService implements IProductService {
             for (Integer productId : productsIds) {
                 IProduct product = productRepository.getProductById(productId);
                 product.addStore(storeId);
-                productRepository.updateProduct(product);
+                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), new HashSet<>(product.getStoresIds()));
             }
         } catch (IllegalArgumentException e) {
             logger.error("While trying to add products to store, recived error {}", e);
@@ -132,7 +145,7 @@ public class ProductService implements IProductService {
             for (Integer productId : productIds) {
                 IProduct product = productRepository.getProductById(productId);
                 product.removeStore(storeId);
-                productRepository.updateProduct(product);
+                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), new HashSet<>(product.getStoresIds()));
                 List<Integer> storesIds = product.getStoresIds();
                 if (storesIds.isEmpty()) {
                     productRepository.deleteProduct(productId);
@@ -144,6 +157,22 @@ public class ProductService implements IProductService {
             throw e;
         } finally {
             logger.info("Products with ids {} were added to store with id {}", productIds, storeId);
+        }
+    }
+
+
+    @Override
+    public List<ProductDTO> getProductsByCategory(PCategory category) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getProductsByCategory'");
+    }
+    @Override
+    public IProduct getProduct(int productId) {
+        try {
+            return productRepository.getProductById(productId);
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to get product, recived error {}", e);
+            throw e;
         }
     }
   

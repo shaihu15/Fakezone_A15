@@ -1,6 +1,9 @@
 package ApplicationLayer.Interfaces;
 
 import java.util.AbstractMap.SimpleEntry;
+
+import org.springframework.security.access.method.P;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
@@ -9,15 +12,12 @@ import java.util.Stack;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-import DomainLayer.Enums.StoreManagerPermission;
-
-import DomainLayer.Model.DiscountPolicy;
-import DomainLayer.Model.Product;
-import DomainLayer.Model.PurchasePolicy;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.StoreManager;
-import DomainLayer.Model.StoreOwner;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.PCategory;
+import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.Cart;
+import DomainLayer.Model.User;
+import java.time.LocalDate;
 
 public interface IStoreService {
 
@@ -49,7 +49,7 @@ public interface IStoreService {
         StoreProductDTO getProductFromStore(int productId, int storeId);
 
         // --- Product Management ---
-        void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity);
+        void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category);
 
         void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice,
                         int quantity);
@@ -110,8 +110,11 @@ public interface IStoreService {
 
         StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
+        double calcAmount(Cart cart, LocalDate dobInput);
+  
         void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
         void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
+
 
         boolean canViewOrders(int storeId, int userId);
 

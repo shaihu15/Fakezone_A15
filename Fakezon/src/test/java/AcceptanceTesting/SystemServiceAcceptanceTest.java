@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -107,19 +108,20 @@ public class SystemServiceAcceptanceTest {
         String password = "password123";
         String dobInput = "1990-01-01";
         LocalDate dob = LocalDate.parse(dobInput);
+        String country = "IL";
 
         // Mock the behavior of the authenticatorService to return a token
         String mockToken = "mockToken123";
-        when(authenticatorService.register(email, password, dob)).thenReturn(mockToken);
+        when(authenticatorService.register(email, password, dob,country)).thenReturn(mockToken);
 
         // Act
         // Verify that the response is not null and contains the expected token
-        Response<String> response = systemService.guestRegister(email, password, dobInput);
+        Response<String> response = systemService.guestRegister(email, password, dobInput,country);
 
         // Assert
         assertTrue(response.isSuccess());
         assertEquals(mockToken, response.getData());
-        verify(authenticatorService, times(1)).register(email, password, dob);
+        verify(authenticatorService, times(1)).register(email, password, dob,country);
     }
     
 
@@ -129,9 +131,10 @@ public class SystemServiceAcceptanceTest {
         String email = "test@gmail.com";
         String password = "password123";
         String invalidDobInput = "invalid-date";
+        String country = "IL";
 
         // Act
-        Response<String> response = systemService.guestRegister(email, password, invalidDobInput);
+        Response<String> response = systemService.guestRegister(email, password, invalidDobInput,country);
 
         // Assert
         assertFalse(response.isSuccess());
@@ -173,7 +176,7 @@ public class SystemServiceAcceptanceTest {
 
         // Arrange
         int productId = 1;
-        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId);
+        ProductDTO mockProduct = new ProductDTO("Test Product", "Description", productId,null);
         when(productService.viewProduct(productId)).thenReturn(mockProduct);
 
         // Act

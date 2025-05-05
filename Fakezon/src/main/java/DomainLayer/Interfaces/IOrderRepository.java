@@ -7,6 +7,7 @@ public interface IOrderRepository {
         void updateOrder(int orderId, IOrder Order);
         void deleteOrder(int orderId);
         IOrder getOrder(int orderId);
+        
         Collection<IOrder> getAllOrders();
 
 }
