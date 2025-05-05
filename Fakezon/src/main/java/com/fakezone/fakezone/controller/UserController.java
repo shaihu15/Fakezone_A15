@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    ResponseEntity<Response<UserDTO>> registerUser(@RequestBody Request<RegisterUserRequest> userRequest) {
+    public ResponseEntity<Response<UserDTO>> registerUser(@RequestBody Request<RegisterUserRequest> userRequest) {
         try {
             String token = userRequest.getToken();
             String email = userRequest.getData().getEmail();
@@ -61,7 +61,7 @@ public class UserController {
     }
 
     @PostMapping("/addToBasket/{userId}/{storeId}")
-    ResponseEntity<Response<Void>> addToBasket(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<Void>> addToBasket(@RequestHeader("Authorization") String token,
                                                @PathVariable int userId,
                                                @PathVariable int storeId,
                                                @RequestBody StoreProductDTO product) {
@@ -84,7 +84,7 @@ public class UserController {
     }
 
     @GetMapping("/viewCart/{userId}")
-    ResponseEntity<Response<List<StoreProductDTO>>> viewCart(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<List<StoreProductDTO>>> viewCart(@RequestHeader("Authorization") String token,
                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to view cart for user: {}", userId);
@@ -105,7 +105,7 @@ public class UserController {
     }
 
     @GetMapping("/getAllMessages/{userId}")
-    ResponseEntity<Response<HashMap<Integer, String>>> getAllMessages(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<HashMap<Integer, String>>> getAllMessages(@RequestHeader("Authorization") String token,
                                                                       @PathVariable int userId) {
         try {
             logger.info("Received request to get all messages for user: {}", userId);
@@ -126,7 +126,7 @@ public class UserController {
     }
 
     @PostMapping("/purchaseCart")
-    ResponseEntity<Response<String>> purchaseCart(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<String>> purchaseCart(@RequestHeader("Authorization") String token,
                                                   @RequestBody Request<PurchaseRequest> request) {
         try {
             logger.info("Received request to purchase cart for user: {}", request.getData().getUserId());
@@ -158,7 +158,7 @@ public class UserController {
     }
 
     @PostMapping("/sendMessageToStore/{userId}/{storeId}")
-    ResponseEntity<Response<Void>> sendMessageToStore(@PathVariable int userId,
+    public ResponseEntity<Response<Void>> sendMessageToStore(@PathVariable int userId,
                                                       @PathVariable int storeId,
                                                       @RequestBody Request<String> request) {
         try {
@@ -181,7 +181,7 @@ public class UserController {
         }
     }
     @GetMapping("/getAssignmentMessages/{userId}")
-    ResponseEntity<Response<HashMap<Integer, String>>> getAssignmentMessages(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<HashMap<Integer, String>>> getAssignmentMessages(@RequestHeader("Authorization") String token,
                                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to get assignment messages for user: {}", userId);
@@ -202,7 +202,7 @@ public class UserController {
     }
 
     @GetMapping("/getAuctionEndedtMessages/{userId}")
-    ResponseEntity<Response<HashMap<Integer, String>>> getAuctionEndedtMessages(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<HashMap<Integer, String>>> getAuctionEndedtMessages(@RequestHeader("Authorization") String token,
                                                                                 @PathVariable int userId) {
         try {
             logger.info("Received request to get auction ended messages for user: {}", userId);
@@ -223,7 +223,7 @@ public class UserController {
     }
 
     @GetMapping("/getOrdersByUser/{userId}")
-    ResponseEntity<Response<List<OrderDTO>>> getOrdersByUser(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByUser(@RequestHeader("Authorization") String token,
                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to get orders for user: {}", userId);
