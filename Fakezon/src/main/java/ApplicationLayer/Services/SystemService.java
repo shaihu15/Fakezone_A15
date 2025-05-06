@@ -3,64 +3,52 @@ package ApplicationLayer.Services;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
-
-import ApplicationLayer.DTO.*;
-import ApplicationLayer.Response;
-
-
-import InfrastructureLayer.Repositories.StoreRepository;
-import javassist.bytecode.LineNumberAttribute.Pc;
-import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Interfaces.*;
-import DomainLayer.Model.*;
-
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.DTO.BasketDTO;
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
-
+import ApplicationLayer.Response;
+import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
-
+import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
-
-import org.springframework.context.ApplicationEventPublisher;
-import ApplicationLayer.DTO.StoreRolesDTO;
-
-import java.util.Arrays;
-
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.access.method.P;
-import org.springframework.stereotype.Component;
-
-
-import ApplicationLayer.Enums.ErrorType;
-import ApplicationLayer.Enums.PCategory;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -285,12 +273,13 @@ public class SystemService implements ISystemService {
         }
     }
     public LocalDate parseDate(String dateString) {
-    try {
-        return LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
-    } catch (DateTimeParseException e) {
-        throw new IllegalArgumentException("Invalid date format: " + dateString);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try {
+            return LocalDate.parse(dateString, formatter);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format: " + dateString);
+        }
     }
-}
 
     @Override
     public Response<StoreProductDTO> getProductFromStore(int productId, int storeId) {
@@ -362,20 +351,16 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Invalid country code: " + country);
             return new Response<>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
         }
+        if(!isValidPassword(password)){
+            logger.error("System Service - Invalid password: " + password);
+            return new Response<>(null, "Invalid password", false, ErrorType.INVALID_INPUT);
+        }
         String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR);
         }
         logger.info("System Service - User got token successfully: " + email); 
-        try{
-            LocalDate dob = parseDate(dateOfBirth);
-            this.userService.addUser(password, email, dob, country);
-        }
-        catch (Exception e) {
-            logger.error("System Service - Invalid date format: " + dateOfBirth);
-            return new Response<>(null, "Invalid date format", false, ErrorType.INVALID_INPUT);
-        }
         logger.info("System Service - User registered successfully: " + email);
 
         return new Response<> ( null, "Guest registered successfully", true);
@@ -1133,6 +1118,9 @@ public class SystemService implements ISystemService {
         return this.authenticatorService.isValid(token);
     }
 
+    private boolean isValidPassword(String password) {
+    return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+    }
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
     // if (authenticatorService.isValid(sessionToken)) {
@@ -1141,7 +1129,8 @@ public class SystemService implements ISystemService {
     // } else {
     // logger.error("System Service - Invalid session token: " + sessionToken);
     // throw new IllegalArgumentException("Invalid session token");
+    // } 
     // }
-    // }
+    
 
 }

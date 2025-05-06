@@ -70,11 +70,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void updateUser(Registered user) {
-        userRepository.update(user);
-    }
-
-    @Override
     public Optional<Registered> getUserById(int userID) {
         return userRepository.findById(userID);
     }
@@ -266,23 +261,6 @@ public class UserService implements IUserService {
             logger.error("User not found: " + userID);
             throw new IllegalArgumentException("User not found");
         }
-    }
-
-
-    @Override
-    public UserDTO addUser(String password, String email, LocalDate dateOfBirth, String country) {
-        Registered user;
-        try {
-            user = new Registered(email, password, dateOfBirth, country);
-            userRepository.addUser(user);
-            logger.info("User added: " + email);
-        } catch (Exception e) {
-            // Handle exception if needed
-            System.out.println("Error during add user: " + e.getMessage());
-            logger.error("Error during add user: " + e.getMessage());
-            throw new IllegalArgumentException("User already exists");
-        }
-        return user.toDTO();
     }
 
     @Override
