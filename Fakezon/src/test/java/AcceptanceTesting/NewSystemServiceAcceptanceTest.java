@@ -1,23 +1,17 @@
 package AcceptanceTesting;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Io;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -37,7 +31,6 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
-import java.util.Locale;
 
 public class NewSystemServiceAcceptanceTest {
     private SystemService systemService;
@@ -79,14 +72,13 @@ public class NewSystemServiceAcceptanceTest {
 
     @Test
     void testRegisterUser_validArguments_Success() {
-        String email = "user@gmail.com";
+        String email = "test@gmail.com";
         String password = "password123";
-        String birthDate = LocalDate.now().toString();
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> result = systemService.guestRegister(email, password, birthDate, country);
         System.out.println("Result: " + result.getMessage()+ " " + result.isSuccess());
-        System.out.println("Result: " + Locale.getDefault().getCountry());
-        // assertTrue(result.isSuccess());
         assertEquals("Guest registered successfully", result.getMessage());
     }
 }
