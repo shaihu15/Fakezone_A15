@@ -46,15 +46,14 @@ public class AuthenticatorAdapter implements IAuthenticator {
     public String login(String email, String password) {
         try {
             logger.info("Logging in user with email: {}", email);
-            userService.login(email, password);
             // Generate a token for the logged-in user
             Optional<Registered> user = userService.getUserByUserName(email);
             if (user.isPresent()) {
                 String token = tokenService.generateToken(user.get().getEmail(), user.get().getUserId());
-                logger.info("User logged in successfully: {}", email);
+                logger.info("User created token successfully: {}", email);
                 return token;
             } else {
-                logger.error("User login failed for email: {}", email);
+                logger.error("User is not present for email: {}", email);
                 return null; // Login failed
             }
         } catch (Exception e) {

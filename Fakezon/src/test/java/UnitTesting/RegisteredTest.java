@@ -1,21 +1,23 @@
 package UnitTesting;
 
 import java.time.LocalDate;
+import java.util.List;
 
-import DomainLayer.Model.Order;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import ApplicationLayer.DTO.OrderDTO;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import ApplicationLayer.DTO.OrderDTO;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
 
 public class RegisteredTest {
     private Registered registeredUser;
@@ -106,6 +108,7 @@ public class RegisteredTest {
 
     @Test
     void givenLogedoutUser_isLoggedIn_returnFalse() {
+        registeredUser.login();
         assertTrue(registeredUser.isLoggedIn(), "User should be logged in initially");
         registeredUser.logout();
         assertFalse(registeredUser.isLoggedIn(), "User should not be logged in after logout");

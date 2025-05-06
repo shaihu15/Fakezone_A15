@@ -88,21 +88,26 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void login(String email, String password) {
+    public UserDTO login(String email, String password) {
         try {
             Optional<Registered> optionalUser = userRepository.findByUserName(email);
             if (optionalUser.isEmpty()) {
-                logger.warn("Login failed: User with email {} not found", email);
+                logger.error("Login failed: User with email {} not found", email);
                 throw new IllegalArgumentException("User not found");
             }
             Registered user = optionalUser.get();
-            if (user.getPassword().equals(password)) {
-                user.login();
-                logger.info("User logged in: " + email);
+            if (user.getPassword().equals(password)) {    
+                logger.info("User password match " + email);
             } else {
-                logger.warn("Login failed: Incorrect password for user with email {}", email);
+                logger.error("Login failed: Incorrect password for user with email {}", email);
                 throw new IllegalArgumentException("Incorrect password");
             }
+            if(user.isLoggedIn()) {
+                logger.error("User already logged in: " + email);
+                throw new IllegalArgumentException("User already logged in");
+            }
+            user.login();
+            return user.toDTO();
         } catch (Exception e) {
             // Handle exception if needed
             logger.error("Error during login: " + e.getMessage());

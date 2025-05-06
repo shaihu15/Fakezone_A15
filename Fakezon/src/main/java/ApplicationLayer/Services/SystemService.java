@@ -21,6 +21,7 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IOrderService;
@@ -1086,6 +1087,18 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during getting orders by store id", false, ErrorType.INTERNAL_ERROR);
         }
     }
+    @Override
+    public Response<UserDTO> login(String email, String password){
+        try{
+            String token = this.authenticatorService.login(email, password);
+            UserDTO user = this.userService.login(email, password);
+            return new Response<>(user, "Login successful with token: " + token, true);
+        } catch (Exception e) {
+            logger.error("System Service - Login failed: " + e.getMessage());
+            return new Response<>(null, "Login failed: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
 
     private boolean isAuth(String token){
         return this.authenticatorService.isValid(token);

@@ -4,12 +4,13 @@ import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -85,31 +86,71 @@ public class NewSystemServiceAcceptanceTest {
         assertEquals("Guest registered successfully", result.getMessage());
     }
     @Test
-void testRegisterUser_validAndInvalidArguments() {
-    String validEmail = "test@gmail.com";
-    String invalidEmail = "invalid-email"; // no @
-    String password = "password123";
-    String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    String validCountry = "IL";
-    String invalidCountry = "XYZ"; // invalid country code
+    void testRegisterUser_validAndInvalidArguments() {
+        String validEmail = "test@gmail.com";
+        String invalidEmail = "invalid-email"; // no @
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String validCountry = "IL";
+        String invalidCountry = "XYZ"; // invalid country code
+    
+        // Test valid input — should succeed
+        Response<String> result = systemService.guestRegister(validEmail, password, birthDate, validCountry);
+        System.out.println("Valid result: " + result.getMessage() + " " + result.isSuccess());
+        assertTrue(result.isSuccess());
+        assertEquals("Guest registered successfully", result.getMessage());
+    
+        // Test invalid email — should fail (assuming email validation is implemented)
+        Response<String> resultInvalidEmail = systemService.guestRegister(invalidEmail, password, birthDate, validCountry);
+        System.out.println("Invalid email result: " + resultInvalidEmail.getMessage() + " " + resultInvalidEmail.isSuccess());
+        assertFalse(resultInvalidEmail.isSuccess());
+        // assertEquals("Invalid email format", resultInvalidEmail.getMessage()); // uncomment if your service returns this message
+    
+        // Test invalid country — should fail
+        Response<String> resultInvalidCountry = systemService.guestRegister(validEmail, password, birthDate, invalidCountry);
+        System.out.println("Invalid country result: " + resultInvalidCountry.getMessage() + " " + resultInvalidCountry.isSuccess());
+        assertFalse(resultInvalidCountry.isSuccess());
+        assertEquals("Invalid country code", resultInvalidCountry.getMessage());
+    }
+    @Test
+    void testLoginUser_validCredentials_Success() {
+        // Arrange
+        String email = "user@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String country = "IL";
 
-    // Test valid input — should succeed
-    Response<String> result = systemService.guestRegister(validEmail, password, birthDate, validCountry);
-    System.out.println("Valid result: " + result.getMessage() + " " + result.isSuccess());
-    assertTrue(result.isSuccess());
-    assertEquals("Guest registered successfully", result.getMessage());
+        // Register the user
+        Response<String> registerResponse = systemService.guestRegister(email, password, birthDate, country);
+        assertTrue(registerResponse.isSuccess(), "User registration should succeed");
 
-    // Test invalid email — should fail (assuming email validation is implemented)
-    Response<String> resultInvalidEmail = systemService.guestRegister(invalidEmail, password, birthDate, validCountry);
-    System.out.println("Invalid email result: " + resultInvalidEmail.getMessage() + " " + resultInvalidEmail.isSuccess());
-    assertFalse(resultInvalidEmail.isSuccess());
-    // assertEquals("Invalid email format", resultInvalidEmail.getMessage()); // uncomment if your service returns this message
+        // Act
+        Response<UserDTO> loginResponse = systemService.login(email, password);
 
-    // Test invalid country — should fail
-    Response<String> resultInvalidCountry = systemService.guestRegister(validEmail, password, birthDate, invalidCountry);
-    System.out.println("Invalid country result: " + resultInvalidCountry.getMessage() + " " + resultInvalidCountry.isSuccess());
-    assertFalse(resultInvalidCountry.isSuccess());
-    assertEquals("Invalid country code", resultInvalidCountry.getMessage());
+        // Assert
+        assertNotNull(loginResponse, "Login response should not be null");
+        assertTrue(loginResponse.isSuccess(), "Login should succeed with valid credentials");
+    }
+    @Test
+    void testLoginUser_invalidCredentials_Failure() {
+        // Arrange
+        String email = "user@gmail.com";
+        String password = "password123";
+        String invalidPassword = "wrongPassword";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String country = "IL";
+    
+        // Register the user
+        Response<String> registerResponse = systemService.guestRegister(email, password, birthDate, country);
+        assertTrue(registerResponse.isSuccess(), "User registration should succeed");
+    
+        // Act
+        Response<UserDTO> loginResponse = systemService.login(email, invalidPassword);
+    
+        // Assert
+        assertNotNull(loginResponse, "Login response should not be null");
+        assertFalse(loginResponse.isSuccess(), "Login should fail with invalid credentials");
+    }    
+    
 }
-
-}
+    

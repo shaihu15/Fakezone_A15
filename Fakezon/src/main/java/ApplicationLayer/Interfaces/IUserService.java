@@ -26,7 +26,7 @@ public interface IUserService {
 
     void logout(String email);
 
-    void login(String email, String password);
+    UserDTO login(String email, String password);
 
     boolean isUserLoggedIn(int userID);
 

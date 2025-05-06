@@ -16,6 +16,8 @@ import DomainLayer.Interfaces.IPayment;
 
 
 public interface ISystemService {
+
+    Response<UserDTO> login(String email, String password); // login to the system
     // Access to core services
     IDelivery getDeliveryService();
 
