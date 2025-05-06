@@ -34,26 +34,26 @@ public class Registered extends User {
     private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
     private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
-    private Queue<SimpleEntry<Integer, String>> auctionEndedMessages; // storeID -> message
-    private String state;
+    private Queue<SimpleEntry<Integer, String>> auctionEndedMessages; // storeID -> message    \
     public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super();
         this.email = email;
         this.password = password;
         this.roles = new HashMap<>();
-        this.isLoggedIn = true;
+        this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
-        this.state = state;
+
 
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
         this.productsPurchase.put(storeID, productsPurchase);
     }
+
 
     @Override
     public boolean isRegistered() {

@@ -28,7 +28,7 @@ public class User {
         this.orders = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
-
+    
     public boolean isRegistered() {
         return false;
     }
