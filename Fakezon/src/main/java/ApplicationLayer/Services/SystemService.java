@@ -35,22 +35,11 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrder;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.StoreFounder;
-import DomainLayer.Model.StoreManager;
-import DomainLayer.Model.StoreOwner;
-
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
 import org.springframework.context.ApplicationEventPublisher;
-import ApplicationLayer.DTO.StoreRolesDTO;
 
 import java.util.Arrays;
 
@@ -370,7 +359,7 @@ public class SystemService implements ISystemService {
         logger.info("System Service - User got token successfully: " + email); 
         try{
             LocalDate dob = parseDate(dateOfBirth);
-            this.userService.addUser(password, email, dob, country);
+            this.userService.registerUser(password, email, dob, country);
         }
         catch (Exception e) {
             logger.error("System Service - Invalid date format: " + dateOfBirth);

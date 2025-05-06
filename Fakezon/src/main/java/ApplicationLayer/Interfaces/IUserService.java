@@ -24,8 +24,6 @@ public interface IUserService {
 
     void deleteUser(String userName);// need?
 
-    void updateUser(Registered user);
-
     void logout(String email);
 
     void login(String email, String password);
@@ -47,9 +45,6 @@ public interface IUserService {
     Response<List<OrderDTO>> getOrdersByUser(int userID); // get all the orders of the user
     
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
-
-
-    UserDTO addUser(String password, String email, LocalDate dateOfBirth, String country); // add a new user
 
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
 
