@@ -3,6 +3,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -81,4 +84,32 @@ public class NewSystemServiceAcceptanceTest {
         System.out.println("Result: " + result.getMessage()+ " " + result.isSuccess());
         assertEquals("Guest registered successfully", result.getMessage());
     }
+    @Test
+void testRegisterUser_validAndInvalidArguments() {
+    String validEmail = "test@gmail.com";
+    String invalidEmail = "invalid-email"; // no @
+    String password = "password123";
+    String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    String validCountry = "IL";
+    String invalidCountry = "XYZ"; // invalid country code
+
+    // Test valid input — should succeed
+    Response<String> result = systemService.guestRegister(validEmail, password, birthDate, validCountry);
+    System.out.println("Valid result: " + result.getMessage() + " " + result.isSuccess());
+    assertTrue(result.isSuccess());
+    assertEquals("Guest registered successfully", result.getMessage());
+
+    // Test invalid email — should fail (assuming email validation is implemented)
+    Response<String> resultInvalidEmail = systemService.guestRegister(invalidEmail, password, birthDate, validCountry);
+    System.out.println("Invalid email result: " + resultInvalidEmail.getMessage() + " " + resultInvalidEmail.isSuccess());
+    assertFalse(resultInvalidEmail.isSuccess());
+    // assertEquals("Invalid email format", resultInvalidEmail.getMessage()); // uncomment if your service returns this message
+
+    // Test invalid country — should fail
+    Response<String> resultInvalidCountry = systemService.guestRegister(validEmail, password, birthDate, invalidCountry);
+    System.out.println("Invalid country result: " + resultInvalidCountry.getMessage() + " " + resultInvalidCountry.isSuccess());
+    assertFalse(resultInvalidCountry.isSuccess());
+    assertEquals("Invalid country code", resultInvalidCountry.getMessage());
+}
+
 }

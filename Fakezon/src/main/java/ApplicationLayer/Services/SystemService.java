@@ -351,6 +351,10 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Invalid country code: " + country);
             return new Response<>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
         }
+        if(!isValidPassword(password)){
+            logger.error("System Service - Invalid password: " + password);
+            return new Response<>(null, "Invalid password", false, ErrorType.INVALID_INPUT);
+        }
         String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
@@ -1087,6 +1091,9 @@ public class SystemService implements ISystemService {
         return this.authenticatorService.isValid(token);
     }
 
+    private boolean isValidPassword(String password) {
+    return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+    }
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
     // if (authenticatorService.isValid(sessionToken)) {
@@ -1095,7 +1102,8 @@ public class SystemService implements ISystemService {
     // } else {
     // logger.error("System Service - Invalid session token: " + sessionToken);
     // throw new IllegalArgumentException("Invalid session token");
+    // } 
     // }
-    // }
+    
 
 }
