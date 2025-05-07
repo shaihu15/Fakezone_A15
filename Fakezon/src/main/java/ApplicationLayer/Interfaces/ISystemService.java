@@ -117,5 +117,7 @@ public interface ISystemService {
 
     Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token);
 
+    Response<Void> userLogout(int userID);
+
 
 }

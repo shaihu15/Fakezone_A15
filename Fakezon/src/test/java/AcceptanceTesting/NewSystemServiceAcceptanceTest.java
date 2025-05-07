@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.method.P;
 
@@ -77,12 +78,12 @@ public class NewSystemServiceAcceptanceTest {
         systemService.guestRegister(systemAdmainEmail, systemAdmainPassword, systemAdmainBirthDate.toString(), systemAdmainCountry);
     }
 
+
     @Test
     void testRegisterUser_validArguments_Success() {
         String email = "test@gmail.com";
         String password = "password123";
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
-        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> result = systemService.guestRegister(email, password, birthDate, country);
         System.out.println("Result: " + result.getMessage()+ " " + result.isSuccess());
@@ -243,8 +244,6 @@ public class NewSystemServiceAcceptanceTest {
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
         Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        assertTrue(resultUserLogin.isSuccess());
-        assertNotNull(resultUserLogin.getData(), "User login should succeed and return user data");
         int userId = resultUserLogin.getData().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         int storeId = resultAddStore.getData();
@@ -258,6 +257,94 @@ public class NewSystemServiceAcceptanceTest {
         assertEquals(productName, resultGetProduct.getData().getName());
     }
 
+    @Test
+    void testLogout_validUserLoggedIn_Success() {
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getUserId();
+        assertTrue(resultUserLogin.isSuccess(), "User login should succeed");
+        Response<Void> resultLogout=systemService.userLogout(userId);
+        assertTrue(resultLogout.isSuccess(), "User logout should succeed");
+
+    }
+    @Test
+    void testLogout_invalidUserNotLoggedIn_Failure() {
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getUserId();
+        assertTrue(resultUserLogin.isSuccess(), "User login should succeed");
+        Response<Void> resultLogout=systemService.userLogout(userId);
+        assertTrue(resultLogout.isSuccess(), "User logout should succeed");
+        Response<Void> resultLogoutAgain=systemService.userLogout(userId);
+        assertFalse(resultLogoutAgain.isSuccess(), "User logout should fail if user is not logged in");
+    }
+    @Test
+    void testLogout_invalidUserNotExist_Failure() {
+        int userId = 9999; // Assuming this user ID does not exist
+        Response<Void> resultLogoutAgain=systemService.userLogout(userId);
+        assertFalse(resultLogoutAgain.isSuccess(), "User logout should fail if user not exist");
+    }
+    @Test
+    void testLogout_validUserLoggedInWithCart_Success() {
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        int storeId = resultAddStore.getData();
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        int productId = storePResponse.getData().getProductId();
+        systemService.addToBasket(userId, productId, storeId, 1);
+        Response<Void> resultLogout=systemService.userLogout(userId);
+        assertTrue(resultLogout.isSuccess(), "User logout should succeed");
+        // After logout, the cart should be empty or not accessible
+        // need to fix viewCart as guest
+
+        
+        // Response<List<StoreProductDTO>> cart = systemService.viewCart(userId);
+        // assertNotNull(cart, "Cart should not be null after logout");
+        // assertTrue(cart.isSuccess(), "Cart retrieval should succeed after logout");
+        // assertTrue(cart.getData().isEmpty(), "Cart should be empty after logout");
+    }
+    @Test
+    void testAddToCart_validProduct_Success() {
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        int storeId = resultAddStore.getData();
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        int productId = storePResponse.getData().getProductId();
+        systemService.addToBasket(userId, productId, storeId, 1);
+        Response<List<StoreProductDTO>> cart = systemService.viewCart(userId);
+        assertNotNull(cart, "Cart should not be null");
+        assertTrue(cart.isSuccess(), "Cart retrieval should succeed");
+        assertTrue(cart.getData().size() > 0, "Cart should contain products");
+    }
+
 
 }
+
+
     

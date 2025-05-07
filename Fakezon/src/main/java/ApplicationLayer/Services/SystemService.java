@@ -43,6 +43,7 @@ import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
@@ -1160,6 +1161,31 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during searching products by category: " + e.getMessage());
             return new Response<>(null, "Error during searching products by category", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<Void> userLogout(int userID) {
+        try {
+            logger.info("System service - user " + userID + " trying to logout");
+            Optional<Registered> user = this.userService.getUserById(userID);
+
+            if(user == null) {
+                logger.error("System Service - User not found: " + userID);
+                return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT);
+            }
+            if (this.userService.isUserLoggedIn(userID)) {
+                String email = user.get().getEmail();
+                this.authenticatorService.logout(email);
+                this.userService.logout(email);
+                return new Response<>(null, "Logout successful", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during logout: " + e.getMessage());
+            return new Response<>(null, "Error during logout: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
     
