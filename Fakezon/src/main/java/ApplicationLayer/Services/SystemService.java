@@ -742,7 +742,7 @@ public class SystemService implements ISystemService {
 	public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
 		try{
             if (this.userService.isUserLoggedIn(userID)) {
-                return this.userService.getAuctionEndedtMessages(userID);
+                return this.userService.getAuctionEndedMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
                 return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
