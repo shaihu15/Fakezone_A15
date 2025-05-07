@@ -71,8 +71,9 @@ public class StoreService implements IStoreService {
 
     // --- Store-related DTO Conversions ---
     private StoreDTO toStoreDTO(Store store) {
+        int storeId = store.getId();
         Collection<StoreProductDTO> storeProductDTOs = store.getStoreProducts().values().stream()
-                .map(sp -> new StoreProductDTO(sp)) // using the constructor directly
+                .map(sp -> new StoreProductDTO(sp,storeId)) // using the constructor directly
                 .collect(Collectors.toList());
 
         Map<Integer, Double> ratings = store.getRatings().entrySet().stream()
@@ -90,8 +91,8 @@ public class StoreService implements IStoreService {
                 store.getAverageRating());
     }
 
-    public StoreProductDTO toStoreProductDTO(StoreProduct storeProduct) {
-        return new StoreProductDTO(storeProduct);
+    public StoreProductDTO toStoreProductDTO(StoreProduct storeProduct, int storeId) {
+        return new StoreProductDTO(storeProduct, storeId);
     }
     // --- Store Info Methods ---
 
@@ -153,7 +154,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category) {
+    public StoreProductDTO addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category) {
         try{
             logger.info("Store Service - User " + requesterId + " trying to add store product " + productId + " to store "+ storeId);
             Store store = storeRepository.findById(storeId);
@@ -161,8 +162,8 @@ public class StoreService implements IStoreService {
                 logger.error("Store Service - addProductToStore - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
             logger.info("Store product added: " + productId + " to store: " + storeId + " by user: " + requesterId);
+            return store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
         }
         catch (Exception e){
             logger.error("StoreService - failed to add store product " + e.getMessage());
@@ -464,7 +465,7 @@ public class StoreService implements IStoreService {
             logger.error("getProductFromStore - Product not found: " + productId);
             throw new IllegalArgumentException("Product not found");
         }
-        return toStoreProductDTO(product);
+        return toStoreProductDTO(product, storeId);
     }
 
     public void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd) {

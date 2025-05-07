@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.method.P;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IOrderService;
@@ -153,51 +154,110 @@ public class NewSystemServiceAcceptanceTest {
         assertNotNull(loginResponse, "Login response should not be null");
         assertFalse(loginResponse.isSuccess(), "Login should fail with invalid credentials");
     }    
-    // @Test
-    // void testSearchByCategory_validCategory_Success() {
-    //     System.out.println("testSearchByCategory_validCategory_Success");
-    //     // Arrange
-    //     String email = "test@gmail.com";
-    //     String password = "password123";
-    //     String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
-    //     System.out.println("BirthDate: " + birthDate);
-    //     String country = "IL";
-    //     Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);    
-    //     Response<UserDTO> resultUser=systemService.login(email, password);
-    //     Response<Integer> responseStore = systemService.addStore(1, "Test Store");
-    //     assertTrue(responseStore.isSuccess(), "Store creation should succeed");
-    //     assertNotNull(responseStore.getData(), "Store ID should not be null");
-    //     System.out.println("Store ID: " + responseStore.getData());
-    //     int storeId = responseStore.getData();
-    //     int userId = resultUser.getData().getUserId();
-    //     String productName = "Test Product";
-    //     String category = PCategory.ELECTRONICS.toString();
-    //     systemService.addProductToStore(storeId, userId, productName, "good", 1, 1, category);
-    //     Response<List<ProductDTO>> result = systemService.searchByCategory(category);
-    //     assertNotNull(result, "Search result should not be null");
-    //     assertTrue(result.isSuccess(), "Search should succeed with valid category");
-    //     assertEquals(productName, result.getData().get(0).getName(), "Product name should match the searched category");
-    // }
-    // @Test
-    // void testSearchByCategory_invalidCategory_Failure() {
-    //     // Arrange
-    //     String email = "test@gmail.com";
-    //     String password = "password123";
-    //     String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
-    //     System.out.println("BirthDate: " + birthDate);
-    //     String country = "IL";
-    //     systemService.guestRegister(email, password, birthDate, country);    
-    //     Response<UserDTO> resultUser=systemService.login(email, password);
-    //     Response<Integer> responseStore = systemService.addStore(1, "Test Store");
-    //     int storeId = responseStore.getData();
-    //     int userId = resultUser.getData().getUserId();
-    //     String productName = "Test Product";
-    //     String category = PCategory.ELECTRONICS.toString();
-    //     String invalidCategory = "INVALID_CATEGORY"; // Invalid category
-    //     systemService.addProductToStore(storeId, userId, productName, "good", 1, 1, category);
-    //     Response<List<ProductDTO>> result = systemService.searchByCategory(invalidCategory);
-    //     assertNull(result.getData());
-    //     assertFalse(result.isSuccess(), "Search should fail with invalid category");
-    // }
+    @Test
+    void testSearchByCategory_validCategoryExistingProduct_Success() {
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        int storeId = resultAddStore.getData();
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+        Response<StoreProductDTO> storeProductDTO = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        int productId = storeProductDTO.getData().getProductId();
+        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
+        Response<List<ProductDTO>> result = systemService.searchByCategory(category);
+        assertNotNull(result, "Search result should not be null");
+        assertTrue(result.isSuccess(), "Search should succeed with valid category");
+        assertEquals(productName, result.getData().get(0).getName(), "Product name should match the searched category");
+    }
+
+    @Test
+    void testSearchByCategory_validCategoryNonExistingProduct_Success() {
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        int storeId = resultAddStore.getData();
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+        String nonExistingCategory = PCategory.BEAUTY.toString(); // Non-existing category
+        Response<StoreProductDTO> storeProductDTO = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        int productId = storeProductDTO.getData().getProductId();
+        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
+        Response<List<ProductDTO>> result = systemService.searchByCategory(nonExistingCategory);
+        assertNotNull(result, "Search result should not be null");
+        assertTrue(result.getData().isEmpty(), "Search result should be empty for non-existing pruducts in the category");
+        assertTrue(result.isSuccess(), "Search should succeed with valid category");
+    }
+
+    @Test
+    void testSearchByCategory_invalidCategory_Failure() {
+        // Arrange
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        systemService.guestRegister(email, password, birthDate, country);    
+        Response<UserDTO> resultUser=systemService.login(email, password);
+        String invalidCategory = "INVALID_CATEGORY"; // Invalid category
+        Response<List<ProductDTO>> result = systemService.searchByCategory(invalidCategory);
+        assertNull(result.getData());
+        assertFalse(result.isSuccess(), "Search should fail with invalid category");
+    }
+
+    @Test
+    void testAddStore_validArguments_Success(){
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        assertTrue(resultUserLogin.isSuccess());
+        assertNotNull(resultUserLogin.getData(), "User login should succeed and return user data");
+        int userId = resultUserLogin.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        assertTrue(resultAddStore.isSuccess());
+        assertNotNull(resultAddStore.getData(), "Store ID should not be null");
+        System.out.println("Store ID: " + resultAddStore.getData());
+        assertTrue(resultAddStore.getData() > 0, "Store ID should be greater than 0");
+    }
+
+    @Test
+    void testAddProductToStore_validArguments_Success(){
+        String email = "test@gmail.com";
+        String password = "password123";
+        String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+        String country = "IL";
+        Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
+        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        assertTrue(resultUserLogin.isSuccess());
+        assertNotNull(resultUserLogin.getData(), "User login should succeed and return user data");
+        int userId = resultUserLogin.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        int storeId = resultAddStore.getData();
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        assertTrue(resultAddStore.isSuccess(), "Product addition should succeed");
+        Response<ProductDTO> resultGetProduct = systemService.getProduct(1);
+        assertTrue(resultGetProduct.isSuccess(), "Product retrieval should succeed");
+        assertEquals(productName, resultGetProduct.getData().getName());
+    }
+
+
 }
     

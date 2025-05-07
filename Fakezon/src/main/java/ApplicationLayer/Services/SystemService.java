@@ -594,7 +594,7 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<Void> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
+    public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
         String name = null;
         int productId;
         PCategory categoryEnum = null;
@@ -633,8 +633,8 @@ public class SystemService implements ISystemService {
         }
         try{
             
-            storeService.addProductToStore(storeId, requesterId, productId, productName, basePrice, quantity, categoryEnum);
-            return new Response<>(null, "Product added to store successfully", true);
+            StoreProductDTO spDTO =storeService.addProductToStore(storeId, requesterId, productId, productName, basePrice, quantity, categoryEnum);
+            return new Response<>(spDTO, "Product added to store successfully", true);
         }
         catch (Exception e){
             logger.error("System service - failed to add product to store " + e.getMessage());

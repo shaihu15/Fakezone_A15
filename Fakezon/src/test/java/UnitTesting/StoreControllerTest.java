@@ -2,6 +2,7 @@ package UnitTesting;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -102,7 +103,7 @@ class StoreControllerTest {
         when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
                 .thenReturn(new Response<>(null, "Product added successfully", true));
 
-        ResponseEntity<Response<Void>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
+        ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());

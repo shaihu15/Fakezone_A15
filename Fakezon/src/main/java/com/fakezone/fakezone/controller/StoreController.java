@@ -3,6 +3,7 @@ package com.fakezone.fakezone.controller;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -59,7 +60,7 @@ public class StoreController {
 
 
     @PostMapping("/addProductToStore/{storeId}/{requesterId}")
-    public ResponseEntity<Response<Void>> addProductToStore(@PathVariable("storeId") int storeId,
+    public ResponseEntity<Response<StoreProductDTO>> addProductToStore(@PathVariable("storeId") int storeId,
                                                             @PathVariable("requesterId") int requesterId,
                                                             @RequestParam("productName") String productName,
                                                             @RequestParam("description") String description,
@@ -70,10 +71,10 @@ public class StoreController {
         try {
             logger.info("Received request to add product '{}' to store {} by user {} with token {}", productName, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<StoreProductDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
+            Response<StoreProductDTO> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
@@ -83,7 +84,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<StoreProductDTO> response = new Response<>(null, "An error occurred at the controller level", false);
             return ResponseEntity.status(500).body(response);
         }
     }
