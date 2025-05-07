@@ -4,14 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
 import java.util.function.Function;
-import jakarta.annotation.PostConstruct;
 
 @Service
 public class TokenService {
@@ -19,18 +16,11 @@ public class TokenService {
     private static final String USER_ID_CLAIM = "userId";
     private static final String USER_ROLE_CLAIM = "role";
     private static final long GUEST_TOKEN_VALIDITY = 2 * 60 * 60 * 1000; // 2 hours for guests
-
-    @Value("${jwt.secret}")
-    private String secretKey;
     
-    private Key key;
+    private static final String HARDCODED_SECRET = "jM0Xcm6tKgvfMYdr1N5mZK3qPxYybg8vZ2H7sLDwE0RpQlFuT9aWnS4JeIcO1zA";
     
-    @PostConstruct
-    public void init() {
-        // Decode the Base64 secret key and create a signing key
-        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-    }
+    // Initialize the key directly with the hardcoded secret
+    private final Key key = Keys.hmacShaKeyFor(HARDCODED_SECRET.getBytes());
     
     // Generate token for user with userId
     public String generateToken(String email, int userId) {
