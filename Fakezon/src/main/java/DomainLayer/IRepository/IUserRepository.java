@@ -111,4 +111,58 @@ public interface IUserRepository {
      * @return The number of system administrators
      */
     int getSystemAdminCount();
+    
+    /**
+     * Add an unsigned (guest) user to the repository
+     * 
+     * @param user The user to add
+     * @throws IllegalArgumentException If a user with the same ID already exists
+     */
+    void addUnsignedUser(User user);
+    
+    /**
+     * Find an unsigned user by ID
+     * 
+     * @param userId The ID of the user to find
+     * @return The user wrapped in an Optional, or an empty Optional if not found
+     */
+    Optional<User> findUnsignedUserById(int userId);
+    
+    /**
+     * Get all unsigned users
+     * 
+     * @return A list of all unsigned users
+     */
+    List<User> getAllUnsignedUsers();
+    
+    /**
+     * Update an unsigned user
+     * 
+     * @param user The user to update
+     * @throws IllegalArgumentException If the user doesn't exist
+     */
+    void updateUnsignedUser(User user);
+    
+    /**
+     * Remove an unsigned user from the repository
+     * 
+     * @param userId The ID of the user to remove
+     * @return true if the user was removed, false if they weren't found
+     */
+    boolean removeUnsignedUser(int userId);
+    
+    /**
+     * Check if a user ID belongs to an unsigned user
+     * 
+     * @param userId The ID to check
+     * @return true if the ID belongs to an unsigned user, false otherwise
+     */
+    boolean isUnsignedUser(int userId);
+    
+    /**
+     * Get the total count of unsigned users
+     * 
+     * @return The number of unsigned users
+     */
+    int getUnsignedUserCount();
 }
