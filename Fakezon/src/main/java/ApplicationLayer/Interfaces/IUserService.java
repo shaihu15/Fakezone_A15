@@ -87,4 +87,19 @@ public interface IUserService {
     List<Registered> getAllSuspendedUsers(int adminId);
     
     int cleanupExpiredSuspensions(int adminId);
+    
+    // Unsigned (guest) user management
+    void addUnsignedUser(User user);
+    
+    Optional<User> getUnsignedUserById(int userId);
+    
+    List<User> getAllUnsignedUsers();
+    
+    void updateUnsignedUser(User user);
+    
+    boolean removeUnsignedUser(int userId);
+    
+    boolean isUnsignedUser(int userId);
+    
+    int getUnsignedUserCount();
 }

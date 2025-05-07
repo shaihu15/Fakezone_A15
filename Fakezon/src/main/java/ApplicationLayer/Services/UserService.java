@@ -640,4 +640,142 @@ public class UserService implements IUserService {
         logger.info(removedCount + " expired suspensions cleaned up by admin ID " + adminId);
         return removedCount;
     }
+
+    // Unsigned (guest) user management methods
+    
+    /**
+     * Add an unsigned (guest) user to the repository
+     * 
+     * @param user The user to add
+     * @throws IllegalArgumentException If a user with the same ID already exists
+     */
+    @Override
+    public void addUnsignedUser(User user) {
+        try {
+            userRepository.addUnsignedUser(user);
+            logger.info("Added unsigned user with ID: " + user.getUserId());
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to add unsigned user: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error during adding unsigned user: " + e.getMessage());
+            throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Find an unsigned user by ID
+     * 
+     * @param userId The ID of the user to find
+     * @return The user wrapped in an Optional, or an empty Optional if not found
+     */
+    @Override
+    public Optional<User> getUnsignedUserById(int userId) {
+        try {
+            Optional<User> user = userRepository.findUnsignedUserById(userId);
+            if (user.isPresent()) {
+                logger.info("Found unsigned user with ID: " + userId);
+            } else {
+                logger.info("Unsigned user with ID " + userId + " not found");
+            }
+            return user;
+        } catch (Exception e) {
+            logger.error("Error during getting unsigned user: " + e.getMessage());
+            throw new IllegalArgumentException("Error getting unsigned user: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Get all unsigned users
+     * 
+     * @return A list of all unsigned users
+     */
+    @Override
+    public List<User> getAllUnsignedUsers() {
+        try {
+            List<User> users = userRepository.getAllUnsignedUsers();
+            logger.info("Retrieved " + users.size() + " unsigned users");
+            return users;
+        } catch (Exception e) {
+            logger.error("Error during getting all unsigned users: " + e.getMessage());
+            throw new IllegalArgumentException("Error getting all unsigned users: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Update an unsigned user
+     * 
+     * @param user The user to update
+     * @throws IllegalArgumentException If the user doesn't exist
+     */
+    @Override
+    public void updateUnsignedUser(User user) {
+        try {
+            userRepository.updateUnsignedUser(user);
+            logger.info("Updated unsigned user with ID: " + user.getUserId());
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to update unsigned user: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error during updating unsigned user: " + e.getMessage());
+            throw new IllegalArgumentException("Error updating unsigned user: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Remove an unsigned user from the repository
+     * 
+     * @param userId The ID of the user to remove
+     * @return true if the user was removed, false if they weren't found
+     */
+    @Override
+    public boolean removeUnsignedUser(int userId) {
+        try {
+            boolean result = userRepository.removeUnsignedUser(userId);
+            if (result) {
+                logger.info("Removed unsigned user with ID: " + userId);
+            } else {
+                logger.info("No unsigned user with ID " + userId + " to remove");
+            }
+            return result;
+        } catch (Exception e) {
+            logger.error("Error during removing unsigned user: " + e.getMessage());
+            throw new IllegalArgumentException("Error removing unsigned user: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Check if a user ID belongs to an unsigned user
+     * 
+     * @param userId The ID to check
+     * @return true if the ID belongs to an unsigned user, false otherwise
+     */
+    @Override
+    public boolean isUnsignedUser(int userId) {
+        try {
+            boolean result = userRepository.isUnsignedUser(userId);
+            logger.info("User with ID " + userId + " is " + (result ? "an unsigned user" : "not an unsigned user"));
+            return result;
+        } catch (Exception e) {
+            logger.error("Error checking if user is unsigned: " + e.getMessage());
+            throw new IllegalArgumentException("Error checking if user is unsigned: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Get the total count of unsigned users
+     * 
+     * @return The number of unsigned users
+     */
+    @Override
+    public int getUnsignedUserCount() {
+        try {
+            int count = userRepository.getUnsignedUserCount();
+            logger.info("Current unsigned user count: " + count);
+            return count;
+        } catch (Exception e) {
+            logger.error("Error getting unsigned user count: " + e.getMessage());
+            throw new IllegalArgumentException("Error getting unsigned user count: " + e.getMessage());
+        }
+    }
 }
