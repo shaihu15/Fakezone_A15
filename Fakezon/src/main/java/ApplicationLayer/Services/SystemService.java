@@ -1400,6 +1400,132 @@ public class SystemService implements ISystemService {
     // throw new IllegalArgumentException("Invalid session token");
     // } 
     // }
-    
 
+    // Unsigned (guest) user management methods
+    
+    @Override
+    public Response<Void> addUnsignedUser(User user) {
+        try {
+            userService.addUnsignedUser(user);
+            logger.info("System Service - Added unsigned user with ID: " + user.getUserId());
+            return new Response<>(null, "Unsigned user added successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to add unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error adding unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<User> getUnsignedUserById(int userId) {
+        try {
+            Optional<User> optionalUser = userService.getUnsignedUserById(userId);
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                logger.info("System Service - Retrieved unsigned user with ID: " + userId);
+                return new Response<>(user, "Unsigned user retrieved successfully", true);
+            } else {
+                logger.error("System Service - Unsigned user not found: " + userId);
+                return new Response<>(null, "Unsigned user not found", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error getting unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<User>> getAllUnsignedUsers(int adminId) {
+        try {
+            if (!userService.isSystemAdmin(adminId)) {
+                logger.error("System Service - Unauthorized attempt to get all unsigned users: Admin privileges required for user ID " + adminId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            List<User> users = userService.getAllUnsignedUsers();
+            logger.info("System Service - Retrieved " + users.size() + " unsigned users");
+            return new Response<>(users, "Retrieved " + users.size() + " unsigned users", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get all unsigned users: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all unsigned users: " + e.getMessage());
+            return new Response<>(null, "Error getting all unsigned users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Void> updateUnsignedUser(User user) {
+        try {
+            userService.updateUnsignedUser(user);
+            logger.info("System Service - Updated unsigned user with ID: " + user.getUserId());
+            return new Response<>(null, "Unsigned user updated successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to update unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during updating unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error updating unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> removeUnsignedUser(int userId) {
+        try {
+            boolean removed = userService.removeUnsignedUser(userId);
+            if (removed) {
+                logger.info("System Service - Removed unsigned user with ID: " + userId);
+                return new Response<>(true, "Unsigned user removed successfully", true);
+            } else {
+                logger.info("System Service - No unsigned user with ID " + userId + " to remove");
+                return new Response<>(false, "No unsigned user with that ID found", true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to remove unsigned user: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing unsigned user: " + e.getMessage());
+            return new Response<>(false, "Error removing unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> isUnsignedUser(int userId) {
+        try {
+            boolean isUnsigned = userService.isUnsignedUser(userId);
+            logger.info("System Service - Checked if user ID " + userId + " is unsigned: " + isUnsigned);
+            return new Response<>(isUnsigned, "User's unsigned status checked successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to check if user is unsigned: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during checking if user is unsigned: " + e.getMessage());
+            return new Response<>(false, "Error checking if user is unsigned: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Integer> getUnsignedUserCount(int adminId) {
+        try {
+            if (!userService.isSystemAdmin(adminId)) {
+                logger.error("System Service - Unauthorized attempt to get unsigned user count: Admin privileges required for user ID " + adminId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            int count = userService.getUnsignedUserCount();
+            logger.info("System Service - Retrieved unsigned user count: " + count);
+            return new Response<>(count, "Retrieved unsigned user count: " + count, true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get unsigned user count: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting unsigned user count: " + e.getMessage());
+            return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
 }

@@ -14,6 +14,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public interface ISystemService {
 
@@ -78,6 +79,7 @@ public interface ISystemService {
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
     Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
     Response<Void> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity,String category); // add product to store
 
@@ -139,4 +141,18 @@ public interface ISystemService {
     
     Response<Integer> getSystemAdminCount(int requesterId);
 
+    // Unsigned (guest) user management
+    Response<Void> addUnsignedUser(User user);
+    
+    Response<User> getUnsignedUserById(int userId);
+    
+    Response<List<User>> getAllUnsignedUsers(int adminId);
+    
+    Response<Void> updateUnsignedUser(User user);
+    
+    Response<Boolean> removeUnsignedUser(int userId);
+    
+    Response<Boolean> isUnsignedUser(int userId);
+    
+    Response<Integer> getUnsignedUserCount(int adminId);
 }
