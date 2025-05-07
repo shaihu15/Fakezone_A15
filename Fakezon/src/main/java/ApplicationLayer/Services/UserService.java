@@ -429,4 +429,215 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User not found");
         }
     }
+
+    @Override
+    public void addSystemAdmin(int userId) {
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            userRepository.addSystemAdmin(userId);
+            logger.info("Added system admin: User ID " + userId);
+        } else {
+            logger.error("Failed to add system admin: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+
+    @Override
+    public boolean removeSystemAdmin(int userId) {
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            boolean removed = userRepository.removeSystemAdmin(userId);
+            if (removed) {
+                logger.info("Removed system admin: User ID " + userId);
+            } else {
+                logger.info("User ID " + userId + " was not a system admin");
+            }
+            return removed;
+        } else {
+            logger.error("Failed to remove system admin: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+
+    @Override
+    public boolean isSystemAdmin(int userId) {
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            return userRepository.isSystemAdmin(userId);
+        } else {
+            logger.error("Failed to check system admin status: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+
+    @Override
+    public List<Registered> getAllSystemAdmins() {
+        List<Registered> admins = userRepository.getAllSystemAdmins();
+        logger.info("Retrieved " + admins.size() + " system administrators");
+        return admins;
+    }
+
+    @Override
+    public int getSystemAdminCount() {
+        int count = userRepository.getSystemAdminCount();
+        logger.info("Current system admin count: " + count);
+        return count;
+    }
+
+    // Suspension management methods (admin only)
+    
+    /**
+     * Suspend a user until a specific date. Requires admin privileges.
+     * If endOfSuspension is null, the suspension is permanent.
+     * 
+     * @param adminId The ID of the admin performing the action
+     * @param userId The ID of the user to suspend
+     * @param endOfSuspension The date when the suspension ends, or null for permanent suspension
+     * @throws IllegalArgumentException If the user doesn't exist or the admin doesn't have privileges
+     */
+    @Override
+    public void suspendUser(int adminId, int userId, LocalDate endOfSuspension) {
+        if (!userRepository.isSystemAdmin(adminId)) {
+            logger.error("Unauthorized attempt to suspend user: Admin privileges required for user ID " + adminId);
+            throw new IllegalArgumentException("Admin privileges required");
+        }
+        
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            logger.error("Failed to suspend user: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+        
+        if (userRepository.isSystemAdmin(userId)) {
+            logger.error("Cannot suspend an admin user: User ID " + userId);
+            throw new IllegalArgumentException("Cannot suspend admin users");
+        }
+        
+        userRepository.suspendUser(userId, endOfSuspension);
+        
+        if (endOfSuspension == null) {
+            logger.info("User ID " + userId + " permanently suspended by admin ID " + adminId);
+        } else {
+            logger.info("User ID " + userId + " suspended until " + endOfSuspension + " by admin ID " + adminId);
+        }
+    }
+    
+    /**
+     * Remove suspension from a user. Requires admin privileges.
+     * 
+     * @param adminId The ID of the admin performing the action
+     * @param userId The ID of the user to unsuspend
+     * @return true if the user was unsuspended, false if they weren't suspended
+     * @throws IllegalArgumentException If the user doesn't exist or the admin doesn't have privileges
+     */
+    @Override
+    public boolean unsuspendUser(int adminId, int userId) {
+        if (!userRepository.isSystemAdmin(adminId)) {
+            logger.error("Unauthorized attempt to unsuspend user: Admin privileges required for user ID " + adminId);
+            throw new IllegalArgumentException("Admin privileges required");
+        }
+        
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            logger.error("Failed to unsuspend user: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+        
+        boolean wasUnsuspended = userRepository.unsuspendUser(userId);
+        
+        if (wasUnsuspended) {
+            logger.info("User ID " + userId + " unsuspended by admin ID " + adminId);
+        } else {
+            logger.info("User ID " + userId + " was not suspended (unsuspend request by admin ID " + adminId + ")");
+        }
+        
+        return wasUnsuspended;
+    }
+    
+    /**
+     * Check if a user is currently suspended.
+     * 
+     * @param userId The ID of the user to check
+     * @return true if the user is suspended, false otherwise
+     * @throws IllegalArgumentException If the user doesn't exist
+     */
+    @Override
+    public boolean isUserSuspended(int userId) {
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            logger.error("Failed to check suspension status: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+        
+        return userRepository.isUserSuspended(userId);
+    }
+    
+    /**
+     * Get the end date of a user's suspension. Requires admin privileges.
+     * 
+     * @param adminId The ID of the admin performing the action
+     * @param userId The ID of the user to check
+     * @return The end date of the suspension, or null if the suspension is permanent
+     * @throws IllegalArgumentException If the user doesn't exist, isn't suspended, or the admin doesn't have privileges
+     */
+    @Override
+    public LocalDate getSuspensionEndDate(int adminId, int userId) {
+        if (!userRepository.isSystemAdmin(adminId)) {
+            logger.error("Unauthorized attempt to get suspension end date: Admin privileges required for user ID " + adminId);
+            throw new IllegalArgumentException("Admin privileges required");
+        }
+        
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            logger.error("Failed to get suspension end date: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+        
+        try {
+            LocalDate endDate = userRepository.getSuspensionEndDate(userId);
+            logger.info("Suspension end date for user ID " + userId + " checked by admin ID " + adminId);
+            return endDate;
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to get suspension end date: " + e.getMessage());
+            throw e;
+        }
+    }
+    
+    /**
+     * Get all suspended users. Requires admin privileges.
+     * 
+     * @param adminId The ID of the admin performing the action
+     * @return A list of all suspended users
+     * @throws IllegalArgumentException If the admin doesn't have privileges
+     */
+    @Override
+    public List<Registered> getAllSuspendedUsers(int adminId) {
+        if (!userRepository.isSystemAdmin(adminId)) {
+            logger.error("Unauthorized attempt to get suspended users: Admin privileges required for user ID " + adminId);
+            throw new IllegalArgumentException("Admin privileges required");
+        }
+        
+        List<Registered> suspendedUsers = userRepository.getAllSuspendedUsers();
+        logger.info("List of " + suspendedUsers.size() + " suspended users retrieved by admin ID " + adminId);
+        return suspendedUsers;
+    }
+    
+    /**
+     * Cleanup expired suspensions. Requires admin privileges.
+     * 
+     * @param adminId The ID of the admin performing the action
+     * @return The number of expired suspensions that were removed
+     * @throws IllegalArgumentException If the admin doesn't have privileges
+     */
+    @Override
+    public int cleanupExpiredSuspensions(int adminId) {
+        if (!userRepository.isSystemAdmin(adminId)) {
+            logger.error("Unauthorized attempt to cleanup suspensions: Admin privileges required for user ID " + adminId);
+            throw new IllegalArgumentException("Admin privileges required");
+        }
+        
+        int removedCount = userRepository.cleanupExpiredSuspensions();
+        logger.info(removedCount + " expired suspensions cleaned up by admin ID " + adminId);
+        return removedCount;
+    }
 }
