@@ -51,7 +51,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
 
@@ -83,7 +83,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -107,7 +107,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<StoreDTO> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<StoreDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -135,7 +135,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -161,7 +161,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -189,7 +189,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -216,7 +216,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -241,7 +241,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -268,7 +268,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -296,7 +296,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -322,7 +322,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -348,7 +348,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -376,7 +376,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -406,7 +406,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -432,7 +432,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -459,7 +459,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -484,7 +484,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<StoreRolesDTO> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<StoreRolesDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -511,7 +511,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in sendResponseForAuctionByOwner: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -538,7 +538,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in addStoreAuctionProductDays: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -563,7 +563,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAllStoreOrders: {}", e.getMessage());
-            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -588,7 +588,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in acceptAssignment: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -613,7 +613,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in declineAssignment: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -638,7 +638,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getPendingOwners: {}", e.getMessage());
-            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -663,7 +663,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getPendingManagers: {}", e.getMessage());
-            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }

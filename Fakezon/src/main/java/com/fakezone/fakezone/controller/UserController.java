@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Response<UserDTO>> registerUser(@RequestBody Request<RegisterUserRequest> userRequest) {
+    public ResponseEntity<Response<String>> registerUser(@RequestBody Request<RegisterUserRequest> userRequest) {
         try {
             String token = userRequest.getToken();
             String email = userRequest.getData().getEmail();
@@ -44,18 +44,18 @@ public class UserController {
             String country = userRequest.getData().getCountry();
             logger.info("Received request to register user with email: {}", email);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<UserDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
                 return ResponseEntity.status(401).body(response);
             }
             LocalDate dob = LocalDate.parse(dateOfBirth);
             Response<String> response = systemService.guestRegister(email, password, dob.toString(), country);
             if (response.isSuccess()) {
-                return ResponseEntity.ok(new Response<>(null, "User registered successfully", true));
+                return ResponseEntity.ok(response);
             }
-            return ResponseEntity.status(400).body(new Response<>(null, response.getMessage(), false));
+            return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in registerUser: {}", e.getMessage());
-            Response<UserDTO> response = new Response<>(null, "An error occurred during registration", false);
+            Response<String> response = new Response<>(null, "An error occurred during registration", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -73,12 +73,12 @@ public class UserController {
             }
             Response<Void> response = systemService.addToBasket(userId, product.getProductId(), storeId, product.getQuantity());
             if (response.isSuccess()) {
-                return ResponseEntity.ok(new Response<>(null, "Product added to basket successfully", true));
+                return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in addToBasket: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred while adding to basket", false);
+            Response<Void> response = new Response<>(null, "An error occurred while adding to basket", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -99,7 +99,7 @@ public class UserController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in viewCart: {}", e.getMessage());
-            Response<List<StoreProductDTO>> response = new Response<>(null, "An error occurred while retrieving the cart", false);
+            Response<List<StoreProductDTO>> response = new Response<>(null, "An error occurred while retrieving the cart", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -120,7 +120,7 @@ public class UserController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAllMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving messages", false);
+            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving messages", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -147,12 +147,12 @@ public class UserController {
                     request.getData().getRecipient(),
                     request.getData().getPackageDetails());
             if (response.isSuccess()) {
-                return ResponseEntity.ok(new Response<>(null, "purchase cart finished successfully", true));
+                return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in purchaseCart: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred while purchasing cart", false);
+            Response<String> response = new Response<>(null, "An error occurred while purchasing cart", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -171,12 +171,12 @@ public class UserController {
             }
             Response<Void> response = systemService.sendMessageToStore(userId, storeId, message);
             if (response.isSuccess()) {
-                return ResponseEntity.ok(new Response<>(null, "Message sent successfully", true));
+                return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in sendMessageToStore: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred while sending the message", false);
+            Response<Void> response = new Response<>(null, "An error occurred while sending the message", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -196,7 +196,7 @@ public class UserController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAssignmentMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving assignment messages", false);
+            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving assignment messages", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -217,7 +217,7 @@ public class UserController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAuctionEndedtMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving auction ended messages", false);
+            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving auction ended messages", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -238,7 +238,7 @@ public class UserController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getOrdersByUser: {}", e.getMessage());
-            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred while retrieving orders", false);
+            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred while retrieving orders", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
