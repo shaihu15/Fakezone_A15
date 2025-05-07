@@ -2,27 +2,35 @@ package InfrastructureLayer.Security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.function.Function;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class TokenService {
-    // In production, this key should be loaded from a secure external source
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000; // 5 hours
     private static final String USER_ID_CLAIM = "userId";
     private static final String USER_ROLE_CLAIM = "role";
     private static final long GUEST_TOKEN_VALIDITY = 2 * 60 * 60 * 1000; // 2 hours for guests
 
     @Value("${jwt.secret}")
-    private String secretKey; // This should be set in application.properties
+    private String secretKey;
+    
+    private Key key;
+    
+    @PostConstruct
+    public void init() {
+        // Decode the Base64 secret key and create a signing key
+        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+    }
     
     // Generate token for user with userId
     public String generateToken(String email, int userId) {
