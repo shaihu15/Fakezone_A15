@@ -34,14 +34,14 @@ public class StoreController {
     }
 
     @PostMapping("/addStore/{userId}/{storeName}")
-    public ResponseEntity<Response<Void>> addStore(@PathVariable("userId") int userId, @PathVariable("storeName") String storeName, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<Response<Integer>> addStore(@PathVariable("userId") int userId, @PathVariable("storeName") String storeName, @RequestHeader("Authorization") String token) {
         try{
             logger.info("Received request to add store with name: {} from user this request tocken of: {}", storeName, token);
             if(!authenticatorAdapter.isValid(token)){
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addStore(userId, storeName);
+            Response<Integer> response = systemService.addStore(userId, storeName);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             }
@@ -51,7 +51,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Integer> response = new Response<>(null, "An error occurred at the controller level", false);
             return ResponseEntity.status(500).body(response);
         }
 

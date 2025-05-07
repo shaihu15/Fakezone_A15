@@ -1,16 +1,18 @@
 package AcceptanceTesting;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.method.P;
 
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -151,6 +153,51 @@ public class NewSystemServiceAcceptanceTest {
         assertNotNull(loginResponse, "Login response should not be null");
         assertFalse(loginResponse.isSuccess(), "Login should fail with invalid credentials");
     }    
-    
+    // @Test
+    // void testSearchByCategory_validCategory_Success() {
+    //     System.out.println("testSearchByCategory_validCategory_Success");
+    //     // Arrange
+    //     String email = "test@gmail.com";
+    //     String password = "password123";
+    //     String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+    //     System.out.println("BirthDate: " + birthDate);
+    //     String country = "IL";
+    //     Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);    
+    //     Response<UserDTO> resultUser=systemService.login(email, password);
+    //     Response<Integer> responseStore = systemService.addStore(1, "Test Store");
+    //     assertTrue(responseStore.isSuccess(), "Store creation should succeed");
+    //     assertNotNull(responseStore.getData(), "Store ID should not be null");
+    //     System.out.println("Store ID: " + responseStore.getData());
+    //     int storeId = responseStore.getData();
+    //     int userId = resultUser.getData().getUserId();
+    //     String productName = "Test Product";
+    //     String category = PCategory.ELECTRONICS.toString();
+    //     systemService.addProductToStore(storeId, userId, productName, "good", 1, 1, category);
+    //     Response<List<ProductDTO>> result = systemService.searchByCategory(category);
+    //     assertNotNull(result, "Search result should not be null");
+    //     assertTrue(result.isSuccess(), "Search should succeed with valid category");
+    //     assertEquals(productName, result.getData().get(0).getName(), "Product name should match the searched category");
+    // }
+    // @Test
+    // void testSearchByCategory_invalidCategory_Failure() {
+    //     // Arrange
+    //     String email = "test@gmail.com";
+    //     String password = "password123";
+    //     String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
+    //     System.out.println("BirthDate: " + birthDate);
+    //     String country = "IL";
+    //     systemService.guestRegister(email, password, birthDate, country);    
+    //     Response<UserDTO> resultUser=systemService.login(email, password);
+    //     Response<Integer> responseStore = systemService.addStore(1, "Test Store");
+    //     int storeId = responseStore.getData();
+    //     int userId = resultUser.getData().getUserId();
+    //     String productName = "Test Product";
+    //     String category = PCategory.ELECTRONICS.toString();
+    //     String invalidCategory = "INVALID_CATEGORY"; // Invalid category
+    //     systemService.addProductToStore(storeId, userId, productName, "good", 1, 1, category);
+    //     Response<List<ProductDTO>> result = systemService.searchByCategory(invalidCategory);
+    //     assertNull(result.getData());
+    //     assertFalse(result.isSuccess(), "Search should fail with invalid category");
+    // }
 }
     

@@ -162,6 +162,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
+            logger.info("Store product added: " + productId + " to store: " + storeId + " by user: " + requesterId);
         }
         catch (Exception e){
             logger.error("StoreService - failed to add store product " + e.getMessage());
