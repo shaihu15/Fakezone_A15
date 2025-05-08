@@ -1,0 +1,116 @@
+package NewAcceptanceTesting;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.method.P;
+
+import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.IOrderService;
+import ApplicationLayer.Interfaces.IProductService;
+import ApplicationLayer.Interfaces.IStoreService;
+import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
+import ApplicationLayer.Services.OrderService;
+import ApplicationLayer.Services.ProductService;
+import ApplicationLayer.Services.StoreService;
+import ApplicationLayer.Services.SystemService;
+import ApplicationLayer.Services.UserService;
+import DomainLayer.IRepository.IProductRepository;
+import DomainLayer.IRepository.IStoreRepository;
+import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
+import DomainLayer.Interfaces.IOrderRepository;
+import DomainLayer.Interfaces.IPayment;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Adapters.DeliveryAdapter;
+import InfrastructureLayer.Adapters.PaymentAdapter;
+import InfrastructureLayer.Repositories.OrderRepository;
+import InfrastructureLayer.Repositories.ProductRepository;
+import InfrastructureLayer.Repositories.StoreRepository;
+import InfrastructureLayer.Repositories.UserRepository;
+
+
+public class TestHelper {
+    private final SystemService systemService;
+
+    public TestHelper(SystemService systemService) {
+        this.systemService = systemService;
+    }
+
+    public String validEmail() {
+        return "user@gmail.com";
+    }
+
+    public String validPassword() {
+        return "StrongPass123";
+    }
+
+    public String invalidEmail() {
+        return "not-an-email";
+    }
+
+    public String invalidPassword() {
+        return "123";
+    }
+
+    public String validBirthDate_Over18() {
+        return LocalDate.now().minusYears(18).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+    
+    public String validBirthDate_under18() {
+        return LocalDate.now().minusYears(17).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    public String invalidBirthDate() {
+        return "1-1-1111";
+    }
+
+    public String validCountry() {
+        return "IL";
+    }
+
+    public String invalidCountry() {
+        return "InvalidCountry";
+    }
+
+    public String validStoreName() {
+        return "TestStore" + System.currentTimeMillis();
+    }
+
+    /*/
+    public String validStoreDescription() {
+        return "This is a test store description.";
+    }
+
+    public String validProductName() {
+        return "TestProduct" + System.currentTimeMillis();
+    }
+
+    public String validProductDescription() {
+        return "This is a test product description.";
+    }
+
+    */
+
+    public Response<String> registerUser(String email, String password, String birthDate, String country) {
+        Response<String> result = systemService.guestRegister(email, password, birthDate, country);
+        if (result.isSuccess()) {
+            System.out.println("User registered successfully: " + result.getMessage());
+        } else {
+            System.out.println("User registration failed: " + result.getMessage());
+        }
+        return result;
+    }
+}
