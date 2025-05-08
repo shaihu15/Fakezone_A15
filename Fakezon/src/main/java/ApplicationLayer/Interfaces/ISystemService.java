@@ -13,7 +13,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-
+import DomainLayer.Model.Registered;
 
 public interface ISystemService {
 
@@ -119,5 +119,28 @@ public interface ISystemService {
 
     Response<Void> userLogout(int userID);
 
+    // User suspension management (admin only)
+    Response<Void> suspendUser(int requesterId, int userId, LocalDate endOfSuspension);
+    
+    Response<Boolean> unsuspendUser(int requesterId, int userId);
+    
+    Response<Boolean> isUserSuspended(int userId);
+    
+    Response<LocalDate> getSuspensionEndDate(int requesterId, int userId);
+    
+    Response<List<Registered>> getAllSuspendedUsers(int requesterId);
+    
+    Response<Integer> cleanupExpiredSuspensions(int requesterId);
+    
+    // System admin management
+    Response<Void> addSystemAdmin(int requesterId, int userId);
+    
+    Response<Boolean> removeSystemAdmin(int requesterId, int userId);
+    
+    Response<Boolean> isSystemAdmin(int userId);
+    
+    Response<List<Registered>> getAllSystemAdmins(int requesterId);
+    
+    Response<Integer> getSystemAdminCount(int requesterId);
 
 }

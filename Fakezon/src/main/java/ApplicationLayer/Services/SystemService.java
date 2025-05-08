@@ -1119,6 +1119,17 @@ public class SystemService implements ISystemService {
     @Override
     public Response<UserDTO> login(String email, String password){
         try{
+            // Check if the user exists first
+            Optional<Registered> optionalUser = userService.getUserByUserName(email);
+            if (optionalUser.isPresent()) {
+                Registered user = optionalUser.get();
+                // Check if the user is suspended before login
+                if (userService.isUserSuspended(user.getUserId())) {
+                    logger.error("System Service - Login failed: User is suspended: " + email);
+                    return new Response<>(null, "Login failed: User is suspended", false, ErrorType.INVALID_INPUT);
+                }
+            }
+            
             String token = this.authenticatorService.login(email, password);
             UserDTO user = this.userService.login(email, password);
             return new Response<>(user, "Login successful with token: " + token, true);
@@ -1128,13 +1139,257 @@ public class SystemService implements ISystemService {
         }
     }
 
+    // User suspension management methods (admin only)
+    
+    @Override
+    public Response<Void> suspendUser(int requesterId, int userId, LocalDate endOfSuspension) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to suspend user: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            userService.suspendUser(requesterId, userId, endOfSuspension);
+            
+            if (endOfSuspension == null) {
+                logger.info("System Service - User ID " + userId + " permanently suspended by admin ID " + requesterId);
+                return new Response<>(null, "User permanently suspended", true);
+            } else {
+                logger.info("System Service - User ID " + userId + " suspended until " + endOfSuspension + " by admin ID " + requesterId);
+                return new Response<>(null, "User suspended until " + endOfSuspension, true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error during suspension: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during suspension: " + e.getMessage());
+            return new Response<>(null, "Error during suspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> unsuspendUser(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to unsuspend user: Admin privileges required for user ID " + requesterId);
+                return new Response<>(false, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            boolean wasUnsuspended = userService.unsuspendUser(requesterId, userId);
+            
+            if (wasUnsuspended) {
+                logger.info("System Service - User ID " + userId + " unsuspended by admin ID " + requesterId);
+                return new Response<>(true, "User unsuspended successfully", true);
+            } else {
+                logger.info("System Service - User ID " + userId + " was not suspended (unsuspend request by admin ID " + requesterId + ")");
+                return new Response<>(false, "User was not suspended", true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error during unsuspension: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during unsuspension: " + e.getMessage());
+            return new Response<>(false, "Error during unsuspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> isUserSuspended(int userId) {
+        try {
+            boolean isSuspended = userService.isUserSuspended(userId);
+            logger.info("System Service - Checked suspension status for User ID " + userId + ": " + (isSuspended ? "Suspended" : "Not suspended"));
+            return new Response<>(isSuspended, "Suspension status checked successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error checking suspension status: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error checking suspension status: " + e.getMessage());
+            return new Response<>(false, "Error checking suspension status: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<LocalDate> getSuspensionEndDate(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get suspension end date: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            LocalDate endDate = userService.getSuspensionEndDate(requesterId, userId);
+            
+            String message = endDate == null ? "User is permanently suspended" : "User is suspended until " + endDate;
+            logger.info("System Service - " + message + " (checked by admin ID " + requesterId + ")");
+            return new Response<>(endDate, message, true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error getting suspension end date: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error getting suspension end date: " + e.getMessage());
+            return new Response<>(null, "Error getting suspension end date: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<Registered>> getAllSuspendedUsers(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get suspended users: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            List<Registered> suspendedUsers = userService.getAllSuspendedUsers(requesterId);
+            
+            logger.info("System Service - Retrieved " + suspendedUsers.size() + " suspended users (requested by admin ID " + requesterId + ")");
+            return new Response<>(suspendedUsers, suspendedUsers.size() + " suspended users found", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error retrieving suspended users: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error retrieving suspended users: " + e.getMessage());
+            return new Response<>(null, "Error retrieving suspended users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Integer> cleanupExpiredSuspensions(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to cleanup suspensions: Admin privileges required for user ID " + requesterId);
+                return new Response<>(-1, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            int removedCount = userService.cleanupExpiredSuspensions(requesterId);
+            
+            logger.info("System Service - Cleaned up " + removedCount + " expired suspensions (requested by admin ID " + requesterId + ")");
+            return new Response<>(removedCount, "Cleaned up " + removedCount + " expired suspensions", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error during cleanup: " + e.getMessage());
+            return new Response<>(-1, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during cleanup: " + e.getMessage());
+            return new Response<>(-1, "Error during cleanup: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    // System admin management methods
+    
+    @Override
+    public Response<Void> addSystemAdmin(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to add system admin: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            userService.addSystemAdmin(userId);
+            
+            logger.info("System Service - User ID " + userId + " added as system admin by admin ID " + requesterId);
+            return new Response<>(null, "User added as system admin successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error adding system admin: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error adding system admin: " + e.getMessage());
+            return new Response<>(null, "Error adding system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> removeSystemAdmin(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to remove system admin: Admin privileges required for user ID " + requesterId);
+                return new Response<>(false, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            // Prevent removing yourself as an admin
+            if (requesterId == userId) {
+                logger.error("System Service - Admin ID " + requesterId + " attempted to remove themselves as admin");
+                return new Response<>(false, "Cannot remove yourself as admin", false, ErrorType.INVALID_INPUT);
+            }
+            
+            boolean wasRemoved = userService.removeSystemAdmin(userId);
+            
+            if (wasRemoved) {
+                logger.info("System Service - User ID " + userId + " removed from system admins by admin ID " + requesterId);
+                return new Response<>(true, "User removed from system admins successfully", true);
+            } else {
+                logger.info("System Service - User ID " + userId + " was not a system admin (remove request by admin ID " + requesterId + ")");
+                return new Response<>(false, "User was not a system admin", true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error removing system admin: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error removing system admin: " + e.getMessage());
+            return new Response<>(false, "Error removing system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> isSystemAdmin(int userId) {
+        try {
+            boolean isAdmin = userService.isSystemAdmin(userId);
+            logger.info("System Service - Checked admin status for User ID " + userId + ": " + (isAdmin ? "Admin" : "Not admin"));
+            return new Response<>(isAdmin, "Admin status checked successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error checking admin status: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error checking admin status: " + e.getMessage());
+            return new Response<>(false, "Error checking admin status: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<Registered>> getAllSystemAdmins(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get system admins: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            List<Registered> admins = userService.getAllSystemAdmins();
+            
+            logger.info("System Service - Retrieved " + admins.size() + " system admins (requested by admin ID " + requesterId + ")");
+            return new Response<>(admins, admins.size() + " system admins found", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error retrieving system admins: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error retrieving system admins: " + e.getMessage());
+            return new Response<>(null, "Error retrieving system admins: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Integer> getSystemAdminCount(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get admin count: Admin privileges required for user ID " + requesterId);
+                return new Response<>(-1, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            int count = userService.getSystemAdminCount();
+            
+            logger.info("System Service - Current system admin count: " + count + " (requested by admin ID " + requesterId + ")");
+            return new Response<>(count, "Current system admin count: " + count, true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error getting admin count: " + e.getMessage());
+            return new Response<>(-1, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error getting admin count: " + e.getMessage());
+            return new Response<>(-1, "Error getting admin count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
 
     private boolean isAuth(String token){
         return this.authenticatorService.isValid(token);
     }
 
     private boolean isValidPassword(String password) {
-    return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+        return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
     }
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
