@@ -14,6 +14,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public interface ISystemService {
 
@@ -143,4 +144,18 @@ public interface ISystemService {
     
     Response<Integer> getSystemAdminCount(int requesterId);
 
+    // Unsigned (guest) user management
+    Response<Void> addUnsignedUser(User user);
+    
+    Response<User> getUnsignedUserById(int userId);
+    
+    Response<List<User>> getAllUnsignedUsers(int adminId);
+    
+    Response<Void> updateUnsignedUser(User user);
+    
+    Response<Boolean> removeUnsignedUser(int userId);
+    
+    Response<Boolean> isUnsignedUser(int userId);
+    
+    Response<Integer> getUnsignedUserCount(int adminId);
 }
