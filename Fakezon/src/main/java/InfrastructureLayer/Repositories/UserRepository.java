@@ -15,13 +15,11 @@ import DomainLayer.Model.User;
 
 public class UserRepository implements IUserRepository {
     private Map<Integer, Registered> users;
-    private Map<Integer, User> unsignedUsers; // Map to store unsigned (guest) users
     private Map<Integer, LocalDate> suspendedUsers; // Map of userId to suspension end date (null if permanent)
     private Set<Integer> systemAdmins; // Set of user IDs who are system administrators
 
     public UserRepository() {
         this.users = new HashMap<>();
-        this.unsignedUsers = new HashMap<>(); // Initialize the unsigned users map
         this.suspendedUsers = new HashMap<>();
         this.systemAdmins = new HashSet<>();
     }
@@ -32,7 +30,6 @@ public class UserRepository implements IUserRepository {
                 .filter(user -> user.getEmail().equals(email) && user instanceof Registered)
                 .findFirst();
     }
-
     @Override
     public Optional<Registered> findById(int userID) {
         return Optional.ofNullable(users.get(userID));
@@ -75,12 +72,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public Optional<User> findAllById(int userID) {
-        // First check registered users
-        if (users.containsKey(userID)) {
-            return Optional.ofNullable(users.get(userID));
-        }
-        // Then check unsigned users
-        return Optional.ofNullable(unsignedUsers.get(userID));
+        return Optional.ofNullable(users.get(userID));
     }
 
     /**
@@ -260,81 +252,5 @@ public class UserRepository implements IUserRepository {
      */
     public int getSystemAdminCount() {
         return systemAdmins.size();
-    }
-    
-    /**
-     * Add an unsigned (guest) user to the repository
-     * 
-     * @param user The user to add
-     * @throws IllegalArgumentException If a user with the same ID already exists
-     */
-    public void addUnsignedUser(User user) {
-        int userId = user.getUserId();
-        if (unsignedUsers.containsKey(userId) || users.containsKey(userId)) {
-            throw new IllegalArgumentException("User with ID " + userId + " already exists.");
-        }
-        unsignedUsers.put(userId, user);
-    }
-    
-    /**
-     * Find an unsigned user by ID
-     * 
-     * @param userId The ID of the user to find
-     * @return The user wrapped in an Optional, or an empty Optional if not found
-     */
-    public Optional<User> findUnsignedUserById(int userId) {
-        return Optional.ofNullable(unsignedUsers.get(userId));
-    }
-    
-    /**
-     * Get all unsigned users
-     * 
-     * @return A list of all unsigned users
-     */
-    public List<User> getAllUnsignedUsers() {
-        return new ArrayList<>(unsignedUsers.values());
-    }
-    
-    /**
-     * Update an unsigned user
-     * 
-     * @param user The user to update
-     * @throws IllegalArgumentException If the user doesn't exist
-     */
-    public void updateUnsignedUser(User user) {
-        int userId = user.getUserId();
-        if (!unsignedUsers.containsKey(userId)) {
-            throw new IllegalArgumentException("Unsigned user with ID " + userId + " does not exist.");
-        }
-        unsignedUsers.put(userId, user);
-    }
-    
-    /**
-     * Remove an unsigned user from the repository
-     * 
-     * @param userId The ID of the user to remove
-     * @return true if the user was removed, false if they weren't found
-     */
-    public boolean removeUnsignedUser(int userId) {
-        return unsignedUsers.remove(userId) != null;
-    }
-    
-    /**
-     * Check if a user ID belongs to an unsigned user
-     * 
-     * @param userId The ID to check
-     * @return true if the ID belongs to an unsigned user, false otherwise
-     */
-    public boolean isUnsignedUser(int userId) {
-        return unsignedUsers.containsKey(userId);
-    }
-    
-    /**
-     * Get the total count of unsigned users
-     * 
-     * @return The number of unsigned users
-     */
-    public int getUnsignedUserCount() {
-        return unsignedUsers.size();
     }
 }
