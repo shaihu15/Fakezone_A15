@@ -1,12 +1,17 @@
 package ApplicationLayer.Interfaces;
 
-import java.util.Collection;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import ApplicationLayer.DTO.*;
+import ApplicationLayer.DTO.BasketDTO;
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -14,6 +19,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public interface ISystemService {
 
@@ -78,9 +84,13 @@ public interface ISystemService {
     Response<String> closeStoreByFounder(int storeId, int userId);
 
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+  
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+
     Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
+  
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
+  
     Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity,String category); // add product to store
 
     Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
@@ -143,4 +153,18 @@ public interface ISystemService {
     
     Response<Integer> getSystemAdminCount(int requesterId);
 
+    // Unsigned (guest) user management
+    Response<Void> addUnsignedUser(User user);
+    
+    Response<User> getUnsignedUserById(int userId);
+    
+    Response<List<User>> getAllUnsignedUsers(int adminId);
+    
+    Response<Void> updateUnsignedUser(User user);
+    
+    Response<Boolean> removeUnsignedUser(int userId);
+    
+    Response<Boolean> isUnsignedUser(int userId);
+    
+    Response<Integer> getUnsignedUserCount(int adminId);
 }
