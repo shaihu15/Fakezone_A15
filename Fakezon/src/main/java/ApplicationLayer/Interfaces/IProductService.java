@@ -10,7 +10,9 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
 
 public interface IProductService {
-    int addProduct(String productName, String productDescription,PCategory category);    void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds); // other parameters can be added as needed
+    int addProduct(String productName, String productDescription,PCategory category);    
+    
+    void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds); // other parameters can be added as needed
     
     void deleteProduct(int productId);
 

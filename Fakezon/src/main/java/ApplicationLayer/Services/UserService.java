@@ -395,7 +395,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID) {
+    public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
 
