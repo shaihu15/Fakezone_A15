@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 
@@ -79,6 +80,17 @@ public class ProductRepository implements IProductRepository {
         for(IProduct product : products.values()){
             if(product.getName().toLowerCase().contains(keyword.toLowerCase()) || 
                product.getDescription().toLowerCase().contains(keyword.toLowerCase())){
+                result.add(product);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Collection<IProduct> getProductsByCategory(PCategory category) {
+        Collection<IProduct> result = new ArrayList<>();
+        for(IProduct product : products.values()){
+            if(product.getCategory() == category){
                 result.add(product);
             }
         }
