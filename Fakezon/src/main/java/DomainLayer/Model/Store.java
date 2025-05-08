@@ -95,7 +95,7 @@ public class Store implements IStore {
     // precondition: user is logged in and previously made a purchase from the store
     // - cheaked by service layer
     @Override
-    public void addRating(int userID, double rating, String comment) {
+    public synchronized void addRating(int userID, double rating, String comment) {
         if (Sratings.containsKey(userID)) {
             Sratings.get(userID).updateRating(rating, comment);
         } else {
@@ -158,11 +158,11 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        StoreProduct storeProduct = new StoreProduct(productID, name, basePrice, quantity, category);
+        StoreProduct storeProduct = new StoreProduct(productID,storeID, name, basePrice, quantity, category);
         storeProducts.put(productID, storeProduct); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
-        return new StoreProductDTO(storeProduct,storeID ); //returns the productDTO
+        return new StoreProductDTO(storeProduct); //returns the productDTO
     }
     @Override
     public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
@@ -191,7 +191,7 @@ public class Store implements IStore {
             throw e;
         }
         StoreProduct storeProduct = storeProducts.get(productID);
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
+        storeProducts.put(productID, new StoreProduct(productID,storeID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
     }
@@ -217,27 +217,6 @@ public class Store implements IStore {
         storeProducts.remove(productID);
         productsLock.unlock();
         rolesLock.unlock();
-    }
-
-    public void addAuctionProductDays(int requesterId, int productId, int daysToAdd){
-        rolesLock.lock();
-        productsLock.lock();
-        try{
-            if(!hasInventoryPermissions(requesterId)){
-                throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
-            }
-            if(!auctionProducts.containsKey(productId)){
-                throw new IllegalArgumentException("Product "+ productId + " not on Auction in store " + storeID);
-            }
-            auctionProducts.get(productId).addDays(daysToAdd); //throws if daysToAdd <= 0, gets caught in service
-            productsLock.unlock();
-            rolesLock.unlock();
-        }
-        catch(Exception e){
-            productsLock.unlock();
-            rolesLock.unlock();
-            throw e;
-        }
     }
 
 

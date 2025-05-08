@@ -517,33 +517,6 @@ public class StoreController {
         }
     }
 
-    @PostMapping("/addStoreAuctionProductDays/{storeId}/{requesterId}/{productId}")
-    public ResponseEntity<Response<Void>> addStoreAuctionProductDays(@PathVariable("storeId") int storeId,
-                                                              @PathVariable("requesterId") int requesterId,
-                                                              @PathVariable("productId") int productId,
-                                                              @RequestParam("daysToAdd") int daysToAdd,
-                                                              @RequestHeader("Authorization") String token) {
-        try {
-            logger.info("Received request to add auction days for product {} in store {} by user {} with token {}", productId, storeId, requesterId, token);
-            if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
-                return ResponseEntity.status(401).body(response);
-            }
-            Response<Void> response = systemService.addStoreAuctionProductDays(storeId, requesterId, productId, daysToAdd);
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            }
-            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
-                return ResponseEntity.status(500).body(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (Exception e) {
-            logger.error("Error in addStoreAuctionProductDays: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
-            return ResponseEntity.status(500).body(response);
-        }
-    }
-
     @GetMapping("/getAllStoreOrders/{storeId}/{userId}")
     public ResponseEntity<Response<List<OrderDTO>>> getAllStoreOrders(@PathVariable("storeId") int storeId,
                                                                @PathVariable("userId") int userId,

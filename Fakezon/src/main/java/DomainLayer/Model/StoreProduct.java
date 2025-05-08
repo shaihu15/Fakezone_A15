@@ -10,6 +10,7 @@ import java.util.Locale.Category;
 
 public class StoreProduct {
     private int SproductID;
+    private int storeId;
     private String name;
     private double basePrice;
     private int quantity;
@@ -17,8 +18,9 @@ public class StoreProduct {
     private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
 
 
-   public StoreProduct(int SproductID, String name, double basePrice, int quantity,PCategory category) {
+   public StoreProduct(int SproductID, int storeId,String name, double basePrice, int quantity,PCategory category) {
         this.SproductID = SproductID;
+        this.storeId =storeId;
         this.name = name;
         this.basePrice = basePrice;
         this.quantity = quantity;
@@ -26,6 +28,7 @@ public class StoreProduct {
     }
     public StoreProduct(StoreProduct storeProduct) {
         this.SproductID = storeProduct.SproductID;
+        this.storeId = storeProduct.storeId;
         this.name = storeProduct.name;
         this.basePrice = storeProduct.basePrice;
         this.quantity = storeProduct.quantity;
@@ -45,6 +48,10 @@ public class StoreProduct {
     }
     public PCategory getCategory() {
         return category;
+    }
+    public int getStoreId()
+    {
+        return storeId;
     }
    
     //precondition: user is logged in and User has purchased the product - cheaked by service layer
