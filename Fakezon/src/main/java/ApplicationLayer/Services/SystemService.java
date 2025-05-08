@@ -51,6 +51,7 @@ import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import javassist.bytecode.LineNumberAttribute.Pc;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -191,13 +192,13 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Void> addStore(int userId, String storeName) {
+    public Response<Integer> addStore(int userId, String storeName) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
                 int storeId = this.storeService.addStore(userId, storeName);
                 this.userService.addRole(userId, storeId, new StoreFounder());
                 logger.info("System Service - User opened store: " + storeId + " by user: " + userId + " with name: " + storeName);
-                return new Response<>(null, "Store opened successfully", true);
+                return new Response<>(storeId, "Store opened successfully", true);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
@@ -286,7 +287,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<StoreProductDTO> getProductFromStore(int productId, int storeId) {
         try {
-            logger.info("System service - user trying to view procuct " + productId + " in store: " + storeId);
+            logger.info("System service - user trying to view product " + productId + " in store: " + storeId);
             StoreDTO s = this.storeService.viewStore(storeId);
             return new Response<StoreProductDTO>(s.getStoreProductById(productId), "Product retrieved successfully", true);
         } catch (Exception e) {
@@ -298,7 +299,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<ProductDTO> getProduct(int productId) {
         try {
-            logger.info("System service - user trying to view procuct " + productId);
+            logger.info("System service - user trying to view product " + productId);
             ProductDTO productDTO = this.productService.viewProduct(productId);
             return new Response<ProductDTO>(productDTO, "Product retrieved successfully", true);
         } catch (IllegalArgumentException e) {
@@ -316,7 +317,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
-            logger.info("System service - user trying to update procuct " + productId);
+            logger.info("System service - user trying to update product " + productId);
             this.productService.updateProduct(productId, productName, productDescription, storesIds);
             return new Response<>(true, "Product updated successfully", true);
         } catch (Exception e) {
@@ -328,7 +329,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Boolean> deleteProduct(int productId) {
         try {
-            logger.info("System service - user trying to delete procuct " + productId);
+            logger.info("System service - user trying to delete product " + productId);
             this.productService.deleteProduct(productId);
             return new Response<>(true, "Product deleted successfully", true);
         } catch (Exception e) {
@@ -383,7 +384,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
-            logger.info("System service - user trying to view procuct " + keyword);
+            logger.info("System service - user trying to view product " + keyword);
             return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
@@ -403,7 +404,7 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Invalid category: " + category);
                 return new Response<>(-1, "Invalid category", false, ErrorType.INVALID_INPUT);
             }
-            logger.info("System service - user trying to add procuct " + productName);
+            logger.info("System service - user trying to add product " + productName);
             int productId = this.productService.addProduct(productName, productDescription,categoryEnum);
             return new Response<>(productId, "Product added successfully", true);
         } catch (Exception e) {
@@ -448,7 +449,7 @@ public class SystemService implements ISystemService {
     public Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
             List<StoreManagerPermission> perms) {
         try {
-            logger.info("Systrem service - user sessionToken: " + sessionToken + " trying to add permissions: "
+            logger.info("System service - user sessionToken: " + sessionToken + " trying to add permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
             if (this.authenticatorService.isValid(sessionToken)) {
                 int requesterId = this.authenticatorService.getUserId(sessionToken);
@@ -461,7 +462,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during adding store manager permissions: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
-    //maby add details to response
+    //add details to response
     @Override
     public Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
             List<StoreManagerPermission> perms) {
@@ -594,7 +595,7 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<Void> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
+    public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
         String name = null;
         int productId;
         PCategory categoryEnum = null;
@@ -633,8 +634,8 @@ public class SystemService implements ISystemService {
         }
         try{
             
-            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity, categoryEnum);
-            return new Response<>(null, "Product added to store successfully", true);
+            StoreProductDTO spDTO =storeService.addProductToStore(storeId, requesterId, productId, productName, basePrice, quantity, categoryEnum);
+            return new Response<>(spDTO, "Product added to store successfully", true);
         }
         catch (Exception e){
             logger.error("System service - failed to add product to store " + e.getMessage());
@@ -739,10 +740,10 @@ public class SystemService implements ISystemService {
         }	}
 
 	@Override
-	public Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID) {
+	public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
 		try{
             if (this.userService.isUserLoggedIn(userID)) {
-                return this.userService.getAuctionEndedtMessages(userID);
+                return this.userService.getAuctionEndedMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
                 return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
@@ -1400,6 +1401,48 @@ public class SystemService implements ISystemService {
     // throw new IllegalArgumentException("Invalid session token");
     // } 
     // }
+
+    @Override
+    public Response<List<ProductDTO>> searchByCategory(String category) {
+        try {
+            PCategory categoryEnum = isCategoryValid(category);
+            if (categoryEnum == null) {
+                logger.error("System Service - Invalid category: " + category);
+                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT);
+            }
+                List<ProductDTO> products = this.productService.getProductsByCategory(categoryEnum);
+                return new Response<>(products, "Products retrieved successfully", true);
+
+        } catch (Exception e) {
+            logger.error("System Service - Error during searching products by category: " + e.getMessage());
+            return new Response<>(null, "Error during searching products by category", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<Void> userLogout(int userID) {
+        try {
+            logger.info("System service - user " + userID + " trying to logout");
+            Optional<Registered> user = this.userService.getUserById(userID);
+
+            if(user == null) {
+                logger.error("System Service - User not found: " + userID);
+                return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT);
+            }
+            if (this.userService.isUserLoggedIn(userID)) {
+                String email = user.get().getEmail();
+                this.authenticatorService.logout(email);
+                this.userService.logout(email);
+                return new Response<>(null, "Logout successful", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during logout: " + e.getMessage());
+            return new Response<>(null, "Error during logout: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
     
 
 }

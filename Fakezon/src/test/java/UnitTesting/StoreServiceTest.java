@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 
 import DomainLayer.Enums.StoreManagerPermission;
@@ -223,7 +225,7 @@ class StoreServiceTest {
     void testAddAuctionProductToStore_Success() {
         int storeId = storeService.addStore(1, "AuctionStore1");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        storeService.addProductToStore(storeId, 1, 101, "AuctionStore1",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 101, "AuctionStore1",50.0,5,PCategory.ELECTRONICS);
         // Adding an auction product to the store
         assertDoesNotThrow(() ->
             storeService.addAuctionProductToStore(storeId, 1, 101, 50.0, 5)
@@ -249,7 +251,7 @@ class StoreServiceTest {
     void testAddBidOnAuctionProductInStore_Success() {
         int storeId = storeService.addStore(1, "AuctionStore2");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        storeService.addProductToStore(storeId, 1, 102, "AuctionStore2",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 102, "AuctionStore2",50.0,5,PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 102, 50.0, 5);
 
@@ -274,7 +276,7 @@ class StoreServiceTest {
     void testSendResponseForAuctionByOwner_Success() {
         int storeId = storeService.addStore(1, "AuctionStore4");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        storeService.addProductToStore(storeId, 1, 104, "AuctionStore4",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 104, "AuctionStore4",50.0,5,PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 104, 50.0, 1);
 
@@ -295,7 +297,7 @@ class StoreServiceTest {
     void testGetAuctionProductsFromStore_Success() {
         int storeId = storeService.addStore(1, "AuctionStore5");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        storeService.addProductToStore(storeId, 1, 105, "AuctionStore5",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 105, "AuctionStore5",50.0,5,PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 105, 50.0, 5);
 
@@ -316,7 +318,7 @@ class StoreServiceTest {
     void testAddBidOnAuctionProductInStore_BidTooLow() {
         int storeId = storeService.addStore(1, "AuctionStore6");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        storeService.addProductToStore(storeId, 1, 106, "AuctionStore6",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 106, "AuctionStore6",50.0,5,PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 106, 50.0, 5);
         storeService.addBidOnAuctionProductInStore(storeId, 2, 106, 60.0);

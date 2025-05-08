@@ -11,6 +11,7 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
 import InfrastructureLayer.Repositories.ProductRepository;
 
@@ -31,11 +32,13 @@ public class ProductRepositoryTest {
         when(product1.getId()).thenReturn(1);
         when(product1.getName()).thenReturn("Product1");
         when(product1.getDescription()).thenReturn("good product");
+        when(product1.getCategory()).thenReturn(PCategory.ELECTRONICS);
 
         // Define behavior for product2
         when(product2.getId()).thenReturn(2);
         when(product2.getName()).thenReturn("Product2");
         when(product2.getDescription()).thenReturn("another good product");
+        when(product2.getCategory()).thenReturn(PCategory.BEAUTY); 
     }
 
     @Test
@@ -102,5 +105,21 @@ public class ProductRepositoryTest {
         assertTrue(products.contains(product1));
         assertTrue(products.contains(product2));
         assertEquals(2, products.size());
+    }
+
+    @Test
+    void givenExistingCategory_WhenGetProductsByCategory_ThenReturnsProductsInCategory() {
+        repository.addProduct(product1);
+        repository.addProduct(product2);
+        Collection<IProduct> products = repository.getProductsByCategory(PCategory.ELECTRONICS);
+        assertTrue(products.contains(product1));
+        assertEquals(1, products.size());
+    }
+
+    @Test
+    void givenNonExistingCategory_WhenGetProductsByCategory_ThenReturnsEmptyCollection() {
+        repository.addProduct(product1);
+        Collection<IProduct> products = repository.getProductsByCategory(PCategory.BEAUTY);
+        assertTrue(products.isEmpty());
     }
 }

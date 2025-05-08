@@ -46,7 +46,7 @@ class UserControllerTest {
         when(systemService.guestRegister("test@example.com", "password", "2000-01-01", "USA"))
                 .thenReturn(new Response<>("Success", "User registered successfully", true));
 
-        ResponseEntity<Response<UserDTO>> response = userController.registerUser(request);
+        ResponseEntity<Response<String>> response = userController.registerUser(request);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("User registered successfully", response.getBody().getMessage());
@@ -59,7 +59,7 @@ class UserControllerTest {
         Request<RegisterUserRequest> request = new Request<>("invalidToken", registerUserRequest);
         when(authenticatorAdapter.isValid("invalidToken")).thenReturn(false);
 
-        ResponseEntity<Response<UserDTO>> response = userController.registerUser(request);
+        ResponseEntity<Response<String>> response = userController.registerUser(request);
 
         assertEquals(401, response.getStatusCodeValue());
         assertEquals("Invalid token", response.getBody().getMessage());
