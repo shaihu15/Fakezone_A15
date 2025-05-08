@@ -40,13 +40,13 @@ public class StoreProductDTO {
         this.averageRating = averageRating;
     }
 
-    public StoreProductDTO(StoreProduct storeProduct) {
+    public StoreProductDTO(StoreProduct storeProduct, int storeId) {
         this.productId = storeProduct.getSproductID();
+        this.storeId = storeId;
         this.name = storeProduct.getName();
         this.basePrice = storeProduct.getBasePrice();
         this.quantity = storeProduct.getQuantity();
         this.averageRating = storeProduct.getAverageRating(); // Assuming getAverageRating() returns a double
-        this.storeId = storeProduct.getStoreId(); // Assuming StoreProduct has a method to get store ID
         this.category = storeProduct.getCategory(); // Assuming StoreProduct has a method to get category
     }
 

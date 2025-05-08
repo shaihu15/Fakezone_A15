@@ -167,4 +167,35 @@ public class ProductServiceTest {
         verify(productRepository, times(1)).getProductById(1);
         verify(productRepository, never()).updateProduct(1, "UpdatedProduct", "UpdatedDescription", new HashSet<>());
     }
+
+    @Test
+    void givenValidCategory_WhenGetProductsByCategory_ThenReturnsMatchingProducts() {
+        IProduct mockProduct1 = mock(IProduct.class);
+        IProduct mockProduct2 = mock(IProduct.class);
+
+        when(mockProduct1.getName()).thenReturn("Product1");
+        when(mockProduct1.getDescription()).thenReturn("Description1");
+        when(mockProduct1.getCategory()).thenReturn(PCategory.ELECTRONICS);
+        when(mockProduct2.getName()).thenReturn("Product2");
+        when(mockProduct2.getDescription()).thenReturn("Description2");
+        when(mockProduct2.getCategory()).thenReturn(PCategory.ELECTRONICS);
+
+        when(productRepository.getProductsByCategory(PCategory.ELECTRONICS)).thenReturn(Arrays.asList(mockProduct1, mockProduct2));
+
+        List<ProductDTO> productDTOs = productService.getProductsByCategory(PCategory.ELECTRONICS);
+
+        assertEquals(2, productDTOs.size());
+        assertEquals("Product1", productDTOs.get(0).getName());
+        assertEquals("Description1", productDTOs.get(0).getDescription());
+        assertEquals("Product2", productDTOs.get(1).getName());
+        assertEquals("Description2", productDTOs.get(1).getDescription());
+    }
+    @Test
+    void givenInvalidCategory_WhenGetProductsByCategory_ThenThrowsException() {
+        doThrow(new RuntimeException("Category not found")).when(productRepository).getProductsByCategory(PCategory.ELECTRONICS);
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            productService.getProductsByCategory(PCategory.ELECTRONICS);
+        });
+        assertEquals("Category not found", exception.getMessage());
+    }
 }

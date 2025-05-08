@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 
 import static org.mockito.Mockito.*;
@@ -38,7 +39,7 @@ public class StoreTest {
     void setUp() {
         publisher = mock(ApplicationEventPublisher.class);
         store = new Store("Test Store", founderId, publisher);
-        store.addStoreProduct(founderId ,productId, "Test Product", 100.0, 5, PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO = store.addStoreProduct(founderId ,productId, "Test Product", 100.0, 5, PCategory.ELECTRONICS);
 
     }
 
