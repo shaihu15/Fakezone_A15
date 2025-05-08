@@ -49,7 +49,7 @@ public interface IStoreService {
   StoreProductDTO getProductFromStore(int productId, int storeId);
 
   // --- Product Management ---
-  void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category);
+  StoreProductDTO addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category);
 
   void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice,
                   int quantity);

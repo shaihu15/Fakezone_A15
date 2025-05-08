@@ -13,7 +13,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
-
+import DomainLayer.Model.Registered;
 
 public interface ISystemService {
 
@@ -37,7 +37,7 @@ public interface ISystemService {
 
     Response<Void> sendMessageToUser(int managerId, int storeId, int userToAnswer, String message); // send message to user
 
-    Response<Void> addStore(int userId, String storeName);
+    Response<Integer> addStore(int userId, String storeName);
 
     Response<StoreProductDTO> getProductFromStore(int productId, int storeId);
 
@@ -50,6 +50,8 @@ public interface ISystemService {
     Response<String> guestRegister(String email, String password,String dobInput, String country);
     
     Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
+
+    Response<List<ProductDTO>> searchByCategory(String category);
     
     Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
     
@@ -77,9 +79,9 @@ public interface ISystemService {
 
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
-    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
-    Response<Void> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity,String category); // add product to store
+    Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity,String category); // add product to store
 
     Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
@@ -115,5 +117,30 @@ public interface ISystemService {
 
     Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token);
 
+    Response<Void> userLogout(int userID);
+
+    // User suspension management (admin only)
+    Response<Void> suspendUser(int requesterId, int userId, LocalDate endOfSuspension);
+    
+    Response<Boolean> unsuspendUser(int requesterId, int userId);
+    
+    Response<Boolean> isUserSuspended(int userId);
+    
+    Response<LocalDate> getSuspensionEndDate(int requesterId, int userId);
+    
+    Response<List<Registered>> getAllSuspendedUsers(int requesterId);
+    
+    Response<Integer> cleanupExpiredSuspensions(int requesterId);
+    
+    // System admin management
+    Response<Void> addSystemAdmin(int requesterId, int userId);
+    
+    Response<Boolean> removeSystemAdmin(int requesterId, int userId);
+    
+    Response<Boolean> isSystemAdmin(int userId);
+    
+    Response<List<Registered>> getAllSystemAdmins(int requesterId);
+    
+    Response<Integer> getSystemAdminCount(int requesterId);
 
 }

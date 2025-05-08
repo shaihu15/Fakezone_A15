@@ -43,7 +43,7 @@ public interface IUserService {
     boolean didPurchaseProduct(int userID, int storeID, int productID); // check if the user purchased from the product
 
     Response<List<OrderDTO>> getOrdersByUser(int userID); // get all the orders of the user
-    
+
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
 
     void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
@@ -60,8 +60,31 @@ public interface IUserService {
   
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
   
-    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
 
     Optional<User> getAnyUserById(int Id); // get any user by id, guest or registered
-
+    
+    // System admin management
+    void addSystemAdmin(int userId);
+    
+    boolean removeSystemAdmin(int userId);
+    
+    boolean isSystemAdmin(int userId);
+    
+    List<Registered> getAllSystemAdmins();
+    
+    int getSystemAdminCount();
+    
+    // User suspension management (admin only)
+    void suspendUser(int adminId, int userId, LocalDate endOfSuspension);
+    
+    boolean unsuspendUser(int adminId, int userId);
+    
+    boolean isUserSuspended(int userId);
+    
+    LocalDate getSuspensionEndDate(int adminId, int userId);
+    
+    List<Registered> getAllSuspendedUsers(int adminId);
+    
+    int cleanupExpiredSuspensions(int adminId);
 }

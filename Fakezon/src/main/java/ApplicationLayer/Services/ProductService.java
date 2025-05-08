@@ -162,8 +162,18 @@ public class ProductService implements IProductService {
 
     @Override
     public List<ProductDTO> getProductsByCategory(PCategory category) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getProductsByCategory'");
+        try {
+            Collection<IProduct> products = productRepository.getProductsByCategory(category);
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory(), new HashSet<>(product.getStoresIds())))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to get products by category, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Products with category {} were retrieved", category);
+        }
     }
     @Override
     public IProduct getProduct(int productId) {
