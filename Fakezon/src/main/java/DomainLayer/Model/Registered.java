@@ -50,6 +50,7 @@ public class Registered extends User {
 
     }
 
+
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
         this.productsPurchase.put(storeID, productsPurchase);
     }

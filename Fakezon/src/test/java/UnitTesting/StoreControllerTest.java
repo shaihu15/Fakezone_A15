@@ -2,6 +2,7 @@ package UnitTesting;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
@@ -45,7 +46,7 @@ class StoreControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addStore(userId, storeName)).thenReturn(new Response<>(null, "Store added successfully", true));
 
-        ResponseEntity<Response<Void>> response = storeController.addStore(userId, storeName, token);
+        ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -60,7 +61,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<Void>> response = storeController.addStore(userId, storeName, token);
+        ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -102,7 +103,7 @@ class StoreControllerTest {
         when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
                 .thenReturn(new Response<>(null, "Product added successfully", true));
 
-        ResponseEntity<Response<Void>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
+        ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -342,7 +343,7 @@ class StoreControllerTest {
         when(systemService.addStore(userId, storeName))
                 .thenReturn(new Response<>(null, "Internal server error", false, ErrorType.INTERNAL_ERROR));
 
-        ResponseEntity<Response<Void>> response = storeController.addStore(userId, storeName, token);
+        ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
 
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());

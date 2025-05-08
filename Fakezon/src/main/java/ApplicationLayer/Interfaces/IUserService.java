@@ -60,7 +60,7 @@ public interface IUserService {
   
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
   
-    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
 
     Optional<User> getAnyUserById(int Id); // get any user by id, guest or registered
 

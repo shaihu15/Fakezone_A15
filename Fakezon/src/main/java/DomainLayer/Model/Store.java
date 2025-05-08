@@ -133,7 +133,7 @@ public class Store implements IStore {
     
 
     @Override
-    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category) {
+    public StoreProductDTO addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -158,9 +158,11 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, category)); //overrides old product
+        StoreProduct storeProduct = new StoreProduct(productID, name, basePrice, quantity, category);
+        storeProducts.put(productID, storeProduct); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
+        return new StoreProductDTO(storeProduct,storeID ); //returns the productDTO
     }
     @Override
     public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
@@ -414,7 +416,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID() + " is out of stock in store ID: " + storeID);
             }
             auctionProduct.setQuantity(auctionProduct.getQuantity()-1);
-            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO()));
+            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO(storeID)));
         }
     }
     private void handeleIfDeclinedAuction(AuctionProduct auctionProduct){
@@ -990,7 +992,7 @@ public class Store implements IStore {
         }
         storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
         return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating(), storeProduct.getStoreId(), storeProduct.getCategory());
+                    quantity, storeProduct.getAverageRating(), storeID, storeProduct.getCategory());
     }
 
     private boolean hasInventoryPermissions(int id){

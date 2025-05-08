@@ -201,8 +201,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getAuctionEndedtMessages/{userId}")
-    public ResponseEntity<Response<HashMap<Integer, String>>> getAuctionEndedtMessages(@RequestHeader("Authorization") String token,
+    @GetMapping("/getAuctionEndedMessages/{userId}")
+    public ResponseEntity<Response<HashMap<Integer, String>>> getAuctionEndedMessages(@RequestHeader("Authorization") String token,
                                                                                 @PathVariable int userId) {
         try {
             logger.info("Received request to get auction ended messages for user: {}", userId);
@@ -210,7 +210,7 @@ public class UserController {
                 Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, String>> response = systemService.getAuctionEndedtMessages(userId);
+            Response<HashMap<Integer, String>> response = systemService.getAuctionEndedMessages(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
