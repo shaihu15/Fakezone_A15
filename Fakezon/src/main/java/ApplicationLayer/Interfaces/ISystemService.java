@@ -1,12 +1,17 @@
 package ApplicationLayer.Interfaces;
 
-import java.util.Collection;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import ApplicationLayer.DTO.*;
+import ApplicationLayer.DTO.BasketDTO;
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -82,7 +87,7 @@ public interface ISystemService {
   
     Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
 
-    Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID); // get all the messages of the user
+    Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
   
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
   
