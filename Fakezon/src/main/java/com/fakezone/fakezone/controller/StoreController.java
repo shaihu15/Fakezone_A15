@@ -83,7 +83,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<StoreProductDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
             return ResponseEntity.status(500).body(response);
         }
     }
