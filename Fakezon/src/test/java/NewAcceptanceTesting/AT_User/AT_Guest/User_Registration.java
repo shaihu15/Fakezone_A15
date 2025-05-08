@@ -1,10 +1,11 @@
-package NewAcceptanceTesting;
+package NewAcceptanceTesting.AT_User.AT_Guest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import NewAcceptanceTesting.TestHelper; 
 
 
 import ApplicationLayer.Interfaces.IOrderService;
