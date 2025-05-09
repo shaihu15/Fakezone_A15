@@ -147,8 +147,6 @@ public class TestHelper {
             return null;
         }
         Response<UserDTO> loginResult = systemService.login(validEmail, validPassword); 
-
-        //Response<UserDTO> loginResult = systemService.login(validEmail, validPassword);
         if(!loginResult.isSuccess()){
             return null;
         }
