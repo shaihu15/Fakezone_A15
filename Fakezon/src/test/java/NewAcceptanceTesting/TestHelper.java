@@ -135,5 +135,35 @@ public class TestHelper {
         return result;
     }
 
+    public Response<UserDTO> register_and_login(){
+        String validEmail = validEmail();
+        String validPassword = validPassword();
+        String validBirthDay = validBirthDate_Over18();
+        String validCountry = validCountry();
+        Response<String> result = systemService.guestRegister(validEmail, validPassword, validBirthDay, validCountry );
+
+        if(!result.isSuccess()){
+            return null;
+        }
+        Response<UserDTO> loginResult = systemService.login(validEmail, validPassword);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+
+    public Response<Integer> openStore(){
+        Response<UserDTO> loginResult = register_and_login();
+        if(loginResult == null){
+            return null;
+        }
+        int userId = loginResult.getData().getUserId();
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        if(!resultAddStore.isSuccess()){
+            return null;
+        }
+        return resultAddStore;
+    }
+
 
 }

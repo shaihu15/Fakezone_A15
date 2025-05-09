@@ -368,6 +368,10 @@ public class StoreService implements IStoreService {
             logger.error("openStore - Store name already exists: " + storeName);
             throw new IllegalArgumentException("Store name already exists");
         }
+        if (storeName == null || storeName.isEmpty()) {
+            logger.error("openStore - Store name is empty: " + storeName);
+            throw new IllegalArgumentException("Store name is empty");
+        }
         Store store = new Store(storeName, userId, publisher);
         int storeId = store.getId();
         logger.info("openStore - New store ID: " + storeId);
