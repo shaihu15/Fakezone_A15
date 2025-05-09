@@ -59,7 +59,6 @@ public class NewSystemServiceAcceptanceTest {
     private String systemAdmainCountry = "IL";
 
     private LocalDate systemAdmainBirthDate = LocalDate.of(2000, 1, 1);
-
     @BeforeEach
     void setUp() {
 
