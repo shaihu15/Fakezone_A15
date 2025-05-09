@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -145,7 +146,9 @@ public class TestHelper {
         if(!result.isSuccess()){
             return null;
         }
-        Response<UserDTO> loginResult = systemService.login(validEmail, validPassword);
+        Response<UserDTO> loginResult = systemService.login(validEmail, validPassword); 
+
+        //Response<UserDTO> loginResult = systemService.login(validEmail, validPassword);
         if(!loginResult.isSuccess()){
             return null;
         }
