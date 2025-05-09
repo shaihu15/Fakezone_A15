@@ -53,8 +53,16 @@ public class TestHelper {
         return "user@gmail.com";
     }
 
+    public String validEmail2() {
+        return "user2@gmail.com";
+    }
+
     public String validPassword() {
         return "StrongPass123";
+    }
+
+    public String validPassword2() {
+        return "StrongPass1234";
     }
 
     public String invalidEmail() {
@@ -113,4 +121,19 @@ public class TestHelper {
         }
         return result;
     }
+
+    public Response<String> success_registerUser(){
+        String validEmail = validEmail();
+        String validPassword = validPassword();
+        String validBirthDay = validBirthDate_Over18();
+        String validCountry = validCountry();
+        Response<String> result = systemService.guestRegister(validEmail, validPassword, validBirthDay, validCountry );
+
+        if(!result.isSuccess()){
+            return null;
+        }
+        return result;
+    }
+
+
 }
