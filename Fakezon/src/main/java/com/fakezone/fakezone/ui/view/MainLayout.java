@@ -350,6 +350,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         LoginRequest logReq = new LoginRequest(loginEmailField.getValue(), loginPasswordField.getValue());
         Request<LoginRequest> req = new Request<LoginRequest>(token, logReq);
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = "http://localhost:8080/api/user/login";
         try{
             ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
@@ -379,6 +380,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         Request<Integer> req = new Request<Integer>(token, ((UserDTO) session.getAttribute("userDTO")).getUserId());
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = "http://localhost:8080/api/user/logout";
         try{
             ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(

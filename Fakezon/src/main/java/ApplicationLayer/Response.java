@@ -11,28 +11,23 @@ public class Response<T> {
     private final boolean success;
     private final ErrorType errorType;
     private final String token;
-    
-    @JsonCreator
-     public Response(
-        @JsonProperty("data") T data,
-        @JsonProperty("message") String message,
-        @JsonProperty("success") boolean success
-    ) {
-        this.data = data;
-        this.message = message;
-        if(!success){
-            throw new IllegalArgumentException("Success must be true if no error type is provided");
-        }
-        this.success = true;
+
+    public Response() {
+        this.data = null;
+        this.message = null;
+        this.success = false;
         this.errorType = null;
         this.token = null;
     }
+    
 
+    @JsonCreator
     public Response(
         @JsonProperty("data") T data,
         @JsonProperty("message") String message,
         @JsonProperty("success") boolean success,
-        @JsonProperty("errorType") ErrorType errorType
+        @JsonProperty("errorType") ErrorType errorType,
+        @JsonProperty("token") String token
     ) {
         this.data = data;
         this.message = message;
@@ -48,20 +43,7 @@ public class Response<T> {
         this.token = null;
     }
 
-    public Response(
-        @JsonProperty("data") T data,
-        @JsonProperty("message") String message,
-        @JsonProperty("success") boolean success,
-        @JsonProperty("token") String token){
-        this.data = data;
-        this.message = message;
-        if(!success){
-            throw new IllegalArgumentException("Success must be true if no error type is provided");
-        }
-        this.success = true;
-        this.errorType = null;
-        this.token = token;
-    }
+
 
     public String getToken(){
         return token;

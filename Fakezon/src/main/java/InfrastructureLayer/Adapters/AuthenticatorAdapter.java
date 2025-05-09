@@ -35,16 +35,16 @@ public class AuthenticatorAdapter implements IAuthenticator {
                 // Generate a token for the registered user with userId
                 String token = tokenService.generateToken(userDTO.getUserEmail(), userDTO.getUserId());
                 //return token;
-                return new Response<>(token, "Registration successful", true);
+                return new Response<>(token, "Registration successful", true, null, token);
             } else {
                 logger.error("User registration failed for email: {}", email);
                 //return null; // Registration failed
-                return new Response<>(null, "Registration failed", false, ErrorType.INTERNAL_ERROR);
+                return new Response<>(null, "Registration failed", false, ErrorType.INTERNAL_ERROR, null);
             }
         } catch (Exception e) {
             logger.error("Error during user registration: {}", e.getMessage());
             //return null; // Registration failed
-            return new Response<>(null, "Registration failed: " + e.getMessage(), false, ErrorType.INVALID_INPUT);
+            return new Response<>(null, "Registration failed: " + e.getMessage(), false, ErrorType.INVALID_INPUT, null);
 
         }
     }
