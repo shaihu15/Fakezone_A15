@@ -46,10 +46,8 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
-    private TokenService tokenService;
-    @Autowired
-    public MainLayout(TokenService tokenService) {
-        this.tokenService = tokenService;
+    private UserDTO userInfo = null;
+    public MainLayout() {
         initSession();
         createHeader();
     }
@@ -61,14 +59,28 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         String token = (String) session.getAttribute("token");
         if (token == null) {
-            token = tokenService.generateGuestToken();
-            session.setAttribute("token", token);
+            RestTemplate restTemplate = new RestTemplate();
+            String url = "http://localhost:8080/api/user/generateGuestToken";
+            try{
+                ResponseEntity<Response> apiResponse = restTemplate.getForEntity(url, Response.class);
+                Response<String> tokenResponse = (Response<String>) apiResponse.getBody();
+                if(tokenResponse != null && tokenResponse.isSuccess()){
+                    session.setAttribute("token", tokenResponse.getData());
+                    jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", token);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    cookie.setMaxAge(60 * 60 * 5); // 5 hours
+                    response.addCookie(cookie);
+                }
+                else{
+                    Notification.show(apiResponse.getBody().getMessage());
+                }
+            }
+            catch(Exception e){
+                Notification.show(e.getMessage());
+            }
 
-            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", token);
-            cookie.setHttpOnly(true);
-            cookie.setPath("/");
-            cookie.setMaxAge(60 * 60 * 5); // 5 hours
-            response.addCookie(cookie);
+            
         }
     }
 
@@ -84,8 +96,8 @@ public class MainLayout extends AppLayout implements RouterLayout {
         spacer.setWidth("20%");
 
          // SEARCH BAR
-         HorizontalLayout searchLayout = new HorizontalLayout();
-         TextField searchField = new TextField();
+        HorizontalLayout searchLayout = new HorizontalLayout();
+        TextField searchField = new TextField();
         searchField.setPlaceholder("Search Everywhere...");
 
         Button searchButton = new Button(new Icon(VaadinIcon.SEARCH));
@@ -98,10 +110,14 @@ public class MainLayout extends AppLayout implements RouterLayout {
         searchLayout.setFlexGrow(0.4, searchField);
 
         // LOGIN/REGISTER BUTTON
-        // TODO: IMPLEMENT THAT IF THE USER IS LOGGED IN THE BUTTON WILL TURN TO LOGOUT OR SOMETHING 
-        Button loginRegisterButton = new Button("Login/Register");
-        loginRegisterButton.addClickListener(event -> loginRegisterClick());
-
+        Button loginRegisterLogoutButton = null;
+        if(isGuestToken()){
+            loginRegisterLogoutButton = new Button("Login/Register");
+            loginRegisterLogoutButton.addClickListener(event -> loginRegisterClick());
+        }
+        else{
+            //TODO LOGOUT
+        }
         //NOTIFS
         Icon notificationsIcon = VaadinIcon.BELL.create();
         notificationsIcon.setSize("30px");
@@ -116,7 +132,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         
         // HEADER LAYOUT
-        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout, notificationsButton, loginRegisterButton, cartButton);
+        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout, notificationsButton, loginRegisterLogoutButton, cartButton);
         header.setWidth("100%");
         header.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         header.getStyle().set("background", "#ffffff").set("padding", "10px");
@@ -126,6 +142,28 @@ public class MainLayout extends AppLayout implements RouterLayout {
         addToNavbar(header);
     }
 
+    private boolean isGuestToken(){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String token = (String) session.getAttribute("token");
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8080/api/user/isGuestToken";
+        try{
+            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
+            Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
+            if(response.isSuccess()){
+                return response.getData();
+            }
+            else{
+               Notification.show(response.getMessage());
+               return true;
+            }
+        }
+        catch(Exception e){
+            Notification.show(e.getMessage());
+            return true;
+        }
+    }
 
 
     private void openRegisterDialog() {
@@ -219,19 +257,20 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String url = "http://localhost:8080/api/user/register";
         try{
             ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, req, Response.class);
-            Response<UserDTO> response = (Response<UserDTO>) apiResponse.getBody();
+            Response<String> response = (Response<String>) apiResponse.getBody();
             if(response.isSuccess()){
-                Notification.show("User " + response.getData().getUserEmail()+ " created succefully");
+                Notification.show("Registered succefully");
             }
             else{
-                Notification.show(response.getMessage());
+               Notification.show(response.getMessage());
             }
         }
         catch(Exception e){
             Notification.show(e.getMessage());
         }
-
-        registerDialog.close();
+        finally{
+            registerDialog.close();
+        }
 
     }
 

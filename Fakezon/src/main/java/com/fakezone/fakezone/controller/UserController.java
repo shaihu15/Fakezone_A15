@@ -242,4 +242,32 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @GetMapping("/generateGuestToken")
+    public ResponseEntity<Response<String>> generateGuestToken() {
+        try {
+            logger.info("Received request to generate guest token");
+            String guestToken = authenticatorAdapter.generateGuestToken();
+            Response<String> response = new Response<>(guestToken, "Guest token generated successfully", true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error in generateGuestToken: {}", e.getMessage());
+            Response<String> response = new Response<>(null, "An error occurred while generating guest token", false, ErrorType.INTERNAL_ERROR);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    @PostMapping("/isGuestToken")
+    public ResponseEntity<Response<Boolean>> isGuestToken(@RequestBody String token){
+        try {
+            logger.info("Received request to check guest token");
+            Response<Boolean> response = new Response<>(authenticatorAdapter.isGuestToken(token), "", true);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error in isGuestToken: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while generating guest token", false, ErrorType.INTERNAL_ERROR);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }

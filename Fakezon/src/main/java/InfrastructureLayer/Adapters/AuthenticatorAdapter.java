@@ -85,4 +85,12 @@ public class AuthenticatorAdapter implements IAuthenticator {
     public int getUserId(String sessionToken) {
         return tokenService.extractUserId(sessionToken);
     }
+
+    public String generateGuestToken(){
+        return tokenService.generateGuestToken();
+    }
+
+    public Boolean isGuestToken(String token){
+        return tokenService.isGuestToken(token);
+    }
 }
