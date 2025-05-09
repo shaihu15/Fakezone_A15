@@ -6,9 +6,11 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
+import ApplicationLayer.RequestDataTypes.LoginRequest;
 import ApplicationLayer.RequestDataTypes.PurchaseRequest;
 import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
 import ApplicationLayer.Response;
+import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 
@@ -242,4 +245,48 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<Response<UserDTO>> login(@RequestBody Request<LoginRequest> request){
+        try {
+            String email = request.getData().getUsername();
+            String password = request.getData().getPassword();
+            logger.info("Received request to login user with email: {}", email);
+            Response<AbstractMap.SimpleEntry<UserDTO, String>> response = systemService.login(email, password);
+            Response<UserDTO> userResponse;
+            if (response.isSuccess()) {
+                userResponse = new Response<>(response.getData().getKey(), response.getMessage(), true, response.getData().getValue());
+                return ResponseEntity.ok(userResponse);
+            }
+            userResponse = new Response<>(null, response.getMessage(), false, response.getErrorType());
+            return ResponseEntity.status(400).body(userResponse);
+        } catch (Exception e) {
+            logger.error("Error in login: {}", e.getMessage());
+            Response<UserDTO> response = new Response<>(null, "An error occurred during login", false, ErrorType.INTERNAL_ERROR);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Response<Void>> logout(@RequestBody Request<Integer> request) {
+        try {
+            String token = request.getToken();
+            if(!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                return ResponseEntity.status(401).body(response);
+            }
+            Integer id = request.getData();
+            logger.info("Received request to logout user with id: {}", id);
+            Response<Void> response = systemService.userLogout(id);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in logout: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred during logout", false, ErrorType.INTERNAL_ERROR);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 }
