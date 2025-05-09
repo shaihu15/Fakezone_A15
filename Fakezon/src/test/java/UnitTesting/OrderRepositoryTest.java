@@ -17,6 +17,7 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Model.Order;
+import DomainLayer.Model.OrderedProduct;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,24 +30,28 @@ public class OrderRepositoryTest {
     private OrderRepository repository;
     private IOrder order1;
     private IOrder order2;
+    private int storeId;
 
     @BeforeEach
     void setUp() {
         repository = new OrderRepository(new HashMap<>());
-
+        storeId = 1;
         // Create mock StoreProductDTO objects with all required fields
-        StoreProductDTO product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1,PCategory.ELECTRONICS);
-        StoreProductDTO product2 = new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1, PCategory.ELECTRONICS);
-        StoreProductDTO product3 = new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1, PCategory.ELECTRONICS);
+        StoreProductDTO product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, storeId,PCategory.ELECTRONICS);
+        StoreProductDTO product2 = new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, storeId, PCategory.ELECTRONICS);
+        StoreProductDTO product3 = new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, storeId, PCategory.ELECTRONICS);
 
         List<StoreProductDTO> products1 = Arrays.asList(product1, product2, product3);
         List<StoreProductDTO> products2 = Arrays.asList(product1, product2);
 
         Basket basket1 = new Basket(1, products1.stream().collect(Collectors.toMap(StoreProductDTO::getProductId, StoreProductDTO::getQuantity)));
         Basket basket2 = new Basket(2, products2.stream().collect(Collectors.toMap(StoreProductDTO::getProductId, StoreProductDTO::getQuantity)));
-
-        order1 = new Order(1, 101, OrderState.PENDING, basket1, "123 Main St", PaymentMethod.CREDIT_CARD);
-        order2 = new Order(2, 102, OrderState.SHIPPED, basket2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY);
+        List<OrderedProduct> orderedProducts1 = products1.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
+        List<OrderedProduct> orderedProducts2 = products2.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
+        double totalPrice1 = products1.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
+        double totalPrice2 = products2.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
+        order1 = new Order(1,storeId, 101, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1);
+        order2 = new Order(2, storeId,102, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2);
     }
     @Test
     void givenValidOrder_WhenAddOrder_ThenOrderIsAdded() {
@@ -61,30 +66,6 @@ public class OrderRepositoryTest {
             repository.addOrder(order1);
         });
         assertEquals("Order with ID 1 already exists.", exception.getMessage());
-    }
-
-    @Test
-    void givenExistingOrder_WhenUpdateOrder_ThenOrderIsUpdated() {
-        repository.addOrder(order1);
-        StoreProductDTO storeProductDTO1=new StoreProductDTO(7, "Product7", 30.0, 0, 0.0, 1, PCategory.ELECTRONICS);
-        StoreProductDTO storeProductDTO2=new StoreProductDTO(8, "Product8", 40.0, 0, 0.0, 1, PCategory.ELECTRONICS);
-        StoreProductDTO storeProductDTO3=new StoreProductDTO(9, "Product9", 50.0, 0, 0.0, 1, PCategory.ELECTRONICS);
-        Basket updatedBasket = new Basket(1, Map.of(
-                storeProductDTO1.getProductId(), 2,
-                storeProductDTO2.getProductId(), 1,
-                storeProductDTO3.getProductId(), 1
-        ));
-        IOrder updatedOrder = new Order(1, 101, OrderState.SHIPPED, updatedBasket, "789 Pine St", PaymentMethod.CREDIT_CARD);
-        repository.updateOrder(1, updatedOrder);        repository.updateOrder(1, updatedOrder);
-        assertEquals(updatedOrder, repository.getOrder(1));
-    }
-
-    @Test
-    void givenNonExistingOrder_WhenUpdateOrder_ThenThrowsException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.updateOrder(1, order1);
-        });
-        assertEquals("Order with ID 1 does not exist.", exception.getMessage());
     }
 
     @Test

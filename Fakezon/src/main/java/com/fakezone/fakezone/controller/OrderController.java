@@ -28,52 +28,6 @@ public class OrderController {
         this.systemService = systemService;
     }
 
-    @PostMapping("/makeOrder")
-    public ResponseEntity<Response<Integer>> makeOrder (@RequestBody Request<RequestOrderDataType> request){
-        try{
-            RequestOrderDataType requestData = request.getData();
-            Response<Integer> response = systemService.addOrder(
-                    requestData.getUserId(),
-                    requestData.getBasket(),
-                    requestData.getAddress(),
-                    requestData.getPaymentMethod(),
-                    request.getToken()
-            );
-            if(response.isSuccess()){
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(400).body(response);
-            }
-        }
-        catch (Exception e){
-            logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while making the order", false));
-        }
-    }
-
-    @PutMapping("/updateOrder")
-    public ResponseEntity<Response<Integer>> updateOrder(@RequestBody Request<RequestOrderDataType> request){
-        try{
-            RequestOrderDataType requestData = request.getData();
-            Response<Integer> response = systemService.updateOrder(
-                    requestData.getOrderId(),
-                    requestData.getBasket(),
-                    requestData.getUserId(),
-                    requestData.getAddress(),
-                    requestData.getPaymentMethod(),
-                    request.getToken()
-            );
-            if(response.isSuccess()){
-                return ResponseEntity.ok(response);
-            } else {
-                return ResponseEntity.status(400).body(response);
-            }
-        }
-        catch (Exception e){
-            logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while updating the order", false));
-        }
-    }
 
     @GetMapping("/deleteOrder/{orderId}")
     public ResponseEntity<Response<Boolean>> deleteOrder(@PathVariable("orderId") int orderId, @RequestHeader("Authorization") String token){

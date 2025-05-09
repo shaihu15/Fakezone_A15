@@ -155,7 +155,7 @@ public class Registered extends User {
     public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
         if(!isLoggedIn) {
             this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We are pleased to inform you that your bid has won the auction on product: "+event.getProductID()+", at a price of: "+event.getCurrentHighestBid()+"! The product has been added to your shopping cart, please purchase it as soon as possible."));
-            addToBasket(event.getStoreId(), event.getStoreProductDTO());
+            addToBasket(event.getStoreId(), event.getStoreProductDTO().getProductId(), 1);
             return;
         }
         // your logic to send to UI

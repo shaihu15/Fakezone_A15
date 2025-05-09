@@ -90,4 +90,16 @@ public class User {
         this.userId = userId;
     }
 
+    public void setCart(Map<Integer,Map<Integer,Integer>> validCart) {
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : validCart.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> productQuantities = entry.getValue();
+            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
+                int productId = productEntry.getKey();
+                int quantity = productEntry.getValue();
+                cart.addProduct(storeId, productId, quantity);
+            }
+        }
+    }
+
 }

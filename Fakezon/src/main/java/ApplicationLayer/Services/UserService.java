@@ -778,4 +778,20 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Error getting unsigned user count: " + e.getMessage());
         }
     }
+
+    @Override
+    public void setCart(int userId, Map<Integer, Map<Integer, Integer>> validCart) {
+        Optional<User> user = userRepository.findAllById(userId);
+        if (user.isPresent()) {
+            try {
+                user.get().setCart(validCart);
+                logger.info("Cart set for user: " + userId);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during set cart: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+    }
 }

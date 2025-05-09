@@ -6,11 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Model.Order;
+import DomainLayer.Model.OrderedProduct;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.Basket;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -21,33 +24,42 @@ public class OrderTest {
     private StoreProductDTO product1;
     private StoreProductDTO product2;
     private StoreProductDTO product3;
+    private int storeId;
+    private int orderId = 1;
+    private int userId = 5;
 
     @BeforeEach
     void setUp() {
         product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, 1, PCategory.FASHION);
         product2 = new StoreProductDTO(2, "Product2", 15.0, 3, 4.0, 1, PCategory.FASHION);
         product3 = new StoreProductDTO(3, "Product3", 20.0, 2, 3.5, 1, PCategory.FASHION);
+        storeId = 1;
         Basket basket = new Basket(1, Map.of(
                 product1.getProductId(), 2,
                 product2.getProductId(), 1,
                 product3.getProductId(), 1
         ));
-        order = new Order(1, 101, OrderState.PENDING, basket, "123 Main St", PaymentMethod.CREDIT_CARD);
+        List<StoreProductDTO> products1 = Arrays.asList(product1, product2, product3);
+        List<OrderedProduct> orderedProducts1 = products1.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
+        double totalPrice1 = products1.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
+
+
+        order = new Order(orderId,userId,storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1);
     }
 
     @Test
     void givenValidOrder_WhenGetId_ThenReturnsCorrectId() {
-        assertEquals(1, order.getId());
+        assertEquals(orderId, order.getId());
     }
 
     @Test
     void givenValidOrder_WhenGetUserId_ThenReturnsCorrectUserId() {
-        assertEquals(101, order.getUserId());
+        assertEquals(userId, order.getUserId());
     }
 
     @Test
     void givenValidOrder_WhenGetStoreId_ThenReturnsCorrectStoreId() {
-        assertEquals(1, order.getStoreId());
+        assertEquals(storeId, order.getStoreId());
     }
 
     @Test
@@ -86,12 +98,11 @@ public class OrderTest {
     @Test
     void givenCashOnDeliveryOrder_WhenSetPaymentMethod_ThenPaymentMethodIsUpdated() {
 
-        Basket basket = new Basket(1, Map.of(
-            product1.getProductId(), 2,
-            product2.getProductId(), 1,
-            product3.getProductId(), 1
-        ));
-        order = new Order(1, 101, OrderState.PENDING, basket, "123 Main St", PaymentMethod.CASH_ON_DELIVERY);        order.setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+
+        List<StoreProductDTO> products1 = Arrays.asList(product1, product2, product3);
+        List<OrderedProduct> orderedProducts1 = products1.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
+        order = new Order(1,storeId, 101, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CASH_ON_DELIVERY, 10);        
+        order.setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
         assertEquals(PaymentMethod.CASH_ON_DELIVERY, order.getPaymentMethod());
     }
 

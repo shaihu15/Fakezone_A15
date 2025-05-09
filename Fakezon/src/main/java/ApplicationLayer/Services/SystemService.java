@@ -38,6 +38,7 @@ import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
@@ -775,11 +776,13 @@ public class SystemService implements ISystemService {
     	}
 
     @Override
-    public Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
+    public synchronized Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails) {
-        double price = 0;
+        Map<Integer,Double> prices = null;//storeId,price from store
+        double totalPrice = 0;
         Cart cart = null;
+        Map<StoreDTO, Map<StoreProductDTO,Integer>> validCart = null;
         try{
             logger.info("System service - user " + userId + " trying to purchase cart");
             cart = this.userService.getUserCart(userId);
@@ -798,16 +801,17 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - User not found: " + userId);
                 return new Response<String>(null, "User not found", false, ErrorType.INVALID_INPUT);
             }
-            price = this.storeService.calcAmount(cart,dob);
-           logger.info("System Service - User "+userId + "cart price: " + price);
-
+            validCart = this.storeService.checkIfProductsInStores(cart.getAllProducts());
+            prices = this.storeService.calcAmount(userId,cart,dob);
+            logger.info("System Service - User "+userId + "cart price: " + totalPrice);
+            totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
         }
         catch (Exception e) {
             logger.error("System Service - Error during purchase cart: " + e.getMessage());
             return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
-            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, price);
+            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
             logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
         } catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());
@@ -818,11 +822,11 @@ public class SystemService implements ISystemService {
             logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
 
         } catch (Exception e) {
-            this.paymentService.refund(cardNumber,price);
+            this.paymentService.refund(cardNumber,totalPrice);
             logger.error("System Service - Error during delivery: " + e.getMessage());
             logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder + " at card number: " + cardNumber);
         }
-        this.orderService.addOrderCart(cart, userId, address, paymentMethod);
+        this.orderService.addOrderCart(validCart,prices, userId, address, paymentMethod);
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true);
 
     }
@@ -989,54 +993,6 @@ public class SystemService implements ISystemService {
         return Arrays.asList(isoCountries).contains(code);
     }
 
-    private void addOrder(int userId, BasketDTO basketDTO, String address, String paymentMethod, String token) {
-        try {
-            logger.info("System service - user " + userId + " trying to add order to store " + basketDTO.getStoreId());
-            if (this.userService.isUserLoggedIn(userId)) {
-                for (StoreProductDTO storeProductDTO : basketDTO.getProducts().keySet()) {
-                    if (storeProductDTO == null) {
-                        logger.error("System Service - Product not found in store: " + productId + " in store: " + basketDTO.getStoreId());
-                    }
-
-                }
-                PaymentMethod payment = PaymentMethod.valueOf(paymentMethod);
-                int orderId = this.orderService.addOrder(basketDTO, userId, address, payment);
-                logger.info("System service - order " + orderId + " added successfully");
-            } else {
-                logger.error("System Service - User is not logged in: " + userId);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during adding order: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public Response<Integer> updateOrder(int orderId, BasketDTO basket, Integer userId, String address, String paymentMethod, String token){
-        try {
-            if(!this.isAuth(token)){
-                return new Response<>(-1, "User is not logged in", false, ErrorType.INVALID_INPUT);
-            }
-            logger.info("System service - user " + userId + " trying to update order " + orderId);
-            List<Integer> products =  basket.getProducts().stream().map(product -> product.getProductId()).toList();
-            if (this.userService.isUserLoggedIn(userId)) {
-                for(Integer id : products){
-                    IProduct product = this.productService.getProduct(id);
-                    if (product == null) {
-                        logger.error("System Service - Product not found: " + id);
-                        return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT);
-                    }
-                }
-                int updatedOrderId = this.orderService.updateOrder(orderId, new Basket(basket.getStoreId(), basket.getProducts()), userId, address, PaymentMethod.valueOf(paymentMethod));
-                return new Response<>(updatedOrderId, "Order updated successfully", true);
-            } else {
-                logger.error("System Service - User is not logged in: " + userId);
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during updating order: " + e.getMessage());
-            return new Response<>(null, "Error during updating order: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
-        }
-    }
 
     public Response<Boolean> deleteOrder(int orderId, String token) {
         try {

@@ -115,8 +115,6 @@ public interface ISystemService {
 
     Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
 
-    Response<Integer> updateOrder(int orderId, BasketDTO basket, Integer userId, String address, String paymentMethod, String token);
-
     Response<Boolean> deleteOrder(int orderId, String token);
 
     Response<OrderDTO> viewOrder(int orderId, String token);

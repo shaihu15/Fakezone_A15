@@ -7,6 +7,7 @@ import org.springframework.security.access.method.P;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -98,8 +99,6 @@ public interface IStore {
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
 
-    double calcAmount(Basket basket, LocalDate dob);
-
     boolean canViewOrders(int userId);
   
     void acceptAssignment(int userId);
@@ -109,6 +108,8 @@ public interface IStore {
     List<Integer> getPendingOwners(int requesterId);
 
     List<Integer> getPendingManagers(int requesterId);
+    
     void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
     
+    double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
 }

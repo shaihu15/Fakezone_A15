@@ -9,43 +9,44 @@ import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Cart {
 
-    private List<Basket> baskets;
+    private Map<Integer,Basket> baskets; // storeID -> Basket
 
     public Cart() {
-        this.baskets = new ArrayList<>();
+        this.baskets = new HashMap<>();
     }
 
     public void clear() {
         baskets.clear();
     }
 
-    public List<Basket> getBaskets() {
+    public Map<Integer,Basket> getBaskets() {
         return baskets;
     }
     public void addProduct(int storeID, int productId, int quantity) {
-        Basket basket = getBasket(storeID);
-        if (basket != null) {
-            basket.addProduct(productId, quantity);
-            return;
+        if (baskets.containsKey(storeID)) {
+            baskets.get(storeID).addProduct(productId, quantity);
+        } else {
+            Basket newBasket = new Basket(storeID);
+            newBasket.addProduct(productId, quantity);
+            baskets.put(storeID, newBasket);
         }
-        Basket newBasket = new Basket(storeID);
-        newBasket.addProduct(productId, quantity);
-        baskets.add(newBasket);
     }
 
     public Basket getBasket(int storeID) {
-        for (Basket basket : baskets) {
-            if (basket.getStoreID() == storeID) {
-                return basket;
-            }
+        if(baskets.containsKey(storeID)) {
+            return baskets.get(storeID);
+        } else {
+            throw new IllegalArgumentException("No basket found for store ID: " + storeID);
         }
-        return null;
     }
 
     public Map<Integer,Map<Integer,Integer>> getAllProducts() {//returns a map of storeID to productID to quantity
         Map<Integer,Map<Integer,Integer>> allProducts = new HashMap<>();
-        for (Basket basket : baskets) {
-            allProducts.put(basket.getStoreID(), basket.getProducts());
+        for (Map.Entry<Integer, Basket> entry : baskets.entrySet()) {
+            int storeID = entry.getKey();
+            Basket basket = entry.getValue();
+            Map<Integer, Integer> products = basket.getProducts(); // productID to quantity
+            allProducts.put(storeID, products);
         }
         return allProducts;
     }

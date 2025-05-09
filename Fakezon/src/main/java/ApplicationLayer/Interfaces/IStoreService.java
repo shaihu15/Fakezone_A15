@@ -111,7 +111,7 @@ public interface IStoreService {
 
   StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
-  double calcAmount(Cart cart, LocalDate dobInput);
+  Map<Integer,Double> calcAmount(int user,Cart cart, LocalDate dobInput);
 
   void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
 

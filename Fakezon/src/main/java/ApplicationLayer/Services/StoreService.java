@@ -539,23 +539,20 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public double calcAmount(Cart cart, LocalDate dob) {
-        double totalAmount = 0;
-
-        for (Basket basket : cart.getBaskets()) {
-            int id = basket.getStoreID();
-            Store store = storeRepository.findById(id);
+    public Map<Integer,Double> calcAmount(int userId,Cart cart, LocalDate dob) {
+        Map<Integer,Double> prices = new HashMap<>();
+        for (Map.Entry<Integer, Map<Integer,Integer>> entry : cart.getAllProducts().entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer,Integer> basket = entry.getValue();
+            Store store = storeRepository.findById(storeId);
             if (store == null) {
-                logger.error("calcAmount - Store not found: " + id);
+                logger.error("calcAmount - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            double basketAmount;
-            basketAmount = store.calcAmount(basket,dob);
-            totalAmount += basketAmount;
-            logger.info("basket amount calculated: " +basketAmount + " in store: " + id);
-
-        }
-        return totalAmount;
+            double storeAmount = store.calcAmount(userId, basket, dob);
+            prices.put(storeId, storeAmount);
+            }
+        return prices;
     }
 
     @Override
@@ -653,5 +650,24 @@ public class StoreService implements IStoreService {
             throw e;
         }
     }
+
+    @Override
+    public Map<StoreDTO, Map<StoreProductDTO, Integer>> checkIfProductsInStores(
+            Map<Integer, Map<Integer, Integer>> cart) {
+        Map<StoreDTO, Map<StoreProductDTO, Integer>> result = new HashMap<>();
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : cart.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> products = entry.getValue();
+            Store store = storeRepository.findById(storeId);
+            if (store == null) {
+                logger.error("checkIfProductsInStores - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            Map<StoreProductDTO, Integer> storeProducts = store.checkIfProductsInStore(products);
+            result.put(toStoreDTO(store), storeProducts);
+        }
+        return result;
+    }
+
 
 }
