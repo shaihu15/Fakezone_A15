@@ -1,6 +1,7 @@
 package DomainLayer.Model;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import DomainLayer.Enums.OrderState;
@@ -91,7 +92,7 @@ public class Order implements IOrder{
 
     @Override
     public Collection<Integer> getProductIds() {
-        return basket.getProducts().stream().map(product->product.getProductId()).toList();
+        return basket.getProducts().keySet();
     }
 
 

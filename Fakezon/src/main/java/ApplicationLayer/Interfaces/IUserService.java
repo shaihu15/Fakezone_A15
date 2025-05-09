@@ -3,6 +3,7 @@ package ApplicationLayer.Interfaces;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import ApplicationLayer.DTO.OrderDTO;
@@ -46,9 +47,9 @@ public interface IUserService {
 
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
 
-    void addToBasket(int userId, int storeId, StoreProductDTO product); // add a product to the user's basket
+    void addToBasket(int userId, int storeId, int productId, int quantity); // add a product to the user's basket
 
-    List<StoreProductDTO> viewCart(int userId);
+    Map<Integer,Map<Integer,Integer>> viewCart(int userId);
 
     Cart getUserCart(int userId); // get the user's cart
 
@@ -102,4 +103,6 @@ public interface IUserService {
     boolean isUnsignedUser(int userId);
     
     int getUnsignedUserCount();
+
+    void setCart(int userId, Map<Integer,Map<Integer,Integer>> validCart);
 }

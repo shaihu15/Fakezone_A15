@@ -3,6 +3,7 @@ package DomainLayer.Model;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -978,8 +979,10 @@ public class Store implements IStore {
         return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
     }
 
+
+
     @Override
-    public double calcAmount(Basket basket, LocalDate dob) {
+    public double calcAmount(Map<Integer,Integer> productToBuy, LocalDate dob) {
         List<StoreProductDTO> products = basket.getProducts();
         double amount = 0;
         for (StoreProductDTO product : products) {

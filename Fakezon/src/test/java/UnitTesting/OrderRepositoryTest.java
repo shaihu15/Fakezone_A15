@@ -20,6 +20,8 @@ import DomainLayer.Model.Order;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.Collection;
 
 
@@ -40,8 +42,8 @@ public class OrderRepositoryTest {
         List<StoreProductDTO> products1 = Arrays.asList(product1, product2, product3);
         List<StoreProductDTO> products2 = Arrays.asList(product1, product2);
 
-        Basket basket1 = new Basket(1, products1);
-        Basket basket2 = new Basket(2, products2);
+        Basket basket1 = new Basket(1, products1.stream().collect(Collectors.toMap(StoreProductDTO::getProductId, StoreProductDTO::getQuantity)));
+        Basket basket2 = new Basket(2, products2.stream().collect(Collectors.toMap(StoreProductDTO::getProductId, StoreProductDTO::getQuantity)));
 
         order1 = new Order(1, 101, OrderState.PENDING, basket1, "123 Main St", PaymentMethod.CREDIT_CARD);
         order2 = new Order(2, 102, OrderState.SHIPPED, basket2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY);
@@ -64,10 +66,13 @@ public class OrderRepositoryTest {
     @Test
     void givenExistingOrder_WhenUpdateOrder_ThenOrderIsUpdated() {
         repository.addOrder(order1);
-        Basket updatedBasket = new Basket(1, Arrays.asList(
-                new StoreProductDTO(7, "Product7", 30.0, 0, 0.0, 1, PCategory.ELECTRONICS),
-                new StoreProductDTO(8, "Product8", 40.0, 0, 0.0, 1, PCategory.ELECTRONICS),
-                new StoreProductDTO(9, "Product9", 50.0, 0, 0.0, 1, PCategory.ELECTRONICS)
+        StoreProductDTO storeProductDTO1=new StoreProductDTO(7, "Product7", 30.0, 0, 0.0, 1, PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO2=new StoreProductDTO(8, "Product8", 40.0, 0, 0.0, 1, PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO3=new StoreProductDTO(9, "Product9", 50.0, 0, 0.0, 1, PCategory.ELECTRONICS);
+        Basket updatedBasket = new Basket(1, Map.of(
+                storeProductDTO1.getProductId(), 2,
+                storeProductDTO2.getProductId(), 1,
+                storeProductDTO3.getProductId(), 1
         ));
         IOrder updatedOrder = new Order(1, 101, OrderState.SHIPPED, updatedBasket, "789 Pine St", PaymentMethod.CREDIT_CARD);
         repository.updateOrder(1, updatedOrder);        repository.updateOrder(1, updatedOrder);

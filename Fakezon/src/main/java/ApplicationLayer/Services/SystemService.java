@@ -115,16 +115,35 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
-            product = this.storeService.decrementProductQuantity(productId, storeId, quantity);
+            product = this.storeService.getProductFromStore(productId, storeId);
         } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
             return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
-        this.userService.addToBasket(userId, storeId, product);
-        logger.info(
+        try{
+            if (product == null) {
+                logger.error("System Service - Product not found: " + productId + " in store: " + storeId);
+                return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting product: " + e.getMessage());
+            return new Response<>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+        if (product.getQuantity() < quantity) {
+            logger.error("System Service - Not enough product in stock: " + productId + " in store: " + storeId);
+            return new Response<>(null, "Not enough product in stock", false, ErrorType.INVALID_INPUT);
+        }
+        try{
+            this.userService.addToBasket(userId, storeId, productId, quantity);
+            logger.info(
                 "System Service - User added product to basket: " + productId + " from store: " + storeId + " by user: "
                         + userId + " with quantity: " + quantity);
-        return new Response<>(null, "Product added to basket successfully", true);
+            return new Response<>(null, "Product added to basket successfully", true);
+        }
+        catch (Exception e) {
+            logger.error("System Service - Error during adding to basket: " + e.getMessage());
+            return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
     }
 
     @Override
@@ -677,12 +696,30 @@ public class SystemService implements ISystemService {
 
 
     @Override
-    public Response<List<StoreProductDTO>> viewCart(int userId) {
+    public Response<Map<StoreDTO,Map<StoreProductDTO,Integer>>> viewCart(int userId) {
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId)) {
-                List<StoreProductDTO> cart = this.userService.viewCart(userId);
-                return new Response<>(cart, "Cart retrieved successfully", true);
+                Map<Integer,Map<Integer,Integer>> cart = this.userService.viewCart(userId);
+                if (cart.isEmpty()) {
+                    logger.error("System Service - Cart is empty: " + userId);
+                    return new Response<>(null, "Cart is empty", false, ErrorType.INVALID_INPUT);
+                }
+                Map<StoreDTO, Map<StoreProductDTO,Integer>> validCart = storeService.checkIfProductsInStores(cart);
+                
+                Map<Integer,Map<Integer,Integer>> newCart = new HashMap<>();
+                for (Map.Entry<StoreDTO, Map<StoreProductDTO,Integer>> entry : validCart.entrySet()) {
+                    int storeId = entry.getKey().getStoreId();
+                    Map<StoreProductDTO,Integer> products = entry.getValue();
+                    Map<Integer,Integer> newProducts = new HashMap<>();
+                    for (Map.Entry<StoreProductDTO,Integer> productEntry : products.entrySet()) {
+                        newProducts.put(productEntry.getKey().getProductId(), productEntry.getValue());
+                    }
+                    newCart.put(storeId, newProducts);
+                }
+                this.userService.setCart(userId, newCart);
+
+                return new Response<>(validCart, "Cart retrieved successfully", true);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
@@ -952,33 +989,24 @@ public class SystemService implements ISystemService {
         return Arrays.asList(isoCountries).contains(code);
     }
 
-    @Override
-    public Response<Integer> addOrder(int userId, BasketDTO basketDTO, String address, String paymentMethod, String token) {
+    private void addOrder(int userId, BasketDTO basketDTO, String address, String paymentMethod, String token) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(-1, "User is not logged in", false, ErrorType.INVALID_INPUT);
-            }
             logger.info("System service - user " + userId + " trying to add order to store " + basketDTO.getStoreId());
             if (this.userService.isUserLoggedIn(userId)) {
-                for (Integer productId : basketDTO.getProducts().stream().map(product -> product.getProductId()).toList()) {
-                    StoreProductDTO storeProduct = this.storeService.getProductFromStore(basketDTO.getStoreId(), productId);
-                    if (storeProduct == null) {
+                for (StoreProductDTO storeProductDTO : basketDTO.getProducts().keySet()) {
+                    if (storeProductDTO == null) {
                         logger.error("System Service - Product not found in store: " + productId + " in store: " + basketDTO.getStoreId());
-                        return new Response<>(null, "Product not found in store", false, ErrorType.INVALID_INPUT);
                     }
 
                 }
                 PaymentMethod payment = PaymentMethod.valueOf(paymentMethod);
-                int orderId = this.orderService.addOrder(new Basket(basketDTO.getStoreId(), basketDTO.getProducts()), userId, address, payment);
+                int orderId = this.orderService.addOrder(basketDTO, userId, address, payment);
                 logger.info("System service - order " + orderId + " added successfully");
-                return new Response<>(orderId, "Order added successfully", true);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during adding order: " + e.getMessage());
-            return new Response<>(null, "Error during adding order: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
 

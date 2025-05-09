@@ -3,6 +3,7 @@ package ApplicationLayer.Services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import ApplicationLayer.DTO.BasketDTO;
 import DomainLayer.Interfaces.IProduct;
@@ -140,13 +141,9 @@ public class OrderService implements IOrderService {
                 logger.error("Basket is empty, cannot create order.");
                 throw new IllegalArgumentException("Basket is empty, cannot create order.");
             }// not sopposed to be here, but just in case
-            List<Integer> productIds = basket.getProducts().stream()
-                .map(StoreProductDTO::getProductId)
-                .toList();
             IOrder order = new Order(userId, OrderState.SHIPPED, basket, address, paymentMethod);
             orderRepository.addOrder(order);
             logger.info("Order created with ID: {}", order.getId());
         }
-      
     }
 }

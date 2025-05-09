@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
@@ -269,12 +269,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void addToBasket(int userId, int storeId, StoreProductDTO product) {
+    public void addToBasket(int userId, int storeId, int productId, int quantity) {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
-                user.get().addToBasket(storeId, product);
-                logger.info("Product added to basket: " + product.getName() + " from store: " + storeId + " by user: "
+                user.get().addToBasket(storeId, productId, quantity);
+                logger.info("Product added to basket: " + productId+ " from store: " + storeId + " by user: "
                         + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -288,7 +288,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<StoreProductDTO> viewCart(int userId) {
+    public Map<Integer,Map<Integer,Integer>> viewCart(int userId) {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {

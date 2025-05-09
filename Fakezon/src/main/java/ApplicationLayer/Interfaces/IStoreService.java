@@ -6,6 +6,7 @@ import org.springframework.security.access.method.P;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -123,5 +124,7 @@ public interface IStoreService {
   List<Integer> getPendingOwners(int storeId, int requesterId);
 
   List<Integer> getPendingManagers(int storeId, int requesterId);
+
+  Map<StoreDTO, Map<StoreProductDTO, Integer>> checkIfProductsInStores(Map<Integer, Map<Integer, Integer>> cart);
 
 }

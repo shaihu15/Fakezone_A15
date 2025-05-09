@@ -1,7 +1,10 @@
 package DomainLayer.Model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Cart {
@@ -19,14 +22,14 @@ public class Cart {
     public List<Basket> getBaskets() {
         return baskets;
     }
-    public void addProduct(int storeID, StoreProductDTO product) {
+    public void addProduct(int storeID, int productId, int quantity) {
         Basket basket = getBasket(storeID);
         if (basket != null) {
-            basket.addProduct(product);
+            basket.addProduct(productId, quantity);
             return;
         }
         Basket newBasket = new Basket(storeID);
-        newBasket.addProduct(product);
+        newBasket.addProduct(productId, quantity);
         baskets.add(newBasket);
     }
 
@@ -39,10 +42,10 @@ public class Cart {
         return null;
     }
 
-    public List<StoreProductDTO> getAllProducts() {
-        List<StoreProductDTO> allProducts = new ArrayList<>();
+    public Map<Integer,Map<Integer,Integer>> getAllProducts() {//returns a map of storeID to productID to quantity
+        Map<Integer,Map<Integer,Integer>> allProducts = new HashMap<>();
         for (Basket basket : baskets) {
-            allProducts.addAll(basket.getProducts());
+            allProducts.put(basket.getStoreID(), basket.getProducts());
         }
         return allProducts;
     }

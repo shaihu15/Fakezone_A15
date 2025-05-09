@@ -1,13 +1,14 @@
 package ApplicationLayer.DTO;
 
 import java.util.List;
+import java.util.Map;
 
 public class BasketDTO {
 
     private final Integer storeId;
-    private final List<StoreProductDTO> products;
+    private final Map<StoreProductDTO, Integer> products;
 
-    public BasketDTO(Integer storeId, List<StoreProductDTO> products) {
+    public BasketDTO(Integer storeId, Map<StoreProductDTO, Integer> products) {
         this.storeId = storeId;
         this.products = products;
     }
@@ -15,7 +16,7 @@ public class BasketDTO {
     public Integer getStoreId() {
         return storeId;
     }
-    public List<StoreProductDTO> getProducts() {
+    public Map<StoreProductDTO, Integer> getProducts() {
         return products;
     }
 }
