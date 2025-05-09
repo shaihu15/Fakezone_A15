@@ -1,6 +1,7 @@
 package ApplicationLayer.Interfaces;
 
 import java.time.LocalDate;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,7 @@ import DomainLayer.Model.User;
 
 public interface ISystemService {
 
-    Response<UserDTO> login(String email, String password); // login to the system
+    Response<AbstractMap.SimpleEntry<UserDTO, String>> login(String email, String password); // login to the system
     // Access to core services
     IDelivery getDeliveryService();
 

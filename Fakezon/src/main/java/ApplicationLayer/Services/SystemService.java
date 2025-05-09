@@ -3,13 +3,7 @@ package ApplicationLayer.Services;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1106,7 +1100,7 @@ public class SystemService implements ISystemService {
         }
     }
     @Override
-    public Response<UserDTO> login(String email, String password){
+    public Response<AbstractMap.SimpleEntry<UserDTO, String>> login(String email, String password){
         try{
             // Check if the user exists first
             Optional<Registered> optionalUser = userService.getUserByUserName(email);
@@ -1121,7 +1115,7 @@ public class SystemService implements ISystemService {
             
             String token = this.authenticatorService.login(email, password);
             UserDTO user = this.userService.login(email, password);
-            return new Response<>(user, "Login successful with token: " + token, true);
+            return new Response<>(new AbstractMap.SimpleEntry<>(user, token), "Successful Login", true);
         } catch (Exception e) {
             logger.error("System Service - Login failed: " + e.getMessage());
             return new Response<>(null, "Login failed: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
