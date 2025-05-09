@@ -1,5 +1,8 @@
 package ApplicationLayer;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import ApplicationLayer.Enums.ErrorType;
 
 public class Response<T> {
@@ -7,8 +10,13 @@ public class Response<T> {
     private final String message;
     private final boolean success;
     private final ErrorType errorType;
-
-    public Response(T data, String message, boolean success) {
+    
+    @JsonCreator
+     public Response(
+        @JsonProperty("data") T data,
+        @JsonProperty("message") String message,
+        @JsonProperty("success") boolean success
+    ) {
         this.data = data;
         this.message = message;
         if(!success){
@@ -18,7 +26,12 @@ public class Response<T> {
         this.errorType = null;
     }
 
-    public Response(T data, String message, boolean success, ErrorType errorType) {
+    public Response(
+        @JsonProperty("data") T data,
+        @JsonProperty("message") String message,
+        @JsonProperty("success") boolean success,
+        @JsonProperty("errorType") ErrorType errorType
+    ) {
         this.data = data;
         this.message = message;
         if(!success && errorType == null){

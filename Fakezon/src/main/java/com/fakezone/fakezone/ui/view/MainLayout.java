@@ -2,10 +2,33 @@ package com.fakezone.fakezone.ui.view;
 
 
 import com.vaadin.flow.router.RouterLayout;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinResponse;
+
+import ApplicationLayer.Request;
+import ApplicationLayer.Response;
+import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
+import ApplicationLayer.DTO.UserDTO;
+import InfrastructureLayer.Security.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
@@ -20,10 +43,33 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
-    public MainLayout() {
+    private TokenService tokenService;
+    @Autowired
+    public MainLayout(TokenService tokenService) {
+        this.tokenService = tokenService;
+        initSession();
         createHeader();
+    }
+
+    private void initSession() {
+        HttpServletRequest request = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpServletResponse response = (HttpServletResponse) VaadinResponse.getCurrent();
+        HttpSession session = request.getSession(true); // true = create if not exist
+
+        String token = (String) session.getAttribute("token");
+        if (token == null) {
+            token = tokenService.generateGuestToken();
+            session.setAttribute("token", token);
+
+            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", token);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60 * 5); // 5 hours
+            response.addCookie(cookie);
+        }
     }
 
     private void createHeader() {
@@ -82,11 +128,6 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
 
 
-
-
-
-
-
     private void openRegisterDialog() {
         Dialog registerDialog = new Dialog();
         registerDialog.setHeaderTitle("Register");
@@ -95,23 +136,103 @@ public class MainLayout extends AppLayout implements RouterLayout {
         EmailField registerEmailField = new EmailField("Email");
         PasswordField registerPasswordField = new PasswordField("Password");
         PasswordField registerConfirmPasswordField = new PasswordField("Confirm Password");
-        registerFormLayout.add(registerEmailField, registerPasswordField, registerConfirmPasswordField);
+        TextField dobField = new TextField("Date of Birth");
+        registerEmailField.setValueChangeMode(ValueChangeMode.EAGER);
+        registerPasswordField.setValueChangeMode(ValueChangeMode.EAGER);
+        registerConfirmPasswordField.setValueChangeMode(ValueChangeMode.EAGER);
+        dobField.setValueChangeMode(ValueChangeMode.EAGER);
+        dobField.setPlaceholder("YYYY-MM-DD");
+        registerPasswordField.getElement().setProperty("helperText", "Password must contain letters and numbers, and be at least 6 characters long.");
+        registerPasswordField.setHelperText("Password must contain letters and numbers, and be at least 6 characters long.");
+        ComboBox<String> countryComboBox = new ComboBox<>("Country");
+        List<String> countryNames = Arrays.stream(Locale.getISOCountries())
+            .map(code -> Locale.forLanguageTag("und-" + code).getDisplayCountry())
+            .sorted()
+            .collect(Collectors.toList());
+        countryComboBox.setItems(countryNames);
+        registerFormLayout.add(registerEmailField, registerPasswordField, registerConfirmPasswordField, dobField, countryComboBox);
 
         Button registerButton = new Button("Register", e -> {
-            // TODO: Implement Register logic (validate input PWFIELD = CPWFIELD, create user)
-            register();
+            register(registerEmailField, registerPasswordField, dobField, countryComboBox, registerDialog);
         });
-        registerEmailField.addKeyDownListener(Key.ENTER, event -> register());
-        registerPasswordField.addKeyDownListener(Key.ENTER, event -> register());
-        registerConfirmPasswordField.addKeyDownListener(Key.ENTER, event -> register());
+        registerButton.setEnabled(false);
+        registerEmailField.addValueChangeListener(event -> validateRegisterForm(registerEmailField, registerPasswordField, 
+                                                                    registerConfirmPasswordField, registerButton, dobField, countryComboBox));
+        registerPasswordField.addValueChangeListener(event -> validateRegisterForm(registerEmailField, registerPasswordField, 
+                                                                    registerConfirmPasswordField, registerButton, dobField, countryComboBox));
+        registerConfirmPasswordField.addValueChangeListener(event -> validateRegisterForm(registerEmailField, registerPasswordField, 
+                                                                    registerConfirmPasswordField, registerButton, dobField, countryComboBox));
+        dobField.addValueChangeListener(event -> validateRegisterForm(registerEmailField, registerPasswordField, 
+                                                                    registerConfirmPasswordField, registerButton, dobField, countryComboBox));
+        countryComboBox.addValueChangeListener(event -> validateRegisterForm(registerEmailField, registerPasswordField, 
+                                                                    registerConfirmPasswordField, registerButton, dobField, countryComboBox));
+
+        registerEmailField.addKeyDownListener(Key.ENTER, event ->  {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
+                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
+        registerPasswordField.addKeyDownListener(Key.ENTER, event -> {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
+                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
+        registerConfirmPasswordField.addKeyDownListener(Key.ENTER, event -> {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
+                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
+        dobField.addKeyDownListener(Key.ENTER, event -> {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
+                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
 
         registerDialog.add(registerFormLayout);
         registerDialog.getFooter().add(registerButton);
         registerDialog.open();
     }
 
-    private void register(){
-        testDialog();
+    private boolean validateRegisterForm(EmailField emailField, PasswordField passwordField, PasswordField confirmPasswordField, Button registerButton, TextField dobField, ComboBox<String> countryComboBox) {
+        boolean isEmailValid = emailField.isInvalid() == false && !emailField.getValue().isEmpty();
+        boolean isPasswordValid = !passwordField.getValue().isEmpty();
+        boolean arePasswordsEqual = passwordField.getValue().equals(confirmPasswordField.getValue());
+        boolean isPasswordComplexEnough = passwordField.getValue().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+        boolean isValidDate = isValidDate(dobField.getValue());
+        String selectedCountryName = countryComboBox.getValue();
+        String countryCode = getCountryCodeFromName(selectedCountryName);
+        boolean isCountrySelected = countryCode != null;
+        registerButton.setEnabled(isEmailValid && isPasswordValid && arePasswordsEqual && isPasswordComplexEnough && isValidDate && isCountrySelected);
+        return isEmailValid && isPasswordValid && arePasswordsEqual && isPasswordComplexEnough && isValidDate && isCountrySelected;
+    }
+
+    private String getCountryCodeFromName(String countryName) {
+        for (String code : Locale.getISOCountries()) {
+            Locale locale = new Locale("", code);
+            if (locale.getDisplayCountry().equals(countryName)) {
+                return code;
+            }
+        }
+        return null; // if no match is found
+    }
+
+    private boolean isValidDate(String date) {
+        String datePattern = "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
+        return date.matches(datePattern);
+    }
+
+    private void register(EmailField registerEmailField, PasswordField registerPasswordField, TextField dobField, ComboBox<String> countryComboBox, Dialog registerDialog){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String token = (String) session.getAttribute("token");
+        RegisterUserRequest regReq = new RegisterUserRequest(registerEmailField.getValue(), registerPasswordField.getValue(), dobField.getValue(), getCountryCodeFromName(countryComboBox.getValue()));
+        Request<RegisterUserRequest> req = new Request<RegisterUserRequest>(token, regReq);
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8080/api/user/register";
+        try{
+            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, req, Response.class);
+            Response<UserDTO> response = (Response<UserDTO>) apiResponse.getBody();
+            if(response.isSuccess()){
+                Notification.show("User " + response.getData().getUserEmail()+ " created succefully");
+            }
+            else{
+                Notification.show(response.getMessage());
+            }
+        }
+        catch(Exception e){
+            Notification.show(e.getMessage());
+        }
+
+        registerDialog.close();
+
     }
 
     private void testDialog(){
