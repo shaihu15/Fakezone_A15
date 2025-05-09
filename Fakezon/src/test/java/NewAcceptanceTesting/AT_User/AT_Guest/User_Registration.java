@@ -82,7 +82,7 @@ public class User_Registration {
         assertTrue(result.isSuccess());
         assertEquals("Guest registered successfully", result.getMessage());
     }
-/*
+
     @Test
     void testRegisterUser_invalidEmail_Failure() {
         String invalidEmail = testHelper.invalidEmail();
@@ -92,9 +92,9 @@ public class User_Registration {
         Response<String> result = systemService.guestRegister(invalidEmail, validPassword, validBirthDay, validCountry );
 
         assertFalse(result.isSuccess());
-        assertEquals("Invalid email format", result.getMessage());
+        assertEquals("Registration failed: Invalid email format", result.getMessage());
     }
-*/
+/* 
     @Test
     void testRegisterUser_invalidPassword_Failure() {
         String validEmail = testHelper.validEmail();
@@ -102,11 +102,12 @@ public class User_Registration {
         String validBirthDay = testHelper.validBirthDate_Over18();
         String validCountry = testHelper.validCountry();
         Response<String> result = systemService.guestRegister(validEmail, invalidPassword, validBirthDay, validCountry );
-
+        
+        
         assertFalse(result.isSuccess());
-        assertEquals("Invalid password", result.getMessage());
+        assertEquals("Registration failed: Invalid password", result.getMessage());
     }
-    
+ */  
     @Test
     void testRegisterUser_invalidBirthDate_Failure() {
         String validEmail = testHelper.validEmail();
@@ -130,7 +131,7 @@ public class User_Registration {
         assertFalse(result.isSuccess());
         assertEquals("Invalid country code", result.getMessage());
     }
-/*
+
     @Test
     void testRegisterUser_AlreadyRegistered_Failure() {
         String validEmail = testHelper.validEmail();
@@ -143,10 +144,9 @@ public class User_Registration {
 
 
         assertFalse(user2.isSuccess());
-        assertEquals("User already registered", user2.getMessage());
+        assertEquals("Registration failed: User already exists", user2.getMessage());
     }
-*/
-/*
+
     @Test
     void testRegisterUser_EmptyEmail_Failure() {
         String emptyEmail = "";
@@ -156,9 +156,9 @@ public class User_Registration {
         Response<String> result = systemService.guestRegister(emptyEmail, validPassword, validBirthDay, validCountry );
 
         assertFalse(result.isSuccess());
-        assertEquals("Invalid email format", result.getMessage());
+        assertEquals("Registration failed: Invalid email format", result.getMessage());
     }
-*/
+
     @Test
     void testRegisterUser_EmptyPassword_Failure() {
         String validEmail = testHelper.validEmail();

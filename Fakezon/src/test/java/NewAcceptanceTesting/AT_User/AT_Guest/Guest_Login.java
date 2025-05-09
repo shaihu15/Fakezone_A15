@@ -35,6 +35,8 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 
+import java.util.AbstractMap;
+
 public class Guest_Login {
     //Use-case: 1.4 Guest Login
 
@@ -80,7 +82,7 @@ public class Guest_Login {
         Response<String> registerResponse = testHelper.registerUser(email, password, testHelper.validBirthDate_Over18(), testHelper.validCountry());
         assertTrue(registerResponse.isSuccess()); // User should be registered successfully
         
-        Response<UserDTO> loginResponse = systemService.login(email, password);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
 
         assertTrue(loginResponse.isSuccess());
         //assertTrue(loginResponse.getMessage().contains("Login successful with token: "),"Login successful with token: ");    
@@ -95,7 +97,7 @@ public class Guest_Login {
         Response<String> registerResponse = testHelper.registerUser(validEmail, validPassword, testHelper.validBirthDate_Over18(), testHelper.validCountry());
         assertTrue(registerResponse.isSuccess()); // User should be registered successfully
 
-        Response<UserDTO> loginResponse = systemService.login(validEmail2, validPassword);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail2, validPassword);
 
         assertFalse(loginResponse.isSuccess());
         //assertTrue(loginResponse.getMessage().contains("Login failed"), "Expected login failure message but got: " + loginResponse.getMessage());
@@ -111,7 +113,7 @@ public class Guest_Login {
         Response<String> registerResponse = testHelper.registerUser(validEmail, validPassword, testHelper.validBirthDate_Over18(), testHelper.validCountry());
         assertTrue(registerResponse.isSuccess()); // User should be registered successfully
 
-        Response<UserDTO> loginResponse = systemService.login(validEmail, validPassword2);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail, validPassword2);
 
         assertFalse(loginResponse.isSuccess());
         //assertTrue(loginResponse.getMessage().contains("Login failed"), "Expected login failure message but got: " + loginResponse.getMessage());
@@ -126,7 +128,7 @@ public class Guest_Login {
         Response<String> registerResponse = testHelper.registerUser(validEmail, validPassword, testHelper.validBirthDate_Over18(), testHelper.validCountry());
         assertTrue(registerResponse.isSuccess()); // User should be registered successfully
 
-        Response<UserDTO> loginResponse = systemService.login(emptyEmail, validPassword);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(emptyEmail, validPassword);
         assertFalse(loginResponse.isSuccess());
     }
 
@@ -139,7 +141,7 @@ public class Guest_Login {
         Response<String> registerResponse = testHelper.registerUser(validEmail, validPassword, testHelper.validBirthDate_Over18(), testHelper.validCountry());
         assertTrue(registerResponse.isSuccess()); // User should be registered successfully
 
-        Response<UserDTO> loginResponse = systemService.login(validEmail, emptyPassword);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail, emptyPassword);
         assertFalse(loginResponse.isSuccess());    
     }
     

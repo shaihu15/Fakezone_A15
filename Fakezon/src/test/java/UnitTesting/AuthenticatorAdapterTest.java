@@ -24,6 +24,9 @@ import ApplicationLayer.Interfaces.IUserService;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Security.TokenService;
 
+import ApplicationLayer.Response;
+import ApplicationLayer.Enums.ErrorType;
+
 public class AuthenticatorAdapterTest {
     
     @Mock
@@ -67,7 +70,8 @@ public class AuthenticatorAdapterTest {
         when(mockTokenService.generateToken(email, 1)).thenReturn(expectedToken);
         
         // Act
-        String actualToken = authenticatorAdapter.register(email, password, dateOfBirth, country);
+        Response<String> response = authenticatorAdapter.register(email, password, dateOfBirth, country);
+        String actualToken = response.getData(); // Assuming getData() extracts the String from Response
         
         // Assert
         assertEquals(expectedToken, actualToken);
@@ -85,10 +89,11 @@ public class AuthenticatorAdapterTest {
         when(mockUserService.registerUser(email, password, dateOfBirth,country)).thenReturn(null);
         
         // Act
-        String token = authenticatorAdapter.register(email, password, dateOfBirth,country);
-        
+        Response<String> response = authenticatorAdapter.register(email, password, dateOfBirth,country);
+        String actualToken = response.getData(); // Assuming getData() extracts the String from Response
+
         // Assert
-        assertNull(token);
+        assertNull(actualToken);
         verify(mockUserService).registerUser(email, password, dateOfBirth,country);
         verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
@@ -105,10 +110,10 @@ public class AuthenticatorAdapterTest {
             .thenThrow(new IllegalArgumentException("User already exists"));
         
         // Act
-        String token = authenticatorAdapter.register(email, password, dateOfBirth,country);
+        Response<String> response = authenticatorAdapter.register(email, password, dateOfBirth,country);
         
         // Assert
-        assertNull(token);
+        assertNull(response.getData()); // Assuming getData() extracts the String from Response
         verify(mockUserService).registerUser(email, password, dateOfBirth,country);
         verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
@@ -166,7 +171,7 @@ public class AuthenticatorAdapterTest {
         assertFalse(isValid);
         verify(mockTokenService).validateToken(token);
     }
-    
+
     @Test
     void getUserIdFromToken_WhenValidToken_ShouldReturnUserId() {
         // Arrange
@@ -194,4 +199,5 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertEquals(0, userId); // Assuming 0 is the default value for an invalid token
     }
+    
 }

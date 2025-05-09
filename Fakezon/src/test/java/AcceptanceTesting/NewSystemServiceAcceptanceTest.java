@@ -3,6 +3,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.AbstractMap;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -128,7 +129,7 @@ public class NewSystemServiceAcceptanceTest {
         assertTrue(registerResponse.isSuccess(), "User registration should succeed");
 
         // Act
-        Response<UserDTO> loginResponse = systemService.login(email, password);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
 
         // Assert
         assertNotNull(loginResponse, "Login response should not be null");
@@ -148,7 +149,7 @@ public class NewSystemServiceAcceptanceTest {
         assertTrue(registerResponse.isSuccess(), "User registration should succeed");
     
         // Act
-        Response<UserDTO> loginResponse = systemService.login(email, invalidPassword);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, invalidPassword);
     
         // Assert
         assertNotNull(loginResponse, "Login response should not be null");
@@ -161,8 +162,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         int storeId = resultAddStore.getData();
         String productName = "Test Product";
@@ -184,8 +185,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         int storeId = resultAddStore.getData();
         String productName = "Test Product";
@@ -210,7 +211,7 @@ public class NewSystemServiceAcceptanceTest {
         System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         systemService.guestRegister(email, password, birthDate, country);    
-        Response<UserDTO> resultUser=systemService.login(email, password);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUser=systemService.login(email, password);
         String invalidCategory = "INVALID_CATEGORY"; // Invalid category
         Response<List<ProductDTO>> result = systemService.searchByCategory(invalidCategory);
         assertNull(result.getData());
@@ -224,10 +225,10 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
         assertTrue(resultUserLogin.isSuccess());
         assertNotNull(resultUserLogin.getData(), "User login should succeed and return user data");
-        int userId = resultUserLogin.getData().getUserId();
+        int userId = resultUserLogin.getData().getKey().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         assertTrue(resultAddStore.isSuccess());
         assertNotNull(resultAddStore.getData(), "Store ID should not be null");
@@ -242,8 +243,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         int storeId = resultAddStore.getData();
         String productName = "Test Product";
@@ -263,8 +264,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         assertTrue(resultUserLogin.isSuccess(), "User login should succeed");
         Response<Void> resultLogout=systemService.userLogout(userId);
         assertTrue(resultLogout.isSuccess(), "User logout should succeed");
@@ -277,8 +278,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         assertTrue(resultUserLogin.isSuccess(), "User login should succeed");
         Response<Void> resultLogout=systemService.userLogout(userId);
         assertTrue(resultLogout.isSuccess(), "User logout should succeed");
@@ -298,8 +299,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         int storeId = resultAddStore.getData();
         String productName = "Test Product";
@@ -326,8 +327,8 @@ public class NewSystemServiceAcceptanceTest {
         String birthDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // Format the date        System.out.println("BirthDate: " + birthDate);
         String country = "IL";
         Response<String> resultRegister = systemService.guestRegister(email, password, birthDate, country);
-        Response<UserDTO> resultUserLogin=systemService.login(email, password);
-        int userId = resultUserLogin.getData().getUserId();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUserLogin=systemService.login(email, password);
+        int userId = resultUserLogin.getData().getKey().getUserId();
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         int storeId = resultAddStore.getData();
         String productName = "Test Product";

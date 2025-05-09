@@ -10,6 +10,7 @@ public class Response<T> {
     private final String message;
     private final boolean success;
     private final ErrorType errorType;
+    private final String token;
     
     @JsonCreator
      public Response(
@@ -24,6 +25,7 @@ public class Response<T> {
         }
         this.success = true;
         this.errorType = null;
+        this.token = null;
     }
 
     public Response(
@@ -43,6 +45,22 @@ public class Response<T> {
         } else {
             this.errorType = errorType;
         }
+        this.token = null;
+    }
+
+    public Response(T data, String message, boolean success, String token){
+        this.data = data;
+        this.message = message;
+        if(!success){
+            throw new IllegalArgumentException("Success must be true if no error type is provided");
+        }
+        this.success = true;
+        this.errorType = null;
+        this.token = token;
+    }
+
+    public String getToken(){
+        return token;
     }
 
     public T getData() {
