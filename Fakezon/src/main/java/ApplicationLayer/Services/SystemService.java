@@ -681,17 +681,6 @@ public class SystemService implements ISystemService {
         }
     }
 
-    @Override
-    public Response<Void> addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd){
-        try{
-            logger.info("System service - user " + requesterId + " trying to add store auction product days");
-            storeService.addStoreAuctionProductDays(storeId, requesterId, productId, daysToAdd);
-            return new Response<>(null, "Product auction days added successfully", true);}
-        catch (Exception e) {
-            logger.info("System service - failed to add auction product days  " + e.getMessage());
-            return new Response<>(null, "Error during adding auction product days: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
-        }
-    }
 
     @Override
     public Response<List<StoreProductDTO>> viewCart(int userId) {

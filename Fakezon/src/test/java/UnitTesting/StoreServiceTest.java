@@ -262,17 +262,6 @@ class StoreServiceTest {
     }
 
     @Test
-    void testAddStoreAuctionProductDays_InvalidDays() {
-        int storeId = storeService.addStore(1, "AuctionStore3");
-        assertTrue(storeId > 0, "Store ID should be a positive number");
-
-        // Adding an auction product with invalid days
-        assertThrows(IllegalArgumentException.class, () ->
-            storeService.addAuctionProductToStore(storeId, 1, 103, 50.0, -1)
-        );
-    }
-
-    @Test
     void testSendResponseForAuctionByOwner_Success() {
         int storeId = storeService.addStore(1, "AuctionStore4");
         assertTrue(storeId > 0, "Store ID should be a positive number");
