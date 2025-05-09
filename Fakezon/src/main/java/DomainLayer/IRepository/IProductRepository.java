@@ -3,6 +3,7 @@ package DomainLayer.IRepository;
 import java.util.Collection;
 import java.util.Set;
 
+import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
 
 public interface IProductRepository {
@@ -12,4 +13,5 @@ public interface IProductRepository {
     IProduct getProductById(int productId);
     Collection<IProduct> getAllProducts(); 
     Collection<IProduct> searchProducts(String keyword); 
+    Collection<IProduct> getProductsByCategory(PCategory category); // Get all products in a specific category
 }

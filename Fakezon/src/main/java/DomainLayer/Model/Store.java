@@ -95,7 +95,7 @@ public class Store implements IStore {
     // precondition: user is logged in and previously made a purchase from the store
     // - cheaked by service layer
     @Override
-    public void addRating(int userID, double rating, String comment) {
+    public synchronized void addRating(int userID, double rating, String comment) {
         if (Sratings.containsKey(userID)) {
             Sratings.get(userID).updateRating(rating, comment);
         } else {
@@ -133,7 +133,7 @@ public class Store implements IStore {
     
 
     @Override
-    public void addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category) {
+    public StoreProductDTO addStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity, PCategory category) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -158,9 +158,11 @@ public class Store implements IStore {
             rolesLock.unlock();
             throw e;
         }
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, category)); //overrides old product
+        StoreProduct storeProduct = new StoreProduct(productID,storeID, name, basePrice, quantity, category);
+        storeProducts.put(productID, storeProduct); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
+        return new StoreProductDTO(storeProduct); //returns the productDTO
     }
     @Override
     public void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity) {
@@ -189,7 +191,7 @@ public class Store implements IStore {
             throw e;
         }
         StoreProduct storeProduct = storeProducts.get(productID);
-        storeProducts.put(productID, new StoreProduct(productID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
+        storeProducts.put(productID, new StoreProduct(productID,storeID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
         productsLock.unlock();
         rolesLock.unlock();
     }
@@ -215,27 +217,6 @@ public class Store implements IStore {
         storeProducts.remove(productID);
         productsLock.unlock();
         rolesLock.unlock();
-    }
-
-    public void addAuctionProductDays(int requesterId, int productId, int daysToAdd){
-        rolesLock.lock();
-        productsLock.lock();
-        try{
-            if(!hasInventoryPermissions(requesterId)){
-                throw new IllegalArgumentException("User " + requesterId + " has insufficient inventory permissions for store " + storeID);
-            }
-            if(!auctionProducts.containsKey(productId)){
-                throw new IllegalArgumentException("Product "+ productId + " not on Auction in store " + storeID);
-            }
-            auctionProducts.get(productId).addDays(daysToAdd); //throws if daysToAdd <= 0, gets caught in service
-            productsLock.unlock();
-            rolesLock.unlock();
-        }
-        catch(Exception e){
-            productsLock.unlock();
-            rolesLock.unlock();
-            throw e;
-        }
     }
 
 
@@ -414,7 +395,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID() + " is out of stock in store ID: " + storeID);
             }
             auctionProduct.setQuantity(auctionProduct.getQuantity()-1);
-            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO()));
+            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(), auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(), auctionProduct.toDTO(storeID)));
         }
     }
     private void handeleIfDeclinedAuction(AuctionProduct auctionProduct){
@@ -990,7 +971,7 @@ public class Store implements IStore {
         }
         storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
         return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating(), storeProduct.getStoreId(), storeProduct.getCategory());
+                    quantity, storeProduct.getAverageRating(), storeID, storeProduct.getCategory());
     }
 
     private boolean hasInventoryPermissions(int id){

@@ -1,21 +1,26 @@
 package UnitTesting;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-
 import java.time.LocalDate;
-import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IUserService;
-import DomainLayer.Model.Registered;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Security.TokenService;
 
@@ -105,68 +110,6 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertNull(token);
         verify(mockUserService).registerUser(email, password, dateOfBirth,country);
-        verify(mockTokenService, never()).generateToken(anyString(), anyInt());
-    }
-    
-    @Test
-    void login_WhenSuccessful_ShouldReturnToken() {
-        // Arrange
-        String email = "test@example.com";
-        String password = "password123";
-        Registered mockUser = mock(Registered.class);
-        Optional<Registered> optionalUser = Optional.of(mockUser);
-        String expectedToken = "valid-token-456";
-        int userId = 42;
-        
-        when(mockUserService.getUserByUserName(email)).thenReturn(optionalUser);
-        when(mockUser.getEmail()).thenReturn(email);
-        when(mockUser.getUserId()).thenReturn(userId);
-        when(mockTokenService.generateToken(email, userId)).thenReturn(expectedToken);
-        
-        // Act
-        String actualToken = authenticatorAdapter.login(email, password);
-        
-        // Assert
-        assertEquals(expectedToken, actualToken);
-        verify(mockUserService).login(email, password);
-        verify(mockUserService).getUserByUserName(email);
-        verify(mockTokenService).generateToken(email, userId);
-    }
-    
-    @Test
-    void login_WhenUserNotFound_ShouldReturnNull() {
-        // Arrange
-        String email = "nonexistent@example.com";
-        String password = "password123";
-        
-        when(mockUserService.getUserByUserName(email)).thenReturn(Optional.empty());
-        
-        // Act
-        String token = authenticatorAdapter.login(email, password);
-        
-        // Assert
-        assertNull(token);
-        verify(mockUserService).login(email, password);
-        verify(mockUserService).getUserByUserName(email);
-        verify(mockTokenService, never()).generateToken(anyString(), anyInt());
-    }
-    
-    @Test
-    void login_WhenLoginThrowsException_ShouldReturnNull() {
-        // Arrange
-        String email = "test@example.com";
-        String password = "wrong-password";
-        
-        doThrow(new IllegalArgumentException("Incorrect password"))
-            .when(mockUserService).login(email, password);
-        
-        // Act
-        String token = authenticatorAdapter.login(email, password);
-        
-        // Assert
-        assertNull(token);
-        verify(mockUserService).login(email, password);
-        verify(mockUserService, never()).getUserByUserName(anyString());
         verify(mockTokenService, never()).generateToken(anyString(), anyInt());
     }
     

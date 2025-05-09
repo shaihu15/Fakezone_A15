@@ -49,7 +49,7 @@ public interface IStoreService {
   StoreProductDTO getProductFromStore(int productId, int storeId);
 
   // --- Product Management ---
-  void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category);
+  StoreProductDTO addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category);
 
   void updateProductInStore(int storeId, int requesterId, int productId, String name, double basePrice,
                   int quantity);
@@ -113,8 +113,6 @@ public interface IStoreService {
   double calcAmount(Cart cart, LocalDate dobInput);
 
   void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
-  void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd);
-
 
   boolean canViewOrders(int storeId, int userId);
 

@@ -71,6 +71,7 @@ public class StoreService implements IStoreService {
 
     // --- Store-related DTO Conversions ---
     private StoreDTO toStoreDTO(Store store) {
+        int storeId = store.getId();
         Collection<StoreProductDTO> storeProductDTOs = store.getStoreProducts().values().stream()
                 .map(sp -> new StoreProductDTO(sp)) // using the constructor directly
                 .collect(Collectors.toList());
@@ -153,7 +154,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category) {
+    public StoreProductDTO addProductToStore(int storeId, int requesterId, int productId, String name, double basePrice, int quantity, PCategory category) {
         try{
             logger.info("Store Service - User " + requesterId + " trying to add store product " + productId + " to store "+ storeId);
             Store store = storeRepository.findById(storeId);
@@ -161,7 +162,8 @@ public class StoreService implements IStoreService {
                 logger.error("Store Service - addProductToStore - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
+            logger.info("Store product added: " + productId + " to store: " + storeId + " by user: " + requesterId);
+            return store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
         }
         catch (Exception e){
             logger.error("StoreService - failed to add store product " + e.getMessage());
@@ -204,22 +206,6 @@ public class StoreService implements IStoreService {
         }
     }
 
-    
-    @Override
-    public void addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd){
-        try {
-            logger.info("Store Service - User "+ requesterId + " trying to add " + daysToAdd + " days to auction product " + productId + " in store " + storeId);
-            Store store = storeRepository.findById(storeId);
-            if (store == null){
-                logger.error("Store Service - removeProductFromStore - Store not found: " + storeId);
-                throw new IllegalArgumentException("Store not found");
-            }
-            store.addAuctionProductDays(requesterId, productId, daysToAdd);
-        } catch (Exception e) {
-            logger.error("StoreService - failed to add store auction product days " + e.getMessage());
-            throw e;
-        }
-    }
 
     @Override
     public void addStoreRating(int storeId, int userId, double rating, String comment) {

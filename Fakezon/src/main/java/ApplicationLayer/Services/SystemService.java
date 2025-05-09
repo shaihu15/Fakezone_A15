@@ -3,64 +3,55 @@ package ApplicationLayer.Services;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
-
-import ApplicationLayer.DTO.*;
-import ApplicationLayer.Response;
-
-
-import InfrastructureLayer.Repositories.StoreRepository;
-import javassist.bytecode.LineNumberAttribute.Pc;
-import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Interfaces.*;
-import DomainLayer.Model.*;
-
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.DTO.BasketDTO;
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
-
+import ApplicationLayer.Response;
+import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Cart;
+import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
-
+import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
-
-import org.springframework.context.ApplicationEventPublisher;
-import ApplicationLayer.DTO.StoreRolesDTO;
-
-import java.util.Arrays;
-
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.access.method.P;
-import org.springframework.stereotype.Component;
-
-
-import ApplicationLayer.Enums.ErrorType;
-import ApplicationLayer.Enums.PCategory;
+import javassist.bytecode.LineNumberAttribute.Pc;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -201,13 +192,13 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Void> addStore(int userId, String storeName) {
+    public Response<Integer> addStore(int userId, String storeName) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
                 int storeId = this.storeService.addStore(userId, storeName);
                 this.userService.addRole(userId, storeId, new StoreFounder());
                 logger.info("System Service - User opened store: " + storeId + " by user: " + userId + " with name: " + storeName);
-                return new Response<>(null, "Store opened successfully", true);
+                return new Response<>(storeId, "Store opened successfully", true);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
@@ -285,17 +276,18 @@ public class SystemService implements ISystemService {
         }
     }
     public LocalDate parseDate(String dateString) {
-    try {
-        return LocalDate.parse(dateString, DateTimeFormatter.ISO_DATE);
-    } catch (DateTimeParseException e) {
-        throw new IllegalArgumentException("Invalid date format: " + dateString);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try {
+            return LocalDate.parse(dateString, formatter);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format: " + dateString);
+        }
     }
-}
 
     @Override
     public Response<StoreProductDTO> getProductFromStore(int productId, int storeId) {
         try {
-            logger.info("System service - user trying to view procuct " + productId + " in store: " + storeId);
+            logger.info("System service - user trying to view product " + productId + " in store: " + storeId);
             StoreDTO s = this.storeService.viewStore(storeId);
             return new Response<StoreProductDTO>(s.getStoreProductById(productId), "Product retrieved successfully", true);
         } catch (Exception e) {
@@ -307,7 +299,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<ProductDTO> getProduct(int productId) {
         try {
-            logger.info("System service - user trying to view procuct " + productId);
+            logger.info("System service - user trying to view product " + productId);
             ProductDTO productDTO = this.productService.viewProduct(productId);
             return new Response<ProductDTO>(productDTO, "Product retrieved successfully", true);
         } catch (IllegalArgumentException e) {
@@ -325,7 +317,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         try {
-            logger.info("System service - user trying to update procuct " + productId);
+            logger.info("System service - user trying to update product " + productId);
             this.productService.updateProduct(productId, productName, productDescription, storesIds);
             return new Response<>(true, "Product updated successfully", true);
         } catch (Exception e) {
@@ -337,7 +329,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Boolean> deleteProduct(int productId) {
         try {
-            logger.info("System service - user trying to delete procuct " + productId);
+            logger.info("System service - user trying to delete product " + productId);
             this.productService.deleteProduct(productId);
             return new Response<>(true, "Product deleted successfully", true);
         } catch (Exception e) {
@@ -362,20 +354,16 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Invalid country code: " + country);
             return new Response<>(null, "Invalid country code", false, ErrorType.INVALID_INPUT);
         }
+        if(!isValidPassword(password)){
+            logger.error("System Service - Invalid password: " + password);
+            return new Response<>(null, "Invalid password", false, ErrorType.INVALID_INPUT);
+        }
         String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR);
         }
         logger.info("System Service - User got token successfully: " + email); 
-        try{
-            LocalDate dob = parseDate(dateOfBirth);
-            this.userService.addUser(password, email, dob, country);
-        }
-        catch (Exception e) {
-            logger.error("System Service - Invalid date format: " + dateOfBirth);
-            return new Response<>(null, "Invalid date format", false, ErrorType.INVALID_INPUT);
-        }
         logger.info("System Service - User registered successfully: " + email);
 
         return new Response<> ( null, "Guest registered successfully", true);
@@ -396,7 +384,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
         try {
-            logger.info("System service - user trying to view procuct " + keyword);
+            logger.info("System service - user trying to view product " + keyword);
             return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
@@ -416,7 +404,7 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Invalid category: " + category);
                 return new Response<>(-1, "Invalid category", false, ErrorType.INVALID_INPUT);
             }
-            logger.info("System service - user trying to add procuct " + productName);
+            logger.info("System service - user trying to add product " + productName);
             int productId = this.productService.addProduct(productName, productDescription,categoryEnum);
             return new Response<>(productId, "Product added successfully", true);
         } catch (Exception e) {
@@ -461,7 +449,7 @@ public class SystemService implements ISystemService {
     public Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
             List<StoreManagerPermission> perms) {
         try {
-            logger.info("Systrem service - user sessionToken: " + sessionToken + " trying to add permissions: "
+            logger.info("System service - user sessionToken: " + sessionToken + " trying to add permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
             if (this.authenticatorService.isValid(sessionToken)) {
                 int requesterId = this.authenticatorService.getUserId(sessionToken);
@@ -474,7 +462,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during adding store manager permissions: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
     }
-    //maby add details to response
+    //add details to response
     @Override
     public Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
             List<StoreManagerPermission> perms) {
@@ -607,7 +595,7 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<Void> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
+    public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
         String name = null;
         int productId;
         PCategory categoryEnum = null;
@@ -646,8 +634,8 @@ public class SystemService implements ISystemService {
         }
         try{
             
-            storeService.addProductToStore(storeId, requesterId, productId, name, basePrice, quantity, categoryEnum);
-            return new Response<>(null, "Product added to store successfully", true);
+            StoreProductDTO spDTO =storeService.addProductToStore(storeId, requesterId, productId, productName, basePrice, quantity, categoryEnum);
+            return new Response<>(spDTO, "Product added to store successfully", true);
         }
         catch (Exception e){
             logger.error("System service - failed to add product to store " + e.getMessage());
@@ -693,17 +681,6 @@ public class SystemService implements ISystemService {
         }
     }
 
-    @Override
-    public Response<Void> addStoreAuctionProductDays(int storeId, int requesterId, int productId, int daysToAdd){
-        try{
-            logger.info("System service - user " + requesterId + " trying to add store auction product days");
-            storeService.addStoreAuctionProductDays(storeId, requesterId, productId, daysToAdd);
-            return new Response<>(null, "Product auction days added successfully", true);}
-        catch (Exception e) {
-            logger.info("System service - failed to add auction product days  " + e.getMessage());
-            return new Response<>(null, "Error during adding auction product days: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
-        }
-    }
 
     @Override
     public Response<List<StoreProductDTO>> viewCart(int userId) {
@@ -752,10 +729,10 @@ public class SystemService implements ISystemService {
         }	}
 
 	@Override
-	public Response<HashMap<Integer, String>> getAuctionEndedtMessages(int userID) {
+	public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
 		try{
             if (this.userService.isUserLoggedIn(userID)) {
-                return this.userService.getAuctionEndedtMessages(userID);
+                return this.userService.getAuctionEndedMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
                 return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
@@ -1128,11 +1105,281 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during getting orders by store id", false, ErrorType.INTERNAL_ERROR);
         }
     }
+    @Override
+    public Response<UserDTO> login(String email, String password){
+        try{
+            // Check if the user exists first
+            Optional<Registered> optionalUser = userService.getUserByUserName(email);
+            if (optionalUser.isPresent()) {
+                Registered user = optionalUser.get();
+                // Check if the user is suspended before login
+                if (userService.isUserSuspended(user.getUserId())) {
+                    logger.error("System Service - Login failed: User is suspended: " + email);
+                    return new Response<>(null, "Login failed: User is suspended", false, ErrorType.INVALID_INPUT);
+                }
+            }
+            
+            String token = this.authenticatorService.login(email, password);
+            UserDTO user = this.userService.login(email, password);
+            return new Response<>(user, "Login successful with token: " + token, true);
+        } catch (Exception e) {
+            logger.error("System Service - Login failed: " + e.getMessage());
+            return new Response<>(null, "Login failed: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    // User suspension management methods (admin only)
+    
+    @Override
+    public Response<Void> suspendUser(int requesterId, int userId, LocalDate endOfSuspension) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to suspend user: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            userService.suspendUser(requesterId, userId, endOfSuspension);
+            
+            if (endOfSuspension == null) {
+                logger.info("System Service - User ID " + userId + " permanently suspended by admin ID " + requesterId);
+                return new Response<>(null, "User permanently suspended", true);
+            } else {
+                logger.info("System Service - User ID " + userId + " suspended until " + endOfSuspension + " by admin ID " + requesterId);
+                return new Response<>(null, "User suspended until " + endOfSuspension, true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error during suspension: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during suspension: " + e.getMessage());
+            return new Response<>(null, "Error during suspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> unsuspendUser(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to unsuspend user: Admin privileges required for user ID " + requesterId);
+                return new Response<>(false, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            boolean wasUnsuspended = userService.unsuspendUser(requesterId, userId);
+            
+            if (wasUnsuspended) {
+                logger.info("System Service - User ID " + userId + " unsuspended by admin ID " + requesterId);
+                return new Response<>(true, "User unsuspended successfully", true);
+            } else {
+                logger.info("System Service - User ID " + userId + " was not suspended (unsuspend request by admin ID " + requesterId + ")");
+                return new Response<>(false, "User was not suspended", true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error during unsuspension: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during unsuspension: " + e.getMessage());
+            return new Response<>(false, "Error during unsuspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> isUserSuspended(int userId) {
+        try {
+            boolean isSuspended = userService.isUserSuspended(userId);
+            logger.info("System Service - Checked suspension status for User ID " + userId + ": " + (isSuspended ? "Suspended" : "Not suspended"));
+            return new Response<>(isSuspended, "Suspension status checked successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error checking suspension status: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error checking suspension status: " + e.getMessage());
+            return new Response<>(false, "Error checking suspension status: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<LocalDate> getSuspensionEndDate(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get suspension end date: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            LocalDate endDate = userService.getSuspensionEndDate(requesterId, userId);
+            
+            String message = endDate == null ? "User is permanently suspended" : "User is suspended until " + endDate;
+            logger.info("System Service - " + message + " (checked by admin ID " + requesterId + ")");
+            return new Response<>(endDate, message, true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error getting suspension end date: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error getting suspension end date: " + e.getMessage());
+            return new Response<>(null, "Error getting suspension end date: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<Registered>> getAllSuspendedUsers(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get suspended users: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            List<Registered> suspendedUsers = userService.getAllSuspendedUsers(requesterId);
+            
+            logger.info("System Service - Retrieved " + suspendedUsers.size() + " suspended users (requested by admin ID " + requesterId + ")");
+            return new Response<>(suspendedUsers, suspendedUsers.size() + " suspended users found", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error retrieving suspended users: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error retrieving suspended users: " + e.getMessage());
+            return new Response<>(null, "Error retrieving suspended users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Integer> cleanupExpiredSuspensions(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to cleanup suspensions: Admin privileges required for user ID " + requesterId);
+                return new Response<>(-1, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            int removedCount = userService.cleanupExpiredSuspensions(requesterId);
+            
+            logger.info("System Service - Cleaned up " + removedCount + " expired suspensions (requested by admin ID " + requesterId + ")");
+            return new Response<>(removedCount, "Cleaned up " + removedCount + " expired suspensions", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error during cleanup: " + e.getMessage());
+            return new Response<>(-1, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during cleanup: " + e.getMessage());
+            return new Response<>(-1, "Error during cleanup: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    // System admin management methods
+    
+    @Override
+    public Response<Void> addSystemAdmin(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to add system admin: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            userService.addSystemAdmin(userId);
+            
+            logger.info("System Service - User ID " + userId + " added as system admin by admin ID " + requesterId);
+            return new Response<>(null, "User added as system admin successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error adding system admin: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error adding system admin: " + e.getMessage());
+            return new Response<>(null, "Error adding system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> removeSystemAdmin(int requesterId, int userId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to remove system admin: Admin privileges required for user ID " + requesterId);
+                return new Response<>(false, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            // Prevent removing yourself as an admin
+            if (requesterId == userId) {
+                logger.error("System Service - Admin ID " + requesterId + " attempted to remove themselves as admin");
+                return new Response<>(false, "Cannot remove yourself as admin", false, ErrorType.INVALID_INPUT);
+            }
+            
+            boolean wasRemoved = userService.removeSystemAdmin(userId);
+            
+            if (wasRemoved) {
+                logger.info("System Service - User ID " + userId + " removed from system admins by admin ID " + requesterId);
+                return new Response<>(true, "User removed from system admins successfully", true);
+            } else {
+                logger.info("System Service - User ID " + userId + " was not a system admin (remove request by admin ID " + requesterId + ")");
+                return new Response<>(false, "User was not a system admin", true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error removing system admin: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error removing system admin: " + e.getMessage());
+            return new Response<>(false, "Error removing system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> isSystemAdmin(int userId) {
+        try {
+            boolean isAdmin = userService.isSystemAdmin(userId);
+            logger.info("System Service - Checked admin status for User ID " + userId + ": " + (isAdmin ? "Admin" : "Not admin"));
+            return new Response<>(isAdmin, "Admin status checked successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error checking admin status: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error checking admin status: " + e.getMessage());
+            return new Response<>(false, "Error checking admin status: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<Registered>> getAllSystemAdmins(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get system admins: Admin privileges required for user ID " + requesterId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            List<Registered> admins = userService.getAllSystemAdmins();
+            
+            logger.info("System Service - Retrieved " + admins.size() + " system admins (requested by admin ID " + requesterId + ")");
+            return new Response<>(admins, admins.size() + " system admins found", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error retrieving system admins: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error retrieving system admins: " + e.getMessage());
+            return new Response<>(null, "Error retrieving system admins: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Integer> getSystemAdminCount(int requesterId) {
+        try {
+            if (!userService.isSystemAdmin(requesterId)) {
+                logger.error("System Service - Unauthorized attempt to get admin count: Admin privileges required for user ID " + requesterId);
+                return new Response<>(-1, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            int count = userService.getSystemAdminCount();
+            
+            logger.info("System Service - Current system admin count: " + count + " (requested by admin ID " + requesterId + ")");
+            return new Response<>(count, "Current system admin count: " + count, true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Error getting admin count: " + e.getMessage());
+            return new Response<>(-1, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error getting admin count: " + e.getMessage());
+            return new Response<>(-1, "Error getting admin count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
 
     private boolean isAuth(String token){
         return this.authenticatorService.isValid(token);
     }
 
+    private boolean isValidPassword(String password) {
+        return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+    }
     // // Example of a system service method that uses the authenticator service
     // public void SystemServiceMethod(String sessionToken) {
     // if (authenticatorService.isValid(sessionToken)) {
@@ -1141,7 +1388,179 @@ public class SystemService implements ISystemService {
     // } else {
     // logger.error("System Service - Invalid session token: " + sessionToken);
     // throw new IllegalArgumentException("Invalid session token");
-    // }
+    // } 
     // }
 
+
+    @Override
+    public Response<List<ProductDTO>> searchByCategory(String category) {
+        try {
+            PCategory categoryEnum = isCategoryValid(category);
+            if (categoryEnum == null) {
+                logger.error("System Service - Invalid category: " + category);
+                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT);
+            }
+                List<ProductDTO> products = this.productService.getProductsByCategory(categoryEnum);
+                return new Response<>(products, "Products retrieved successfully", true);
+
+        } catch (Exception e) {
+            logger.error("System Service - Error during searching products by category: " + e.getMessage());
+            return new Response<>(null, "Error during searching products by category", false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Response<Void> userLogout(int userID) {
+        try {
+            logger.info("System service - user " + userID + " trying to logout");
+            Optional<Registered> user = this.userService.getUserById(userID);
+
+            if(user == null) {
+                logger.error("System Service - User not found: " + userID);
+                return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT);
+            }
+            if (this.userService.isUserLoggedIn(userID)) {
+                String email = user.get().getEmail();
+                this.authenticatorService.logout(email);
+                this.userService.logout(email);
+                return new Response<>(null, "Logout successful", true);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during logout: " + e.getMessage());
+            return new Response<>(null, "Error during logout: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+
+
+    // Unsigned (guest) user management methods
+    
+    @Override
+    public Response<Void> addUnsignedUser(User user) {
+        try {
+            userService.addUnsignedUser(user);
+            logger.info("System Service - Added unsigned user with ID: " + user.getUserId());
+            return new Response<>(null, "Unsigned user added successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to add unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error adding unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<User> getUnsignedUserById(int userId) {
+        try {
+            Optional<User> optionalUser = userService.getUnsignedUserById(userId);
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                logger.info("System Service - Retrieved unsigned user with ID: " + userId);
+                return new Response<>(user, "Unsigned user retrieved successfully", true);
+            } else {
+                logger.error("System Service - Unsigned user not found: " + userId);
+                return new Response<>(null, "Unsigned user not found", false, ErrorType.INVALID_INPUT);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error getting unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<List<User>> getAllUnsignedUsers(int adminId) {
+        try {
+            if (!userService.isSystemAdmin(adminId)) {
+                logger.error("System Service - Unauthorized attempt to get all unsigned users: Admin privileges required for user ID " + adminId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            List<User> users = userService.getAllUnsignedUsers();
+            logger.info("System Service - Retrieved " + users.size() + " unsigned users");
+            return new Response<>(users, "Retrieved " + users.size() + " unsigned users", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get all unsigned users: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all unsigned users: " + e.getMessage());
+            return new Response<>(null, "Error getting all unsigned users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Void> updateUnsignedUser(User user) {
+        try {
+            userService.updateUnsignedUser(user);
+            logger.info("System Service - Updated unsigned user with ID: " + user.getUserId());
+            return new Response<>(null, "Unsigned user updated successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to update unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during updating unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error updating unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> removeUnsignedUser(int userId) {
+        try {
+            boolean removed = userService.removeUnsignedUser(userId);
+            if (removed) {
+                logger.info("System Service - Removed unsigned user with ID: " + userId);
+                return new Response<>(true, "Unsigned user removed successfully", true);
+            } else {
+                logger.info("System Service - No unsigned user with ID " + userId + " to remove");
+                return new Response<>(false, "No unsigned user with that ID found", true);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to remove unsigned user: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing unsigned user: " + e.getMessage());
+            return new Response<>(false, "Error removing unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Boolean> isUnsignedUser(int userId) {
+        try {
+            boolean isUnsigned = userService.isUnsignedUser(userId);
+            logger.info("System Service - Checked if user ID " + userId + " is unsigned: " + isUnsigned);
+            return new Response<>(isUnsigned, "User's unsigned status checked successfully", true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to check if user is unsigned: " + e.getMessage());
+            return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during checking if user is unsigned: " + e.getMessage());
+            return new Response<>(false, "Error checking if user is unsigned: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
+    
+    @Override
+    public Response<Integer> getUnsignedUserCount(int adminId) {
+        try {
+            if (!userService.isSystemAdmin(adminId)) {
+                logger.error("System Service - Unauthorized attempt to get unsigned user count: Admin privileges required for user ID " + adminId);
+                return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT);
+            }
+            
+            int count = userService.getUnsignedUserCount();
+            logger.info("System Service - Retrieved unsigned user count: " + count);
+            return new Response<>(count, "Retrieved unsigned user count: " + count, true);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get unsigned user count: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting unsigned user count: " + e.getMessage());
+            return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+    }
 }

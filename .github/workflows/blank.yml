@@ -21,10 +21,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build project
-        working-directory: Fakezon
-        run: mvn -B compile
+      # Cache Maven dependencies to speed up builds
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
 
-      - name: Run unit tests
+      # Compile, run tests, and generate JaCoCo code coverage report
+      - name: Run tests and generate coverage report
         working-directory: Fakezon
-        run: mvn test
+        run: mvn verify
+
+      # Upload the generated JaCoCo report as a downloadable artifact from the GitHub Actions UI
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: Fakezon/target/site/jacoco
