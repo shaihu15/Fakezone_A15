@@ -48,7 +48,11 @@ public class Response<T> {
         this.token = null;
     }
 
-    public Response(T data, String message, boolean success, String token){
+    public Response(
+        @JsonProperty("data") T data,
+        @JsonProperty("message") String message,
+        @JsonProperty("success") boolean success,
+        @JsonProperty("token") String token){
         this.data = data;
         this.message = message;
         if(!success){

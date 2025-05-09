@@ -7,12 +7,14 @@ import com.vaadin.flow.server.VaadinResponse;
 
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
+import ApplicationLayer.RequestDataTypes.LoginRequest;
 import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
 import ApplicationLayer.DTO.UserDTO;
 import InfrastructureLayer.Security.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.constraints.Email;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,10 +22,14 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -34,6 +40,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.icon.Icon;
@@ -46,7 +53,6 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
-    private UserDTO userInfo = null;
     public MainLayout() {
         initSession();
         createHeader();
@@ -116,7 +122,8 @@ public class MainLayout extends AppLayout implements RouterLayout {
             loginRegisterLogoutButton.addClickListener(event -> loginRegisterClick());
         }
         else{
-            //TODO LOGOUT
+            loginRegisterLogoutButton = new Button("Logout");
+            loginRegisterLogoutButton.addClickListener(event -> logoutClick());
         }
         //NOTIFS
         Icon notificationsIcon = VaadinIcon.BELL.create();
@@ -205,14 +212,10 @@ public class MainLayout extends AppLayout implements RouterLayout {
         countryComboBox.addValueChangeListener(event -> validateRegisterForm(registerEmailField, registerPasswordField, 
                                                                     registerConfirmPasswordField, registerButton, dobField, countryComboBox));
 
-        registerEmailField.addKeyDownListener(Key.ENTER, event ->  {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
-                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
-        registerPasswordField.addKeyDownListener(Key.ENTER, event -> {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
-                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
-        registerConfirmPasswordField.addKeyDownListener(Key.ENTER, event -> {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
-                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
-        dobField.addKeyDownListener(Key.ENTER, event -> {if (validateRegisterForm(registerEmailField, registerPasswordField, registerConfirmPasswordField,
-                                                                             registerButton, dobField, countryComboBox))  registerButton.click();;});
+        registerEmailField.addKeyDownListener(Key.ENTER, event ->  {if (registerButton.isEnabled())  registerButton.click();;});
+        registerPasswordField.addKeyDownListener(Key.ENTER, event -> {if (registerButton.isEnabled())  registerButton.click();;});
+        registerConfirmPasswordField.addKeyDownListener(Key.ENTER, event -> {if (registerButton.isEnabled())  registerButton.click();;});
+        dobField.addKeyDownListener(Key.ENTER, event -> {if (registerButton.isEnabled())  registerButton.click();;});
 
         registerDialog.add(registerFormLayout);
         registerDialog.getFooter().add(registerButton);
@@ -221,13 +224,13 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
     private boolean validateRegisterForm(EmailField emailField, PasswordField passwordField, PasswordField confirmPasswordField, Button registerButton, TextField dobField, ComboBox<String> countryComboBox) {
         boolean isEmailValid = emailField.isInvalid() == false && !emailField.getValue().isEmpty();
-        boolean isPasswordValid = !passwordField.getValue().isEmpty();
-        boolean arePasswordsEqual = passwordField.getValue().equals(confirmPasswordField.getValue());
-        boolean isPasswordComplexEnough = passwordField.getValue().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+        boolean isPasswordValid = passwordField.getValue() != null && !passwordField.getValue().isEmpty();
+        boolean arePasswordsEqual = isPasswordValid && confirmPasswordField.getValue() != null && passwordField.getValue().equals(confirmPasswordField.getValue());
+        boolean isPasswordComplexEnough = isPasswordValid && passwordField.getValue().matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
         boolean isValidDate = isValidDate(dobField.getValue());
         String selectedCountryName = countryComboBox.getValue();
         String countryCode = getCountryCodeFromName(selectedCountryName);
-        boolean isCountrySelected = countryCode != null;
+        boolean isCountrySelected = countryCode != "";
         registerButton.setEnabled(isEmailValid && isPasswordValid && arePasswordsEqual && isPasswordComplexEnough && isValidDate && isCountrySelected);
         return isEmailValid && isPasswordValid && arePasswordsEqual && isPasswordComplexEnough && isValidDate && isCountrySelected;
     }
@@ -239,10 +242,12 @@ public class MainLayout extends AppLayout implements RouterLayout {
                 return code;
             }
         }
-        return null; // if no match is found
+        return ""; // if no match is found
     }
 
     private boolean isValidDate(String date) {
+        if(date == null)
+            return false;
         String datePattern = "^(\\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
         return date.matches(datePattern);
     }
@@ -256,7 +261,12 @@ public class MainLayout extends AppLayout implements RouterLayout {
         RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/api/user/register";
         try{
-            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, req, Response.class);
+            ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(req),
+                new ParameterizedTypeReference<Response<String>>() {}
+            );
             Response<String> response = (Response<String>) apiResponse.getBody();
             if(response.isSuccess()){
                 Notification.show("Registered succefully");
@@ -306,26 +316,90 @@ public class MainLayout extends AppLayout implements RouterLayout {
         FormLayout loginFormLayout = new FormLayout();
         EmailField loginEmailField = new EmailField("Email");
         PasswordField loginPasswordField = new PasswordField("Password");
-        loginFormLayout.add(loginEmailField, loginPasswordField);
-        loginEmailField.addKeyDownListener(Key.ENTER, e -> login());
-        loginPasswordField.addKeyDownListener(Key.ENTER, e -> login());
-
+        loginEmailField.setValueChangeMode(ValueChangeMode.EAGER);
+        loginPasswordField.setValueChangeMode(ValueChangeMode.EAGER);
         Button loginButton = new Button("Login");
-        loginButton.addClickListener(e -> login());
-
+        loginButton.setEnabled(false);
+        loginButton.addClickListener(e -> login(loginEmailField, loginPasswordField, loginDialog));
+        loginEmailField.addKeyDownListener(Key.ENTER, e -> {if(loginButton.isEnabled()) loginButton.click();});
+        loginPasswordField.addKeyDownListener(Key.ENTER, e -> {if(loginButton.isEnabled()) loginButton.click();});
+        loginEmailField.addValueChangeListener(event -> validateLoginButton(loginEmailField, loginPasswordField, loginButton));
+        loginPasswordField.addValueChangeListener(event -> validateLoginButton(loginEmailField, loginPasswordField, loginButton));
         Button registerButton = new Button("Register", e -> {
             loginDialog.close(); // Close the Login Dialog
             openRegisterDialog(); // Open the Register Dialog
         });
 
-        loginDialog.add(loginFormLayout);
+        loginFormLayout.add(loginEmailField, loginPasswordField);
         HorizontalLayout loginButtonsLayout = new HorizontalLayout(loginButton, registerButton);
-        loginDialog.add(loginButtonsLayout);
+        loginDialog.add(loginFormLayout, loginButtonsLayout);
         loginDialog.open(); // Open the Login Dialog
     }
 
-    private void login(){
-        testDialog();
+    private boolean validateLoginButton(EmailField loginEmailField,PasswordField loginPasswordField, Button loginButton){
+        boolean validEmail = !loginEmailField.isInvalid() && !loginEmailField.getValue().isEmpty();
+        boolean validPass = loginPasswordField.getValue() != null && !loginPasswordField.getValue().isEmpty();
+        loginButton.setEnabled(validPass && validEmail);
+        return validPass && validEmail;
+    }
+
+    private void login(EmailField loginEmailField,PasswordField loginPasswordField, Dialog loginDialog){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String token = (String) session.getAttribute("token");
+        LoginRequest logReq = new LoginRequest(loginEmailField.getValue(), loginPasswordField.getValue());
+        Request<LoginRequest> req = new Request<LoginRequest>(token, logReq);
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8080/api/user/login";
+        try{
+            ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(req),
+                new ParameterizedTypeReference<Response<UserDTO>>() {}
+            );            
+            Response<UserDTO> response = apiResponse.getBody();
+            if(response.isSuccess()){
+                session.setAttribute("token", response.getToken());
+                session.setAttribute("userDTO", response.getData());
+                UI.getCurrent().getPage().reload();
+            }
+            else{
+                loginDialog.add(new Paragraph(response.getMessage()));
+            }
+        }
+        catch(Exception e){
+            loginDialog.add(new Paragraph(e.getMessage()));
+        }
+    }
+    
+    private void logoutClick(){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String token = (String) session.getAttribute("token");
+        Request<Integer> req = new Request<Integer>(token, ((UserDTO) session.getAttribute("userDTO")).getUserId());
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8080/api/user/logout";
+        try{
+            ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(req),
+                new ParameterizedTypeReference<Response<Void>>() {}
+            );            
+            Response<Void> response = apiResponse.getBody();
+            if(response.isSuccess()){
+                session.removeAttribute("token");
+                session.removeAttribute("userDTO");
+                UI.getCurrent().getPage().reload();
+            }
+            else{
+                Notification.show(response.getMessage());
+            }
+        }
+        catch(Exception e){
+            Notification.show(e.getMessage());
+        }
     }
 
 

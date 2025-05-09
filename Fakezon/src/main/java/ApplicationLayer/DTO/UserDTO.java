@@ -1,5 +1,6 @@
 package ApplicationLayer.DTO;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserDTO {
