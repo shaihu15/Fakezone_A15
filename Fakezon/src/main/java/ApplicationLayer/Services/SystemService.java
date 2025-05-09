@@ -352,7 +352,12 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Invalid password: " + password);
             return new Response<>(null, "Invalid password", false, ErrorType.INVALID_INPUT);
         }
-        String token = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
+        Response<String> response = this.authenticatorService.register(email, password, dateOfBirthLocalDate, country);
+        if (!response.isSuccess()) {
+            logger.error("System Service - Error during guest registration: " + response.getMessage());
+            return new Response<>(null, response.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
+        String token = response.getData();
         if (token == null) {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR);

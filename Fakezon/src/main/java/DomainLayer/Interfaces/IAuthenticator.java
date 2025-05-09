@@ -2,8 +2,10 @@ package DomainLayer.Interfaces;
 
 import java.time.LocalDate;
 
+import ApplicationLayer.Response;
+
 public interface IAuthenticator {
-    String register(String email, String password, LocalDate dateOfBirth, String country);
+    Response<String> register(String email, String password, LocalDate dateOfBirth, String country);
 
     String login(String email, String password);
 
