@@ -1,16 +1,14 @@
-package NewAcceptanceTesting.AT_User.AT_Registered;
+package NewAcceptanceTesting.AT_User.AT_Guest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.Response;
-import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -34,11 +32,11 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
+import InfrastructureLayer.Security.TokenService;
 import NewAcceptanceTesting.TestHelper;
 
-public class Open_Store {
-    //Use-case: 3.2 Open Store 
-
+public class Guest_User_Access_to_Product_Information {
+    // Use-case: 2.1 Guest User Access to Product Information
     private SystemService systemService;
     private IStoreRepository storeRepository;
     private IUserRepository userRepository;
@@ -52,6 +50,7 @@ public class Open_Store {
     private IProductService productService;
     private IUserService userService;
     private IOrderService orderService;
+    private TokenService tokenService;
 
     private TestHelper testHelper;
 
@@ -72,73 +71,24 @@ public class Open_Store {
         authenticatorService = new AuthenticatorAdapter(userService);
         systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
         testHelper = new TestHelper(systemService);
+        tokenService = new TokenService(); 
     }
 
     @Test
-    void testOpenStore_validArguments_Success() {
-        Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
-        String storeName = "Test Store";
-
-        Response<Integer> resultAddStore = systemService.addStore(userId, storeName);
+    void testGuestUserAccessToProductInformation_Succsses() {
+       Response<Integer> resultAddStore = testHelper.openStore();
+        assertNotNull(resultAddStore);
         int storeId = resultAddStore.getData();
+        assertTrue(storeRepository.findById(storeId).isOpen());
+        //the store is open
 
-        assertNotNull(resultAddStore.getData());
-        assertEquals(storeRepository.findByName(storeName).getId(), storeId);
-        assertTrue(storeRepository.findByName(storeName).isOpen());
-        assertTrue(storeRepository.findById(resultAddStore.getData()).isOpen());
+        String guestToken = tokenService.generateGuestToken(); 
+        assertNotNull(guestToken);
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(guestToken, storeId); 
+        StoreDTO store = accessStoreResponse.getData();
+        assertNotNull(store);
+        //gust user can access the store
 
-    }
-
-    @Test
-    void testOpenStore_StoreNameAlreadyTaken_Failure() {
-        Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
-
-        Response<Integer> resultAddStore1 = systemService.addStore(userId, "Test Store");
-        Response<Integer> resultAddStore2 = systemService.addStore(userId, "Test Store");
-        int storeId1 = resultAddStore1.getData();
-
-        assertNotNull(storeId1);
-        assertTrue(storeRepository.findById(storeId1).isOpen()); //store1 is open
-
-        assertNull(resultAddStore2.getData());//store2 dont get id - not open
-        assertEquals("Error during opening store: Store name already exists", resultAddStore2.getMessage());
-    }
-
-    @Test
-    void testOpenStore_StoreNameIsEmpty_Failure() {
-        Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
-
-        String invalidStoreName = ""; 
-
-        Response<Integer> resultAddStore = systemService.addStore(userId, invalidStoreName);
-
-        assertNull(resultAddStore.getData());
-        assertEquals("Error during opening store: Store name is empty", resultAddStore.getMessage());
-    }
-
-        @Test
-    void testOpenStore_StoreNameIsNull_Failure() {
-        Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
-
-
-        Response<Integer> resultAddStore = systemService.addStore(userId, null);
-
-        assertNull(resultAddStore.getData());
-        assertEquals("Error during opening store: Store name is empty", resultAddStore.getMessage());
-    }
- 
-    @Test
-    void testOpenStore_UserNotRegistered_Failure() {
-        int userId = 9999; // Assuming this user ID does not exist
-
-        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
-
-        assertNull(resultAddStore.getData());
-        assertEquals("Error during opening store: User not found", resultAddStore.getMessage());
     }
 
 }
