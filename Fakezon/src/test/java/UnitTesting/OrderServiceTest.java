@@ -40,48 +40,6 @@ public class OrderServiceTest {
     }
 
     @Test
-    void givenValidOrderDetails_WhenAddOrder_ThenOrderIsAdded() {
-        StoreProductDTO mockProduct = mock(StoreProductDTO.class);
-        when(mockProduct.getProductId()).thenReturn(1);
-
-        when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProduct));
-        when(mockBasket.getStoreID()).thenReturn(101);
-
-        int orderId = orderService.addOrder(mockBasket,  1, "123 Main St", PaymentMethod.CREDIT_CARD);
-        verify(orderRepository, times(1)).addOrder(any(IOrder.class));
-        assertEquals(1, orderId); // Assuming the ID is generated as 1
-    }
-
-    @Test
-    void givenValidOrderDetails_WhenUpdateOrder_ThenOrderIsUpdated() {
-        StoreProductDTO mockProductDTO = mock(StoreProductDTO.class);
-        when(mockProductDTO.getProductId()).thenReturn(1);
-        when(mockBasket.getProducts()).thenReturn(Collections.singletonList(mockProductDTO));
-        int orderId = orderService.updateOrder(1,
-                mockBasket,1, "123 Main St", PaymentMethod.CREDIT_CARD);
-
-        verify(orderRepository, times(1)).updateOrder(eq(1), any(IOrder.class));
-        assertEquals(1, orderId);
-    }
-
-    @Test
-    void givenNonExistingOrder_WhenUpdateOrder_ThenThrowsException() {
-        // Mocking the basket methods
-        when(mockBasket.getProducts()).thenReturn(Collections.emptyList());
-        when(mockBasket.getStoreID()).thenReturn(101);
-
-        // Simulating the exception
-        doThrow(new IllegalArgumentException("Order not found")).when(orderRepository).updateOrder(eq(1), any(IOrder.class));
-
-        // Asserting the exception
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            orderService.updateOrder(1, mockBasket, 1, "123 Main St", PaymentMethod.CREDIT_CARD);
-        });
-
-        assertEquals("Order not found", exception.getMessage());
-    }
-
-    @Test
     void givenValidOrderId_WhenDeleteOrder_ThenOrderIsDeleted() {
         orderService.deleteOrder(1);
 

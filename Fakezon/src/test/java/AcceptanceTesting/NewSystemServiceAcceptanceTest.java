@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.method.P;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
@@ -337,7 +339,7 @@ public class NewSystemServiceAcceptanceTest {
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         int productId = storePResponse.getData().getProductId();
         systemService.addToBasket(userId, productId, storeId, 1);
-        Response<List<StoreProductDTO>> cart = systemService.viewCart(userId);
+        Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> cart = systemService.viewCart(userId);
         assertNotNull(cart, "Cart should not be null");
         assertTrue(cart.isSuccess(), "Cart retrieval should succeed");
         assertTrue(cart.getData().size() > 0, "Cart should contain products");

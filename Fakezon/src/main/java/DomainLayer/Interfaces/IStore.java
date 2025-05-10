@@ -7,6 +7,7 @@ import org.springframework.security.access.method.P;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -88,7 +89,7 @@ public interface IStore {
 
     void removeStoreManager(int requesterId, int toRemoveId);
 
-    StoreProductDTO decrementProductQuantity(int productId, int quantity);
+    List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy, int userId);
 
     boolean isOwner(int userId);
 
@@ -97,8 +98,6 @@ public interface IStore {
     ProductRating getStoreProductRating(int userID, int productID);
 
     boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount);
-
-    double calcAmount(Basket basket, LocalDate dob);
 
     boolean canViewOrders(int userId);
   
@@ -109,6 +108,10 @@ public interface IStore {
     List<Integer> getPendingOwners(int requesterId);
 
     List<Integer> getPendingManagers(int requesterId);
+    
     void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
     
+    double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
+
+    Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products);
 }

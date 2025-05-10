@@ -44,7 +44,7 @@ class StoreControllerTest {
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addStore(userId, storeName)).thenReturn(new Response<>(null, "Store added successfully", true));
+        when(systemService.addStore(userId, storeName)).thenReturn(new Response<>(null, "Store added successfully", true, null, null));
 
         ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
 
@@ -101,7 +101,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
-                .thenReturn(new Response<>(null, "Product added successfully", true));
+                .thenReturn(new Response<>(null, "Product added successfully", true, null, null));
 
         ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
 
@@ -119,7 +119,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.removeProductFromStore(storeId, requesterId, productId))
-                .thenReturn(new Response<>(null, "Product removed successfully", true));
+                .thenReturn(new Response<>(null, "Product removed successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.removeProductFromStore(storeId, requesterId, productId, token);
 
@@ -136,7 +136,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.closeStoreByFounder(storeId, userId))
-                .thenReturn(new Response<>("Store closed successfully", "Store closed successfully", true));
+                .thenReturn(new Response<>("Store closed successfully", "Store closed successfully", true, null, null));
 
         ResponseEntity<Response<String>> response = storeController.closeStoreByFounder(storeId, userId, token);
 
@@ -154,7 +154,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getPendingOwners(storeId, requesterId))
-                .thenReturn(new Response<>(pendingOwners, "Pending owners retrieved successfully", true));
+                .thenReturn(new Response<>(pendingOwners, "Pending owners retrieved successfully", true, null, null));
 
         ResponseEntity<Response<List<Integer>>> response = storeController.getPendingOwners(storeId, requesterId, token);
 
@@ -172,7 +172,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.acceptAssignment(storeId, userId))
-                .thenReturn(new Response<>("Assignment accepted successfully", "Assignment accepted successfully", true));
+                .thenReturn(new Response<>("Assignment accepted successfully", "Assignment accepted successfully", true, null, null));
 
         ResponseEntity<Response<String>> response = storeController.acceptAssignment(storeId, userId, token);
 
@@ -189,7 +189,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.declineAssignment(storeId, userId))
-                .thenReturn(new Response<>("Assignment declined successfully", "Assignment declined successfully", true));
+                .thenReturn(new Response<>("Assignment declined successfully", "Assignment declined successfully", true, null, null));
 
         ResponseEntity<Response<String>> response = storeController.declineAssignment(storeId, userId, token);
 
@@ -209,7 +209,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.updateProductInStore(storeId, requesterId, productId, basePrice, quantity))
-                .thenReturn(new Response<>(null, "Product updated successfully", true));
+                .thenReturn(new Response<>(null, "Product updated successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.updateProductInStore(storeId, requesterId, productId, basePrice, quantity, token);
 
@@ -229,7 +229,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd))
-                .thenReturn(new Response<>(null, "Auction product added successfully", true));
+                .thenReturn(new Response<>(null, "Auction product added successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd, token);
 
@@ -248,7 +248,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addBidOnAuctionProductInStore(storeId, requesterId, productId, bid))
-                .thenReturn(new Response<>(null, "Bid added successfully", true));
+                .thenReturn(new Response<>(null, "Bid added successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.addBidOnAuctionProductInStore(storeId, requesterId, productId, bid, token);
 
@@ -267,7 +267,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.ratingStore(storeId, userId, rating, comment))
-                .thenReturn(new Response<>(null, "Store rated successfully", true));
+                .thenReturn(new Response<>(null, "Store rated successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.ratingStore(storeId, userId, rating, comment, token);
 
@@ -285,7 +285,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addStoreOwner(storeId, requesterId, ownerId))
-                .thenReturn(new Response<>(null, "Store owner added successfully", true));
+                .thenReturn(new Response<>(null, "Store owner added successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.addStoreOwner(storeId, requesterId, ownerId, token);
 
@@ -303,7 +303,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.removeStoreOwner(storeId, requesterId, ownerId))
-                .thenReturn(new Response<>(null, "Store owner removed successfully", true));
+                .thenReturn(new Response<>(null, "Store owner removed successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.removeStoreOwner(storeId, requesterId, ownerId, token);
 
@@ -322,7 +322,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.sendMessageToUser(managerId, storeId, userId, message))
-                .thenReturn(new Response<>(null, "Message sent successfully", true));
+                .thenReturn(new Response<>(null, "Message sent successfully", true, null, null));
 
         ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
 
@@ -341,7 +341,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addStore(userId, storeName))
-                .thenReturn(new Response<>(null, "Internal server error", false, ErrorType.INTERNAL_ERROR));
+                .thenReturn(new Response<>(null, "Internal server error", false, ErrorType.INTERNAL_ERROR, null));
 
         ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
 
@@ -358,7 +358,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.userAccessStore(token, storeId))
-                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST));
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
 
         ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
 
@@ -396,7 +396,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd))
-                .thenReturn(new Response<>(null, "Internal server error", false, ErrorType.INTERNAL_ERROR));
+                .thenReturn(new Response<>(null, "Internal server error", false, ErrorType.INTERNAL_ERROR, null));
 
         ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd, token);
 
@@ -414,7 +414,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getPendingOwners(storeId, requesterId))
-                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST));
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
 
         ResponseEntity<Response<List<Integer>>> response = storeController.getPendingOwners(storeId, requesterId, token);
 

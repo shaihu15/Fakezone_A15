@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import ApplicationLayer.Enums.PCategory;
 
@@ -46,13 +47,13 @@ public class UserTest {
         StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5,1,PCategory.ELECTRONICS);
 
         // Act
-        user.addToBasket(storeId, product);
+        int quantity = 2;
+        user.addToBasket(storeId, product.getProductId(), quantity);
 
         // Assert
         Basket basket = user.getBasket(storeId);
         assertNotNull(basket, "Basket should not be null after adding a product");
         assertEquals(1, basket.getProducts().size(), "Basket should contain one product");
-        assertEquals("Test Product", basket.getProducts().get(0).getName(), "Product name should match");
     }
 
     @Test
@@ -64,12 +65,12 @@ public class UserTest {
         StoreProductDTO product2 = new StoreProductDTO(102, "Product 2", 20.0, 1, 5.0,2,    PCategory.BEAUTY);
 
 
-        user.addToBasket(storeId, product1);
-        user.addToBasket(storeId2, product2);
+        user.addToBasket(storeId, product1.getProductId(), product1.getQuantity());
+        user.addToBasket(storeId2, product2.getProductId(), product2.getQuantity());
 
 
         // Act
-        List<StoreProductDTO> cartProducts = user.viewCart();
+        Map<Integer,Map<Integer,Integer>> cartProducts = user.viewCart();
 
         // Assert
         assertNotNull(cartProducts, "Cart products should not be null");
@@ -81,13 +82,13 @@ public class UserTest {
         // Arrange
         int storeId = 1;
         StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5,1, PCategory.ELECTRONICS);
-        user.addToBasket(storeId, product);
+        user.addToBasket(storeId, product.getProductId(), product.getQuantity());
 
         // Act
         user.clearCart();
 
         // Assert
-        List<StoreProductDTO> cartProducts = user.viewCart();
+        Map<Integer,Map<Integer,Integer>> cartProducts = user.viewCart();
         assertTrue(cartProducts.isEmpty(), "Cart should be empty after clearing");
     }
 
@@ -96,14 +97,14 @@ public class UserTest {
         // Arrange
         int storeId = 1;
         StoreProductDTO product = new StoreProductDTO(101, "Test Product", 10.0, 2, 4.5,1, PCategory.ELECTRONICS);
-        user.addToBasket(storeId, product);
+        user.addToBasket(storeId, product.getProductId(), product.getQuantity());
 
         // Act
         boolean result = user.logout();
 
         // Assert
         assertTrue(result, "Logout should return true");
-        List<StoreProductDTO> cartProducts = user.viewCart();
+        Map<Integer,Map<Integer,Integer>> cartProducts = user.viewCart();
         assertTrue(cartProducts.isEmpty(), "Cart should be empty after logout");
     }
     

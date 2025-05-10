@@ -3,6 +3,7 @@ package DomainLayer.Model;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -354,7 +355,6 @@ public class Store implements IStore {
                 }
                 else {
                     this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID, auctionProduct.getBasePrice(),"Auction failed, no bids were placed"));
-                    auctionProducts.remove(productID);
                 }
             } else {
                 throw new IllegalArgumentException("Auction for product with ID: " + productID + " has not ended yet.");
@@ -960,34 +960,62 @@ public class Store implements IStore {
     }
 
     @Override
-    public synchronized StoreProductDTO decrementProductQuantity(int productId, int quantity) {
-        StoreProduct storeProduct = storeProducts.get(productId);
-        if (storeProduct == null) {
-            throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
-                    + storeID);
+    public synchronized List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy, int userId) {
+        List<StoreProductDTO> products = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
+            StoreProduct storeProduct = storeProducts.get(productId);
+            if (storeProduct == null) {
+                throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
+                        + storeID);
+            }
+            if(auctionProducts.containsKey(productId)){
+                AuctionProduct auctionProduct = auctionProducts.get(productId);
+                if(auctionProduct.getUserIDHighestBid() != userId  && !auctionProduct.isApprovedByAllOwners()){
+                    throw new IllegalArgumentException("User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
+                }
+                if(auctionProduct.getQuantity() < quantity) {
+                    throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+                }
+                auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
+                auctionProducts.remove(productId);
+            }
+            else if (storeProduct.getQuantity() < quantity) {
+                throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+            }
+            else{
+                storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
+            }
+            products.add(new StoreProductDTO(storeProduct, quantity));
         }
-        if (storeProduct.getQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
-        }
-        storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
-        return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating(), storeID, storeProduct.getCategory());
+        
+        return products;
     }
 
     private boolean hasInventoryPermissions(int id){
         return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
     }
 
+
+
     @Override
-    public double calcAmount(Basket basket, LocalDate dob) {
-        List<StoreProductDTO> products = basket.getProducts();
+    public double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob) {
+        if(!isOpen) {
+            throw new IllegalArgumentException("Store is closed, can not purchase products");
+        }
+        if(productToBuy == null || productToBuy.isEmpty()){
+            throw new IllegalArgumentException("Product list is empty or null");
+        }
         double amount = 0;
-        for (StoreProductDTO product : products) {
-            if (!storeProducts.containsKey(product.getProductId())) {
-                throw new IllegalArgumentException(
-                        "Product with ID: " + product.getProductId() + " does not exist in store ID: " + storeID);
-            }
+        Map<StoreProductDTO, Boolean> products = checkIfProductsInStore(productToBuy);
+        for (Map.Entry<StoreProductDTO, Boolean> entry : products.entrySet()) {
+            StoreProductDTO product = entry.getKey();
             int productId = product.getProductId();
+            if(!storeProducts.containsKey(productId)) {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productId + " does not exist in store ID: " + storeID);
+            }
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
                 if (!policy.canPurchase(dob, productId, product.getQuantity())) {
@@ -995,27 +1023,38 @@ public class Store implements IStore {
                             "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
                 }
             }
-
-            boolean isDiscountApplicable = true;
-            DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
-            if(discountPolicy == null) {
-                isDiscountApplicable = false;
+            if(auctionProducts.containsKey(productId)){
+                AuctionProduct auctionProduct = auctionProducts.get(productId);
+                if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isApprovedByAllOwners()){
+                    amount += auctionProduct.getCurrentHighestBid();
+                }
             }
-            if (discountPolicy!= null) {
-                DiscountPolicy policy = this.discountPolicies.get(productId);
-                List<DiscountCondition> conditions = policy.getConditions();
-                for(DiscountCondition condition : conditions) {
-                    if (products.stream().anyMatch(p -> p.getProductId() == condition.getTriggerProductId() && p.getQuantity() < condition.getTriggerQuantity())){ 
+            else
+            {
+                boolean isDiscountApplicable = true;
+                DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
+                if(discountPolicy == null) {
                     isDiscountApplicable = false;
-                        break;
+                }
+                if (discountPolicy!= null) {
+                    DiscountPolicy policy = this.discountPolicies.get(productId);
+                    List<DiscountCondition> conditions = policy.getConditions();
+                    for(DiscountCondition condition : conditions) {
+                        boolean con = products.entrySet().stream().anyMatch(e ->
+                        e.getKey().getProductId() == condition.getTriggerProductId() &&
+                        e.getKey().getQuantity() < condition.getTriggerQuantity());
+                        if (con){
+                            isDiscountApplicable = false;
+                            break;
+                        }
                     }
-                }  
-            }
-            if(isDiscountApplicable) {
-                discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-                amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-            } else {
-                amount += product.getBasePrice() * product.getQuantity();
+                }
+                if(isDiscountApplicable && discountPolicy != null) {
+                    discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                    amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                } else {
+                    amount += product.getBasePrice() * product.getQuantity();
+                }
             }
     }
         return amount;
@@ -1049,6 +1088,24 @@ public class Store implements IStore {
         List<Integer> pending = new ArrayList<>(pendingManagers.keySet());
         rolesLock.unlock();
         return pending;
+    }
+
+    @Override
+    public Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products) {
+        Map<StoreProductDTO, Boolean> productsInStore = new HashMap<>();
+        for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
+            if (storeProducts.containsKey(productId)) {
+                StoreProduct storeProduct = storeProducts.get(productId);
+                if (storeProduct.getQuantity() >= quantity) {
+                    productsInStore.put(new StoreProductDTO(storeProduct, quantity), true);
+                } else {
+                    productsInStore.put(new StoreProductDTO(storeProduct, quantity), false);
+                }
+            }
+        }
+        return productsInStore;
     }
 
 }

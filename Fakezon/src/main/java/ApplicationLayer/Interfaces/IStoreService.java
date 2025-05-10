@@ -6,6 +6,7 @@ import org.springframework.security.access.method.P;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -104,13 +105,13 @@ public interface IStoreService {
 
   Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId);
 
-  StoreProductDTO decrementProductQuantity(int productId, int storeId, int quantity);
+  List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy, int userId);
 
   void removeProductFromStore(int storeId, int requesterId, int productId);
 
   StoreRolesDTO getStoreRoles(int storeId, int requesterId);
 
-  double calcAmount(Cart cart, LocalDate dobInput);
+  Map<Integer,Double> calcAmount(int user,Cart cart, LocalDate dobInput);
 
   void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
 
@@ -123,5 +124,7 @@ public interface IStoreService {
   List<Integer> getPendingOwners(int storeId, int requesterId);
 
   List<Integer> getPendingManagers(int storeId, int requesterId);
+
+  Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(Map<Integer, Map<Integer, Integer>> cart);
 
 }
