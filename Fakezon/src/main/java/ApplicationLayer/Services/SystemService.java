@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -34,11 +33,8 @@ import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Interfaces.IProduct;
-import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
-import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
@@ -46,7 +42,6 @@ import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
-import javassist.bytecode.LineNumberAttribute.Pc;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -177,16 +172,10 @@ public class SystemService implements ISystemService {
         }
     }
 
-    public Response<StoreDTO> userAccessStore(String token, int storeId) {
+    public Response<StoreDTO> userAccessStore(int storeId) {
         try {
-            logger.info("System Service - User accessed store: " + storeId + " by user with token " + token);
+            logger.info("System Service - User accessed store: " + storeId);
             
-            if (this.authenticatorService.isValid(token)){
-                logger.info("System Service - Token is valid: " + token);
-            }else {
-                logger.error("System Service - Token is not valid: " + token);
-                return new Response<StoreDTO>(null, "Token is not valid", false, ErrorType.INVALID_INPUT, null);
-            }
             StoreDTO s = this.storeService.viewStore(storeId);
             if (s.isOpen()) {
                 return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
@@ -386,18 +375,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<ProductDTO>> searchByKeyword(String token, String keyword) {
-        try {
-            if (!this.authenticatorService.isValid(token)) {
-                logger.error("System Service - Token is not valid: " + token);
-                throw new IllegalArgumentException("Token is not valid");
-            } else {
-                logger.info("System Service - Token is valid: " + token);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during user access store: " + e.getMessage());
-            return new Response<>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }
+    public Response<List<ProductDTO>> searchByKeyword(String keyword) {
         try {
             logger.info("System service - user trying to view product " + keyword);
             return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true, null, null);
@@ -461,30 +439,23 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
-            List<StoreManagerPermission> perms) {
+    public Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId, List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user sessionToken: " + sessionToken + " trying to add permissions: "
+            logger.info("System service - user trying to add permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
-            if (this.authenticatorService.isValid(sessionToken)) {
-                int requesterId = this.authenticatorService.getUserId(sessionToken);
                 storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
                 return new Response<>(null, "Permissions added successfully", true, null, null);
-            } else {
-                return new Response<>(null, "Invalid session token: " + sessionToken, false, ErrorType.INVALID_INPUT, null);
-            }
         } catch (Exception e) {
             return new Response<>(null, "Error during adding store manager permissions: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
     //add details to response
     @Override
-    public Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
+    public Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user sessionToken: " + sessionToken + " trying to remove permissions: "
+            logger.info("System service - user " + requesterId + " trying to remove permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
-            int requesterId = this.authenticatorService.getUserId(sessionToken);
             storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
             return new Response<>(null, "Permissions removed successfully", true, null, null);
         } catch (Exception e) {
@@ -1020,12 +991,8 @@ public class SystemService implements ISystemService {
     }
 
 
-    public Response<Boolean> deleteOrder(int orderId, String token) {
+    public Response<Boolean> deleteOrder(int orderId, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(false, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 this.orderService.deleteOrder(orderId);
                 return new Response<>(true, "Order deleted successfully", true, null, null);
@@ -1040,12 +1007,8 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<OrderDTO> viewOrder(int orderId, String token) {
+    public Response<OrderDTO> viewOrder(int orderId, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 IOrder order = this.orderService.viewOrder(orderId);
                 OrderDTO orderDTO = createOrderDTO(order);
@@ -1061,12 +1024,8 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<OrderDTO>> searchOrders(String keyword, String token) {
+    public Response<List<OrderDTO>> searchOrders(String keyword, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.searchOrders(keyword);
                 List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -1086,12 +1045,8 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token) {
+    public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.getOrdersByStoreId(storeId);
                 List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -1375,10 +1330,6 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error getting admin count: " + e.getMessage());
             return new Response<>(-1, "Error getting admin count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
-    }
-
-    private boolean isAuth(String token){
-        return this.authenticatorService.isValid(token);
     }
 
     private boolean isValidPassword(String password) {
