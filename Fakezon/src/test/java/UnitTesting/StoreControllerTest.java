@@ -357,7 +357,7 @@ class StoreControllerTest {
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.userAccessStore(token, storeId))
+        when(systemService.userAccessStore(storeId))
                 .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
 
         ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
@@ -365,7 +365,7 @@ class StoreControllerTest {
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
-        verify(systemService, times(1)).userAccessStore(token, storeId);
+        verify(systemService, times(1)).userAccessStore(storeId);
     }
 
     @Test
