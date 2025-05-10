@@ -40,7 +40,7 @@ public class ProductController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in ProductController: {}", e.getMessage());
-            Response<ProductDTO> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<ProductDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
 
@@ -63,7 +63,7 @@ public class ProductController {
         }
         catch (Exception e) {
             logger.error("Error in ProductController: {}", e.getMessage());
-            Response<Boolean> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Boolean> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -82,7 +82,7 @@ public class ProductController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in ProductController: {}", e.getMessage());
-            Response<Boolean> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<Boolean> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -101,7 +101,7 @@ public class ProductController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in ProductController: {}", e.getMessage());
-            Response<List<ProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<List<ProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
