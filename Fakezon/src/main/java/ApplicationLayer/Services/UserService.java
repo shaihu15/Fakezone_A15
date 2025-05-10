@@ -220,16 +220,16 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 List<OrderDTO> orders = user.get().getOrders().values().stream().toList();
-                return new Response<>(orders, "Orders retrieved successfully", true);
+                return new Response<>(orders, "Orders retrieved successfully", true, null, null);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during get orders: " + e.getMessage());
                 logger.error("Error during get orders: " + e.getMessage());
-                return new Response<>(null, "Error during get orders: " + e.getMessage(), false);
+                return new Response<>(null, "Error during get orders: " + e.getMessage(), false, null, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false);
+            return new Response<>(null, "User not found", false, null, null);
         }
     }
 
@@ -353,19 +353,19 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAllMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false);
+                    return new Response<>(null, "No messages found", false, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
-                return new Response<>(messages, "Messages retrieved successfully", true);
+                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: " + e.getMessage());
-                return new Response<>(null, "Error during get messages: " + e.getMessage(), false);
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, null, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false);
+            return new Response<>(null, "User not found", false, null, null);
         }
     }
 
@@ -378,19 +378,19 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAssignmentMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false);
+                    return new Response<>(null, "No messages found", false, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
-                return new Response<>(messages, "Messages retrieved successfully", true);
+                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: " + e.getMessage());
-                return new Response<>(null, "Error during get messages: " + e.getMessage(), false);
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, null, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false);
+            return new Response<>(null, "User not found", false, null, null);
         }
     }
 
@@ -403,19 +403,19 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAuctionEndedMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false);
+                    return new Response<>(null, "No messages found", false, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
-                return new Response<>(messages, "Messages retrieved successfully", true);
+                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
             } catch (Exception e) {
                 // Handle exception if needed
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: " + e.getMessage());
-                return new Response<>(null, "Error during get messages: " + e.getMessage(), false);
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, null, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false);
+            return new Response<>(null, "User not found", false, null, null);
         }
     }
 

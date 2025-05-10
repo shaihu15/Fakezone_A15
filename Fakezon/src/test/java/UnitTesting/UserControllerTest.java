@@ -47,7 +47,7 @@ class UserControllerTest {
         Request<RegisterUserRequest> request = new Request<>("validToken", registerUserRequest);
         when(authenticatorAdapter.isValid("validToken")).thenReturn(true);
         when(systemService.guestRegister("test@example.com", "password", "2000-01-01", "USA"))
-                .thenReturn(new Response<>("Success", "User registered successfully", true));
+                .thenReturn(new Response<>("Success", "User registered successfully", true, null, null));
 
         ResponseEntity<Response<String>> response = userController.registerUser(request);
 
@@ -75,7 +75,7 @@ class UserControllerTest {
         String token = "validToken";
         List<StoreProductDTO> cart = List.of(new StoreProductDTO(1, "Product", 10.0, 5, 4.5, 1, null));
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.viewCart(userId)).thenReturn(new Response<>(cart, "Cart retrieved successfully", true));
+        when(systemService.viewCart(userId)).thenReturn(new Response<>(cart, "Cart retrieved successfully", true, null, null));
 
         ResponseEntity<Response<List<StoreProductDTO>>> response = userController.viewCart(token, userId);
 
@@ -102,7 +102,7 @@ class UserControllerTest {
         int userId = 1;
         String token = "validToken";
         List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "123 Main St", "Credit Card"));        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getOrdersByUser(userId)).thenReturn(new Response<>(orders, "Orders retrieved successfully", true));
+        when(systemService.getOrdersByUser(userId)).thenReturn(new Response<>(orders, "Orders retrieved successfully", true, null, null));
 
         ResponseEntity<Response<List<OrderDTO>>> response = userController.getOrdersByUser(token, userId);
 
@@ -131,7 +131,7 @@ class UserControllerTest {
         String token = "validToken";
         UserDTO userDTO = new UserDTO(1, email, 18);
         AbstractMap.SimpleEntry<UserDTO, String> loginData = new AbstractMap.SimpleEntry<>(userDTO, token);
-        Response<AbstractMap.SimpleEntry<UserDTO, String>> serviceResponse = new Response<>(loginData, "Login successful", true);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> serviceResponse = new Response<>(loginData, "Login successful", true, null, null);
 
         LoginRequest loginRequest = new LoginRequest(email, password);
         Request<LoginRequest> request = new Request<>(null, loginRequest);
@@ -151,7 +151,7 @@ class UserControllerTest {
     void testLogin_Failure() {
         String email = "test@example.com";
         String password = "wrongPassword";
-        Response<AbstractMap.SimpleEntry<UserDTO, String>> serviceResponse = new Response<>(null, "Invalid credentials", false, ErrorType.INVALID_INPUT);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> serviceResponse = new Response<>(null, "Invalid credentials", false, ErrorType.INVALID_INPUT, null);
 
         LoginRequest loginRequest = new LoginRequest(email, password);
         Request<LoginRequest> request = new Request<>(null, loginRequest);
@@ -191,7 +191,7 @@ class UserControllerTest {
         Request<Integer> request = new Request<>(token, userId);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.userLogout(userId)).thenReturn(new Response<>(null, "Logout successful", true));
+        when(systemService.userLogout(userId)).thenReturn(new Response<>(null, "Logout successful", true, null, null));
 
         ResponseEntity<Response<Void>> response = userController.logout(request);
 

@@ -149,8 +149,8 @@ public class TestHelper {
         }
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail, validPassword);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
-            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true) 
-            : new Response<>(null, loginResponse.getMessage(), false);
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
         if(!loginResult.isSuccess()){
             return null;
         }

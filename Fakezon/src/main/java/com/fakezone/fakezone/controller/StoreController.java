@@ -39,7 +39,7 @@ public class StoreController {
         try{
             logger.info("Received request to add store with name: {} from user this request tocken of: {}", storeName, token);
             if(!authenticatorAdapter.isValid(token)){
-                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Integer> response = systemService.addStore(userId, storeName);
@@ -52,7 +52,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Integer> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Integer> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null) ;
             return ResponseEntity.status(500).body(response);
         }
 
@@ -71,7 +71,7 @@ public class StoreController {
         try {
             logger.info("Received request to add product '{}' to store {} by user {} with token {}", productName, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<StoreProductDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<StoreProductDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<StoreProductDTO> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
@@ -84,7 +84,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<StoreProductDTO> response = new Response<>(null, "An error occurred at the controller level", false);
+            Response<StoreProductDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -95,7 +95,7 @@ public class StoreController {
         try {
             logger.info("Received request to view store {} with token {}", storeId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<StoreDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<StoreDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<StoreDTO> response = systemService.userAccessStore(token, storeId);
@@ -108,7 +108,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<StoreDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<StoreDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -123,7 +123,7 @@ public class StoreController {
         try {
             logger.info("Received request to update product {} in store {} by user {} with token {}", productId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.updateProductInStore(storeId, requesterId, productId, basePrice, quantity);
@@ -136,7 +136,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -149,7 +149,7 @@ public class StoreController {
         try {
             logger.info("Received request to remove product {} from store {} by user {} with token {}", productId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.removeProductFromStore(storeId, requesterId, productId);
@@ -162,7 +162,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -177,7 +177,7 @@ public class StoreController {
         try {
             logger.info("Received request to add auction product {} to store {} by user {} with token {}", productId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd);
@@ -190,7 +190,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -204,7 +204,7 @@ public class StoreController {
         try {
             logger.info("Received request to add bid on auction product {} in store {} by user {} with token {}", productId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.addBidOnAuctionProductInStore(storeId, requesterId, productId, bid);
@@ -217,7 +217,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -229,7 +229,7 @@ public class StoreController {
         try {
             logger.info("Received request to close store {} by user {} with token {}", storeId, userId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<String> response = systemService.closeStoreByFounder(storeId, userId);
@@ -242,7 +242,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -256,7 +256,7 @@ public class StoreController {
         try {
             logger.info("Received request to rate store {} by user {} with rating {} and comment '{}' using token {}", storeId, userId, rating, comment, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.ratingStore(storeId, userId, rating, comment);
@@ -269,7 +269,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -284,7 +284,7 @@ public class StoreController {
         try {
             logger.info("Received request to rate product {} in store {} by user {} with rating {} and comment '{}' using token {}", productId, storeId, userId, rating, comment, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.ratingStoreProduct(storeId, productId, userId, rating, comment);
@@ -297,7 +297,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -310,7 +310,7 @@ public class StoreController {
         try {
             logger.info("Received request to add owner {} to store {} by user {} with token {}", ownerId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.addStoreOwner(storeId, requesterId, ownerId);
@@ -323,7 +323,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -336,7 +336,7 @@ public class StoreController {
         try {
             logger.info("Received request to remove owner {} from store {} by user {} with token {}", ownerId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.removeStoreOwner(storeId, requesterId, ownerId);
@@ -349,7 +349,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -362,7 +362,7 @@ public class StoreController {
         try {
             logger.info("Received request to add permissions {} to manager {} in store {} with token {}", permissions, managerId, storeId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.addStoreManagerPermissions(storeId, token, managerId, permissions.stream()
@@ -377,7 +377,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -392,7 +392,7 @@ public class StoreController {
             List<String> permissions = request.getData();
             logger.info("Received request to remove permissions {} from manager {} in store {} with token {}", permissions, managerId, storeId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.removeStoreManagerPermissions(storeId, token, managerId, permissions.stream()
@@ -407,7 +407,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -420,7 +420,7 @@ public class StoreController {
         try {
             logger.info("Received request to remove manager {} from store {} by user {} with token {}", managerId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.removeStoreManager(storeId, requesterId, managerId);
@@ -433,7 +433,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -447,7 +447,7 @@ public class StoreController {
         try {
             logger.info("Received request to send message to user {} from manager {} in store {} with token {}", userId, managerId, storeId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<Void> response = systemService.sendMessageToUser(managerId, storeId, userId, message);
@@ -460,7 +460,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -472,7 +472,7 @@ public class StoreController {
         try {
             logger.info("Received request to get roles for store {} by user {} with token {}", storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<StoreRolesDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<StoreRolesDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<StoreRolesDTO> response = systemService.getStoreRoles(storeId, requesterId);
@@ -485,7 +485,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in StoreController: {}", e.getMessage());
-            Response<StoreRolesDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<StoreRolesDTO> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -499,7 +499,7 @@ public class StoreController {
         try {
             logger.info("Received request to send response for auction product {} in store {} by user {} with token {}", productId, storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<String> response = systemService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
@@ -512,7 +512,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in sendResponseForAuctionByOwner: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -524,7 +524,7 @@ public class StoreController {
         try {
             logger.info("Received request to get all orders for store {} by user {} with token {}", storeId, userId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<List<OrderDTO>> response = systemService.getAllStoreOrders(storeId, userId);
@@ -537,7 +537,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAllStoreOrders: {}", e.getMessage());
-            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -549,7 +549,7 @@ public class StoreController {
         try {
             logger.info("Received request to accept assignment for store {} by user {} with token {}", storeId, userId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<String> response = systemService.acceptAssignment(storeId, userId);
@@ -562,7 +562,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in acceptAssignment: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -574,7 +574,7 @@ public class StoreController {
         try {
             logger.info("Received request to decline assignment for store {} by user {} with token {}", storeId, userId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<String> response = systemService.declineAssignment(storeId, userId);
@@ -587,7 +587,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in declineAssignment: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -599,7 +599,7 @@ public class StoreController {
         try {
             logger.info("Received request to get pending owners for store {} by user {} with token {}", storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<List<Integer>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<List<Integer>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<List<Integer>> response = systemService.getPendingOwners(storeId, requesterId);
@@ -612,7 +612,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getPendingOwners: {}", e.getMessage());
-            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -624,7 +624,7 @@ public class StoreController {
         try {
             logger.info("Received request to get pending managers for store {} by user {} with token {}", storeId, requesterId, token);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<List<Integer>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED);
+                Response<List<Integer>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<List<Integer>> response = systemService.getPendingManagers(storeId, requesterId);
@@ -637,7 +637,7 @@ public class StoreController {
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getPendingManagers: {}", e.getMessage());
-            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR);
+            Response<List<Integer>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
