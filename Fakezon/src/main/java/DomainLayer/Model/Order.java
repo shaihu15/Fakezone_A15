@@ -1,6 +1,8 @@
 package DomainLayer.Model;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import DomainLayer.Enums.OrderState;
@@ -10,28 +12,34 @@ import DomainLayer.Interfaces.IOrder;
 public class Order implements IOrder{
     private final int orderId;
     private final int userId;
-    private Basket basket;
+    private final int storeId;
+    private final double totalPrice;
+    private List<OrderedProduct> products;
     private OrderState orderState;
     private String address;
     private PaymentMethod paymentMethod;
     private static AtomicInteger idCounter = new AtomicInteger(0);
 
-    public Order(int userId, OrderState orderState, Basket basket, String address, PaymentMethod paymentMethod) {
+    public Order(int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice) {
         this.orderId = idCounter.incrementAndGet();
+        this.storeId = storeId;
         this.userId = userId;
         this.orderState = orderState;
-        this.basket = basket;
+        this.products = products;
         this.address = address;
         this.paymentMethod = paymentMethod;
+        this.totalPrice = totalPrice;
     }
     
-    public Order(int id, int userId, OrderState orderState, Basket basket, String address, PaymentMethod paymentMethod) {
+    public Order(int id, int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice) {
         this.orderId = id;
         this.userId = userId;
+        this.storeId = storeId;
         this.orderState = orderState;
-        this.basket = basket;
+        this.products = products;
         this.address = address;
         this.paymentMethod = paymentMethod;
+        this.totalPrice = totalPrice;
     }
 
     @Override
@@ -80,18 +88,24 @@ public class Order implements IOrder{
     }
 
     @Override
-    public Basket getBasket() {
-        return basket;
+    public List<OrderedProduct> getProducts() {
+        return products;
     }
 
     @Override
     public int getStoreId() {
-        return basket.getStoreID();
+        return storeId;
     }
 
     @Override
     public Collection<Integer> getProductIds() {
-        return basket.getProducts().stream().map(product->product.getProductId()).toList();
+        return products.stream()
+                .map(OrderedProduct::getProductId)
+                .toList();
+    }
+    @Override
+    public double getTotalPrice() {
+        return totalPrice;
     }
 
 

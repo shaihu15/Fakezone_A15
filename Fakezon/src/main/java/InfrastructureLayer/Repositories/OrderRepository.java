@@ -29,14 +29,6 @@ public class OrderRepository implements IOrderRepository {
         orders.put(Order.getId(), Order);
     }
 
-    @Override
-    public void updateOrder(int orderId, IOrder Order) {
-        IOrder existingOrder = orders.get(orderId);
-        if (existingOrder == null) {
-            throw new IllegalArgumentException("Order with ID " + orderId + " does not exist.");
-        }
-        orders.put(orderId, Order);
-    }
 
     @Override
     public void deleteOrder(int orderId) {

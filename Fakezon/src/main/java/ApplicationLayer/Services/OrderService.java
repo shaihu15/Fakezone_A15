@@ -3,6 +3,7 @@ package ApplicationLayer.Services;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import ApplicationLayer.DTO.BasketDTO;
 import DomainLayer.Interfaces.IProduct;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Model.Cart;
 import ApplicationLayer.Interfaces.IOrderService;
@@ -21,6 +23,7 @@ import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Order;
+import DomainLayer.Model.OrderedProduct;
 
 public class OrderService implements IOrderService {
 
@@ -30,26 +33,6 @@ public class OrderService implements IOrderService {
     public OrderService(IOrderRepository orderRepository) {
         this.orderRepository = orderRepository;
 
-    }
-
-    @Override
-    public int addOrder(Basket basket, int userId, String address, PaymentMethod paymentMethod) {
-        IOrder order = new Order(userId, OrderState.PENDING, basket, address, paymentMethod);
-        orderRepository.addOrder(order);
-        return order.getId();
-    }
-
-    @Override
-    public int updateOrder(int orderId, Basket basket, Integer userId, String address, PaymentMethod paymentMethod) {
-        try {
-            IOrder updatedOrder = new Order(orderId, userId, OrderState.PENDING, basket, address, paymentMethod);
-            orderRepository.updateOrder(orderId, updatedOrder);
-            return updatedOrder.getId();
-
-        } catch (IllegalArgumentException e) {
-            logger.error("While trying to update, recived error {}", e);
-            throw e;
-        }
     }
 
     @Override
@@ -134,19 +117,25 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public void addOrderCart(Cart cart, int userId, String address, PaymentMethod paymentMethod) {
-        for (Basket basket : cart.getBaskets()) {
-            if (basket.getProducts().isEmpty()) {
-                logger.error("Basket is empty, cannot create order.");
-                throw new IllegalArgumentException("Basket is empty, cannot create order.");
-            }// not sopposed to be here, but just in case
-            List<Integer> productIds = basket.getProducts().stream()
-                .map(StoreProductDTO::getProductId)
-                .toList();
-            IOrder order = new Order(userId, OrderState.SHIPPED, basket, address, paymentMethod);
-            orderRepository.addOrder(order);
-            logger.info("Order created with ID: {}", order.getId());
+    public void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod) {
+        try {
+            List<OrderedProduct> orderedProducts = new ArrayList<>();
+            for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : cart.entrySet()) {
+                StoreDTO store = entry.getKey();
+                Map<StoreProductDTO,Boolean> products = entry.getValue();
+                for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
+                    StoreProductDTO storeProduct = productEntry.getKey();
+                    int quantity = storeProduct.getQuantity();
+                    orderedProducts.add(new OrderedProduct(storeProduct, quantity));
+                }
+                double price = prices.get(store.getStoreId());
+                Order order = new Order(1, store.getStoreId(), userId, OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
+                orderRepository.addOrder(order);
+            }
+
+        } catch (IllegalArgumentException e) {
+            logger.error("While trying to add order, recived error {}", e);
+            throw e;
         }
-      
     }
 }

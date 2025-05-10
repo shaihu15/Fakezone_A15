@@ -6,6 +6,8 @@ import ApplicationLayer.DTO.UserDTO;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.DTO.OrderDTO;
@@ -48,28 +50,32 @@ public class User {
         return true;
     }
 
-    public void addToBasket(int storeId, StoreProductDTO product) {
-        cart.addProduct(storeId, product);
+    public void addToBasket(int storeId, int productId, int quantity) {
+        cart.addProduct(storeId, productId, quantity);
     }
 
     public Basket getBasket(int storeId) {
         return cart.getBasket(storeId);
     }
 
-    public List<StoreProductDTO> viewCart() {
-        List<StoreProductDTO> products = cart.getAllProducts();
-        return products;
+    public Map<Integer,Map<Integer,Integer>> viewCart() {
+        Map<Integer,Map<Integer,Integer>> allProducts = cart.getAllProducts();
+        return allProducts;
 
     }
 
     public void saveCartOrder() {
-        List<StoreProductDTO> products = cart.getAllProducts();
-        for (StoreProductDTO product : products) {
-            int storeId = product.getStoreId();
-            if (!productsPurchase.containsKey(storeId)) {
-                productsPurchase.put(storeId, new ArrayList<>());
+        Map<Integer,Map<Integer,Integer>> products = cart.getAllProducts();
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> productQuantities = entry.getValue();
+            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
+                int productId = productEntry.getKey();
+                if (!productsPurchase.containsKey(storeId)) {
+                    productsPurchase.put(storeId, new ArrayList<>());
+                }
+                productsPurchase.get(storeId).add(productId);
             }
-            productsPurchase.get(storeId).add(product.getProductId());
         }
     }
 
@@ -82,6 +88,18 @@ public class User {
     }
     public void setUserId(int userId) { ///this one is only for testing purposes, will 
         this.userId = userId;
+    }
+
+    public void setCart(Map<Integer,Map<Integer,Integer>> validCart) {
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : validCart.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> productQuantities = entry.getValue();
+            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
+                int productId = productEntry.getKey();
+                int quantity = productEntry.getValue();
+                cart.addProduct(storeId, productId, quantity);
+            }
+        }
     }
 
 }
