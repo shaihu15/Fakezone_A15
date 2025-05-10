@@ -98,7 +98,8 @@ public class StoreController {
                 Response<StoreDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<StoreDTO> response = systemService.userAccessStore(token, storeId);
+            
+            Response<StoreDTO> response = systemService.userAccessStore(storeId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
@@ -365,7 +366,9 @@ public class StoreController {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addStoreManagerPermissions(storeId, token, managerId, permissions.stream()
+            
+            int requesterId = authenticatorAdapter.getUserId(token);
+            Response<Void> response = systemService.addStoreManagerPermissions(storeId, managerId, requesterId, permissions.stream()
                     .map(StoreManagerPermission::valueOf)
                     .toList());
             if (response.isSuccess()) {
@@ -395,7 +398,9 @@ public class StoreController {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.removeStoreManagerPermissions(storeId, token, managerId, permissions.stream()
+            
+            int requesterId = authenticatorAdapter.getUserId(token);
+            Response<Void> response = systemService.removeStoreManagerPermissions(storeId, requesterId, managerId, permissions.stream()
                     .map(StoreManagerPermission::valueOf)
                     .toList());
             if (response.isSuccess()) {
