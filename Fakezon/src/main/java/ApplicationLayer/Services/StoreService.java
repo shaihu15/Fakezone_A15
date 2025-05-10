@@ -521,7 +521,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy) {
+    public List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy, int userId) {
         List<StoreProductDTO> products = new ArrayList<>();
         for (Map.Entry<Integer, Map<Integer, Integer>> entry : productsToBuy.entrySet()) {
             int storeId = entry.getKey();
@@ -531,7 +531,7 @@ public class StoreService implements IStoreService {
                 logger.error("decrementProductsQuantity - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            List<StoreProductDTO> productsFromStore = store.decrementProductsQuantity(basket);
+            List<StoreProductDTO> productsFromStore = store.decrementProductsQuantity(basket, userId);
             if (productsFromStore != null) {
                 products.addAll(productsFromStore);
                 logger.info("Products decremented in store: " + storeId + " for user: " + basket.keySet().iterator().next());

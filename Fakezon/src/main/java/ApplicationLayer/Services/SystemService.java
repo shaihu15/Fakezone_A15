@@ -695,6 +695,19 @@ public class SystemService implements ISystemService {
         }
     }
 
+    private Map<Integer, Map<Integer, Integer>> convertStoreCartToUserCatt(Map<StoreDTO,Map<StoreProductDTO,Integer>> cart) {
+        Map<Integer,Map<Integer,Integer>> newCart = new HashMap<>();
+                for (Map.Entry<StoreDTO, Map<StoreProductDTO,Integer>> entry : cart.entrySet()) {
+                    int storeId = entry.getKey().getStoreId();
+                    Map<StoreProductDTO,Integer> products = entry.getValue();
+                    Map<Integer,Integer> newProducts = new HashMap<>();
+                    for (Map.Entry<StoreProductDTO,Integer> productEntry : products.entrySet()) {
+                        newProducts.put(productEntry.getKey().getProductId(), productEntry.getValue());
+                    }
+                    newCart.put(storeId, newProducts);
+                }
+        return newCart;
+    }
 
     @Override
     public Response<Map<StoreDTO,Map<StoreProductDTO,Integer>>> viewCart(int userId) {
@@ -708,17 +721,7 @@ public class SystemService implements ISystemService {
                 }
                 Map<StoreDTO, Map<StoreProductDTO,Integer>> validCart = storeService.checkIfProductsInStores(cart);
                 
-                Map<Integer,Map<Integer,Integer>> newCart = new HashMap<>();
-                for (Map.Entry<StoreDTO, Map<StoreProductDTO,Integer>> entry : validCart.entrySet()) {
-                    int storeId = entry.getKey().getStoreId();
-                    Map<StoreProductDTO,Integer> products = entry.getValue();
-                    Map<Integer,Integer> newProducts = new HashMap<>();
-                    for (Map.Entry<StoreProductDTO,Integer> productEntry : products.entrySet()) {
-                        newProducts.put(productEntry.getKey().getProductId(), productEntry.getValue());
-                    }
-                    newCart.put(storeId, newProducts);
-                }
-                this.userService.setCart(userId, newCart);
+                this.userService.setCart(userId, convertStoreCartToUserCatt(validCart));
 
                 return new Response<>(validCart, "Cart retrieved successfully", true);
             } else {
@@ -827,7 +830,15 @@ public class SystemService implements ISystemService {
             logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder + " at card number: " + cardNumber);
         }
         //update quantity in store
-        //this.storeService.update
+        try{
+            Map<Integer,Map<Integer,Integer>> newCart = convertStoreCartToUserCatt(validCart);
+            this.storeService.decrementProductsQuantity(newCart,userId);
+            logger.info("System Service - User " + userId + " cart purchased successfully, products quantity updated in store");
+        }
+        catch (Exception e) {
+            logger.error("System Service - Error during updating products quantity in store: " + e.getMessage());
+            return new Response<String>(null, "Error during updating products quantity in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        }
         this.orderService.addOrderCart(validCart,prices, userId, address, paymentMethod);
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true);
 

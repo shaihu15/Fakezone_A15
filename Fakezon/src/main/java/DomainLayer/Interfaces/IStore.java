@@ -89,7 +89,7 @@ public interface IStore {
 
     void removeStoreManager(int requesterId, int toRemoveId);
 
-    List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy);
+    List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy, int userId);
 
     boolean isOwner(int userId);
 

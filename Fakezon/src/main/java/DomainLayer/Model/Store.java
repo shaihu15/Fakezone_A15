@@ -960,7 +960,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public synchronized List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy) {
+    public synchronized List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy, int userId) {
         List<StoreProductDTO> products = new ArrayList<>();
         for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
             int productId = entry.getKey();
@@ -970,10 +970,23 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
                         + storeID);
             }
-            if (storeProduct.getQuantity() < quantity) {
+            if(auctionProducts.containsKey(productId)){
+                AuctionProduct auctionProduct = auctionProducts.get(productId);
+                if(auctionProduct.getUserIDHighestBid() != userId  && !auctionProduct.isApprovedByAllOwners()){
+                    throw new IllegalArgumentException("User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
+                }
+                if(auctionProduct.getQuantity() < quantity) {
+                    throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+                }
+                auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
+                auctionProducts.remove(productId);
+            }
+            else if (storeProduct.getQuantity() < quantity) {
                 throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
             }
-            storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
+            else{
+                storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
+            }
             products.add(new StoreProductDTO(storeProduct, quantity));
         }
         
