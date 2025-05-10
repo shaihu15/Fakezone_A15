@@ -6,9 +6,9 @@ import java.util.Map;
 public class BasketDTO {
 
     private final Integer storeId;
-    private final Map<StoreProductDTO, Integer> products;
+    private final Map<StoreProductDTO, Boolean> products;
 
-    public BasketDTO(Integer storeId, Map<StoreProductDTO, Integer> products) {
+    public BasketDTO(Integer storeId, Map<StoreProductDTO, Boolean> products) {
         this.storeId = storeId;
         this.products = products;
     }
@@ -16,7 +16,7 @@ public class BasketDTO {
     public Integer getStoreId() {
         return storeId;
     }
-    public Map<StoreProductDTO, Integer> getProducts() {
+    public Map<StoreProductDTO, Boolean> getProducts() {
         return products;
     }
 }

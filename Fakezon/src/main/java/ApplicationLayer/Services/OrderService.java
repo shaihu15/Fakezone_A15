@@ -117,21 +117,19 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Integer>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod) {
+    public void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod) {
         try {
             List<OrderedProduct> orderedProducts = new ArrayList<>();
-            double totalPrice = 0.0;
-            for (Map.Entry<StoreDTO, Map<StoreProductDTO,Integer>> entry : cart.entrySet()) {
+            for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : cart.entrySet()) {
                 StoreDTO store = entry.getKey();
-                Map<StoreProductDTO,Integer> products = entry.getValue();
-                for (Map.Entry<StoreProductDTO,Integer> productEntry : products.entrySet()) {
+                Map<StoreProductDTO,Boolean> products = entry.getValue();
+                for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
                     StoreProductDTO storeProduct = productEntry.getKey();
-                    int quantity = productEntry.getValue();
-                    double price = prices.get(storeProduct.getProductId());
-                    totalPrice += price * quantity;
+                    int quantity = storeProduct.getQuantity();
                     orderedProducts.add(new OrderedProduct(storeProduct, quantity));
                 }
-                Order order = new Order(1, store.getStoreId(), userId, OrderState.PENDING, orderedProducts, address, paymentMethod, totalPrice);
+                double price = prices.get(store.getStoreId());
+                Order order = new Order(1, store.getStoreId(), userId, OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
                 orderRepository.addOrder(order);
             }
 

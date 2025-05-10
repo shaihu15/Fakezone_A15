@@ -339,7 +339,7 @@ public class NewSystemServiceAcceptanceTest {
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         int productId = storePResponse.getData().getProductId();
         systemService.addToBasket(userId, productId, storeId, 1);
-        Response<Map<StoreDTO,Map<StoreProductDTO,Integer>>> cart = systemService.viewCart(userId);
+        Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> cart = systemService.viewCart(userId);
         assertNotNull(cart, "Cart should not be null");
         assertTrue(cart.isSuccess(), "Cart retrieval should succeed");
         assertTrue(cart.getData().size() > 0, "Cart should contain products");

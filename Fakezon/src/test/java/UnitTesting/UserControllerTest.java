@@ -82,13 +82,13 @@ class UserControllerTest {
         StoreProductDTO storeProduct = new StoreProductDTO(productId, "Product", 10.0, quantity, 4.5, storeId, null);
         List<StoreProductDTO> cart = List.of(storeProduct);
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        Map<StoreProductDTO, Integer> storeProductMap = Map.of(storeProduct, quantity);
+        Map<StoreProductDTO, Boolean> storeProductMap = Map.of(storeProduct, true);
         StoreDTO storeDTO = mock(StoreDTO.class);
 
-        Map<StoreDTO, Map<StoreProductDTO, Integer>> cartMap = Map.of(storeDTO, storeProductMap);
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> cartMap = Map.of(storeDTO, storeProductMap);
         when(systemService.viewCart(userId)).thenReturn(new Response<>(cartMap, "Cart retrieved successfully", true));
 
-        ResponseEntity<Response<Map<StoreDTO,Map<StoreProductDTO,Integer>>>> response = userController.viewCart(token, userId);
+        ResponseEntity<Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>>> response = userController.viewCart(token, userId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Cart retrieved successfully", response.getBody().getMessage());
@@ -101,7 +101,7 @@ class UserControllerTest {
         String token = "invalidToken";
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<Map<StoreDTO, Map<StoreProductDTO, Integer>>>> response = userController.viewCart(token, userId);
+        ResponseEntity<Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>>> response = userController.viewCart(token, userId);
 
         assertEquals(401, response.getStatusCodeValue());
         assertEquals("Invalid token", response.getBody().getMessage());

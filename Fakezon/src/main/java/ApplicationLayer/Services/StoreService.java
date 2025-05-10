@@ -534,7 +534,7 @@ public class StoreService implements IStoreService {
             List<StoreProductDTO> productsFromStore = store.decrementProductsQuantity(basket, userId);
             if (productsFromStore != null) {
                 products.addAll(productsFromStore);
-                logger.info("Products decremented in store: " + storeId + " for user: " + basket.keySet().iterator().next());
+                logger.info("Products decremented in store: " + storeId + " for user: " + userId);
             } else {
                 logger.error("decrementProductsQuantity - Products not found in store: " + storeId);
                 throw new IllegalArgumentException("Products not found in store");
@@ -659,9 +659,9 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public Map<StoreDTO, Map<StoreProductDTO, Integer>> checkIfProductsInStores(
+    public Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(
             Map<Integer, Map<Integer, Integer>> cart) {
-        Map<StoreDTO, Map<StoreProductDTO, Integer>> result = new HashMap<>();
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> result = new HashMap<>();
         for (Map.Entry<Integer, Map<Integer, Integer>> entry : cart.entrySet()) {
             int storeId = entry.getKey();
             Map<Integer, Integer> products = entry.getValue();
@@ -670,7 +670,7 @@ public class StoreService implements IStoreService {
                 logger.error("checkIfProductsInStores - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            Map<StoreProductDTO, Integer> storeProducts = store.checkIfProductsInStore(products);
+            Map<StoreProductDTO, Boolean> storeProducts = store.checkIfProductsInStore(products);
             result.put(toStoreDTO(store), storeProducts);
         }
         return result;

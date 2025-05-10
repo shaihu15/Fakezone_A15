@@ -24,5 +24,5 @@ public interface IOrderService {
     int getOrderStoreId(int orderId);
     List<Integer> getOrderProductIds(int orderId);
     List<IOrder> getOrdersByStoreId(int storeId);
-    void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Integer>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod);
+    void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod);
 }

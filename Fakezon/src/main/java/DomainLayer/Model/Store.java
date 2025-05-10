@@ -1008,8 +1008,8 @@ public class Store implements IStore {
             throw new IllegalArgumentException("Product list is empty or null");
         }
         double amount = 0;
-        Map<StoreProductDTO, Integer> products = checkIfProductsInStore(productToBuy);
-        for (Map.Entry<StoreProductDTO, Integer> entry : products.entrySet()) {
+        Map<StoreProductDTO, Boolean> products = checkIfProductsInStore(productToBuy);
+        for (Map.Entry<StoreProductDTO, Boolean> entry : products.entrySet()) {
             StoreProductDTO product = entry.getKey();
             int productId = product.getProductId();
             if(!storeProducts.containsKey(productId)) {
@@ -1018,7 +1018,7 @@ public class Store implements IStore {
             }
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
-                if (!policy.canPurchase(dob, productId, entry.getValue())) {
+                if (!policy.canPurchase(dob, productId, product.getQuantity())) {
                     throw new IllegalArgumentException(
                             "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
                 }
@@ -1042,7 +1042,7 @@ public class Store implements IStore {
                     for(DiscountCondition condition : conditions) {
                         boolean con = products.entrySet().stream().anyMatch(e ->
                         e.getKey().getProductId() == condition.getTriggerProductId() &&
-                        e.getValue() < condition.getTriggerQuantity());
+                        e.getKey().getQuantity() < condition.getTriggerQuantity());
                         if (con){
                             isDiscountApplicable = false;
                             break;
@@ -1090,21 +1090,19 @@ public class Store implements IStore {
         return pending;
     }
 
-    public Map<StoreProductDTO, Integer> checkIfProductsInStore(Map<Integer,Integer> products) {
-        Map<StoreProductDTO, Integer> productsInStore = new HashMap<>();
+    @Override
+    public Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products) {
+        Map<StoreProductDTO, Boolean> productsInStore = new HashMap<>();
         for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
             int productId = entry.getKey();
             int quantity = entry.getValue();
             if (storeProducts.containsKey(productId)) {
                 StoreProduct storeProduct = storeProducts.get(productId);
                 if (storeProduct.getQuantity() >= quantity) {
-                    productsInStore.put(new StoreProductDTO(storeProduct), quantity);
+                    productsInStore.put(new StoreProductDTO(storeProduct, quantity), true);
                 } else {
-                    throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+                    productsInStore.put(new StoreProductDTO(storeProduct, quantity), false);
                 }
-            } else {
-                throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
-                        + storeID);
             }
         }
         return productsInStore;

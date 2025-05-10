@@ -121,15 +121,11 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
             return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
         }
-        try{
-            if (product == null) {
-                logger.error("System Service - Product not found: " + productId + " in store: " + storeId);
-                return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during getting product: " + e.getMessage());
-            return new Response<>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR);
+        if (product == null) {
+            logger.error("System Service - Product not found: " + productId + " in store: " + storeId);
+            return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT);
         }
+        
         if (product.getQuantity() < quantity) {
             logger.error("System Service - Not enough product in stock: " + productId + " in store: " + storeId);
             return new Response<>(null, "Not enough product in stock", false, ErrorType.INVALID_INPUT);
@@ -695,14 +691,15 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private Map<Integer, Map<Integer, Integer>> convertStoreCartToUserCatt(Map<StoreDTO,Map<StoreProductDTO,Integer>> cart) {
+    private Map<Integer, Map<Integer, Integer>> convertStoreCartToUserCatt(Map<StoreDTO,Map<StoreProductDTO,Boolean>> cart) {
         Map<Integer,Map<Integer,Integer>> newCart = new HashMap<>();
-                for (Map.Entry<StoreDTO, Map<StoreProductDTO,Integer>> entry : cart.entrySet()) {
+                for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : cart.entrySet()) {
                     int storeId = entry.getKey().getStoreId();
-                    Map<StoreProductDTO,Integer> products = entry.getValue();
+                    Map<StoreProductDTO,Boolean> products = entry.getValue();
                     Map<Integer,Integer> newProducts = new HashMap<>();
-                    for (Map.Entry<StoreProductDTO,Integer> productEntry : products.entrySet()) {
-                        newProducts.put(productEntry.getKey().getProductId(), productEntry.getValue());
+                    for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
+                        StoreProductDTO storeProduct = productEntry.getKey();
+                        newProducts.put(storeProduct.getProductId(), storeProduct.getQuantity());
                     }
                     newCart.put(storeId, newProducts);
                 }
@@ -710,7 +707,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Map<StoreDTO,Map<StoreProductDTO,Integer>>> viewCart(int userId) {
+    public Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId) {
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId)) {
@@ -719,7 +716,7 @@ public class SystemService implements ISystemService {
                     logger.error("System Service - Cart is empty: " + userId);
                     return new Response<>(null, "Cart is empty", false, ErrorType.INVALID_INPUT);
                 }
-                Map<StoreDTO, Map<StoreProductDTO,Integer>> validCart = storeService.checkIfProductsInStores(cart);
+                Map<StoreDTO, Map<StoreProductDTO,Boolean>> validCart = storeService.checkIfProductsInStores(cart);
                 
                 this.userService.setCart(userId, convertStoreCartToUserCatt(validCart));
 
@@ -785,7 +782,7 @@ public class SystemService implements ISystemService {
         Map<Integer,Double> prices = null;//storeId,price from store
         double totalPrice = 0;
         Cart cart = null;
-        Map<StoreDTO, Map<StoreProductDTO,Integer>> validCart = null;
+        Map<StoreDTO, Map<StoreProductDTO,Boolean>> validCart = null;
         try{
             logger.info("System service - user " + userId + " trying to purchase cart");
             cart = this.userService.getUserCart(userId);
@@ -805,6 +802,17 @@ public class SystemService implements ISystemService {
                 return new Response<String>(null, "User not found", false, ErrorType.INVALID_INPUT);
             }
             validCart = this.storeService.checkIfProductsInStores(cart.getAllProducts());
+            for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : validCart.entrySet()) {
+                StoreDTO store = entry.getKey();
+                Map<StoreProductDTO,Boolean> products = entry.getValue();
+                for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
+                    StoreProductDTO storeProduct = productEntry.getKey();
+                    if (productEntry.getValue() == false) {
+                        logger.error("System Service - Product is not available: " + storeProduct.getName());
+                        return new Response<String>(null, "Product is not available: " + storeProduct.getName(), false, ErrorType.INVALID_INPUT);
+                    }
+                }
+            }
             prices = this.storeService.calcAmount(userId,cart,dob);
             logger.info("System Service - User "+userId + "cart price: " + totalPrice);
             totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();

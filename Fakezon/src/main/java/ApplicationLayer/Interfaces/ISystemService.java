@@ -81,7 +81,7 @@ public interface ISystemService {
 
     Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 
-    Response<Map<StoreDTO,Map<StoreProductDTO,Integer>>> viewCart(int userId); // returns a list of products in the cart
+    Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 

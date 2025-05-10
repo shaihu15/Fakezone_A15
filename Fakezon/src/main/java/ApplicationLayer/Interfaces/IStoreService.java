@@ -125,6 +125,6 @@ public interface IStoreService {
 
   List<Integer> getPendingManagers(int storeId, int requesterId);
 
-  Map<StoreDTO, Map<StoreProductDTO, Integer>> checkIfProductsInStores(Map<Integer, Map<Integer, Integer>> cart);
+  Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(Map<Integer, Map<Integer, Integer>> cart);
 
 }

@@ -112,4 +112,6 @@ public interface IStore {
     void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
     
     double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
+
+    Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products);
 }
