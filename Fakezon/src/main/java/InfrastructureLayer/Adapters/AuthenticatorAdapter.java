@@ -12,6 +12,9 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Model.Registered;
 import InfrastructureLayer.Security.TokenService;
 
+import ApplicationLayer.Response;
+import ApplicationLayer.Enums.ErrorType;
+
 public class AuthenticatorAdapter implements IAuthenticator {
     private TokenService tokenService;
     private IUserService userService;
@@ -23,7 +26,7 @@ public class AuthenticatorAdapter implements IAuthenticator {
     }
 
     @Override
-    public String register(String email, String password, LocalDate dateOfBirth, String country) {
+    public Response<String> register(String email, String password, LocalDate dateOfBirth, String country) {
         try {
             logger.info("Registering user with email: {}", email);
             UserDTO userDTO = userService.registerUser(email, password, dateOfBirth, country);
@@ -31,14 +34,18 @@ public class AuthenticatorAdapter implements IAuthenticator {
                 logger.info("User registered successfully: {}", userDTO.getUserEmail());
                 // Generate a token for the registered user with userId
                 String token = tokenService.generateToken(userDTO.getUserEmail(), userDTO.getUserId());
-                return token;
+                //return token;
+                return new Response<>(token, "Registration successful", true, null, token);
             } else {
                 logger.error("User registration failed for email: {}", email);
-                return null; // Registration failed
+                //return null; // Registration failed
+                return new Response<>(null, "Registration failed", false, ErrorType.INTERNAL_ERROR, null);
             }
         } catch (Exception e) {
             logger.error("Error during user registration: {}", e.getMessage());
-            return null; // Registration failed
+            //return null; // Registration failed
+            return new Response<>(null, "Registration failed: " + e.getMessage(), false, ErrorType.INVALID_INPUT, null);
+
         }
     }
 
@@ -84,5 +91,13 @@ public class AuthenticatorAdapter implements IAuthenticator {
     }
     public int getUserId(String sessionToken) {
         return tokenService.extractUserId(sessionToken);
+    }
+
+    public String generateGuestToken(){
+        return tokenService.generateGuestToken();
+    }
+
+    public Boolean isGuestToken(String token){
+        return tokenService.isGuestToken(token);
     }
 }

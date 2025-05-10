@@ -20,12 +20,12 @@ public class HomeController {
     @GetMapping("/")
     public ResponseEntity<Response<String>> home() {
         try{
-            Response<String> test = new Response<String>("home", "Welcome to the home page!", true);
+            Response<String> test = new Response<String>("home", "Welcome to the home page!", true, null, null);
             return ResponseEntity.ok(test);
         }
         catch (Exception e){
             logger.error("Error in home controller: {}", e.getMessage());
-            Response<String> test = new Response<String>(null, "An error occurred at the controller level ", false, ErrorType.INTERNAL_ERROR);
+            Response<String> test = new Response<String>(null, "An error occurred at the controller level ", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(test);
         }
     }
