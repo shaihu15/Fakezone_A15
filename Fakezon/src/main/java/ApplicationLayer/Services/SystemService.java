@@ -826,6 +826,8 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during delivery: " + e.getMessage());
             logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder + " at card number: " + cardNumber);
         }
+        //update quantity in store
+        //this.storeService.update
         this.orderService.addOrderCart(validCart,prices, userId, address, paymentMethod);
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true);
 

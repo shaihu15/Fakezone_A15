@@ -2,6 +2,7 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -520,22 +521,28 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public StoreProductDTO decrementProductQuantity(int productId, int storeId, int quantity) {
-        Store store = storeRepository.findById(storeId);
-        StoreProductDTO prod;
-        if (store == null) {
-            logger.error("decrementProductQuantity - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
+    public List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy) {
+        List<StoreProductDTO> products = new ArrayList<>();
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : productsToBuy.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> basket = entry.getValue();
+            Store store = storeRepository.findById(storeId);
+            if (store == null) {
+                logger.error("decrementProductsQuantity - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            List<StoreProductDTO> productsFromStore = store.decrementProductsQuantity(basket);
+            if (productsFromStore != null) {
+                products.addAll(productsFromStore);
+                logger.info("Products decremented in store: " + storeId + " for user: " + basket.keySet().iterator().next());
+            } else {
+                logger.error("decrementProductsQuantity - Products not found in store: " + storeId);
+                throw new IllegalArgumentException("Products not found in store");
+            }
+            
         }
-        try {
-            prod = store.decrementProductQuantity(productId, quantity);
-
-        } catch (Exception e) {
-            logger.error("decrementProductQuantity - Product not found: " + productId);
-            throw new IllegalArgumentException("Product not found");
-        }
-        logger.info("Product quantity decremented: " + productId + " in store: " + storeId);
-        return prod;
+        return products;
+        
     }
 
     @Override

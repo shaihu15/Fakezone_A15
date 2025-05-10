@@ -355,7 +355,6 @@ public class Store implements IStore {
                 }
                 else {
                     this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID, auctionProduct.getBasePrice(),"Auction failed, no bids were placed"));
-                    auctionProducts.remove(productID);
                 }
             } else {
                 throw new IllegalArgumentException("Auction for product with ID: " + productID + " has not ended yet.");
@@ -961,18 +960,24 @@ public class Store implements IStore {
     }
 
     @Override
-    public synchronized StoreProductDTO decrementProductQuantity(int productId, int quantity) {
-        StoreProduct storeProduct = storeProducts.get(productId);
-        if (storeProduct == null) {
-            throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
-                    + storeID);
+    public synchronized List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy) {
+        List<StoreProductDTO> products = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
+            StoreProduct storeProduct = storeProducts.get(productId);
+            if (storeProduct == null) {
+                throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
+                        + storeID);
+            }
+            if (storeProduct.getQuantity() < quantity) {
+                throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+            }
+            storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
+            products.add(new StoreProductDTO(storeProduct, quantity));
         }
-        if (storeProduct.getQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
-        }
-        storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
-        return new StoreProductDTO(storeProduct.getSproductID(), storeProduct.getName(), storeProduct.getBasePrice(),
-                    quantity, storeProduct.getAverageRating(), storeID, storeProduct.getCategory());
+        
+        return products;
     }
 
     private boolean hasInventoryPermissions(int id){
@@ -1007,7 +1012,7 @@ public class Store implements IStore {
             }
             if(auctionProducts.containsKey(productId)){
                 AuctionProduct auctionProduct = auctionProducts.get(productId);
-                if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.getDaysToEnd() <= 0){
+                if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isApprovedByAllOwners()){
                     amount += auctionProduct.getCurrentHighestBid();
                 }
             }

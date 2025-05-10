@@ -105,7 +105,7 @@ public interface IStoreService {
 
   Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId);
 
-  StoreProductDTO decrementProductQuantity(int productId, int storeId, int quantity);
+  List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy);
 
   void removeProductFromStore(int storeId, int requesterId, int productId);
 
