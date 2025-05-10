@@ -170,5 +170,15 @@ public class TestHelper {
         return resultAddStore;
     }
 
+       public Response<Integer> openStore(int userId){
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
+        if(!resultAddStore.isSuccess()){
+            return null;
+        }
+        return resultAddStore;
+    }
+
+
+
 
 }
