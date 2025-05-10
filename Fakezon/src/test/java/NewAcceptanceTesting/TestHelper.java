@@ -157,6 +157,26 @@ public class TestHelper {
         return loginResult;
     }
 
+        public Response<UserDTO> register_and_login2(){
+        String validEmail2 = validEmail2();
+        String validPassword2 = validPassword2();
+        String validBirthDay = validBirthDate_Over18();
+        String validCountry = validCountry();
+        Response<String> result = systemService.guestRegister(validEmail2, validPassword2, validBirthDay, validCountry );
+
+        if(!result.isSuccess()){
+            return null;
+        }
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail2, validPassword2);
+        Response<UserDTO> loginResult = loginResponse.isSuccess() 
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+
     public Response<Integer> openStore(){
         Response<UserDTO> loginResult = register_and_login();
         if(loginResult == null){
@@ -168,6 +188,34 @@ public class TestHelper {
             return null;
         }
         return resultAddStore;
+    }
+
+    public Response<StoreProductDTO> addProductToStore(int storeId, int userId) {
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        assertNotNull(storePResponse.getData());
+
+        if (storePResponse.isSuccess()) {
+            return storePResponse;
+        } else {
+            return null;
+        }
+    }
+
+        public Response<StoreProductDTO> addProductToStore2(int storeId, int userId) {
+        String productName = "Test Product2";
+        String productDescription = "Test Description2";
+        String category = PCategory.BOOKS.toString();
+        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
+        assertNotNull(storePResponse.getData());
+
+        if (storePResponse.isSuccess()) {
+            return storePResponse;
+        } else {
+            return null;
+        }
     }
 
        public Response<Integer> openStore(int userId){
