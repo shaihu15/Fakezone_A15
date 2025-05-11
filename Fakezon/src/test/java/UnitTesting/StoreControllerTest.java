@@ -7,6 +7,8 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Response;
+import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.Store;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import com.fakezone.fakezone.controller.StoreController;
 import org.junit.jupiter.api.BeforeEach;
@@ -958,7 +960,7 @@ class StoreControllerTest {
     void testAddStoreManagerPermissions_InvalidToken() {
         int storeId = 1;
         int managerId = 1;
-        List<String> permissions = List.of("VIEW_ORDERS");
+        List<String> permissions = List.of("VIEW_PURCHASES");
         String token = "invalid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
@@ -970,6 +972,117 @@ class StoreControllerTest {
         assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
         verify(systemService, never()).addStoreManagerPermissions(anyInt(), anyString(), anyInt(), anyList());
     }
+    @Test
+    void testRatingStoreProduct_Success() {
+        int storeId = 1;
+        int productId = 1;
+        int userId = 1;
+        double rating = 4.5;
+        String comment = "Great product!";
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.ratingStoreProduct(storeId, productId, userId, rating, comment))
+                .thenReturn(new Response<>(null, "Product rated successfully", true, null, null));
+
+        ResponseEntity<Response<Void>> response = storeController.ratingStoreProduct(storeId, productId, userId, rating, comment, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        verify(systemService, times(1)).ratingStoreProduct(storeId, productId, userId, rating, comment);
+    }
+
+    @Test
+    void testRatingStoreProduct_InvalidToken() {
+        int storeId = 1;
+        int productId = 1;
+        int userId = 1;
+        double rating = 4.5;
+        String comment = "Great product!";
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Void>> response = storeController.ratingStoreProduct(storeId, productId, userId, rating, comment, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        verify(systemService, never()).ratingStoreProduct(anyInt(), anyInt(), anyInt(), anyDouble(), anyString());
+    }
+
+
+
+    @Test
+    void testRemoveStoreManagerPermissions_InvalidToken() {
+        int storeId = 1;
+        int managerId = 1;
+        String token = "invalid-token";
+        Request<List<String>> request = new Request<>(token, List.of("VIEW_PURCHASES"));
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        verify(systemService, never()).removeStoreManagerPermissions(anyInt(), anyString(), anyInt(), anyList());
+    }
+
+    @Test
+    void testAddStoreManagerPermissions_Success() {
+        int storeId = 1;
+        int managerId = 1;
+        List<String> permissions = List.of("VIEW_PURCHASES");
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addStoreManagerPermissions(storeId, token, managerId, permissions.stream()
+                .map(StoreManagerPermission::valueOf)
+                .toList()))
+                .thenReturn(new Response<>(null, "Permissions added successfully", true, null, null));
+
+        ResponseEntity<Response<Void>> response = storeController.addStoreManagerPermissions(storeId, managerId, permissions, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        verify(systemService, times(1)).addStoreManagerPermissions(storeId, token, managerId, permissions.stream()
+                .map(StoreManagerPermission::valueOf)
+                .toList());
+    }
+
+
+    @Test
+    void testSendResponseForAuctionByOwner_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        boolean accept = true;
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<String>> response = storeController.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        verify(systemService, never()).sendResponseForAuctionByOwner(anyInt(), anyInt(), anyInt(), anyBoolean());
+    }
+
+
+    @Test
+    void testGetPendingManagers_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<List<Integer>>> response = storeController.getPendingManagers(storeId, requesterId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        verify(systemService, never()).getPendingManagers(anyInt(), anyInt());
+    }
+
 
 
 }

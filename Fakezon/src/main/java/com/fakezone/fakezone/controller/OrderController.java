@@ -1,6 +1,7 @@
 package com.fakezone.fakezone.controller;
 
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
 import ApplicationLayer.RequestDataTypes.RequestOrderDataType;
@@ -41,7 +42,7 @@ public class OrderController {
         }
         catch (Exception e){
             logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while deleting the order", false, null, null));
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while deleting the order", false, ErrorType.INTERNAL_ERROR, null));
         }
     }
 
@@ -57,7 +58,7 @@ public class OrderController {
         }
         catch (Exception e){
             logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while viewing the order", false, null, null));
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while viewing the order", false, ErrorType.INTERNAL_ERROR, null));
         }
     }
 
@@ -73,7 +74,7 @@ public class OrderController {
         }
         catch (Exception e){
             logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while searching for orders", false, null, null));
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while searching for orders", false, ErrorType.INTERNAL_ERROR, null));
         }
     }
 
@@ -89,7 +90,7 @@ public class OrderController {
         }
         catch (Exception e){
             logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while getting orders by store ID", false, null, null));
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while getting orders by store ID", false, ErrorType.INTERNAL_ERROR, null));
         }
     }
 

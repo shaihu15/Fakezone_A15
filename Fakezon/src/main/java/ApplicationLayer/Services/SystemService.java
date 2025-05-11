@@ -1023,7 +1023,7 @@ public class SystemService implements ISystemService {
     public Response<Boolean> deleteOrder(int orderId, String token) {
         try {
             if(!this.isAuth(token)){
-                return new Response<>(false, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
             }
             int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
