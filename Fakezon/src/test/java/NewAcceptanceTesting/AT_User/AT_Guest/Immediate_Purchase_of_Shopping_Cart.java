@@ -295,5 +295,81 @@ public class Immediate_Purchase_of_Shopping_Cart {
         //add more asserts to check the order details, stock updates, etc.
     }
 
+    @Test
+    void testImmediatePurchase_CreditSystemRejection_Failure() {
+        // Setup: User with a valid cart
+        Response<UserDTO> resultRegister1 = testHelper.register_and_login();
+        assertNotNull(resultRegister1.getData());
+        int StoreFounderId = resultRegister1.getData().getUserId();
+        // StoreFounder is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(StoreFounderId, "Store1");
+        assertNotNull(storeResult.getData());
+        int storeId = storeResult.getData();
+        // The store is open
+
+        Response<UserDTO> resultRegister2 = testHelper.register_and_login2();
+        assertNotNull(resultRegister2.getData());
+        int registeredId = resultRegister2.getData().getUserId();
+        // User is registered and logged in
+
+        Response<StoreProductDTO> storePResponse = testHelper.addProductToStore(storeId, StoreFounderId);
+        assertNotNull(storePResponse.getData());
+        int productIdInt = storePResponse.getData().getProductId();
+        // The product is added to the store
+
+        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productIdInt, 1);
+        assertTrue(responseAddToBasket.isSuccess());
+        // User added the product to the basket
+
+        // Simulate rejection from the credit system
+        Response<String> responsePurchaseCart = systemService.purchaseCart(
+                registeredId, testHelper.validCountry(), LocalDate.now(), null, null,
+                null, null, null, null, null,
+                null, null);
+    
+
+        assertFalse(responsePurchaseCart.isSuccess());
+        assertEquals("Payment failed", responsePurchaseCart.getMessage());
+    }
+
+    @Test
+    void testImmediatePurchase_ShippingSystemRejection_Failure() {
+        // Setup: User with a valid cart
+        Response<UserDTO> resultRegister1 = testHelper.register_and_login();
+        assertNotNull(resultRegister1.getData());
+        int StoreFounderId = resultRegister1.getData().getUserId();
+        // StoreFounder is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(StoreFounderId, "Store1");
+        assertNotNull(storeResult.getData());
+        int storeId = storeResult.getData();
+        // The store is open
+
+        Response<UserDTO> resultRegister2 = testHelper.register_and_login2();
+        assertNotNull(resultRegister2.getData());
+        int registeredId = resultRegister2.getData().getUserId();
+        // User is registered and logged in
+
+        Response<StoreProductDTO> storePResponse = testHelper.addProductToStore(storeId, StoreFounderId);
+        assertNotNull(storePResponse.getData());
+        int productIdInt = storePResponse.getData().getProductId();
+        // The product is added to the store
+
+        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productIdInt, 1);
+        assertTrue(responseAddToBasket.isSuccess());
+        // User added the product to the basket
+
+        
+        Response<String> responsePurchaseCart = systemService.purchaseCart(
+                registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
+                null, "1234567890123456", "cardHolder",
+                "12/25", "123", null, "Recipient",
+                "Package details");
+
+        // Assert: Purchase fails, no credit is charged
+        assertFalse(responsePurchaseCart.isSuccess());
+        assertEquals("Delivery failed", responsePurchaseCart.getMessage());
+    }
 
 }

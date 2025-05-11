@@ -827,15 +827,23 @@ public class SystemService implements ISystemService {
             return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
         try {
-            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
-            logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
+            if(this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
+                logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
+            else
+                return new Response<String>(null, "Payment failed", false, ErrorType.INVALID_INPUT, null);
+            //this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
+            //logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
         } catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());
             return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
         try {
-            this.deliveryService.deliver(country, address, recipient, packageDetails);
-            logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
+            if(this.deliveryService.deliver(country, address, recipient, packageDetails))
+                logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
+            else
+                return new Response<String>(null, "Delivery failed", false, ErrorType.INVALID_INPUT, null);
+            //this.deliveryService.deliver(country, address, recipient, packageDetails);
+            //logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
 
         } catch (Exception e) {
             this.paymentService.refund(cardNumber,totalPrice);
