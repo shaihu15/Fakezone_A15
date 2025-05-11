@@ -20,6 +20,10 @@ public class PaymentAdapter implements IPayment {
     @Override
     public boolean pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount) {
         logger.info("Attempting payment for " + cardHolder + ", amount: " + amount);
+        if (cardNumber == null || cardHolder == null || expDate == null || cvv == null) {
+            logger.error("Payment failed due to missing information for " + cardHolder);
+            return false;
+        }
         boolean result = externalSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
         if (result) {
             logger.info("Payment succeeded for " + cardHolder);

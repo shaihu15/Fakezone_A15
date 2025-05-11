@@ -17,6 +17,10 @@ public class DeliveryAdapter implements IDelivery {
     @Override
     public boolean deliver(String country, String address, String recipient, String packageDetails) {
         logger.info("Attempting delivery to "+country+" to " + recipient + " at " + address + ": " + packageDetails);
+        if (country == null || address == null || recipient == null || packageDetails == null) {
+            logger.error("Delivery failed due to missing information for " + recipient);
+            return false;
+        }
         boolean result = externalSystem.sendPackage(address, recipient, packageDetails);
         if (result) {
             logger.info("Delivery succeeded for " + recipient);
