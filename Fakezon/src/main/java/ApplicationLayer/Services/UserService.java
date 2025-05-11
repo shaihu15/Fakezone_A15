@@ -702,27 +702,7 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Error getting all unsigned users: " + e.getMessage());
         }
     }
-    
-    /**
-     * Update an unsigned user
-     * 
-     * @param user The user to update
-     * @throws IllegalArgumentException If the user doesn't exist
-     */
-    @Override
-    public void updateUnsignedUser(User user) {
-        try {
-            userRepository.updateUnsignedUser(user);
-            logger.info("Updated unsigned user with ID: " + user.getUserId());
-        } catch (IllegalArgumentException e) {
-            logger.error("Failed to update unsigned user: " + e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            logger.error("Error during updating unsigned user: " + e.getMessage());
-            throw new IllegalArgumentException("Error updating unsigned user: " + e.getMessage());
-        }
-    }
-    
+
     /**
      * Remove an unsigned user from the repository
      * 

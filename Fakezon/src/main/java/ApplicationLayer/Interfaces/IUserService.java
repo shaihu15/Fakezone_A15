@@ -96,8 +96,6 @@ public interface IUserService {
     
     List<User> getAllUnsignedUsers();
     
-    void updateUnsignedUser(User user);
-    
     boolean removeUnsignedUser(int userId);
     
     boolean isUnsignedUser(int userId);

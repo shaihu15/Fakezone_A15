@@ -1499,21 +1499,6 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<Void> updateUnsignedUser(User user) {
-        try {
-            userService.updateUnsignedUser(user);
-            logger.info("System Service - Updated unsigned user with ID: " + user.getUserId());
-            return new Response<>(null, "Unsigned user updated successfully", true, null, null);
-        } catch (IllegalArgumentException e) {
-            logger.error("System Service - Failed to update unsigned user: " + e.getMessage());
-            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        } catch (Exception e) {
-            logger.error("System Service - Error during updating unsigned user: " + e.getMessage());
-            return new Response<>(null, "Error updating unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }
-    }
-    
-    @Override
     public Response<Boolean> removeUnsignedUser(int userId) {
         try {
             boolean removed = userService.removeUnsignedUser(userId);
