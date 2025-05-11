@@ -1,27 +1,16 @@
 package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-
-import DomainLayer.Model.Product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.util.*;
-
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Services.OrderService;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Basket;
-import DomainLayer.Model.Order;
 import DomainLayer.Model.Store;
 
 public class OrderServiceTest {

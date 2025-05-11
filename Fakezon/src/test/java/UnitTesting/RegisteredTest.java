@@ -1,6 +1,8 @@
 package UnitTesting;
 
 import java.time.LocalDate;
+import java.time.Period;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,13 +17,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 
 public class RegisteredTest {
     private Registered registeredUser;
-    private String email = "email@com";
+    private String email = "email@gmail.com";
     private String password = "password1234";
     private int userID;
     private String country = "IL";
@@ -164,6 +168,52 @@ public class RegisteredTest {
         assertEquals(order, registeredUser.getOrders().get(orderID),
                 "Order should be saved successfully");
     }
+    @Test
+    public void testSendMessageToStore_Sucssses() {
+        registeredUser.sendMessageToStore(1, "Hello Store!");
+        HashMap<Integer, String> messages = registeredUser.getMessagesFromUser();
+        assertEquals("Hello Store!", messages.get(1));
+    }
+    @Test
+    public void testAddRoleAndGetRole() {
+        IRegisteredRole role = mock(IRegisteredRole.class);
+        registeredUser.addRole(1, role);
+        assertEquals(role, registeredUser.getRoleByStoreID(1));
+    }
+        @Test
+    public void testRemoveRole() {
+        IRegisteredRole role = mock(IRegisteredRole.class);
+        registeredUser.addRole(1, role);
+        registeredUser.removeRole(1);
+        assertNull(registeredUser.getRoleByStoreID(1));
+    }
 
+    @Test
+    public void testRemoveRoleThrowsIfMissing() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            registeredUser.removeRole(999);
+        });
+    }
 
+    @Test
+    public void testSaveOrderAndGetOrders() {
+        OrderDTO order = mock(OrderDTO.class);
+        when(order.getOrderId()).thenReturn(123);
+        registeredUser.saveOrder(order);
+        assertEquals(order, registeredUser.getOrders().get(123));
+    }
+
+    @Test
+    public void testDidPurchaseProductAndStore() {
+        registeredUser.setproductsPurchase(1, List.of(101, 102));
+        assertTrue(registeredUser.didPurchaseStore(1));
+        assertTrue(registeredUser.didPurchaseProduct(1, 101));
+        assertFalse(registeredUser.didPurchaseProduct(1, 999));
+    }
+
+    @Test
+    public void testToDTO() {
+        UserDTO dto = registeredUser.toDTO();
+        assertEquals("email@gmail.com", dto.getUserEmail());
+    }
 }
