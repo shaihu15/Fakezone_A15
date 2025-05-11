@@ -5,43 +5,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.access.method.P;
 
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
 import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
+
 
 
 public class TestHelper {
@@ -59,12 +30,20 @@ public class TestHelper {
         return "user2@gmail.com";
     }
 
+    public String validEmail3() {
+        return "user3@gmail.com";
+    }
+
     public String validPassword() {
         return "StrongPass123";
     }
 
     public String validPassword2() {
         return "StrongPass1234";
+    }
+
+    public String validPassword3() {
+        return "StrongPass12345";
     }
 
     public String invalidEmail() {
@@ -99,20 +78,6 @@ public class TestHelper {
         return "TestStore" + System.currentTimeMillis();
     }
 
-    /*/
-    public String validStoreDescription() {
-        return "This is a test store description.";
-    }
-
-    public String validProductName() {
-        return "TestProduct" + System.currentTimeMillis();
-    }
-
-    public String validProductDescription() {
-        return "This is a test product description.";
-    }
-
-    */
 
     public Response<String> registerUser(String email, String password, String birthDate, String country) {
         Response<String> result = systemService.guestRegister(email, password, birthDate, country);
@@ -168,6 +133,26 @@ public class TestHelper {
             return null;
         }
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail2, validPassword2);
+        Response<UserDTO> loginResult = loginResponse.isSuccess() 
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+
+        public Response<UserDTO> register_and_login3(){
+        String validEmail = validEmail3();
+        String validPassword = validPassword3();
+        String validBirthDay = validBirthDate_Over18();
+        String validCountry = validCountry();
+        Response<String> result = systemService.guestRegister(validEmail, validPassword, validBirthDay, validCountry );
+
+        if(!result.isSuccess()){
+            return null;
+        }
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail, validPassword);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
             : new Response<>(null, loginResponse.getMessage(), false, null, null);

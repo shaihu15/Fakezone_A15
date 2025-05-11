@@ -79,8 +79,8 @@ public class Save_Products_in_Purchase_Basket {
         int StoreFounderId = resultRegister1.getData().getUserId();
         // StoreFounder is registered and logged in
 
-        Response<Integer> storeResult = systemService.addStore(StoreFounderId, "Store1");
-        assertNotNull(storeResult.getData());
+        Response<Integer> storeResult = systemService.addStore(StoreFounderId, "StoreSuccess");
+        assertTrue(storeResult.isSuccess());
         int storeId = storeResult.getData(); 
         //the store is open
 
@@ -90,13 +90,14 @@ public class Save_Products_in_Purchase_Basket {
         // StoreFounder is registered and logged in
 
         Response<StoreProductDTO> storePResponse = testHelper.addProductToStore(storeId, StoreFounderId); 
+        assertTrue(storePResponse.isSuccess());
         int productIdInt = storePResponse.getData().getProductId();
         //the product is added to the store
 
         Response<Void> response = systemService.addToBasket(registeredId, storeId, productIdInt, 1); 
 
         assertTrue(response.isSuccess());
-        assertEquals("Product added to basket successfully", response.getMessage());
+        assertEquals("Product added to basket successfully", response.getMessage()); 
     }
  
     @Test
@@ -119,7 +120,7 @@ public class Save_Products_in_Purchase_Basket {
         Response<Void> response = systemService.addToBasket(registeredId,9 , storeId, 1); // Assuming productId 9 is out of stock
 
         assertFalse(response.isSuccess());
-        assertEquals("Error during adding to basket: Product with ID: 9 does not exist in store ID: 1", response.getMessage());
+        assertEquals("Error during adding to basket: Product with ID: 9 does not exist in store ID: "+storeId, response.getMessage());
     }
 
     @Test
