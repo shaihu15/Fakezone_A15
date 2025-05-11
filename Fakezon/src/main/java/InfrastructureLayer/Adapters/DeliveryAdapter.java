@@ -3,7 +3,7 @@ package InfrastructureLayer.Adapters;
 import DomainLayer.Interfaces.IDelivery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import InfrastructureLayer.Adapters.ExternalDeliverySystem;
 public class DeliveryAdapter implements IDelivery {
     private final ExternalDeliverySystem externalSystem;
     private final Logger logger = LoggerFactory.getLogger(DeliveryAdapter.class);
@@ -11,7 +11,9 @@ public class DeliveryAdapter implements IDelivery {
     public DeliveryAdapter() {
         this.externalSystem = new ExternalDeliverySystem();
     }
-
+    public DeliveryAdapter(ExternalDeliverySystem externalSystem) {
+        this.externalSystem = externalSystem;
+    }
     @Override
     public boolean deliver(String country, String address, String recipient, String packageDetails) {
         logger.info("Attempting delivery to "+country+" to " + recipient + " at " + address + ": " + packageDetails);
@@ -25,14 +27,4 @@ public class DeliveryAdapter implements IDelivery {
         }
     }
 }
-// Mock external system and log for demonstration
-class ExternalDeliverySystem {
-    public boolean sendPackage(String address, String recipient, String packageDetails) {
-        // Simulate always successful delivery
-        return true;
-    }
-    public boolean cancelPackage(int deliveryId) {
-        // Simulate always successful cancellation
-        return true;
-    }
-}
+
