@@ -34,6 +34,8 @@ import NewAcceptanceTesting.TestHelper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.AfterEach;
+
 public class Save_Products_in_Purchase_Basket {
     //Use-case: 2.3 Save Products in Purchase Basket 
 
@@ -72,8 +74,9 @@ public class Save_Products_in_Purchase_Basket {
     }
 
 
+
     @Test
-    void testSuccessfulProductAddition_RegisteredUser_Success() {
+    void testProductAddition_RegisteredUser_Success() {
         Response<UserDTO> resultRegister1 = testHelper.register_and_login();
         assertNotNull(resultRegister1.getData());
         int StoreFounderId = resultRegister1.getData().getUserId();
@@ -81,7 +84,8 @@ public class Save_Products_in_Purchase_Basket {
 
         Response<Integer> storeResult = systemService.addStore(StoreFounderId, "StoreSuccess");
         assertTrue(storeResult.isSuccess());
-        int storeId = storeResult.getData(); 
+        int storeId1 = storeResult.getData(); 
+        System.out.println("storeId1: " + storeId1);
         //the store is open
 
         Response<UserDTO> resultRegister2 = testHelper.register_and_login2();
@@ -89,12 +93,12 @@ public class Save_Products_in_Purchase_Basket {
         int registeredId = resultRegister2.getData().getUserId();
         // StoreFounder is registered and logged in
 
-        Response<StoreProductDTO> storePResponse = testHelper.addProductToStore(storeId, StoreFounderId); 
+        Response<StoreProductDTO> storePResponse = testHelper.addProductToStore2(storeId1, StoreFounderId); 
         assertTrue(storePResponse.isSuccess());
         int productIdInt = storePResponse.getData().getProductId();
         //the product is added to the store
 
-        Response<Void> response = systemService.addToBasket(registeredId, storeId, productIdInt, 1); 
+        Response<Void> response = systemService.addToBasket(registeredId, storeId1, productIdInt, 1); 
 
         assertTrue(response.isSuccess());
         assertEquals("Product added to basket successfully", response.getMessage()); 
