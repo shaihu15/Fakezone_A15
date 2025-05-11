@@ -156,8 +156,6 @@ public interface ISystemService {
     
     Response<List<User>> getAllUnsignedUsers(int adminId);
     
-    Response<Void> updateUnsignedUser(User user);
-    
     Response<Boolean> removeUnsignedUser(int userId);
     
     Response<Boolean> isUnsignedUser(int userId);
