@@ -1133,7 +1133,7 @@ public class SystemService implements ISystemService {
             
             String token = this.authenticatorService.login(email, password);
             UserDTO user = this.userService.login(email, password);
-            return new Response<>(new AbstractMap.SimpleEntry<>(user, token), "Successful Login", true, null, null);
+            return new Response<>(new AbstractMap.SimpleEntry<>(user, token), "Successful Login", true, null, token);
         } catch (Exception e) {
             logger.error("System Service - Login failed: " + e.getMessage());
             return new Response<>(null, "Login failed: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);

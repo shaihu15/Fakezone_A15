@@ -258,7 +258,8 @@ public class UserController {
             Response<AbstractMap.SimpleEntry<UserDTO, String>> response = systemService.login(email, password);
             Response<UserDTO> userResponse;
             if (response.isSuccess()) {
-                userResponse = new Response<UserDTO>(response.getData().getKey(), response.getMessage(), true, null, null);
+                String token = response.getToken();
+                userResponse = new Response<UserDTO>(response.getData().getKey(), response.getMessage(), true, null, token);
                 return ResponseEntity.ok(userResponse);
             }
             userResponse = new Response<>(null, response.getMessage(), false, response.getErrorType(), null);
