@@ -53,7 +53,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
+    RestTemplate restTemplate;
     public MainLayout() {
+        restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
         createHeader();
     }
@@ -65,7 +68,6 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         String token = (String) session.getAttribute("token");
         if (token == null) {
-            RestTemplate restTemplate = new RestTemplate();
             String url = "http://localhost:8080/api/user/generateGuestToken";
             try{
                 ResponseEntity<Response> apiResponse = restTemplate.getForEntity(url, Response.class);
@@ -153,21 +155,15 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
-        RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/api/user/isGuestToken";
-        try{
-            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
-            Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
-            if(response.isSuccess()){
-                return response.getData();
-            }
-            else{
-               Notification.show(response.getMessage());
-               return true;
-            }
+        ResponseEntity<Response<Boolean>> apiResponse = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(token), new ParameterizedTypeReference<Response<Boolean>>() {});
+        
+        Response<Boolean> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
         }
-        catch(Exception e){
-            Notification.show(e.getMessage());
+        else{
+            Notification.show(response.getMessage());
             return true;
         }
     }
@@ -258,29 +254,23 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         RegisterUserRequest regReq = new RegisterUserRequest(registerEmailField.getValue(), registerPasswordField.getValue(), dobField.getValue(), getCountryCodeFromName(countryComboBox.getValue()));
         Request<RegisterUserRequest> req = new Request<RegisterUserRequest>(token, regReq);
-        RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/api/user/register";
-        try{
-            ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(req),
-                new ParameterizedTypeReference<Response<String>>() {}
-            );
-            Response<String> response = (Response<String>) apiResponse.getBody();
-            if(response.isSuccess()){
-                Notification.show("Registered succefully");
-            }
-            else{
-               Notification.show(response.getMessage());
-            }
+    
+        ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(req),
+            new ParameterizedTypeReference<Response<String>>() {}
+        );
+        Response<String> response = (Response<String>) apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Registered succefully");
         }
-        catch(Exception e){
-            Notification.show(e.getMessage());
+        else{
+            Notification.show(response.getMessage());
         }
-        finally{
-            registerDialog.close();
-        }
+    
+        registerDialog.close();
 
     }
 
@@ -349,28 +339,21 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         LoginRequest logReq = new LoginRequest(loginEmailField.getValue(), loginPasswordField.getValue());
         Request<LoginRequest> req = new Request<LoginRequest>(token, logReq);
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = "http://localhost:8080/api/user/login";
-        try{
-            ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(req),
-                new ParameterizedTypeReference<Response<UserDTO>>() {}
-            );            
-            Response<UserDTO> response = apiResponse.getBody();
-            if(response.isSuccess()){
-                session.setAttribute("token", response.getToken());
-                session.setAttribute("userDTO", response.getData());
-                UI.getCurrent().getPage().reload();
-            }
-            else{
-                loginDialog.add(new Paragraph(response.getMessage()));
-            }
+        ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(req),
+            new ParameterizedTypeReference<Response<UserDTO>>() {}
+        );            
+        Response<UserDTO> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            session.setAttribute("token", response.getToken());
+            session.setAttribute("userDTO", response.getData());
+            UI.getCurrent().getPage().reload();
         }
-        catch(Exception e){
-            loginDialog.add(new Paragraph(e.getMessage()));
+        else{
+            loginDialog.add(new Paragraph(response.getMessage()));
         }
     }
     
@@ -379,29 +362,23 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
         Request<Integer> req = new Request<Integer>(token, ((UserDTO) session.getAttribute("userDTO")).getUserId());
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = "http://localhost:8080/api/user/logout";
-        try{
-            ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(req),
-                new ParameterizedTypeReference<Response<Void>>() {}
-            );            
-            Response<Void> response = apiResponse.getBody();
-            if(response.isSuccess()){
-                session.removeAttribute("token");
-                session.removeAttribute("userDTO");
-                UI.getCurrent().getPage().reload();
-            }
-            else{
-                Notification.show(response.getMessage());
-            }
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(req),
+            new ParameterizedTypeReference<Response<Void>>() {}
+        );            
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            session.removeAttribute("token");
+            session.removeAttribute("userDTO");
+            UI.getCurrent().getPage().reload();
         }
-        catch(Exception e){
-            Notification.show(e.getMessage());
+        else{
+            Notification.show(response.getMessage());
         }
+        
     }
 
 
