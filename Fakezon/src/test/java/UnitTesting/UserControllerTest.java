@@ -11,6 +11,7 @@ import ApplicationLayer.RequestDataTypes.LoginRequest;
 import ApplicationLayer.RequestDataTypes.PurchaseRequest;
 import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
 import DomainLayer.Enums.PaymentMethod;
+import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import ApplicationLayer.Response;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
@@ -484,6 +485,211 @@ class UserControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertFalse(response.getBody().getData());
         verify(authenticatorAdapter, times(1)).isGuestToken(token);
+    }
+
+    @Test
+    void testUnsuspendUser_Success() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.unsuspendUser(requesterId, userId))
+                .thenReturn(new Response<>(true, "User unsuspended successfully", true, null, null));
+
+        ResponseEntity<Response<Boolean>> response = userController.unsuspendUser(requesterId, userId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertTrue(response.getBody().getData());
+        verify(systemService, times(1)).unsuspendUser(requesterId, userId);
+    }
+
+    @Test
+    void testUnsuspendUser_InvalidToken() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Boolean>> response = userController.unsuspendUser(requesterId, userId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        verify(systemService, never()).unsuspendUser(anyInt(), anyInt());
+    }
+
+    @Test
+    void testIsUserSuspended_Success() {
+        int userId = 2;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.isUserSuspended(userId))
+                .thenReturn(new Response<>(true, "User is suspended", true, null, null));
+
+        ResponseEntity<Response<Boolean>> response = userController.isUserSuspended(userId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertTrue(response.getBody().getData());
+        verify(systemService, times(1)).isUserSuspended(userId);
+    }
+
+    @Test
+    void testGetSuspensionEndDate_Success() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "validToken";
+        LocalDate suspensionEndDate = LocalDate.now().plusDays(5);
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getSuspensionEndDate(requesterId, userId))
+                .thenReturn(new Response<>(suspensionEndDate, "Suspension end date retrieved", true, null, null));
+
+        ResponseEntity<Response<LocalDate>> response = userController.getSuspensionEndDate(requesterId, userId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(suspensionEndDate, response.getBody().getData());
+        verify(systemService, times(1)).getSuspensionEndDate(requesterId, userId);
+    }
+
+    @Test
+    void testGetAllSuspendedUsers_Success() {
+        int requesterId = 1;
+        String token = "validToken";
+        List<Registered> suspendedUsers = List.of(new Registered("username", "email", LocalDate.of(2000, 1, 1), "USA"));        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getAllSuspendedUsers(requesterId))
+                .thenReturn(new Response<>(suspendedUsers, "Suspended users retrieved", true, null, null));
+
+        ResponseEntity<Response<List<Registered>>> response = userController.getAllSuspendedUsers(requesterId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(suspendedUsers, response.getBody().getData());
+        verify(systemService, times(1)).getAllSuspendedUsers(requesterId);
+    }
+
+    @Test
+    void testCleanupExpiredSuspensions_Success() {
+        int requesterId = 1;
+        String token = "validToken";
+        int cleanedCount = 5;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.cleanupExpiredSuspensions(requesterId))
+                .thenReturn(new Response<>(cleanedCount, "Expired suspensions cleaned", true, null, null));
+
+        ResponseEntity<Response<Integer>> response = userController.cleanupExpiredSuspensions(requesterId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(cleanedCount, response.getBody().getData());
+        verify(systemService, times(1)).cleanupExpiredSuspensions(requesterId);
+    }
+
+    @Test
+    void testAddSystemAdmin_Success() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addSystemAdmin(requesterId, userId))
+                .thenReturn(new Response<>(null, "System admin added successfully", true, null, null));
+
+        ResponseEntity<Response<Void>> response = userController.addSystemAdmin(requesterId, userId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("System admin added successfully", response.getBody().getMessage());
+        verify(systemService, times(1)).addSystemAdmin(requesterId, userId);
+    }
+
+    @Test
+    void testAddSystemAdmin_InvalidToken() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Void>> response = userController.addSystemAdmin(requesterId, userId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).addSystemAdmin(anyInt(), anyInt());
+    }
+
+    @Test
+    void testRemoveSystemAdmin_Success() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeSystemAdmin(requesterId, userId))
+                .thenReturn(new Response<>(true, "System admin removed successfully", true, null, null));
+
+        ResponseEntity<Response<Boolean>> response = userController.removeSystemAdmin(requesterId, userId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertTrue(response.getBody().getData());
+        verify(systemService, times(1)).removeSystemAdmin(requesterId, userId);
+    }
+
+    @Test
+    void testRemoveSystemAdmin_InvalidToken() {
+        int requesterId = 1;
+        int userId = 2;
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Boolean>> response = userController.removeSystemAdmin(requesterId, userId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).removeSystemAdmin(anyInt(), anyInt());
+    }
+
+    @Test
+    void testGetAllSystemAdmins_Success() {
+        int requesterId = 1;
+        String token = "validToken";
+        List<Registered> admins = List.of(new Registered("username", "email", LocalDate.of(2000, 1, 1), "USA"));        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getAllSystemAdmins(requesterId))
+                .thenReturn(new Response<>(admins, "System admins retrieved successfully", true, null, null));
+
+        ResponseEntity<Response<List<Registered>>> response = userController.getAllSystemAdmins(requesterId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(admins, response.getBody().getData());
+        verify(systemService, times(1)).getAllSystemAdmins(requesterId);
+    }
+
+    @Test
+    void testGetSystemAdminCount_Success() {
+        int requesterId = 1;
+        String token = "validToken";
+        int adminCount = 5;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getSystemAdminCount(requesterId))
+                .thenReturn(new Response<>(adminCount, "System admin count retrieved successfully", true, null, null));
+
+        ResponseEntity<Response<Integer>> response = userController.getSystemAdminCount(requesterId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(adminCount, response.getBody().getData());
+        verify(systemService, times(1)).getSystemAdminCount(requesterId);
     }
 
 }
