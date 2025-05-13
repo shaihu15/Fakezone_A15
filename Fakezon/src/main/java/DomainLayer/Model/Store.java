@@ -83,6 +83,33 @@ public class Store implements IStore {
         this.pendingManagers = new HashMap<>();
     }
 
+    /**
+     * **********DO NOT USE - JUST FOR UI PURPOSES**********
+     **/
+    public Store(String name, int founderID, ApplicationEventPublisher publisher, int storeId) {
+        this.storeFounderID = founderID;
+        this.storeOwners = new ArrayList<>();
+        // storeOwners.put(founderID, new StoreOwner(founderID, name));
+        this.storeManagers = new HashMap<>();
+        this.name = name;
+        this.storeID = storeId;
+        this.Sratings = new HashMap<>();
+        this.storeProducts = new HashMap<>();
+        this.auctionProducts = new HashMap<>();
+        this.purchasePolicies = new HashMap<>();
+        this.discountPolicies = new HashMap<>();
+        this.rolesTree = new Tree(founderID); // founder = root
+        this.storeOwners.add(founderID);
+        this.pendingOwners = new HashMap<>(); // appointee : appointor
+        this.storeManagers = new HashMap<>(); // HASH userID to store manager
+        this.messagesFromUsers = new LinkedList<>();
+        this.messagesFromStore = new Stack<>();
+        this.publisher = publisher;
+        this.pendingManagersPerms = new HashMap<>();
+        this.pendingManagers = new HashMap<>();
+    }
+
+
     @Override
     public String getName() {
         return name;

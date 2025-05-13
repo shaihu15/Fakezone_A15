@@ -40,6 +40,18 @@ public class Product implements IProduct {
         }
     }
 
+     /**
+     * **********DO NOT USE - JUST FOR UI PURPOSES**********
+     **/
+    public Product(String name, String description,PCategory category, int productId) {
+        this.id = productId;
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.storesIds = new HashSet<>();
+        
+    }
+
     @Override
     public int getId() {
         return id;    

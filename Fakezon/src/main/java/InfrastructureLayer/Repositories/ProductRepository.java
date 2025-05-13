@@ -8,6 +8,7 @@ import java.util.Set;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Product;
 
 public class ProductRepository implements IProductRepository {
     private final HashMap<Integer, IProduct> products;
@@ -18,6 +19,9 @@ public class ProductRepository implements IProductRepository {
 
     public ProductRepository() {
         this.products =  new HashMap<>();
+
+        //FOR UI PUT IN COMMENT IF NOT NEEDED!
+        init();
     }
 
     @Override
@@ -96,5 +100,13 @@ public class ProductRepository implements IProductRepository {
         }
         return result;
     } 
+
+
+    private void init(){
+        products.put(1001, new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
+        products.put(1002, new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
+        products.get(1001).addStore(1001);
+        products.get(1002).addStore(1001);
+    }
 
 }
