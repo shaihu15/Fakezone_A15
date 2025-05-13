@@ -4,6 +4,8 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.ISystemService;
+import DomainLayer.Interfaces.IAuthenticator;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import com.fakezone.fakezone.controller.ProductController;
@@ -13,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
+import java.net.Authenticator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,13 +25,13 @@ class ProductControllerTest {
 
     @Mock
     private ISystemService systemService;
-
+    private AuthenticatorAdapter authenticatorService;
     private ProductController productController;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        productController = new ProductController(systemService);
+        productController = new ProductController(systemService, authenticatorService);
     }
 
     @Test

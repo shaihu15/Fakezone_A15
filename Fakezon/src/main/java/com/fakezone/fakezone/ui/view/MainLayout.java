@@ -119,6 +119,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         // LOGIN/REGISTER BUTTON
         Button loginRegisterLogoutButton = null;
+        Button notificationsButton = null;
         if(isGuestToken()){
             loginRegisterLogoutButton = new Button("Login/Register");
             loginRegisterLogoutButton.addClickListener(event -> loginRegisterClick());
@@ -126,12 +127,13 @@ public class MainLayout extends AppLayout implements RouterLayout {
         else{
             loginRegisterLogoutButton = new Button("Logout");
             loginRegisterLogoutButton.addClickListener(event -> logoutClick());
+        
+            //NOTIFS
+            Icon notificationsIcon = VaadinIcon.BELL.create();
+            notificationsIcon.setSize("30px");
+            notificationsButton = new Button(notificationsIcon);
+            notificationsButton.addClickListener(event -> showNotifications());
         }
-        //NOTIFS
-        Icon notificationsIcon = VaadinIcon.BELL.create();
-        notificationsIcon.setSize("30px");
-        Button notificationsButton = new Button(notificationsIcon);
-        notificationsButton.addClickListener(event -> showNotifications());
 
         // CART
         Icon cartIcon = VaadinIcon.CART.create();
@@ -141,7 +143,11 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         
         // HEADER LAYOUT
-        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout, notificationsButton, loginRegisterLogoutButton, cartButton);
+        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout);
+        if(notificationsButton != null){
+            header.add(notificationsButton);
+        }
+        header.add(loginRegisterLogoutButton, cartButton);
         header.setWidth("100%");
         header.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         header.getStyle().set("background", "#ffffff").set("padding", "10px");
