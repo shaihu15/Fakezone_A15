@@ -83,7 +83,7 @@ public class User {
         return userId;
     }
 
-        public UserDTO toDTO() {
+    public UserDTO toDTO() {
         return new UserDTO(userId, null, -1);
     }
     public void setUserId(int userId) { ///this one is only for testing purposes, will 

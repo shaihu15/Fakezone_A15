@@ -152,7 +152,7 @@ public interface ISystemService {
     // Unsigned (guest) user management
     Response<Void> addUnsignedUser(User user);
     
-    Response<User> getUnsignedUserById(int userId);
+    Response<UserDTO> getUnsignedUserById(int userId);
     
     Response<List<User>> getAllUnsignedUsers(int adminId);
     
