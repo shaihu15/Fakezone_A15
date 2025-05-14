@@ -617,6 +617,22 @@ public class SystemService implements ISystemService {
         boolean isNewProd = false; //used for reverting if the operation fails
         try{
             logger.info("System service - user " + requesterId + " trying to add product " + productName + " to store " + storeId);
+            if (!storeService.isStoreOpen(storeId)) {
+            logger.error("System Service - Invalid store ID: " + storeId);
+            return new Response<>(null, "Invalid store ID", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (!storeService.getStoreOwners(storeId, requesterId).contains(requesterId)) {
+            logger.error("System Service - User " + requesterId + " is not a owner of store " + storeId);
+            return new Response<>(null, "User is not a owner of this store", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (description == null || description.trim().isEmpty()) {
+            logger.error("System Service - Product description is empty");
+            return new Response<>(null, "Product description must not be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productName == null || productName.trim().isEmpty()) {
+            logger.error("System Service - Product name is empty");
+            return new Response<>(null, "Product name must not be empty", false, ErrorType.INVALID_INPUT, null);
+            }
             List<ProductDTO> products = productService.getAllProducts();
             ProductDTO product = null;
             for(ProductDTO prod : products){
