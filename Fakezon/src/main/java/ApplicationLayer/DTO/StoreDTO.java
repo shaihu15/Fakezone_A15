@@ -88,4 +88,7 @@ public class StoreDTO {
     public Map<Integer, Double> getRatings() {
         return ratings;
     }
+    public double getAverageRating() {
+        return averageRating;
+    }
 }
