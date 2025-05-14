@@ -154,7 +154,7 @@ public interface ISystemService {
     
     Response<User> getUnsignedUserById(int userId);
     
-    Response<List<User>> getAllUnsignedUsers(int adminId);
+    Response<List<UserDTO>> getAllUnsignedUsers(int adminId);
     
     Response<Boolean> removeUnsignedUser(int userId);
     

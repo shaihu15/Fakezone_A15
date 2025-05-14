@@ -1487,14 +1487,14 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<List<User>> getAllUnsignedUsers(int adminId) {
+    public Response<List<UserDTO>> getAllUnsignedUsers(int adminId) {
         try {
             if (!userService.isSystemAdmin(adminId)) {
                 logger.error("System Service - Unauthorized attempt to get all unsigned users: Admin privileges required for user ID " + adminId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
             
-            List<User> users = userService.getAllUnsignedUsers();
+            List<UserDTO> users = userService.getAllUnsignedUsersDTO();
             logger.info("System Service - Retrieved " + users.size() + " unsigned users");
             return new Response<>(users, "Retrieved " + users.size() + " unsigned users", true, null, null);
         } catch (IllegalArgumentException e) {
