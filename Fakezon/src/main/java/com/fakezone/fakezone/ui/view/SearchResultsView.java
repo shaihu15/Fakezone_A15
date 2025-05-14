@@ -29,6 +29,7 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 
@@ -283,6 +284,50 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
                 break;
         }
     }
+    private void searchByProductName(String name) {
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        if (session == null) {
+            Notification.show("Session expired. Please log in again.");
+            UI.getCurrent().navigate(HomeView.class);
+            return;
+        }
+        String token = (String) session.getAttribute("token");
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
+        String url = "http://localhost:8080/api/product/searchProducts/name/" + name;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Response<List<ProductDTO>>> apiResponse = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<Response<List<ProductDTO>>>() {}
+            );
+
+            Response<List<ProductDTO>> response = apiResponse.getBody();
+            if (response != null && response.isSuccess()) {
+                List<ProductDTO> products = response.getData();
+                this.allProducts = products;
+                grid.removeAllColumns();
+                grid.setItems(products);
+                grid.addColumn(ProductDTO::getName).setHeader("Name");
+                grid.addColumn(p -> p.getCategory().name()).setHeader("Category");
+                grid.addColumn(ProductDTO::getDescription).setHeader("Description");
+                grid.addColumn(p -> getStoresSummary(p, token)).setHeader("Available in Stores");
+            } else {
+                Notification.show(response != null ? response.getMessage() : "Product search failed.");
+            }
+        } catch (Exception e) {
+            Notification.show("Error: " + e.getMessage());
+        }
+    }
+
+
+
     private String getStoresSummary(ProductDTO product, String token) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();

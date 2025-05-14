@@ -3,7 +3,9 @@ package InfrastructureLayer.Repositories;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.IRepository.IProductRepository;
@@ -96,5 +98,11 @@ public class ProductRepository implements IProductRepository {
         }
         return result;
     } 
+    @Override
+    public Collection<IProduct> searchProductsByName(String name) {
+        return products.values().stream()
+                .filter(product -> product.getName().toLowerCase().contains(name.toLowerCase()))
+                .collect(Collectors.toList());
+    }
 
 }

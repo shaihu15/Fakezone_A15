@@ -151,7 +151,7 @@ public class ProductController {
             @RequestHeader("Authorization") String token) {
         try {
             logger.info("Received request to search products with name: {} from user with token: {}", name, token);
-            Response<List<ProductDTO>> response = systemService.searchByProductName(name);
+            Response<List<ProductDTO>> response = systemService.searchProductsByName(name, token);
 
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.security.access.method.P;
+
 import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -166,4 +168,6 @@ public interface ISystemService {
     Response<Boolean> isUnsignedUser(int userId);
     
     Response<Integer> getUnsignedUserCount(int adminId);
+
+    Response<List<ProductDTO>> searchProductsByName(String productName, String token);
 }

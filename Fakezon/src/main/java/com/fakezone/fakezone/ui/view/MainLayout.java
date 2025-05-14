@@ -110,12 +110,13 @@ import com.vaadin.flow.router.Route;
             searchField.setPlaceholder("Search Everywhere...");
             // search type selecting
             ComboBox<String> searchType = new ComboBox<>();
+            searchType.setPlaceholder("Search by...");
             searchType.setItems("Keyword", "Category", "Product Name");
             searchType.setValue("Keyword"); // Default value
             Button searchButton = new Button(new Icon(VaadinIcon.SEARCH));
             searchButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-            searchLayout.add(searchField, searchButton);
+            searchLayout.add(searchType, searchField, searchButton);
             searchLayout.setAlignItems(Alignment.CENTER);
             searchButton.addClickListener(event -> performSearch(searchField.getValue(),searchType.getValue())); // Search button
             searchField.addKeyDownListener(Key.ENTER, event -> performSearch(searchField.getValue(),searchType.getValue())); // Enter key

@@ -1562,4 +1562,20 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
+    public Response<List<ProductDTO>> searchProductsByName(String productName, String token) {
+        try {
+            if (token != null && this.authenticatorService.isValid(token)) {
+                //int userId = authenticatorService.getUserId(token);
+                logger.info("Search initiated by user {} (could be guest or logged-in)");
+            } else {
+                logger.info("Search initiated with no or invalid token");
+            }
+            List<ProductDTO> products = productService.searchProductsByName(productName);
+            return new Response<>(products, "Products retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all products: {}", e.getMessage());
+            return new Response<>(null, "Error during getting all products", false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
 }
