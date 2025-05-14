@@ -58,6 +58,8 @@ public class StoreOwner_Add_product {
 
     @BeforeEach
     void setUp() {
+        //Use-case: 4.1 StoreOwner - add a product
+
         storeRepository = new StoreRepository();
         userRepository = new UserRepository();
         productRepository = new ProductRepository();
