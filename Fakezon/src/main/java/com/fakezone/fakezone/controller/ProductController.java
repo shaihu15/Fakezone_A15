@@ -6,7 +6,7 @@ import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.SystemService;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,16 +20,22 @@ import java.util.List;
 public class ProductController {
 
     private final ISystemService systemService;
+    private final AuthenticatorAdapter authenticatorAdapter;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     @Autowired
-    public ProductController(ISystemService systemService){
+    public ProductController(ISystemService systemService, AuthenticatorAdapter authenticatorAdapter) {
         this.systemService = systemService;
+        this.authenticatorAdapter = authenticatorAdapter;
     }
     @GetMapping("/getProduct/{id}")
     public ResponseEntity<Response<ProductDTO>> getProdcut(@PathVariable("id") int id, @RequestHeader("Authorization") String token) {
         try{
             logger.info("Received request to get product with ID: {} from user this request tocken of: {}", id, token);
+            if(!authenticatorAdapter.isValid(token)){
+                Response<ProductDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
             Response<ProductDTO> response = systemService.getProduct(id);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
@@ -51,6 +57,10 @@ public class ProductController {
         try{
             ProductDTO productDTO = updatedProduct.getData();
             logger.info("Received request to update product: {} from user this request tocken of: {}", productDTO.getName(), updatedProduct.getToken());
+            if(!authenticatorAdapter.isValid(updatedProduct.getToken())){
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
 
             Response<Boolean> response = systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
             if(response.isSuccess()){
@@ -72,6 +82,11 @@ public class ProductController {
     public ResponseEntity<Response<Boolean>> deleteProduct(@RequestBody Request<Integer> request) {
         try{
             logger.info("Received request to delete product with ID: {} from user this request tocken of: {}", request.getData(), request.getToken());
+            if(!authenticatorAdapter.isValid(request.getToken())){
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+
             Response<Boolean> response = systemService.deleteProduct(request.getData());
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
@@ -91,6 +106,10 @@ public class ProductController {
     public ResponseEntity<Response<List<ProductDTO>>> searchProducts(@PathVariable("keyword") String keyword, @RequestHeader("Authorization") String token) {
         try{
             logger.info("Received request to search products with keyword: {} from user this request tocken of: {}", keyword, token);
+            if(!authenticatorAdapter.isValid(token)){
+                Response<List<ProductDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
             Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword, token);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
