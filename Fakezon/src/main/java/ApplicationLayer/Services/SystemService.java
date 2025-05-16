@@ -171,13 +171,35 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment) {
         try {
+            if (!storeService.isStoreOpen(storeId)) {
+                logger.error("System Service - Store is close: " + storeId);
+                return new Response<>(null, "Store is close", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (rating < 0 || rating > 5) {
+                logger.error("System Service - Invalid rating value (rating should be between 0 to 5): " + rating);
+                return new Response<>(null, "Invalid rating value", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (this.productService.getProduct(productId) == null) {
+                logger.error("System Service - Product not found: " + productId);
+                return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (this.storeService.getProductFromStore(productId, storeId) == null) {
+                logger.error("System Service - Product not found in store: " + productId + " in store: " + storeId);
+                return new Response<>(null, "Product not found in store", false, ErrorType.INVALID_INPUT, null);
+            }
+            if(this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.didPurchaseProduct(userId, storeId, productId)) {
                 this.storeService.addStoreProductRating(storeId, productId, userId, rating, comment);
                 logger.info("System Service - User rated product: " + productId + " in store: " + storeId + " by user: " + userId + " with rating: " + rating);
                 return new Response<>(null, "Product rated successfully", true, null, null);
             } else {
-                logger.error("System Service - User did not purchase from this product: " + userId + " " + storeId + " " + productId);
-                return new Response<>(null, "User did not purchase from this product", false, ErrorType.INVALID_INPUT, null);
+                logger.error("System Service - User did not purchase from this store that product: " + userId + " " + storeId + " " + productId);
+                return new Response<>(null, "User did not purchase that productfrom the store", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during rating product: " + e.getMessage());
