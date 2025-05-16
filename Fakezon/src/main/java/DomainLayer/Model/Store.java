@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
@@ -1106,6 +1107,24 @@ public class Store implements IStore {
             }
         }
         return productsInStore;
+    }
+
+    @Override
+    public HashMap<Integer, String> getAllStoreMessages(){
+        rolesLock.lock();
+        try{
+            HashMap<Integer, String> messages = new HashMap<>();
+            for (SimpleEntry<Integer, String> message : messagesFromUsers) {
+                messages.put(message.getKey(), message.getValue());
+            }
+            rolesLock.unlock();
+            return messages ;
+        }
+        catch(Exception e){
+            rolesLock.unlock();
+            throw e;
+        }
+
     }
 
 }
