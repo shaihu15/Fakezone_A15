@@ -53,7 +53,7 @@ public class ProductController {
             ProductDTO productDTO = updatedProduct.getData();
             logger.info("Received request to update product: {} from user this request tocken of: {}", productDTO.getName(), updatedProduct.getToken());
 
-            Response<Boolean> response = systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds());
+            Response<Boolean> response = systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             }

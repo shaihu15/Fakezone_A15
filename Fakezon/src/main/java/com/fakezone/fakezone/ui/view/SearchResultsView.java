@@ -93,7 +93,7 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
 
             List<ProductDTO> filtered = allProducts.stream()
                 .filter(product -> {
-                    Set<Integer> matchingStores = product.getStoreIds().stream()
+                    Set<Integer> matchingStores = product.getStoresIds().stream()
                         .filter(storeId -> {
                             try {
                                 String url = String.format("http://localhost:8080/api/product/getProductFromStore/%d/%d", storeId, product.getId());
@@ -320,7 +320,7 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         for (ProductDTO product : products) {
-            for (Integer storeId : product.getStoreIds()) {
+            for (Integer storeId : product.getStoresIds()) {
                 try {
                     String url = String.format("http://localhost:8080/api/product/getProductFromStore/%d/%d", storeId, product.getId());
                     ResponseEntity<Response<StoreProductDTO>> response = restTemplate.exchange(
@@ -373,7 +373,7 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
     // Updated getStoresSummary to use pre-fetched data
     private String getStoresSummary(ProductDTO product, List<StoreProductDTO> storeProducts, Map<Integer, StoreDTO> storeData) {
         StringBuilder sb = new StringBuilder();
-        for (Integer storeId : product.getStoreIds()) {
+        for (Integer storeId : product.getStoresIds()) {
             StoreDTO store = storeData.get(storeId);
             StoreProductDTO sp = storeProducts.stream()
                 .filter(dto -> dto.getProductId() == product.getId() && dto.getStoreId() == storeId)
@@ -410,7 +410,7 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
 
     // Helper method for Store Rating column
     private String getStoreRating(ProductDTO product, List<StoreProductDTO> storeProducts, Map<Integer, StoreDTO> storeData) {
-        List<Integer> storeIds = new ArrayList<>(product.getStoreIds());
+        List<Integer> storeIds = new ArrayList<>(product.getStoresIds());
         if (storeIds.isEmpty()) return "N/A";
         Optional<Double> rating = storeIds.stream()
             .map(storeData::get)
