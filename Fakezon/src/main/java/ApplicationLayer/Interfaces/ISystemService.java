@@ -96,6 +96,8 @@ public interface ISystemService {
   
     Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity,String category); // add product to store
 
+    Response<Integer> addProduct(String productName, String productDescription, String category); // add product to system
+    
     Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails); // purchase the cart
@@ -170,4 +172,6 @@ public interface ISystemService {
     Response<Integer> getUnsignedUserCount(int adminId);
 
     Response<List<ProductDTO>> searchProductsByName(String productName, String token);
+
+    LocalDate parseDate(String dateString);
 }

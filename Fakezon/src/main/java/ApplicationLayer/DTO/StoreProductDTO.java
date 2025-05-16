@@ -28,6 +28,16 @@ public class StoreProductDTO {
 
     @JsonProperty("averageRating")
     private final double averageRating;
+    // Add no-args constructor with default values for final fields
+    public StoreProductDTO() {
+        this.productId = 0;
+        this.name = null;
+        this.basePrice = 0.0;
+        this.quantity = 0;
+        this.storeId = 0;
+        this.category = null;
+        this.averageRating = 0.0;
+    }
 
     public StoreProductDTO(int productId, String name, double basePrice, int quantity,
             double averageRating, int storeId, PCategory category) {   

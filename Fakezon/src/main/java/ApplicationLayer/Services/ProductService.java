@@ -46,6 +46,7 @@ public class ProductService implements IProductService {
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         IProduct existingProduct = null;
         try{
+
             existingProduct = productRepository.getProductById(productId);
             if (existingProduct == null) {
                 throw new IllegalArgumentException("Product not found");
