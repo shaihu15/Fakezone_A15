@@ -238,6 +238,10 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> sendMessageToStore(int userId, int storeId, String message) {
         try {
+            if (message == null || message.trim().isEmpty()) {
+                logger.error("System Service - Message is empty");
+                return new Response<>(null, "Message cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.isUserLoggedIn(userId)) {
                 if (this.storeService.isStoreOpen(storeId)) {
                     this.userService.sendMessageToStore(userId, storeId, message);
@@ -735,6 +739,23 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during viewing cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+
+    @Override
+    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId) {
+        try{
+            if (this.storeService.isStoreOpen(storeId)) {
+                return this.storeService.getAllStoreMessages(storeId);
+            } else {
+                logger.error("System Service - Store is closed: " + storeId);
+                return new Response<HashMap<Integer, String>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+
+    }
+
 
 	@Override
 	public Response<HashMap<Integer, String>> getAllMessages(int userID) {

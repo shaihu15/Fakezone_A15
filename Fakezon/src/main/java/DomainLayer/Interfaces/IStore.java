@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -114,4 +115,6 @@ public interface IStore {
     double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
 
     Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products);
+
+    HashMap<Integer, String> getAllStoreMessages();
 }
