@@ -1030,9 +1030,7 @@ public class SystemService implements ISystemService {
 
     public Response<Boolean> deleteOrder(int orderId, String token) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
+
             int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 this.orderService.deleteOrder(orderId);
@@ -1050,9 +1048,6 @@ public class SystemService implements ISystemService {
     @Override
     public Response<OrderDTO> viewOrder(int orderId, String token) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
             int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 IOrder order = this.orderService.viewOrder(orderId);
