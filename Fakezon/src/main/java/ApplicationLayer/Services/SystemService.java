@@ -1066,9 +1066,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<List<OrderDTO>> searchOrders(String keyword, String token) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
+
             int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.searchOrders(keyword);
@@ -1091,9 +1089,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
+
             int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.getOrdersByStoreId(storeId);
@@ -1380,9 +1376,6 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private boolean isAuth(String token){
-        return this.authenticatorService.isValid(token);
-    }
 
     private boolean isValidPassword(String password) {
         return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
