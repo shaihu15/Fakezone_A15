@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import DomainLayer.Interfaces.INotificationWebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,6 +36,7 @@ public class SystemServiceAdminTest {
     private IAuthenticator mockAuthenticatorService;
     private IPayment mockPaymentService;
     private ApplicationEventPublisher mockPublisher;
+    private INotificationWebSocketHandler mockNotificationWebSocketHandler;
     
     private Registered adminUser;
     private Registered regularUser;
@@ -51,6 +53,7 @@ public class SystemServiceAdminTest {
         mockAuthenticatorService = mock(IAuthenticator.class);
         mockPaymentService = mock(IPayment.class);
         mockPublisher = mock(ApplicationEventPublisher.class);
+        mockNotificationWebSocketHandler = mock(INotificationWebSocketHandler.class);
         
         // Initialize SystemService with mocks
         systemService = new SystemService(
@@ -61,7 +64,8 @@ public class SystemServiceAdminTest {
             mockDeliveryService,
             mockAuthenticatorService,
             mockPaymentService,
-            mockPublisher
+            mockPublisher,
+            mockNotificationWebSocketHandler
         );
         
         // Create test user objects

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 
+import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,10 +29,6 @@ import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -55,6 +52,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
     private IAuthenticator authenticatorService;
     private IPayment paymentService;
     private ApplicationEventPublisher eventPublisher;
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private IStoreService storeService;
     private IProductService productService;
     private IUserService userService;
@@ -76,7 +74,9 @@ public class Immediate_Purchase_of_Shopping_Cart {
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService,
+                orderService, deliveryService, authenticatorService,
+                paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
         //paymentMethod = PaymentMethod.CREDIT_CARD;
     }
