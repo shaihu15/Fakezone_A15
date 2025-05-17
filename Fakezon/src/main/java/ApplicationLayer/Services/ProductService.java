@@ -46,6 +46,7 @@ public class ProductService implements IProductService {
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
         IProduct existingProduct = null;
         try{
+
             existingProduct = productRepository.getProductById(productId);
             if (existingProduct == null) {
                 throw new IllegalArgumentException("Product not found");
@@ -182,6 +183,21 @@ public class ProductService implements IProductService {
         } catch (IllegalArgumentException e) {
             logger.error("While trying to get product, recived error {}", e);
             throw e;
+        }
+    }
+    @Override
+    public List<ProductDTO> searchProductsByName(String name) {
+        try {
+            Collection<IProduct> products = productRepository.searchProductsByName(name);
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory(), new HashSet<>(product.getStoresIds())))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to search, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Product with keyword {} was searched", name);
         }
     }
   

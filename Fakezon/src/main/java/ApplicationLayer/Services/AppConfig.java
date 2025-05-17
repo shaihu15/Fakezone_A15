@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.IRepository.IProductRepository;
@@ -48,5 +49,9 @@ public class AppConfig {
     @Bean
     public AuthenticatorAdapter authenticatorAdapter(IUserService userService) {
         return new AuthenticatorAdapter(userService);
+    }
+    @Bean
+    public IStoreService storeService(IStoreRepository storeRepository, ApplicationEventPublisher eventPublisher) {
+        return new StoreService(storeRepository, eventPublisher) ;
     }
 }

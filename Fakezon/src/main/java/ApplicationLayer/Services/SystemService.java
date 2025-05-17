@@ -285,6 +285,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during sending message to user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
     public LocalDate parseDate(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         try {
@@ -406,9 +407,9 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
-
+    @Override
     //addProduct method should be with amount and store?
-    private Response<Integer> addProduct(String productName, String productDescription, String category) {
+    public Response<Integer> addProduct(String productName, String productDescription, String category) {
         try {
             if (productName == null || productDescription == null || category == null) {
                 logger.error("System Service - Invalid input: " + productName + " " + productDescription + " " + category);
@@ -896,7 +897,7 @@ public class SystemService implements ISystemService {
             
             // 3. For each product, get its StoreProductDTO from each store it's in
             for (ProductDTO product : allProducts) {
-                for (Integer storeId : product.getStoresIds()) {
+                for (Integer storeId : product.getStoreIds()) {
                     try {
                         StoreProductDTO storeProduct = storeService.getProductFromStore(product.getId(), storeId);
                         // Only add products that have ratings
@@ -1410,7 +1411,8 @@ public class SystemService implements ISystemService {
             PCategory categoryEnum = isCategoryValid(category);
             if (categoryEnum == null) {
                 logger.error("System Service - Invalid category: " + category);
-                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT, null);
+                List<ProductDTO> npProducts = new ArrayList<>();
+                return new Response<>(npProducts, "Invalid category", true, null, null);
             }
                 List<ProductDTO> products = this.productService.getProductsByCategory(categoryEnum);
                 return new Response<>(products, "Products retrieved successfully", true, null, null);
@@ -1558,6 +1560,22 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during getting unsigned user count: " + e.getMessage());
             return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    @Override
+    public Response<List<ProductDTO>> searchProductsByName(String productName, String token) {
+        try {
+            if (token != null && this.authenticatorService.isValid(token)) {
+                //int userId = authenticatorService.getUserId(token);
+                logger.info("Search initiated by user {} (could be guest or logged-in)");
+            } else {
+                logger.info("Search initiated with no or invalid token");
+            }
+            List<ProductDTO> products = productService.searchProductsByName(productName);
+            return new Response<>(products, "Products retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all products: {}", e.getMessage());
+            return new Response<>(null, "Error during getting all products", false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 }
