@@ -97,7 +97,7 @@ class ProductControllerTest {
         ProductDTO productDTO = new ProductDTO("product", "Updated Product", 1, PCategory.ELECTRONICS);
         Request<ProductDTO> request = new Request<>("valid-token", productDTO);
 
-        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
+        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds()))
                 .thenReturn(new Response<>(true, null, true, null, null));
 
         ResponseEntity<Response<Boolean>> response = productController.updateProduct(request);
@@ -105,7 +105,7 @@ class ProductControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
         assertTrue(response.getBody().getData());
-        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
+        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds());
     }
 
     @Test
@@ -113,7 +113,7 @@ class ProductControllerTest {
         ProductDTO productDTO = new ProductDTO("product", "Updated Product", 1, PCategory.ELECTRONICS);
         Request<ProductDTO> request = new Request<>("valid-token", productDTO);
 
-        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
+        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds()))
                 .thenReturn(new Response<>(false, "Invalid data", false, ErrorType.BAD_REQUEST, null));
 
         ResponseEntity<Response<Boolean>> response = productController.updateProduct(request);
@@ -121,7 +121,7 @@ class ProductControllerTest {
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
-        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
+        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds());
     }
 
     @Test

@@ -55,7 +55,7 @@
             this.category = product.getCategory();
         }
 
-        public Set<Integer> getStoresIds()  {
+        public Set<Integer> getStoreIds()  {
             return storeIds;
         }
 

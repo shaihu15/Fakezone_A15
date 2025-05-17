@@ -827,7 +827,7 @@ public class SystemService implements ISystemService {
             
             // 3. For each product, get its StoreProductDTO from each store it's in
             for (ProductDTO product : allProducts) {
-                for (Integer storeId : product.getStoresIds()) {
+                for (Integer storeId : product.getStoreIds()) {
                     try {
                         StoreProductDTO storeProduct = storeService.getProductFromStore(product.getId(), storeId);
                         // Only add products that have ratings
