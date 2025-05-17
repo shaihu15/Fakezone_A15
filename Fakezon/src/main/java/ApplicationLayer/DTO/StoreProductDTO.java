@@ -60,6 +60,17 @@ public class StoreProductDTO {
         this.category = storeProduct.getCategory(); // Assuming StoreProduct has a method to get category
     }
 
+    public StoreProductDTO(StoreProduct storeProduct, int quantity) {
+        this.productId = storeProduct.getSproductID();
+        this.storeId = storeProduct.getStoreId();
+        this.name = storeProduct.getName();
+        this.basePrice = storeProduct.getBasePrice();
+        this.quantity = quantity;
+        this.averageRating = storeProduct.getAverageRating(); // Assuming getAverageRating() returns a double
+        this.category = storeProduct.getCategory(); // Assuming StoreProduct has a method to get category
+    }
+
+
     public int getStoreId() {
         return storeId;
     }

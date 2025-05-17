@@ -3,19 +3,17 @@ package NewAcceptanceTesting.AT_User.AT_Registered;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -83,10 +81,12 @@ public class Open_Store {
 
         Response<Integer> resultAddStore = systemService.addStore(userId, storeName);
         int storeId = resultAddStore.getData();
-        
 
         assertNotNull(resultAddStore.getData());
         assertEquals(storeRepository.findByName(storeName).getId(), storeId);
+        assertTrue(storeRepository.findByName(storeName).isOpen());
+        assertTrue(storeRepository.findById(resultAddStore.getData()).isOpen());
+
     }
 
     @Test
@@ -96,9 +96,12 @@ public class Open_Store {
 
         Response<Integer> resultAddStore1 = systemService.addStore(userId, "Test Store");
         Response<Integer> resultAddStore2 = systemService.addStore(userId, "Test Store");
+        int storeId1 = resultAddStore1.getData();
 
-        assertNotNull(resultAddStore1.getData());
-        assertNull(resultAddStore2.getData());
+        assertNotNull(storeId1);
+        assertTrue(storeRepository.findById(storeId1).isOpen()); //store1 is open
+
+        assertNull(resultAddStore2.getData());//store2 dont get id - not open
         assertEquals("Error during opening store: Store name already exists", resultAddStore2.getMessage());
     }
 

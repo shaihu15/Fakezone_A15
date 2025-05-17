@@ -1,8 +1,8 @@
 package DomainLayer.IRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDate;
 
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
@@ -13,8 +13,6 @@ public interface IUserRepository {
     List<Registered> findAll();
 
     void deleteByUserName(String email);
-
-    void update(Registered user);
 
     void addUser(Registered user);
 
@@ -134,15 +132,7 @@ public interface IUserRepository {
      * @return A list of all unsigned users
      */
     List<User> getAllUnsignedUsers();
-    
-    /**
-     * Update an unsigned user
-     * 
-     * @param user The user to update
-     * @throws IllegalArgumentException If the user doesn't exist
-     */
-    void updateUnsignedUser(User user);
-    
+
     /**
      * Remove an unsigned user from the repository
      * 

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.security.access.method.P;
@@ -82,7 +83,7 @@ public interface ISystemService {
 
     Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 
-    Response<List<StoreProductDTO>> viewCart(int userId); // returns a list of products in the cart
+    Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
@@ -117,10 +118,6 @@ public interface ISystemService {
     Response<List<Integer>> getPendingManagers(int storeId, int requesterId);
 
     Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
-
-    Response<Integer> addOrder(int userId, BasketDTO basket, String address, String paymentMethod, String token);
-
-    Response<Integer> updateOrder(int orderId, BasketDTO basket, Integer userId, String address, String paymentMethod, String token);
 
     Response<Boolean> deleteOrder(int orderId, String token);
 
@@ -162,8 +159,6 @@ public interface ISystemService {
     Response<User> getUnsignedUserById(int userId);
     
     Response<List<User>> getAllUnsignedUsers(int adminId);
-    
-    Response<Void> updateUnsignedUser(User user);
     
     Response<Boolean> removeUnsignedUser(int userId);
     

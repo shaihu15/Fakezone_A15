@@ -2,14 +2,15 @@ package ApplicationLayer.Services;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
+import ApplicationLayer.Enums.ErrorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
@@ -225,11 +226,11 @@ public class UserService implements IUserService {
                 // Handle exception if needed
                 System.out.println("Error during get orders: " + e.getMessage());
                 logger.error("Error during get orders: " + e.getMessage());
-                return new Response<>(null, "Error during get orders: " + e.getMessage(), false, null, null);
+                return new Response<>(null, "Error during get orders: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false, null, null);
+            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
 
@@ -269,12 +270,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void addToBasket(int userId, int storeId, StoreProductDTO product) {
+    public void addToBasket(int userId, int storeId, int productId, int quantity) {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
-                user.get().addToBasket(storeId, product);
-                logger.info("Product added to basket: " + product.getName() + " from store: " + storeId + " by user: "
+                user.get().addToBasket(storeId, productId, quantity);
+                logger.info("Product added to basket: " + productId+ " from store: " + storeId + " by user: "
                         + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -288,7 +289,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<StoreProductDTO> viewCart(int userId) {
+    public Map<Integer,Map<Integer,Integer>> viewCart(int userId) {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
@@ -353,7 +354,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAllMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, null, null);
+                    return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -361,11 +362,11 @@ public class UserService implements IUserService {
                 // Handle exception if needed
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: " + e.getMessage());
-                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, null, null);
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false, null, null);
+            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
 
@@ -378,7 +379,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAssignmentMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, null, null);
+                    return new Response<>(null, "No messages found", false, ErrorType.UNAUTHORIZED, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -386,11 +387,11 @@ public class UserService implements IUserService {
                 // Handle exception if needed
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: " + e.getMessage());
-                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, null, null);
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false, null, null);
+            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
 
@@ -403,7 +404,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAuctionEndedMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, null, null);
+                    return new Response<>(null, "No messages found", false, ErrorType.UNAUTHORIZED, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -411,11 +412,11 @@ public class UserService implements IUserService {
                 // Handle exception if needed
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: " + e.getMessage());
-                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, null, null);
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
             }
         } else {
             logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false, null, null);
+            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
 
@@ -701,27 +702,7 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Error getting all unsigned users: " + e.getMessage());
         }
     }
-    
-    /**
-     * Update an unsigned user
-     * 
-     * @param user The user to update
-     * @throws IllegalArgumentException If the user doesn't exist
-     */
-    @Override
-    public void updateUnsignedUser(User user) {
-        try {
-            userRepository.updateUnsignedUser(user);
-            logger.info("Updated unsigned user with ID: " + user.getUserId());
-        } catch (IllegalArgumentException e) {
-            logger.error("Failed to update unsigned user: " + e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            logger.error("Error during updating unsigned user: " + e.getMessage());
-            throw new IllegalArgumentException("Error updating unsigned user: " + e.getMessage());
-        }
-    }
-    
+
     /**
      * Remove an unsigned user from the repository
      * 
@@ -776,6 +757,22 @@ public class UserService implements IUserService {
         } catch (Exception e) {
             logger.error("Error getting unsigned user count: " + e.getMessage());
             throw new IllegalArgumentException("Error getting unsigned user count: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void setCart(int userId, Map<Integer, Map<Integer, Integer>> validCart) {
+        Optional<User> user = userRepository.findAllById(userId);
+        if (user.isPresent()) {
+            try {
+                user.get().setCart(validCart);
+                logger.info("Cart set for user: " + userId);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during set cart: " + e.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
         }
     }
 }

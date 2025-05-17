@@ -1,6 +1,7 @@
 package com.fakezone.fakezone.controller;
 
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -88,22 +90,22 @@ public class UserController {
     }
 
     @GetMapping("/viewCart/{userId}")
-    public ResponseEntity<Response<List<StoreProductDTO>>> viewCart(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>>> viewCart(@RequestHeader("Authorization") String token,
                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to view cart for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<List<StoreProductDTO>> response = systemService.viewCart(userId);
+            Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> response = systemService.viewCart(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in viewCart: {}", e.getMessage());
-            Response<List<StoreProductDTO>> response = new Response<>(null, "An error occurred while retrieving the cart", false, ErrorType.INTERNAL_ERROR, null);
+            Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> response = new Response<>(null, "An error occurred while retrieving the cart", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

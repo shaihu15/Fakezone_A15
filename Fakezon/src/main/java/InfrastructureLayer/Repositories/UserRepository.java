@@ -56,14 +56,6 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public void update(Registered user) {
-        if (!users.containsKey(user.getUserId())) {
-            throw new IllegalArgumentException("User with ID " + user.getUserId() + " does not exist.");
-        }
-        users.put(user.getUserId(), user); // update existing
-    }
-
-    @Override
     public void addUser(Registered user) {
         System.out.println("Adding user with ID: " + user.getUserId());
         if (users.containsKey(user.getUserId())) {
@@ -294,20 +286,7 @@ public class UserRepository implements IUserRepository {
     public List<User> getAllUnsignedUsers() {
         return new ArrayList<>(unsignedUsers.values());
     }
-    
-    /**
-     * Update an unsigned user
-     * 
-     * @param user The user to update
-     * @throws IllegalArgumentException If the user doesn't exist
-     */
-    public void updateUnsignedUser(User user) {
-        int userId = user.getUserId();
-        if (!unsignedUsers.containsKey(userId)) {
-            throw new IllegalArgumentException("Unsigned user with ID " + userId + " does not exist.");
-        }
-        unsignedUsers.put(userId, user);
-    }
+
     
     /**
      * Remove an unsigned user from the repository

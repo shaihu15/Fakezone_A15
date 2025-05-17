@@ -61,6 +61,7 @@ public class StoreDTO {
 
     }
 
+
     public int getStoreId() {
         return storeId;
     }
