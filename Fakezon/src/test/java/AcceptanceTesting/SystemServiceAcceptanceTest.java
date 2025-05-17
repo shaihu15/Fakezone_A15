@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -39,10 +40,6 @@ import ApplicationLayer.Response;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Product;
 import DomainLayer.Model.Registered;
@@ -79,6 +76,7 @@ public class SystemServiceAcceptanceTest {
     private IOrderService orderService;
     private IDelivery deliveryService;
     private IPayment paymentService;
+    private INotificationWebSocketHandler notifyer;
 
     private ApplicationEventPublisher publisher;
 
@@ -94,10 +92,11 @@ public class SystemServiceAcceptanceTest {
         deliveryService = mock(IDelivery.class);
         paymentService = mock(IPayment.class);
         publisher = mock(ApplicationEventPublisher.class);
+        notifyer = mock(INotificationWebSocketHandler.class);
 
         // Inject the mocked services using the overloaded constructor
         systemService = new SystemService(storeService, userService, productService,orderService, deliveryService,
-                authenticatorService, paymentService, publisher);
+                authenticatorService, paymentService, publisher, notifyer);
 
     }
     
