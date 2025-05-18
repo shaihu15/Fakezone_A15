@@ -10,11 +10,14 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
+
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -34,6 +37,9 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
+
+import InfrastructureLayer.Security.TokenService;
+
 import NewAcceptanceTesting.TestHelper;
 
 public class Guest_User_Access_to_Store {
@@ -82,8 +88,14 @@ public class Guest_User_Access_to_Store {
         Response<Integer> resultAddStore = testHelper.openStore();
         storeId = resultAddStore.getData();
 
+
         Response<StoreProductDTO> resultAddProduct = testHelper.addProductToStore(storeId, storeOwnerId);
         productId = resultAddProduct.getData().getProductId();
+
+        String guestToken = tokenService.generateGuestToken(); 
+        assertNotNull(guestToken);
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( storeId); 
+
 
     }
 /* 
@@ -94,4 +106,28 @@ public class Guest_User_Access_to_Store {
         assertEquals(storeId, result.getData().getStoreId());
         assertEquals(productId, result.getData().getProductId());
     }*/
+
+    void testGuestUserAccessStore_StoreIsClose_Fail() {
+        Response<UserDTO> resultRegister = testHelper.register_and_login();
+        assertNotNull(resultRegister);
+        int userId = resultRegister.getData().getUserId();
+        // StoreFounder is registered and logged in
+
+        Response<Integer> resultAddStore = testHelper.openStore(userId);
+        assertNotNull(resultAddStore);
+        int storeId = resultAddStore.getData();
+        assertTrue(storeRepository.findById(storeId).isOpen());
+        //the store is open
+
+        systemService.closeStoreByFounder(userId, storeId);
+        assertFalse(storeRepository.findById(storeId).isOpen());
+        //the store is closed
+
+        String guestToken = tokenService.generateGuestToken(); 
+        assertNotNull(guestToken);
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( -1); 
+
+        assertFalse(accessStoreResponse.isSuccess());
+    }
+
 }

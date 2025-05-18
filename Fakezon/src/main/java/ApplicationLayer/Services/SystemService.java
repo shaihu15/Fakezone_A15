@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -34,11 +33,8 @@ import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Interfaces.IProduct;
-import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
-import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
@@ -46,7 +42,6 @@ import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
-import javassist.bytecode.LineNumberAttribute.Pc;
 
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
@@ -56,7 +51,7 @@ public class SystemService implements ISystemService {
     private IStoreService storeService;
     private IProductService productService;
     private IOrderService orderService;
-    private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private static final Logger logger = LoggerFactory.getLogger(SystemService.class);
     private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
@@ -146,7 +141,15 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> ratingStore(int storeId, int userId, double rating, String comment) {
         try {
+            if (!storeService.isStoreOpen(storeId)) {
+                logger.error("System Service - Store is close: " + storeId);
+                return new Response<>(null, "Store is close", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.didPurchaseStore(userId, storeId)) {
+                if (rating < 0 || rating > 5) {
+                    logger.error("System Service - Invalid rating value (rating should be between 0 to 5): " + rating);
+                    return new Response<>(null, "Invalid rating value", false, ErrorType.INVALID_INPUT, null);
+                }
                 this.storeService.addStoreRating(storeId, userId, rating, comment);
                 logger.info("System Service - User rated store: " + storeId + " by user: " + userId + " with rating: " + rating);
                 return new Response<>(null, "Store rated successfully", true, null, null);
@@ -163,13 +166,35 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment) {
         try {
+            if (!storeService.isStoreOpen(storeId)) {
+                logger.error("System Service - Store is close: " + storeId);
+                return new Response<>(null, "Store is close", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (rating < 0 || rating > 5) {
+                logger.error("System Service - Invalid rating value (rating should be between 0 to 5): " + rating);
+                return new Response<>(null, "Invalid rating value", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (this.productService.getProduct(productId) == null) {
+                logger.error("System Service - Product not found: " + productId);
+                return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (this.storeService.getProductFromStore(productId, storeId) == null) {
+                logger.error("System Service - Product not found in store: " + productId + " in store: " + storeId);
+                return new Response<>(null, "Product not found in store", false, ErrorType.INVALID_INPUT, null);
+            }
+            if(this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.didPurchaseProduct(userId, storeId, productId)) {
                 this.storeService.addStoreProductRating(storeId, productId, userId, rating, comment);
                 logger.info("System Service - User rated product: " + productId + " in store: " + storeId + " by user: " + userId + " with rating: " + rating);
                 return new Response<>(null, "Product rated successfully", true, null, null);
             } else {
-                logger.error("System Service - User did not purchase from this product: " + userId + " " + storeId + " " + productId);
-                return new Response<>(null, "User did not purchase from this product", false, ErrorType.INVALID_INPUT, null);
+                logger.error("System Service - User did not purchase from this store that product: " + userId + " " + storeId + " " + productId);
+                return new Response<>(null, "User did not purchase that productfrom the store", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during rating product: " + e.getMessage());
@@ -177,16 +202,10 @@ public class SystemService implements ISystemService {
         }
     }
 
-    public Response<StoreDTO> userAccessStore(String token, int storeId) {
+    public Response<StoreDTO> userAccessStore(int storeId) {
         try {
-            logger.info("System Service - User accessed store: " + storeId + " by user with token " + token);
+            logger.info("System Service - User accessed store: " + storeId);
             
-            if (this.authenticatorService.isValid(token)){
-                logger.info("System Service - Token is valid: " + token);
-            }else {
-                logger.error("System Service - Token is not valid: " + token);
-                return new Response<StoreDTO>(null, "Token is not valid", false, ErrorType.INVALID_INPUT, null);
-            }
             StoreDTO s = this.storeService.viewStore(storeId);
             if (s.isOpen()) {
                 return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
@@ -386,18 +405,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<ProductDTO>> searchByKeyword(String token, String keyword) {
-        try {
-            if (!this.authenticatorService.isValid(token)) {
-                logger.error("System Service - Token is not valid: " + token);
-                throw new IllegalArgumentException("Token is not valid");
-            } else {
-                logger.info("System Service - Token is valid: " + token);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during user access store: " + e.getMessage());
-            return new Response<>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }
+    public Response<List<ProductDTO>> searchByKeyword(String keyword) {
         try {
             logger.info("System service - user trying to view product " + keyword);
             return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true, null, null);
@@ -461,30 +469,23 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId,
-            List<StoreManagerPermission> perms) {
+    public Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId, List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user sessionToken: " + sessionToken + " trying to add permissions: "
+            logger.info("System service - user trying to add permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
-            if (this.authenticatorService.isValid(sessionToken)) {
-                int requesterId = this.authenticatorService.getUserId(sessionToken);
                 storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
                 return new Response<>(null, "Permissions added successfully", true, null, null);
-            } else {
-                return new Response<>(null, "Invalid session token: " + sessionToken, false, ErrorType.INVALID_INPUT, null);
-            }
         } catch (Exception e) {
             return new Response<>(null, "Error during adding store manager permissions: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
     //add details to response
     @Override
-    public Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId,
+    public Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user sessionToken: " + sessionToken + " trying to remove permissions: "
+            logger.info("System service - user " + requesterId + " trying to remove permissions: "
                     + perms.toString() + " to manager: " + managerId + " in store: " + storeId);
-            int requesterId = this.authenticatorService.getUserId(sessionToken);
             storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
             return new Response<>(null, "Permissions removed successfully", true, null, null);
         } catch (Exception e) {
@@ -617,6 +618,22 @@ public class SystemService implements ISystemService {
         boolean isNewProd = false; //used for reverting if the operation fails
         try{
             logger.info("System service - user " + requesterId + " trying to add product " + productName + " to store " + storeId);
+            if (!storeService.isStoreOpen(storeId)) {
+            logger.error("System Service - Invalid store ID: " + storeId);
+            return new Response<>(null, "Invalid store ID", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (!storeService.getStoreOwners(storeId, requesterId).contains(requesterId)) {
+            logger.error("System Service - User " + requesterId + " is not a owner of store " + storeId);
+            return new Response<>(null, "User is not a owner of this store", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (description == null || description.trim().isEmpty()) {
+            logger.error("System Service - Product description is empty");
+            return new Response<>(null, "Product description must not be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productName == null || productName.trim().isEmpty()) {
+            logger.error("System Service - Product name is empty");
+            return new Response<>(null, "Product name must not be empty", false, ErrorType.INVALID_INPUT, null);
+            }
             List<ProductDTO> products = productService.getAllProducts();
             ProductDTO product = null;
             for(ProductDTO prod : products){
@@ -831,8 +848,6 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
             else
                 return new Response<String>(null, "Payment failed", false, ErrorType.INVALID_INPUT, null);
-            //this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
-            //logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
         } catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());
             return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
@@ -842,8 +857,6 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
             else
                 return new Response<String>(null, "Delivery failed", false, ErrorType.INVALID_INPUT, null);
-            //this.deliveryService.deliver(country, address, recipient, packageDetails);
-            //logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
 
         } catch (Exception e) {
             this.paymentService.refund(cardNumber,totalPrice);
@@ -860,10 +873,28 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during updating products quantity in store: " + e.getMessage());
             return new Response<String>(null, "Error during updating products quantity in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
+        //---------------------------------------------------------------//
+        List<Integer> productsPurchase = this.extractPurchasedProductIds(validCart);
+        int storeId = validCart.keySet().iterator().next().getStoreId();
+        this.userService.getUserById(userId).get().setproductsPurchase(storeId, productsPurchase);
+        //----------------------------------------------------------------//
         this.orderService.addOrderCart(validCart,prices, userId, address, paymentMethod);
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
 
     }
+
+    @Override
+    public List<Integer> extractPurchasedProductIds(Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart) {
+    List<Integer> productIds = new ArrayList<>();
+    for (Map<StoreProductDTO, Boolean> products : validCart.values()) {
+        for (Map.Entry<StoreProductDTO, Boolean> entry : products.entrySet()) {
+            if (Boolean.TRUE.equals(entry.getValue())) {
+                productIds.add(entry.getKey().getProductId());
+            }
+        }
+    }
+    return productIds;
+}
 
     @Override
     public Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
@@ -1028,12 +1059,8 @@ public class SystemService implements ISystemService {
     }
 
 
-    public Response<Boolean> deleteOrder(int orderId, String token) {
+    public Response<Boolean> deleteOrder(int orderId, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 this.orderService.deleteOrder(orderId);
                 return new Response<>(true, "Order deleted successfully", true, null, null);
@@ -1048,12 +1075,8 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<OrderDTO> viewOrder(int orderId, String token) {
+    public Response<OrderDTO> viewOrder(int orderId, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 IOrder order = this.orderService.viewOrder(orderId);
                 OrderDTO orderDTO = createOrderDTO(order);
@@ -1069,12 +1092,8 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<OrderDTO>> searchOrders(String keyword, String token) {
+    public Response<List<OrderDTO>> searchOrders(String keyword, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.searchOrders(keyword);
                 List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -1094,12 +1113,9 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token) {
+    public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId) {
         try {
-            if(!this.isAuth(token)){
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-            int userId = this.authenticatorService.getUserId(token);
+
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.getOrdersByStoreId(storeId);
                 List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -1385,10 +1401,6 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private boolean isAuth(String token){
-        return this.authenticatorService.isValid(token);
-    }
-
     private boolean isValidPassword(String password) {
         return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
     }
@@ -1466,13 +1478,14 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<User> getUnsignedUserById(int userId) {
+    public Response<UserDTO> getUnsignedUserById(int userId) {
         try {
             Optional<User> optionalUser = userService.getUnsignedUserById(userId);
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
+                UserDTO userDTO = user.toDTO(); //email = null , age = -1
                 logger.info("System Service - Retrieved unsigned user with ID: " + userId);
-                return new Response<>(user, "Unsigned user retrieved successfully", true, null, null);
+                return new Response<>(userDTO, "Unsigned user retrieved successfully", true, null, null);
             } else {
                 logger.error("System Service - Unsigned user not found: " + userId);
                 return new Response<>(null, "Unsigned user not found", false, ErrorType.INVALID_INPUT, null);
@@ -1487,14 +1500,14 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<List<User>> getAllUnsignedUsers(int adminId) {
+    public Response<List<UserDTO>> getAllUnsignedUsers(int adminId) {
         try {
             if (!userService.isSystemAdmin(adminId)) {
                 logger.error("System Service - Unauthorized attempt to get all unsigned users: Admin privileges required for user ID " + adminId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
             
-            List<User> users = userService.getAllUnsignedUsers();
+            List<UserDTO> users = userService.getAllUnsignedUsersDTO();
             logger.info("System Service - Retrieved " + users.size() + " unsigned users");
             return new Response<>(users, "Retrieved " + users.size() + " unsigned users", true, null, null);
         } catch (IllegalArgumentException e) {

@@ -95,7 +95,9 @@ public interface IUserService {
     Optional<User> getUnsignedUserById(int userId);
     
     List<User> getAllUnsignedUsers();
-    
+
+    List<UserDTO> getAllUnsignedUsersDTO();
+
     boolean removeUnsignedUser(int userId);
     
     boolean isUnsignedUser(int userId);
@@ -103,4 +105,5 @@ public interface IUserService {
     int getUnsignedUserCount();
 
     void setCart(int userId, Map<Integer,Map<Integer,Integer>> validCart);
+
 }
