@@ -141,7 +141,15 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> ratingStore(int storeId, int userId, double rating, String comment) {
         try {
+            if (!storeService.isStoreOpen(storeId)) {
+                logger.error("System Service - Store is close: " + storeId);
+                return new Response<>(null, "Store is close", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.didPurchaseStore(userId, storeId)) {
+                if (rating < 0 || rating > 5) {
+                    logger.error("System Service - Invalid rating value (rating should be between 0 to 5): " + rating);
+                    return new Response<>(null, "Invalid rating value", false, ErrorType.INVALID_INPUT, null);
+                }
                 this.storeService.addStoreRating(storeId, userId, rating, comment);
                 logger.info("System Service - User rated store: " + storeId + " by user: " + userId + " with rating: " + rating);
                 return new Response<>(null, "Store rated successfully", true, null, null);
@@ -158,13 +166,35 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment) {
         try {
+            if (!storeService.isStoreOpen(storeId)) {
+                logger.error("System Service - Store is close: " + storeId);
+                return new Response<>(null, "Store is close", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (rating < 0 || rating > 5) {
+                logger.error("System Service - Invalid rating value (rating should be between 0 to 5): " + rating);
+                return new Response<>(null, "Invalid rating value", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (this.productService.getProduct(productId) == null) {
+                logger.error("System Service - Product not found: " + productId);
+                return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (this.storeService.getProductFromStore(productId, storeId) == null) {
+                logger.error("System Service - Product not found in store: " + productId + " in store: " + storeId);
+                return new Response<>(null, "Product not found in store", false, ErrorType.INVALID_INPUT, null);
+            }
+            if(this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.didPurchaseProduct(userId, storeId, productId)) {
                 this.storeService.addStoreProductRating(storeId, productId, userId, rating, comment);
                 logger.info("System Service - User rated product: " + productId + " in store: " + storeId + " by user: " + userId + " with rating: " + rating);
                 return new Response<>(null, "Product rated successfully", true, null, null);
             } else {
-                logger.error("System Service - User did not purchase from this product: " + userId + " " + storeId + " " + productId);
-                return new Response<>(null, "User did not purchase from this product", false, ErrorType.INVALID_INPUT, null);
+                logger.error("System Service - User did not purchase from this store that product: " + userId + " " + storeId + " " + productId);
+                return new Response<>(null, "User did not purchase that productfrom the store", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during rating product: " + e.getMessage());
@@ -818,8 +848,6 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
             else
                 return new Response<String>(null, "Payment failed", false, ErrorType.INVALID_INPUT, null);
-            //this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
-            //logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
         } catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());
             return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
@@ -829,8 +857,6 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
             else
                 return new Response<String>(null, "Delivery failed", false, ErrorType.INVALID_INPUT, null);
-            //this.deliveryService.deliver(country, address, recipient, packageDetails);
-            //logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
 
         } catch (Exception e) {
             this.paymentService.refund(cardNumber,totalPrice);
@@ -847,10 +873,28 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during updating products quantity in store: " + e.getMessage());
             return new Response<String>(null, "Error during updating products quantity in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
+        //---------------------------------------------------------------//
+        List<Integer> productsPurchase = this.extractPurchasedProductIds(validCart);
+        int storeId = validCart.keySet().iterator().next().getStoreId();
+        this.userService.getUserById(userId).get().setproductsPurchase(storeId, productsPurchase);
+        //----------------------------------------------------------------//
         this.orderService.addOrderCart(validCart,prices, userId, address, paymentMethod);
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
 
     }
+
+    @Override
+    public List<Integer> extractPurchasedProductIds(Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart) {
+    List<Integer> productIds = new ArrayList<>();
+    for (Map<StoreProductDTO, Boolean> products : validCart.values()) {
+        for (Map.Entry<StoreProductDTO, Boolean> entry : products.entrySet()) {
+            if (Boolean.TRUE.equals(entry.getValue())) {
+                productIds.add(entry.getKey().getProductId());
+            }
+        }
+    }
+    return productIds;
+}
 
     @Override
     public Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {

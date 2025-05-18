@@ -99,6 +99,8 @@ public interface ISystemService {
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails); // purchase the cart
 
+    List<Integer> extractPurchasedProductIds(Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart); //convert cart to list of product ids
+
     Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
 
     Response<Void> removeProductFromStore(int storeId, int requesterId, int productId);

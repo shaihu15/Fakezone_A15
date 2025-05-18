@@ -55,7 +55,6 @@ public class Registered extends User {
         this.productsPurchase.put(storeID, productsPurchase);
     }
 
-
     @Override
     public boolean isRegistered() {
         return true;
