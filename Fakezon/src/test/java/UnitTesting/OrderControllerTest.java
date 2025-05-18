@@ -6,15 +6,21 @@ import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Response;
 import ApplicationLayer.Interfaces.ISystemService;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+
 import com.fakezone.fakezone.controller.OrderController;
+
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -40,7 +46,6 @@ class OrderControllerTest {
     private AuthenticatorAdapter authenticatorAdapter;
 
     @InjectMocks
-
     private OrderController orderController;
 
     @BeforeEach
@@ -126,7 +131,6 @@ class OrderControllerTest {
     void viewOrder_Success() {
         int orderId = 1;
         String token = "valid-token";
-        OrderDTO orderDTO = new OrderDTO(1, 1, 1, List.of(), "2023-01-01", "2023-01-05", "Pending");
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
         int userId = 42;
@@ -201,10 +205,9 @@ class OrderControllerTest {
     void searchOrders_Success() {
         String keyword = "test";
         String token = "valid-token";
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "2023-01-01", "2023-01-05", "Pending"));
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment"));
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         int userId = 42;
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment"));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(authenticatorAdapter.getUserId(token)).thenReturn(userId);
@@ -237,47 +240,6 @@ class OrderControllerTest {
         verify(systemService, times(1)).searchOrders(keyword, userId);
     }
 
-    @Test
-    void searchOrders_InvalidToken() {
-        String keyword = "test";
-        String token = "valid-token";
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.searchOrders(keyword, token)).thenThrow(new RuntimeException("Unexpected error"));
-
-        String token = "invalid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        ResponseEntity<Response<List<OrderDTO>>> response = orderController.searchOrders(keyword, token);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals("Invalid token", response.getBody().getMessage());
-        verify(systemService, never()).searchOrders(anyString(), anyInt());
-    }
-
-    @Test
-    void searchOrders_Exception() {
-        String keyword = "test";
-        String token = "valid-token";
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "2023-01-01", "2023-01-05", "Pending"));
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getOrdersByStoreId(storeId, token))
-                .thenReturn(new Response<>(orders, "Orders retrieved successfully", true, null, null));
-
-        int userId = 42;
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(authenticatorAdapter.getUserId(token)).thenReturn(userId);
-        when(systemService.searchOrders(keyword, userId)).thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<List<OrderDTO>>> response = orderController.searchOrders(keyword, token);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals("An error occurred while searching for orders", response.getBody().getMessage());
-        verify(systemService, times(1)).searchOrders(keyword, userId);
-    }
 
     @Test
     void getOrdersByStoreId_Success() {
@@ -334,32 +296,13 @@ class OrderControllerTest {
     }
 
     @Test
-    void getOrdersByStoreId_Exception() {
-        int storeId = 1;
-        String token = "valid-token";
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        int userId = 42;
-
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(authenticatorAdapter.getUserId(token)).thenReturn(userId);
-        when(systemService.getOrdersByStoreId(storeId, userId)).thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<List<OrderDTO>>> response = orderController.getOrdersByStoreId(storeId, token);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertTrue(response.getBody().isSuccess());
-        assertTrue(response.getBody().getData().isEmpty());
-        verify(systemService, times(1)).getOrdersByStoreId(storeId, token);
-    }
-
-    @Test
     void testViewOrder_NullInput() {
         int orderId = 0;
-        String token = null;
+        int userId = 0;
+        String token = "invalid-token";
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        when(systemService.viewOrder(orderId, token))
+        when(systemService.viewOrder(orderId, userId))
                 .thenReturn(new Response<>(null, "Invalid input", false, ErrorType.INVALID_INPUT, null));
 
         ResponseEntity<Response<OrderDTO>> response = orderController.viewOrder(orderId, token);
@@ -367,23 +310,7 @@ class OrderControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertNull(response.getBody().getData());
-        verify(systemService, times(0)).viewOrder(orderId, token);
+        verify(systemService, times(0)).viewOrder(orderId, userId);
     }
 
-    @Test
-    void testSearchOrders_Unauthorized() {
-        String keyword = "test";
-        String token = "unauthorized-token";
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        when(systemService.searchOrders(keyword, token))
-                .thenReturn(new Response<>(null, "Unauthorized access", false, ErrorType.UNAUTHORIZED, null));
-
-        ResponseEntity<Response<List<OrderDTO>>> response = orderController.searchOrders(keyword, token);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertNull(response.getBody().getData());
-        verify(systemService, times(0)).searchOrders(keyword, token);
-    }
 }

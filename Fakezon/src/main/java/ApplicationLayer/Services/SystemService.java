@@ -1061,7 +1061,6 @@ public class SystemService implements ISystemService {
 
     public Response<Boolean> deleteOrder(int orderId, int userId) {
         try {
-            int userId = this.authenticatorService.getUserId(token);
             if(this.userService.isUserLoggedIn(userId)) {
                 this.orderService.deleteOrder(orderId);
                 return new Response<>(true, "Order deleted successfully", true, null, null);
@@ -1078,8 +1077,6 @@ public class SystemService implements ISystemService {
     @Override
     public Response<OrderDTO> viewOrder(int orderId, int userId) {
         try {
-            int userId = this.authenticatorService.getUserId(token);
-
             if(this.userService.isUserLoggedIn(userId)) {
                 IOrder order = this.orderService.viewOrder(orderId);
                 OrderDTO orderDTO = createOrderDTO(order);
@@ -1097,8 +1094,6 @@ public class SystemService implements ISystemService {
     @Override
     public Response<List<OrderDTO>> searchOrders(String keyword, int userId) {
         try {
-            int userId = this.authenticatorService.getUserId(token);
-
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.searchOrders(keyword);
                 List<OrderDTO> orderDTOS = new ArrayList<>();
@@ -1120,7 +1115,6 @@ public class SystemService implements ISystemService {
     @Override
     public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId) {
         try {
-            int userId = this.authenticatorService.getUserId(token);
 
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.getOrdersByStoreId(storeId);

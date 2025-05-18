@@ -23,7 +23,6 @@ import java.util.List;
 public class OrderController {
 
     public ISystemService systemService;
-    private final AuthenticatorAdapter authenticatorAdapter;
 
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
     private final AuthenticatorAdapter authenticatorAdapter;
