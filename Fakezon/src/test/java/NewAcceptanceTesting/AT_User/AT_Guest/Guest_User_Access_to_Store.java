@@ -3,6 +3,7 @@ package NewAcceptanceTesting.AT_User.AT_Guest;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -87,14 +88,11 @@ public class Guest_User_Access_to_Store {
 
         Response<Integer> resultAddStore = testHelper.openStore();
         storeId = resultAddStore.getData();
-
+        
 
         Response<StoreProductDTO> resultAddProduct = testHelper.addProductToStore(storeId, storeOwnerId);
         productId = resultAddProduct.getData().getProductId();
 
-        String guestToken = tokenService.generateGuestToken(); 
-        assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( storeId); 
 
 
     }
@@ -122,8 +120,8 @@ public class Guest_User_Access_to_Store {
         systemService.closeStoreByFounder(userId, storeId);
         assertFalse(storeRepository.findById(storeId).isOpen());
         //the store is closed
-
-        String guestToken = tokenService.generateGuestToken(); 
+         
+        String guestToken = authenticatorService.generateGuestToken(); 
         assertNotNull(guestToken);
         Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( -1); 
 

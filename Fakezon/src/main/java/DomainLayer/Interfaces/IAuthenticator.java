@@ -16,4 +16,8 @@ public interface IAuthenticator {
     String getEmail(String sessionToken);
 
     int getUserId(String sessionToken);
+
+    String generateGuestToken();
+
+    Boolean isGuestToken(String token);
 }
