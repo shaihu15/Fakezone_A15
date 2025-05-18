@@ -525,31 +525,6 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy, int userId) {
-        List<StoreProductDTO> products = new ArrayList<>();
-        for (Map.Entry<Integer, Map<Integer, Integer>> entry : productsToBuy.entrySet()) {
-            int storeId = entry.getKey();
-            Map<Integer, Integer> basket = entry.getValue();
-            Store store = storeRepository.findById(storeId);
-            if (store == null) {
-                logger.error("decrementProductsQuantity - Store not found: " + storeId);
-                throw new IllegalArgumentException("Store not found");
-            }
-            List<StoreProductDTO> productsFromStore = store.decrementProductsQuantity(basket, userId);
-            if (productsFromStore != null) {
-                products.addAll(productsFromStore);
-                logger.info("Products decremented in store: " + storeId + " for user: " + userId);
-            } else {
-                logger.error("decrementProductsQuantity - Products not found in store: " + storeId);
-                throw new IllegalArgumentException("Products not found in store");
-            }
-            
-        }
-        return products;
-        
-    }
-
-    @Override
     public Map<Integer,Double> calcAmount(int userId,Cart cart, LocalDate dob) {
         Map<Integer,Double> prices = new HashMap<>();
         for (Map.Entry<Integer, Map<Integer,Integer>> entry : cart.getAllProducts().entrySet()) {
@@ -664,7 +639,7 @@ public class StoreService implements IStoreService {
 
     @Override
     public Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(
-            Map<Integer, Map<Integer, Integer>> cart) {
+            int userID,Map<Integer, Map<Integer, Integer>> cart) {
         Map<StoreDTO, Map<StoreProductDTO, Boolean>> result = new HashMap<>();
         for (Map.Entry<Integer, Map<Integer, Integer>> entry : cart.entrySet()) {
             int storeId = entry.getKey();
@@ -674,10 +649,41 @@ public class StoreService implements IStoreService {
                 logger.error("checkIfProductsInStores - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            Map<StoreProductDTO, Boolean> storeProducts = store.checkIfProductsInStore(products);
+            Map<StoreProductDTO, Boolean> storeProducts = store.checkIfProductsInStore(userID, products);
             result.put(toStoreDTO(store), storeProducts);
         }
         return result;
+    }
+
+    @Override
+    public Map<StoreDTO, Map<StoreProductDTO, Boolean>> decrementProductsInStores(
+            int userID,Map<Integer, Map<Integer, Integer>> cart) {
+                Map<StoreDTO, Map<StoreProductDTO, Boolean>> result = new HashMap<>();
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : cart.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> products = entry.getValue();
+            Store store = storeRepository.findById(storeId);
+            if (store == null) {
+                logger.error("decrementProductsInStores - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            Map<StoreProductDTO, Boolean> storeProducts = store.decrementProductsInStore(userID, products);
+            result.put(toStoreDTO(store), storeProducts);
+        }
+        return result;
+    }
+
+    public void returnProductsToStores(int userId, Map<Integer,Map<Integer,Integer>> products){
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> productsInStore = entry.getValue();
+            Store store = storeRepository.findById(storeId);
+            if (store == null) {
+                logger.error("returnProductsToStores - Store not found: " + storeId);
+                throw new IllegalArgumentException("Store not found");
+            }
+            store.returnProductsToStore(userId, productsInStore);
+        }
     }
 
 

@@ -65,6 +65,19 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public void clearUserCart(int userId){
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            Registered user = optionalUser.get();
+            user.clearCart();
+            logger.info("User "+userId+" clear cart");
+        } else {
+            logger.warn("Clear cart failed: User with id {} not found", userId);
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+
+    @Override
     public void deleteUser(String userName) {
         userRepository.deleteByUserName(userName);
         logger.info("User deleted: " + userName);
