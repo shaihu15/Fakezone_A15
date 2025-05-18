@@ -22,6 +22,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.Mock;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -76,6 +78,7 @@ class ProductControllerTest {
     void testGetProduct_BadRequest() {
         int productId = 1;
         String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getProduct(productId)).thenReturn(new Response<>(null, "Invalid product ID", false, ErrorType.BAD_REQUEST, null));
@@ -92,6 +95,7 @@ class ProductControllerTest {
     void testGetProduct_InternalError() {
         int productId = 1;
         String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getProduct(productId)).thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
@@ -123,6 +127,7 @@ class ProductControllerTest {
     void testGetProduct_ExceptionHandling() {
         int productId = 1;
         String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getProduct(productId)).thenThrow(new RuntimeException("Unexpected error"));
@@ -137,9 +142,11 @@ class ProductControllerTest {
 
     @Test
     void testUpdateProduct_Success() {
-        ProductDTO productDTO = new ProductDTO("product", "Updated Product", 1, PCategory.ELECTRONICS);
-        Request<ProductDTO> request = new Request<>("valid-token", productDTO);
         String token = "valid-token";
+        ProductDTO productDTO = new ProductDTO("product", "Updated Product", 1, PCategory.ELECTRONICS);
+        Request<ProductDTO> request = new Request<>(token, productDTO);
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
@@ -155,11 +162,11 @@ class ProductControllerTest {
 
     @Test
     void testUpdateProduct_BadRequest() {
-        ProductDTO productDTO = new ProductDTO("product", "Updated Product", 1, PCategory.ELECTRONICS);
-        Request<ProductDTO> request = new Request<>("valid-token", productDTO);
         String token = "valid-token";
-
+        ProductDTO productDTO = new ProductDTO("product", "Updated Product", 1, PCategory.ELECTRONICS);
+        Request<ProductDTO> request = new Request<>(token, productDTO);
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
+
         when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
                 .thenReturn(new Response<>(false, "Invalid data", false, ErrorType.BAD_REQUEST, null));
 
@@ -207,11 +214,11 @@ class ProductControllerTest {
 
     @Test
     void testDeleteProduct_Success() {
-        int productId = 1;
-        Request<Integer> request = new Request<>("valid-token", productId);
         String token = "valid-token";
-
+        int productId = 1;        
+        Request<Integer> request = new Request<>( token, productId);
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
+
         when(systemService.deleteProduct(productId)).thenReturn(new Response<>(true, null, true, null, null));
 
         ResponseEntity<Response<Boolean>> response = productController.deleteProduct(request, token);
@@ -225,8 +232,8 @@ class ProductControllerTest {
     @Test
     void testDeleteProduct_InternalError() {
         int productId = 1;
-        Request<Integer> request = new Request<>("valid-token", productId);
         String token = "valid-token";
+        Request<Integer> request = new Request<>( token,productId);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.deleteProduct(productId)).thenReturn(new Response<>(false, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
@@ -277,6 +284,7 @@ class ProductControllerTest {
         String keyword = "Test";
         String token = "valid-token";
         List<ProductDTO> products = List.of(new ProductDTO("product", "Test Product", 1, PCategory.ELECTRONICS));
+        when(authenticatorAdapter.isValid("valid-token")).thenReturn(true);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.searchByKeyword(keyword)).thenReturn(new Response<>(products, null, true, null, null));
@@ -293,6 +301,7 @@ class ProductControllerTest {
     void testSearchProducts_BadRequest() {
         String keyword = "Test";
         String token = "valid-token";
+        when(authenticatorAdapter.isValid("valid-token")).thenReturn(true);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.searchByKeyword(keyword)).thenReturn(new Response<>(null, "Invalid keyword", false, ErrorType.BAD_REQUEST, null));

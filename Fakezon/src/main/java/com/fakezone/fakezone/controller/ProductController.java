@@ -23,11 +23,10 @@ import java.util.List;
 public class ProductController {
 
     private final ISystemService systemService;
-    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
     private final AuthenticatorAdapter authenticatorAdapter;
-
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
     @Autowired
-    public ProductController(ISystemService systemService, AuthenticatorAdapter authenticatorAdapter){
+    public ProductController(ISystemService systemService, AuthenticatorAdapter authenticatorAdapter) {
         this.systemService = systemService;
         this.authenticatorAdapter = authenticatorAdapter;
     }
@@ -65,8 +64,12 @@ public class ProductController {
             }
             
             ProductDTO productDTO = updatedProduct.getData();
+            logger.info("Received request to update product: {} from user this request token of: {}", productDTO.getName(), updatedProduct.getToken());
+            if(!authenticatorAdapter.isValid(updatedProduct.getToken())){
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
             logger.info("Updating product: {}", productDTO.getName());
-
             Response<Boolean> response = systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
@@ -86,12 +89,12 @@ public class ProductController {
     @DeleteMapping("/deleteProduct")
     public ResponseEntity<Response<Boolean>> deleteProduct(@RequestBody Request<Integer> request, @RequestHeader("Authorization") String token) {
         try{
-            logger.info("Received request to delete product with ID: {} with token: {}", request.getData(), token);
-            if (!authenticatorAdapter.isValid(token)) {
-                Response<Boolean> response = new Response<>(false, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+            logger.info("Received request to delete product with ID: {} from user this request token of: {}", request.getData(), request.getToken());
+            if(!authenticatorAdapter.isValid(request.getToken())){
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            
+
             Response<Boolean> response = systemService.deleteProduct(request.getData());
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
