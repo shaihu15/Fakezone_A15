@@ -1417,13 +1417,14 @@ public class SystemService implements ISystemService {
     }
     
     @Override
-    public Response<User> getUnsignedUserById(int userId) {
+    public Response<UserDTO> getUnsignedUserById(int userId) {
         try {
             Optional<User> optionalUser = userService.getUnsignedUserById(userId);
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
+                UserDTO userDTO = user.toDTO(); //email = null , age = -1
                 logger.info("System Service - Retrieved unsigned user with ID: " + userId);
-                return new Response<>(user, "Unsigned user retrieved successfully", true, null, null);
+                return new Response<>(userDTO, "Unsigned user retrieved successfully", true, null, null);
             } else {
                 logger.error("System Service - Unsigned user not found: " + userId);
                 return new Response<>(null, "Unsigned user not found", false, ErrorType.INVALID_INPUT, null);
