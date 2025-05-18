@@ -1,5 +1,16 @@
 package UnitTesting;
 
+
+import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.ISystemService;
+import ApplicationLayer.Request;
+import ApplicationLayer.Response;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import com.fakezone.fakezone.controller.ProductController;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -323,5 +334,108 @@ class ProductControllerTest {
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
         verify(systemService, times(1)).searchByKeyword(keyword);
+    }
+
+    @Test
+    void testGetProductFromStore_Success() {
+        int productId = 1;
+        int storeId = 1;
+        String token = "valid-token";
+        StoreProductDTO product = new StoreProductDTO(1, "Test Product", 100.0, 10, 4.5, 1, PCategory.ELECTRONICS);
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getProductFromStore(productId, storeId))
+                .thenReturn(new Response<>(product, "Success", true, null, null));
+
+        ResponseEntity<Response<StoreProductDTO>> response = productController.getProductFromStore(productId, storeId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(product, response.getBody().getData());
+        verify(systemService, times(1)).getProductFromStore(productId, storeId);
+    }
+
+    @Test
+    void testGetProductFromStore_InvalidToken() {
+        int productId = 1;
+        int storeId = 1;
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<StoreProductDTO>> response = productController.getProductFromStore(productId, storeId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getProductFromStore(anyInt(), anyInt());
+    }
+
+    @Test
+    void testGetProductFromStore_InternalServerError() {
+        int productId = 1;
+        int storeId = 1;
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getProductFromStore(productId, storeId))
+                .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
+
+        ResponseEntity<Response<StoreProductDTO>> response = productController.getProductFromStore(productId, storeId, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).getProductFromStore(productId, storeId);
+    }
+
+    @Test
+    void testSearchByCategory_Success() {
+        String category = "ELECTRONICS";
+        String token = "valid-token";
+        List<ProductDTO> products = List.of(new ProductDTO("product", "Test Product", 1, PCategory.ELECTRONICS));
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.searchByCategory(category))
+                .thenReturn(new Response<>(products, "Success", true, null, null));
+
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchByCategory(category, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(products, response.getBody().getData());
+        verify(systemService, times(1)).searchByCategory(category);
+    }
+
+    @Test
+    void testSearchByCategory_InvalidToken() {
+        String category = "ELECTRONICS";
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchByCategory(category, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).searchByCategory(anyString());
+    }
+
+    @Test
+    void testSearchByCategory_InternalServerError() {
+        String category = "ELECTRONICS";
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.searchByCategory(category))
+                .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
+
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchByCategory(category, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).searchByCategory(category);
     }
 }

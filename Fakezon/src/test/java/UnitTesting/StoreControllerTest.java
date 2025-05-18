@@ -30,6 +30,7 @@ import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
@@ -1092,6 +1093,72 @@ class StoreControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         verify(systemService, never()).getPendingManagers(anyInt(), anyInt());
+    }
+
+    @Test
+    void testGetTopRatedProducts_Success() {
+        int limit = 5;
+        String token = "valid-token";
+        List<StoreProductDTO> products = List.of(new StoreProductDTO(1, "Test Product", 100.0, 10, 4.5, 1, PCategory.ELECTRONICS));
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getTopRatedProducts(limit))
+                .thenReturn(new Response<>(products, "Success", true, null, null));
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(products, response.getBody().getData());
+        verify(systemService, times(1)).getTopRatedProducts(limit);
+    }
+
+    @Test
+    void testGetTopRatedProducts_InvalidToken() {
+        int limit = 5;
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getTopRatedProducts(anyInt());
+    }
+
+    @Test
+    void testGetTopRatedProducts_InternalServerError() {
+        int limit = 5;
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getTopRatedProducts(limit))
+                .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).getTopRatedProducts(limit);
+    }
+
+    @Test
+    void testGetTopRatedProducts_BadRequest() {
+        int limit = 5;
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getTopRatedProducts(limit))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).getTopRatedProducts(limit);
     }
 
 

@@ -655,4 +655,57 @@ public class StoreController {
         }
     }
 
+    @PostMapping("/addStoreManager/{storeId}/{requesterId}/{managerId}")
+    public ResponseEntity<Response<Void>> addStoreManager(@PathVariable("storeId") int storeId,
+                                                  @PathVariable("requesterId") int requesterId,
+                                                  @PathVariable("managerId") int managerId,
+                                                  @RequestBody Request<List<StoreManagerPermission>> request) {
+        try {
+            logger.info("Received request to add manager {} to store {} by user {}", managerId, storeId, requesterId);
+            if (!authenticatorAdapter.isValid(request.getToken())) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.addStoreManager(storeId, requesterId, managerId, request.getData());
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getTopRatedProducts/{limit}")
+    public ResponseEntity<Response<List<StoreProductDTO>>> getTopRatedProducts(@PathVariable("limit") int limit,
+                                                                        @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get top rated products with limit {} and token {}", limit, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<StoreProductDTO>> response = systemService.getTopRatedProducts(limit);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getTopRatedProducts: {}", e.getMessage());
+            Response<List<StoreProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+
+
 }
