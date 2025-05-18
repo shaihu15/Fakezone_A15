@@ -4,18 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -35,8 +34,8 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
-import NewAcceptanceTesting.TestHelper;
 import InfrastructureLayer.Security.TokenService;
+import NewAcceptanceTesting.TestHelper;
 
 public class Guest_User_Access_to_Store {
     // Use-case: 2.1 Guest User Access to Store
@@ -88,7 +87,7 @@ public class Guest_User_Access_to_Store {
 
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(guestToken, storeId); 
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( storeId); 
 
         assertTrue(accessStoreResponse.isSuccess());
         assertEquals(accessStoreResponse.getData().getStoreId(), storeId);
@@ -113,7 +112,7 @@ public class Guest_User_Access_to_Store {
 
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(guestToken, -1); 
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( -1); 
 
         assertFalse(accessStoreResponse.isSuccess());
     }

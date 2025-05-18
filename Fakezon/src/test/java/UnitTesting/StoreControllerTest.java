@@ -1,31 +1,41 @@
 package UnitTesting;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
+import com.fakezone.fakezone.controller.StoreController;
+
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.ISystemService;
+import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
-import DomainLayer.Model.Store;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import com.fakezone.fakezone.controller.StoreController;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
-import ApplicationLayer.Request;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.fasterxml.jackson.databind.type.LogicalType.Map;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class StoreControllerTest {
 
@@ -363,7 +373,7 @@ class StoreControllerTest {
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.userAccessStore(token, storeId))
+        when(systemService.userAccessStore(storeId))
                 .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
 
         ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
@@ -371,7 +381,7 @@ class StoreControllerTest {
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
-        verify(systemService, times(1)).userAccessStore(token, storeId);
+        verify(systemService, times(1)).userAccessStore(storeId);
     }
 
     @Test
@@ -436,7 +446,7 @@ class StoreControllerTest {
         String token = "valid-token";
         Map<Integer, Double> ratings = new HashMap<>();
         StoreDTO storeDTO = new StoreDTO(storeId, "Test Store", 1, true, List.of(), ratings, 0.0);        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.userAccessStore(token, storeId))
+        when(systemService.userAccessStore(storeId))
                 .thenReturn(new Response<>(storeDTO, "Store retrieved successfully", true, null, null));
 
         ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
@@ -444,7 +454,7 @@ class StoreControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
         assertEquals(storeDTO, response.getBody().getData());
-        verify(systemService, times(1)).userAccessStore(token, storeId);
+        verify(systemService, times(1)).userAccessStore(storeId);
     }
 
     @Test
@@ -459,7 +469,7 @@ class StoreControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
-        verify(systemService, never()).userAccessStore(anyString(), anyInt());
+        verify(systemService, never()).userAccessStore( anyInt());
     }
 
     @Test
@@ -850,14 +860,14 @@ class StoreControllerTest {
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.userAccessStore(token, storeId)).thenThrow(new RuntimeException("Unexpected error"));
+        when(systemService.userAccessStore(storeId)).thenThrow(new RuntimeException("Unexpected error"));
 
         ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
 
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).userAccessStore(token, storeId);
+        verify(systemService, times(1)).userAccessStore(storeId);
     }
 
     @Test
@@ -970,7 +980,7 @@ class StoreControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
-        verify(systemService, never()).addStoreManagerPermissions(anyInt(), anyString(), anyInt(), anyList());
+        verify(systemService, never()).addStoreManagerPermissions(anyInt(), anyInt(), anyInt(), anyList());
     }
     @Test
     void testRatingStoreProduct_Success() {
@@ -1025,26 +1035,28 @@ class StoreControllerTest {
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
-        verify(systemService, never()).removeStoreManagerPermissions(anyInt(), anyString(), anyInt(), anyList());
+        verify(systemService, never()).removeStoreManagerPermissions(anyInt(),anyInt() , anyInt(), anyList());
     }
 
     @Test
     void testAddStoreManagerPermissions_Success() {
         int storeId = 1;
         int managerId = 1;
+        int requesterId = 2;
         List<String> permissions = List.of("VIEW_PURCHASES");
         String token = "valid-token";
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addStoreManagerPermissions(storeId, token, managerId, permissions.stream()
+        when(authenticatorAdapter.getUserId(token)).thenReturn(requesterId); // <-- ADD THIS LINE
+        when(systemService.addStoreManagerPermissions(storeId, managerId, requesterId, permissions.stream()
                 .map(StoreManagerPermission::valueOf)
                 .toList()))
                 .thenReturn(new Response<>(null, "Permissions added successfully", true, null, null));
-
+    
         ResponseEntity<Response<Void>> response = storeController.addStoreManagerPermissions(storeId, managerId, permissions, token);
-
+    
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
-        verify(systemService, times(1)).addStoreManagerPermissions(storeId, token, managerId, permissions.stream()
+        verify(systemService, times(1)).addStoreManagerPermissions(storeId, managerId, requesterId, permissions.stream()
                 .map(StoreManagerPermission::valueOf)
                 .toList());
     }
@@ -1081,6 +1093,72 @@ class StoreControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         verify(systemService, never()).getPendingManagers(anyInt(), anyInt());
+    }
+
+    @Test
+    void testGetTopRatedProducts_Success() {
+        int limit = 5;
+        String token = "valid-token";
+        List<StoreProductDTO> products = List.of(new StoreProductDTO(1, "Test Product", 100.0, 10, 4.5, 1, PCategory.ELECTRONICS));
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getTopRatedProducts(limit))
+                .thenReturn(new Response<>(products, "Success", true, null, null));
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(products, response.getBody().getData());
+        verify(systemService, times(1)).getTopRatedProducts(limit);
+    }
+
+    @Test
+    void testGetTopRatedProducts_InvalidToken() {
+        int limit = 5;
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getTopRatedProducts(anyInt());
+    }
+
+    @Test
+    void testGetTopRatedProducts_InternalServerError() {
+        int limit = 5;
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getTopRatedProducts(limit))
+                .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).getTopRatedProducts(limit);
+    }
+
+    @Test
+    void testGetTopRatedProducts_BadRequest() {
+        int limit = 5;
+        String token = "valid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getTopRatedProducts(limit))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+
+        ResponseEntity<Response<List<StoreProductDTO>>> response = storeController.getTopRatedProducts(limit, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).getTopRatedProducts(limit);
     }
 
 
