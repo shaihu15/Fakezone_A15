@@ -33,7 +33,7 @@ public interface ISystemService {
 
     IPayment getPaymentService();
 
-    Response<StoreDTO> userAccessStore(String token , int storeId);
+    Response<StoreDTO> userAccessStore(int storeId);
 
     Response<Void> ratingStore(int storeId, int userId, double rating, String comment);
 
@@ -57,13 +57,13 @@ public interface ISystemService {
 
     Response<String> guestRegister(String email, String password,String dobInput, String country);
     
-    Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
+    Response<List<ProductDTO>> searchByKeyword(String keyword);
 
     Response<List<ProductDTO>> searchByCategory(String category);
     
-    Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
+    Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId, List<StoreManagerPermission> perms);
     
-    Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
+    Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove);
 
     Response<Void> removeStoreManager(int storeId, int requesterId, int managerId);
     
@@ -115,13 +115,13 @@ public interface ISystemService {
 
     Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
 
-    Response<Boolean> deleteOrder(int orderId, String token);
+    Response<Boolean> deleteOrder(int orderId, int userId);
 
-    Response<OrderDTO> viewOrder(int orderId, String token);
+    Response<OrderDTO> viewOrder(int orderId, int userId);
 
-    Response<List<OrderDTO>> searchOrders(String keyword, String token);
+    Response<List<OrderDTO>> searchOrders(String keyword, int userId);
 
-    Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token);
+    Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId);
 
     Response<Void> userLogout(int userID);
 

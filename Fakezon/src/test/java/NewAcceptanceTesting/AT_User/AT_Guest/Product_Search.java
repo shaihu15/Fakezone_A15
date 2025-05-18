@@ -159,12 +159,13 @@ public class Product_Search {
         assertNotNull(storePResponse);
         // StoreOwner added a product to Store1
         
+        // NOTE: We're still generating the token for verification in the test, even though we don't pass it to systemService
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
 
-        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(guestToken, productName);
-        Response<List<ProductDTO>> result2 = systemService.searchByKeyword(guestToken, "Test");
-        Response<List<ProductDTO>> result3 = systemService.searchByKeyword(guestToken, "Product");
+        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(productName);
+        Response<List<ProductDTO>> result2 = systemService.searchByKeyword("Test");
+        Response<List<ProductDTO>> result3 = systemService.searchByKeyword("Product");
         int productIdFromResult2 = result1.getData().get(0).getId();
         int productIdFromResult3 = result1.getData().get(0).getId();
 
@@ -172,7 +173,6 @@ public class Product_Search {
         assertNotNull(result2.getData());
         assertNotNull(result3.getData());
         assertEquals(productIdFromResult2, productIdFromResult3);
-
     }
 
     @Test
@@ -194,20 +194,14 @@ public class Product_Search {
         assertNotNull(storePResponse);
         // StoreOwner added a product to Store1
         
+        // NOTE: We're still generating the token for verification in the test, even though we don't pass it to systemService
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
 
-        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(guestToken, productName);
-        Response<List<ProductDTO>> result2 = systemService.searchByKeyword(guestToken, "12");// Invalid keyword
+        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(productName);
+        Response<List<ProductDTO>> result2 = systemService.searchByKeyword("12");// Invalid keyword
 
         assertNotNull(result1.getData());
         assertTrue(result2.getData().isEmpty());
-
     }
-
-    
-
-
-
-
 }
