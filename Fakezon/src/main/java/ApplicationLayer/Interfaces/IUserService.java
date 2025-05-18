@@ -95,7 +95,9 @@ public interface IUserService {
     Optional<User> getUnsignedUserById(int userId);
     
     List<User> getAllUnsignedUsers();
-    
+
+    List<UserDTO> getAllUnsignedUsersDTO();
+
     boolean removeUnsignedUser(int userId);
     
     boolean isUnsignedUser(int userId);
