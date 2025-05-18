@@ -51,7 +51,7 @@ public class OrderController {
         }
         catch (Exception e){
             logger.error("Error in OrderController: {}", e.getMessage());
-            return ResponseEntity.status(500).body(new Response<>(false, "An error occurred while deleting the order", false, ErrorType.INTERNAL_ERROR, null));
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while deleting the order", false, ErrorType.INTERNAL_ERROR, null));
         }
     }
 

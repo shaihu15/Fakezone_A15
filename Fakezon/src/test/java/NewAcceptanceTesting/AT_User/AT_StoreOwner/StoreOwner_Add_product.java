@@ -1,10 +1,8 @@
-package NewAcceptanceTesting.AT_User.AT_Guest;
+package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,11 +36,9 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
-import InfrastructureLayer.Security.TokenService;
 import NewAcceptanceTesting.TestHelper;
 
-public class Product_Search {
-    //Use-case: 2.2 Product Search
+public class StoreOwner_Add_product {
 
     private SystemService systemService;
     private IStoreRepository storeRepository;
@@ -57,8 +53,6 @@ public class Product_Search {
     private IProductService productService;
     private IUserService userService;
     private IOrderService orderService;
-    private TokenService tokenService;
-
 
     private TestHelper testHelper;
 
@@ -78,70 +72,10 @@ public class Product_Search {
         authenticatorService = new AuthenticatorAdapter(userService);
         systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
         testHelper = new TestHelper(systemService);
-        tokenService = new TokenService(); 
-
     }
 
     @Test
-    void testSearchByCategory_validCategoryExistingProduct_Success() {
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult.getData());
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult.getData());
-        int storeId = storeResult.getData(); 
-        // StoreOwner is the owner of Store1
-
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
-        assertNotNull(storePResponse.getData());
-        int productId = storePResponse.getData().getProductId();
-        // StoreOwner added a product to Store1
-        
-        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
-        String category_toTset = resultGetProduct.getData().getCategory().name();
-        Response<List<ProductDTO>> result = systemService.searchByCategory(category_toTset);
-        assertNotNull(result.getData());
-        assertTrue(result.isSuccess());
-        assertEquals(productName, result.getData().get(0).getName());
-    }
-
-    @Test
-    void testSearchByCategory_invalidCategory_Failure() {
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult.getData());
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult.getData());
-        int storeId = storeResult.getData(); 
-        // StoreOwner is the owner of Store1
-
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-        String nonExistingCategory = "nonExistingCategory"; // Non-existing category
-
-        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
-        assertNotNull(storePResponse.getData());
-        int productId = storePResponse.getData().getProductId();
-        // StoreOwner added a product to Store1
-
-
-        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
-        Response<List<ProductDTO>> result = systemService.searchByCategory(nonExistingCategory);
-        System.err.println("result: " + result.getData());
-        assertNotNull(resultGetProduct.getData());
-        assertNull(result.getData());
-    }
-
-    @Test
-    void testSearchBy_validCategoryExistingProduct_Success() {
+    void testAddProductToStore_validArguments_Success(){
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
         assertNotNull(StoreOwnerResult);
         int userId = StoreOwnerResult.getData().getUserId();
@@ -157,26 +91,61 @@ public class Product_Search {
         String category = PCategory.ELECTRONICS.toString();
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         assertNotNull(storePResponse);
-        // StoreOwner added a product to Store1
-        
-        // NOTE: We're still generating the token for verification in the test, even though we don't pass it to systemService
-        String guestToken = tokenService.generateGuestToken(); 
-        assertNotNull(guestToken);
+        assertTrue(storePResponse.isSuccess());
 
-        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(productName);
-        Response<List<ProductDTO>> result2 = systemService.searchByKeyword("Test");
-        Response<List<ProductDTO>> result3 = systemService.searchByKeyword("Product");
-        int productIdFromResult2 = result1.getData().get(0).getId();
-        int productIdFromResult3 = result1.getData().get(0).getId();
+        int productId = storePResponse.getData().getProductId();
 
-        assertNotNull(result1.getData());
-        assertNotNull(result2.getData());
-        assertNotNull(result3.getData());
-        assertEquals(productIdFromResult2, productIdFromResult3);
+        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
+        assertTrue(resultGetProduct.isSuccess());
+        assertEquals(productName, resultGetProduct.getData().getName());
     }
 
     @Test
-    void testSearchBy_invalidCategoryExistingProduct_Failure() {
+    void testAddProductToStore_invalidCategory_Failure(){
+        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
+        assertNotNull(StoreOwnerResult);
+        int userId = StoreOwnerResult.getData().getUserId();
+        // StoreOwner is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
+        assertNotNull(storeResult);
+        int storeId = storeResult.getData();
+        // StoreOwner is the owner of Store1
+
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        
+        assertEquals("Invalid category",systemService.addProductToStore
+                                        (storeId, userId, productName, productDescription, 1, 1, "invalidCategory").getMessage());
+    }
+
+    /* 
+    //no test for invalid storeId in addProductToStore
+    @Test
+    void testAddProductToStore_invalidStoreId_Failure(){
+        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
+        assertNotNull(StoreOwnerResult);
+        int userId = StoreOwnerResult.getData().getUserId();
+        // StoreOwner is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
+        assertNotNull(storeResult);
+        int storeId = storeResult.getData();
+        // StoreOwner is the owner of Store1
+
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+
+        
+        assertEquals("error",systemService.addProductToStore
+                                        (storeId, userId, productName, productDescription, 1, 1, category).getMessage());
+
+    }
+    
+    //no test for invalid userId in addProductToStore
+    @Test
+    void testAddProductToStore_invalidUserId_Failure(){
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
         assertNotNull(StoreOwnerResult);
         int userId = StoreOwnerResult.getData().getUserId();
@@ -190,18 +159,81 @@ public class Product_Search {
         String productName = "Test Product";
         String productDescription = "Test Description";
         String category = PCategory.ELECTRONICS.toString();
+
+        
+        assertEquals("error",systemService.addProductToStore
+                                        (storeId, 9, productName, productDescription, 1, 1, category).getMessage());
+    }
+
+    //no test for invalid productId in addProductToStore
+    @Test
+    void testAddProductToStore_invalidProductName_Failure(){
+        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
+        assertNotNull(StoreOwnerResult);
+        int userId = StoreOwnerResult.getData().getUserId();
+        // StoreOwner is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
+        assertNotNull(storeResult);
+        int storeId = storeResult.getData(); 
+        // StoreOwner is the owner of Store1
+
+        String productName = ""; 
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+
+        
+        assertEquals("error",systemService.addProductToStore
+                                        (storeId, userId, productName, productDescription, 1, 1, category).getMessage());   
+    }                                  
+   
+
+    @Test
+    void testAddProductToStore_invalidProductName_Failure(){
+        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
+        assertNotNull(StoreOwnerResult);
+        int userId = StoreOwnerResult.getData().getUserId();
+        // StoreOwner is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
+        assertNotNull(storeResult);
+        int storeId = storeResult.getData(); 
+        // StoreOwner is the owner of Store1
+
+        //String productName = ""; 
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+
+        
+        assertEquals("error",systemService.addProductToStore
+                                        (storeId, userId, null, productDescription, 1, 1, category).getMessage());   
+    } 
+                                        
+    */
+
+    @Test
+    void testAddProductToStore_ProductAlreadyExists_Failure(){
+        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
+        assertNotNull(StoreOwnerResult);
+        int userId = StoreOwnerResult.getData().getUserId();
+        // StoreOwner is registered and logged in
+
+        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
+        assertNotNull(storeResult);
+        int storeId = storeResult.getData(); 
+        // StoreOwner is the owner of Store1
+
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
+
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         assertNotNull(storePResponse);
-        // StoreOwner added a product to Store1
-        
-        // NOTE: We're still generating the token for verification in the test, even though we don't pass it to systemService
-        String guestToken = tokenService.generateGuestToken(); 
-        assertNotNull(guestToken);
+        assertTrue(storePResponse.isSuccess());
+        int productId = storePResponse.getData().getProductId();
 
-        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(productName);
-        Response<List<ProductDTO>> result2 = systemService.searchByKeyword("12");// Invalid keyword
+        assertEquals("Error during adding product to store: Product "+ productId+" is already in store "+storeId,
+                        systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category).getMessage());
 
-        assertNotNull(result1.getData());
-        assertTrue(result2.getData().isEmpty());
     }
 }

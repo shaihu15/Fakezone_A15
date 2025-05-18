@@ -40,7 +40,7 @@ public class Response<T> {
         } else {
             this.errorType = errorType;
         }
-        this.token = null;
+        this.token = token;
     }
 
 

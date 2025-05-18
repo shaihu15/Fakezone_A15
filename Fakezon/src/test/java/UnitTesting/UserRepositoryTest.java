@@ -2,7 +2,9 @@ package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -247,5 +249,36 @@ public class UserRepositoryTest {
         assertFalse(userRepository.isUserSuspended(user1.getUserId()), "Expired suspension should be removed");
         assertTrue(userRepository.isUserSuspended(user2.getUserId()), "Active suspension should remain");
         assertTrue(userRepository.isUserSuspended(user3.getUserId()), "Permanent suspension should remain");
+    }
+
+        @Test
+    void testUserDoesNotExist_throwsException() {
+        int userId = 1;
+
+        // users map is empty => user doesn't exist
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userRepository.getSuspensionEndDate(userId);
+        });
+
+        assertNotNull(exception, "Exception should not be null");
+    }
+
+    @Test
+    void testUserNotSuspended_throwsException() {
+
+        // suspendedUsers map is empty => user exists but not suspended
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userRepository.getSuspensionEndDate(registedUser.getUserId());
+        });
+
+        assertNotNull(exception, "Exception should not be null");
+    }
+
+    @Test
+    void testUserSuspended_returnsEndDate() {
+        LocalDate endDate = LocalDate.now().plusDays(7);
+        userRepository.suspendUser(registedUser.getUserId(), endDate);
+
+        assertEquals(endDate, userRepository.getSuspensionEndDate(registedUser.getUserId()));
     }
 }

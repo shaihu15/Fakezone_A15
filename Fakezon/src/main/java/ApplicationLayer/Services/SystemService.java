@@ -798,15 +798,23 @@ public class SystemService implements ISystemService {
             return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
         try {
-            this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
-            logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
+            if(this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
+                logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
+            else
+                return new Response<String>(null, "Payment failed", false, ErrorType.INVALID_INPUT, null);
+            //this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice);
+            //logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
         } catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());
             return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
         try {
-            this.deliveryService.deliver(country, address, recipient, packageDetails);
-            logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
+            if(this.deliveryService.deliver(country, address, recipient, packageDetails))
+                logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
+            else
+                return new Response<String>(null, "Delivery failed", false, ErrorType.INVALID_INPUT, null);
+            //this.deliveryService.deliver(country, address, recipient, packageDetails);
+            //logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
 
         } catch (Exception e) {
             this.paymentService.refund(cardNumber,totalPrice);
@@ -1080,7 +1088,7 @@ public class SystemService implements ISystemService {
             
             String token = this.authenticatorService.login(email, password);
             UserDTO user = this.userService.login(email, password);
-            return new Response<>(new AbstractMap.SimpleEntry<>(user, token), "Successful Login", true, null, null);
+            return new Response<>(new AbstractMap.SimpleEntry<>(user, token), "Successful Login", true, null, token);
         } catch (Exception e) {
             logger.error("System Service - Login failed: " + e.getMessage());
             return new Response<>(null, "Login failed: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
@@ -1446,21 +1454,6 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during getting all unsigned users: " + e.getMessage());
             return new Response<>(null, "Error getting all unsigned users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }
-    }
-    
-    @Override
-    public Response<Void> updateUnsignedUser(User user) {
-        try {
-            userService.updateUnsignedUser(user);
-            logger.info("System Service - Updated unsigned user with ID: " + user.getUserId());
-            return new Response<>(null, "Unsigned user updated successfully", true, null, null);
-        } catch (IllegalArgumentException e) {
-            logger.error("System Service - Failed to update unsigned user: " + e.getMessage());
-            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        } catch (Exception e) {
-            logger.error("System Service - Error during updating unsigned user: " + e.getMessage());
-            return new Response<>(null, "Error updating unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
     
