@@ -3,8 +3,8 @@ package com.fakezone.fakezone.controller;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
-import ApplicationLayer.Request;
-import ApplicationLayer.RequestDataTypes.RequestOrderDataType;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+
 import ApplicationLayer.Response;
 import ApplicationLayer.Services.ProductService;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
@@ -23,11 +23,13 @@ import java.util.List;
 public class OrderController {
 
     public ISystemService systemService;
+
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
     private final AuthenticatorAdapter authenticatorAdapter;
 
     @Autowired
-    public OrderController(ISystemService systemService, AuthenticatorAdapter authenticatorAdapter) {
+    public OrderController(ISystemService systemService, AuthenticatorAdapter authenticatorAdapter){
+
         this.systemService = systemService;
         this.authenticatorAdapter = authenticatorAdapter;
     }
@@ -37,12 +39,13 @@ public class OrderController {
     public ResponseEntity<Response<Boolean>> deleteOrder(@PathVariable("orderId") int orderId, @RequestHeader("Authorization") String token){
         try{
             logger.info("Received request to delete order with ID: {} with token: {}", orderId, token);
-            if (!authenticatorAdapter.isValid(token)) {
-                Response<Boolean> response = new Response<>(false, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+            if(!authenticatorAdapter.isValid(token)){
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             int userId = authenticatorAdapter.getUserId(token);
             Response<Boolean> response = systemService.deleteOrder(orderId, userId);
+
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -80,6 +83,7 @@ public class OrderController {
     @GetMapping("/searchOrders/{keyword}")
     public ResponseEntity<Response<List<OrderDTO>>> searchOrders(@PathVariable("keyword") String keyword, @RequestHeader("Authorization") String token){
         try{
+
             logger.info("Received request to search orders with keyword: {} with token: {}", keyword, token);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
@@ -102,6 +106,7 @@ public class OrderController {
     @GetMapping("/getOrdersByUserId/{storeId}")
     public ResponseEntity<Response<List<OrderDTO>>> getOrdersByStoreId(@PathVariable("storeId") int storeId, @RequestHeader("Authorization") String token){
         try{
+
             logger.info("Received request to get orders for store ID: {} with token: {}", storeId, token);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);

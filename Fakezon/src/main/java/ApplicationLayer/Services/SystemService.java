@@ -1115,6 +1115,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId) {
         try {
+
             if(this.userService.isUserLoggedIn(userId)) {
                 List<IOrder> orders = this.orderService.getOrdersByStoreId(storeId);
                 List<OrderDTO> orderDTOS = new ArrayList<>();
