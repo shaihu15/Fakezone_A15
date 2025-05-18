@@ -214,9 +214,10 @@ class ProductControllerTest {
 
     @Test
     void testDeleteProduct_Success() {
-        int productId = 1;
-        Request<Integer> request = new Request<>( "valid-token", productId);
-        when(authenticatorAdapter.isValid("valid-token")).thenReturn(true);
+        String token = "valid-token";
+        int productId = 1;        
+        Request<Integer> request = new Request<>( token, productId);
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
         when(systemService.deleteProduct(productId)).thenReturn(new Response<>(true, null, true, null, null));
 
@@ -231,12 +232,10 @@ class ProductControllerTest {
     @Test
     void testDeleteProduct_InternalError() {
         int productId = 1;
-        Request<Integer> request = new Request<>( "valid-token",productId);
-        when(authenticatorAdapter.isValid("valid-token")).thenReturn(true);
+        String token = "valid-token";
+        Request<Integer> request = new Request<>( token,productId);
 
-        Request<Integer> request = new Request<>("valid-token", productId);
-
-
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.deleteProduct(productId)).thenReturn(new Response<>(false, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
 
         ResponseEntity<Response<Boolean>> response = productController.deleteProduct(request, token);

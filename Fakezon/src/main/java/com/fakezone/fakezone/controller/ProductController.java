@@ -25,8 +25,6 @@ public class ProductController {
     private final ISystemService systemService;
     private final AuthenticatorAdapter authenticatorAdapter;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
-    private final AuthenticatorAdapter authenticatorAdapter;
-
     @Autowired
     public ProductController(ISystemService systemService, AuthenticatorAdapter authenticatorAdapter) {
         this.systemService = systemService;
