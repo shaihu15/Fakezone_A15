@@ -51,7 +51,7 @@ public class SystemService implements ISystemService {
     private IStoreService storeService;
     private IProductService productService;
     private IOrderService orderService;
-    private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private static final Logger logger = LoggerFactory.getLogger(SystemService.class);
     private final ApplicationEventPublisher publisher;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
