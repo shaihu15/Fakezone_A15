@@ -169,22 +169,19 @@ public class SystemServiceAcceptanceTest {
     @Test
     void GetProductByKeyword_Success() {
         // Arrange
-        String token = "validToken";
         String keyword = "Test";
         List<ProductDTO> mockProducts = Arrays.asList(
                 new ProductDTO("Test Product 1", "Description 1", 1, null),
                 new ProductDTO("Test Product 2", "Description 2", 2, null));
-        when(authenticatorService.isValid(token)).thenReturn(true);
         when(productService.searchProducts(keyword)).thenReturn(mockProducts);
 
          // Act
-        Response<List<ProductDTO>> response = systemService.searchByKeyword(token, keyword);
+        Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword);
 
         // Assert
         assertNotNull(response);
         assertTrue(response.isSuccess());
         assertEquals(2, response.getData().size());
-        verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
 
     }
@@ -192,18 +189,15 @@ public class SystemServiceAcceptanceTest {
     @Test
     void GetProductByKeyword_Failure() {
         // Arrange
-        String token = "validToken";
         String keyword = "Test";
-        when(authenticatorService.isValid(token)).thenReturn(true);
         when(productService.searchProducts(keyword)).thenThrow(new RuntimeException("Search failed"));
 
         // Act
-        Response<List<ProductDTO>> response = systemService.searchByKeyword(token, keyword);
+        Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword);
 
         // Assert
         assertFalse(response.isSuccess());
         assertEquals("Error during getting product: Search failed", response.getMessage());
-        verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
         
     }

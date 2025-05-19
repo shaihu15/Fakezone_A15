@@ -3,17 +3,19 @@ package NewAcceptanceTesting.AT_User.AT_Guest;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 import DomainLayer.Interfaces.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -83,7 +85,7 @@ public class Guest_User_Access_to_Product_Information {
 
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(guestToken, storeId); 
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(storeId); 
         StoreDTO store = accessStoreResponse.getData();
         assertNotNull(store);
         //gust user can access the store
