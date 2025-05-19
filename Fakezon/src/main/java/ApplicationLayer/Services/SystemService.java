@@ -69,6 +69,9 @@ public class SystemService implements ISystemService {
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
+        
+        // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
+        init();
     }
 
     // Overloaded constructor for testing purposes
@@ -84,8 +87,6 @@ public class SystemService implements ISystemService {
         this.authenticatorService = authenticatorService;
         this.paymentService = paymentService;
 
-        // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
-        init();
     }
 
     @Override
@@ -1565,7 +1566,8 @@ public class SystemService implements ISystemService {
     }
 
     private void init(){
-        this.purchaseCart(1004, "Israel", LocalDate.of(1998, 10, 15), PaymentMethod.CREDIT_CARD, "deliver", "1234", "Yuval Bachar", "never", "123","address1004","Yuval Bachar", "details");
+        logger.info("UI INIT");
+        this.purchaseCart(1004, "IL", LocalDate.of(1998, 10, 15), PaymentMethod.CREDIT_CARD, "deliver", "1234", "Yuval Bachar", "never", "123","address1004","Yuval Bachar", "details");
         this.ratingStoreProduct(1001, 1001, 1004, 4.5, "Great!");
         this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
     }

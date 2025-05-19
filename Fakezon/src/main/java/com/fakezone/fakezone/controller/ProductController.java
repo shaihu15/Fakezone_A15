@@ -115,7 +115,7 @@ public class ProductController {
         try {
             logger.info("Received request to get top-rated products with limit: {}", limit);
             if(!authenticatorAdapter.isValid(token)){
-                Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token " + token, false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<List<StoreProductDTO>> response = systemService.getTopRatedProducts(limit);

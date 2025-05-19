@@ -49,7 +49,7 @@ public class HomeView extends Main {
         String url = "http://localhost:8080/api/product/topRated/" + lim;
         //api call
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
+        headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<Response<List<StoreProductDTO>>> apiResponse = restTemplate.exchange(
             url,
@@ -66,6 +66,7 @@ public class HomeView extends Main {
         Response<List<StoreProductDTO>> response = apiResponse.getBody();
         if(response.isSuccess()){
             List<StoreProductDTO> products = response.getData();
+            cardsRow.add(new Span(Integer.toString(products.size())));
             for (StoreProductDTO p : products) {
                 VerticalLayout card = new VerticalLayout();
                 card.setWidth("150px");
@@ -82,7 +83,7 @@ public class HomeView extends Main {
         }
         else {
             // fallback: show an error message
-            cardsRow.add(new Span("Unable to load bestsellers."));
+            cardsRow.add(new Span("Unable to load bestsellers: " + response.getMessage()));
         }
 
         // wrap and add
