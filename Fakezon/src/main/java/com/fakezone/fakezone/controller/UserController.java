@@ -11,6 +11,7 @@ import ApplicationLayer.RequestDataTypes.LoginRequest;
 import ApplicationLayer.RequestDataTypes.PurchaseRequest;
 import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
 import ApplicationLayer.Response;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import org.slf4j.Logger;
@@ -320,6 +321,25 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Error in isGuestToken: {}", e.getMessage());
             Response<Boolean> response = new Response<>(null, "An error occurred while generating guest token", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    @GetMapping("/userRoles")
+    public ResponseEntity<Response<HashMap<Integer, IRegisteredRole>>> getUserRoles(@RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get user roles");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<HashMap<Integer, IRegisteredRole>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(token);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getUserRoles: {}", e.getMessage());
+            Response<HashMap<Integer, IRegisteredRole>> response = new Response<>(null, "An error occurred while retrieving user roles", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

@@ -27,6 +27,7 @@ import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IAuthenticator;
@@ -1558,6 +1559,28 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during getting unsigned user count: " + e.getMessage());
             return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    @Override
+    public Response<HashMap<Integer, IRegisteredRole>> getUserRoles(String sessionToken) {
+        try {
+            if(!this.isAuth(sessionToken)){
+                return new Response<>(null, "Session is not Valid please try again", false, ErrorType.INVALID_INPUT, null);
+            }
+            int requesterId = this.authenticatorService.getUserId(sessionToken);
+            if(this.userService.isUserLoggedIn(requesterId)) {
+                HashMap<Integer, IRegisteredRole> roles = this.userService.getAllRoles(requesterId);
+                return new Response<>(roles, "User roles retrieved successfully", true, null, null);
+            }
+            logger.error("System Service - User is not logged in: " + requesterId);
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get user roles: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting user roles: " + e.getMessage());
+            return new Response<>(null, "Error getting user roles: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 }
