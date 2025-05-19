@@ -19,6 +19,7 @@ import jakarta.validation.constraints.Email;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -105,14 +107,18 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HorizontalLayout searchLayout = new HorizontalLayout();
         TextField searchField = new TextField();
         searchField.setPlaceholder("Search Everywhere...");
-
+        // search type selecting
+        ComboBox<String> searchType = new ComboBox<>();
+        searchType.setPlaceholder("Search by...");
+        searchType.setItems("Keyword", "Category", "Product Name");
+        searchType.setValue("Keyword"); // Default value
         Button searchButton = new Button(new Icon(VaadinIcon.SEARCH));
         searchButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-        searchLayout.add(searchField, searchButton);
+        searchLayout.add(searchType, searchField, searchButton);
         searchLayout.setAlignItems(Alignment.CENTER);
-        searchButton.addClickListener(event -> performSearch(searchField.getValue())); // Button click
-        searchField.addKeyDownListener(Key.ENTER, event -> performSearch(searchField.getValue())); // Enter key 
+        searchButton.addClickListener(event -> performSearch(searchField.getValue(),searchType.getValue())); // Search button
+        searchField.addKeyDownListener(Key.ENTER, event -> performSearch(searchField.getValue(),searchType.getValue())); // Enter key
         searchLayout.setFlexGrow(0.4, searchField);
 
         // LOGIN/REGISTER BUTTON
@@ -290,17 +296,45 @@ public class MainLayout extends AppLayout implements RouterLayout {
         testDialog.open();
     }
 
-    private void performSearch(String searchText){
-        //TO DO - RN JUST FOR TEST
-        if (searchText != null && !searchText.isEmpty()) {
-            // Perform the search operation with searchTerm
-            Notification.show("Searching for: " + searchText);  // Replace with your actual search logic
-        } else {
-            Notification.show("Please enter a search term.");
-        }
+    // private void performSearch(String searchText){
+    //     //TO DO - RN JUST FOR TEST
+    //     if (searchText != null && !searchText.isEmpty()) {
+    //         // Perform the search operation with searchTerm
+    //         Notification.show("Searching for: " + searchText);  // Replace with your actual search logic
+    //     } else {
+    //         Notification.show("Please enter a search term.");
+    //     }
        
-    }
+    // }
 
+    private void performSearch(String searchText, String type) {
+            if (searchText == null || searchText.trim().isEmpty()) {
+                Notification.show("Please enter a search term.");
+                return;
+            }
+              String trimmed = searchText.trim();
+            String queryType;
+            switch (type.toLowerCase()) {
+                case "category":
+                    queryType = "category";
+                    break;
+                case "product name":
+                    queryType = "product_name";
+                    break;
+                case "keyword":
+                default:
+                    queryType = "keyword";
+                    break;
+            }
+            UI.getCurrent().navigate("search",
+                new QueryParameters(
+                    Map.of(
+                        "type", List.of(queryType),
+                        "term", List.of(trimmed)
+                    )
+                )
+            );
+        }
     private void showNotifications(){
         testDialog();
     }
