@@ -1111,17 +1111,14 @@ public class Store implements IStore {
 
     @Override
     public HashMap<Integer, String> getAllStoreMessages(){
-        rolesLock.lock();
         try{
             HashMap<Integer, String> messages = new HashMap<>();
             for (SimpleEntry<Integer, String> message : messagesFromUsers) {
                 messages.put(message.getKey(), message.getValue());
             }
-            rolesLock.unlock();
             return messages ;
         }
         catch(Exception e){
-            rolesLock.unlock();
             throw e;
         }
 
