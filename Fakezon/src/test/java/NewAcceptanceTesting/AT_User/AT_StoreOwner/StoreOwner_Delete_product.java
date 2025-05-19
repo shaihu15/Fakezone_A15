@@ -39,6 +39,9 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
+
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import NewAcceptanceTesting.TestHelper;
 
 public class StoreOwner_Delete_product {
@@ -57,7 +60,7 @@ public class StoreOwner_Delete_product {
     private IProductService productService;
     private IUserService userService;
     private IOrderService orderService;
-
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private TestHelper testHelper;
 
     int productId;
@@ -70,13 +73,14 @@ public class StoreOwner_Delete_product {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
 
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
 
         // Initialize the system with a store owner and a product

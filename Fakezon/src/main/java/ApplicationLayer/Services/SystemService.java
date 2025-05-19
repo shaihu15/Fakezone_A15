@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import DomainLayer.Interfaces.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,6 +18,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -28,6 +30,9 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
+
+import DomainLayer.Model.Basket;
+
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrder;
@@ -43,6 +48,7 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
+
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
@@ -53,10 +59,13 @@ public class SystemService implements ISystemService {
     private IOrderService orderService;
     private static final Logger logger = LoggerFactory.getLogger(SystemService.class);
     private final ApplicationEventPublisher publisher;
+    private final INotificationWebSocketHandler notificationWebSocketHandler;
 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
-            IProductRepository productRepository, IOrderRepository orderRepository,ApplicationEventPublisher publisher) {
+                         IProductRepository productRepository, IOrderRepository orderRepository,
+                         ApplicationEventPublisher publisher, INotificationWebSocketHandler notificationWebSocketHandler) {
         this.publisher = publisher;
+        this.notificationWebSocketHandler = notificationWebSocketHandler;
         this.storeService = new StoreService(storeRepository, publisher);
         this.userService = new UserService(userRepository);
         this.productService = new ProductService(productRepository);
@@ -69,8 +78,9 @@ public class SystemService implements ISystemService {
     // Overloaded constructor for testing purposes
     public SystemService(IStoreService storeService, IUserService userService, IProductService productService, IOrderService orderService,
             IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
-            ApplicationEventPublisher publisher) {
+            ApplicationEventPublisher publisher, INotificationWebSocketHandler notificationWebSocketHandler) {
         this.publisher = publisher;
+        this.notificationWebSocketHandler = notificationWebSocketHandler;
         this.storeService = storeService;
         this.userService = userService;
         this.productService = productService;
