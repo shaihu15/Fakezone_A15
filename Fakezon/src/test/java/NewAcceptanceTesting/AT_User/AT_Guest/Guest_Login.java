@@ -7,9 +7,8 @@ import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
-import NewAcceptanceTesting.TestHelper; 
-
-
+import NewAcceptanceTesting.TestHelper;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -31,7 +30,7 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
-
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import java.util.AbstractMap;
 
 public class Guest_Login {
@@ -63,7 +62,7 @@ public class Guest_Login {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);

@@ -17,6 +17,7 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -37,6 +38,9 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+
 
 public class StoreOwner_Add_product {
     //Use-case: 4.1 StoreOwner - Add a product
@@ -74,7 +78,7 @@ public class StoreOwner_Add_product {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);

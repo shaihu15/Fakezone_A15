@@ -1,11 +1,11 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.INotificationWebSocketHandler;
 import DomainLayer.Interfaces.IOrderRepository;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -26,6 +27,7 @@ import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
@@ -63,7 +65,7 @@ public class Guest_User_Access_to_Product_Information {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);

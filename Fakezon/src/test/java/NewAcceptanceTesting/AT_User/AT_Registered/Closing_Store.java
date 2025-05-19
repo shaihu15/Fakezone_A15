@@ -37,7 +37,7 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
-
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 public class Closing_Store {
     //Use-case: 4.9 Closing Store
 
@@ -54,7 +54,7 @@ public class Closing_Store {
     private IProductService productService;
     private IUserService userService;
     private IOrderService orderService;
-
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private TestHelper testHelper;
 
     int storeId;
@@ -76,7 +76,8 @@ public class Closing_Store {
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher,notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultUser = testHelper.register_and_login();

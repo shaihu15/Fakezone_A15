@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -28,7 +29,7 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
-
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterEach;
@@ -61,7 +62,7 @@ public class Save_Products_in_Purchase_Basket {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);

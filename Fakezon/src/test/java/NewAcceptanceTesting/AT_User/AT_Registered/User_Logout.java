@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
-
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -30,6 +30,9 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+
+
 
 public class User_Logout {
 //Use-case: 3.1 User Logout
@@ -59,14 +62,13 @@ public class User_Logout {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService,
-                deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
+        systemService = new SystemService(storeService, userService, productService, orderService,deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
     }
  

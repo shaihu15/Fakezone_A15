@@ -1,4 +1,4 @@
-package DomainLayer.Interfaces;
+package ApplicationLayer.Interfaces;
 
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;

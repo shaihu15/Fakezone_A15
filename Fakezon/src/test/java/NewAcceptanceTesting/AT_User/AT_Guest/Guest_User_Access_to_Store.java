@@ -15,6 +15,7 @@ import ApplicationLayer.DTO.StoreProductDTO;
 
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -35,7 +36,7 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
-
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Security.TokenService;
 
 import NewAcceptanceTesting.TestHelper;
@@ -72,7 +73,7 @@ public class Guest_User_Access_to_Store {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);

@@ -1,7 +1,8 @@
 package InfrastructureLayer.Adapters;
 
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Services.ProductService;
-import DomainLayer.Interfaces.INotificationWebSocketHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
