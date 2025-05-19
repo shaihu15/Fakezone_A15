@@ -1,10 +1,12 @@
 package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.AfterEach;
+import org.atmosphere.config.service.Delete;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,9 +41,9 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
 
-public class StoreOwner_Add_product {
-    //Use-case: 4.1 StoreOwner - Add a product
-
+public class StoreOwner_Delete_product {
+    //Use-case: 4.1 StoreOwner - Delete a product
+    
     private SystemService systemService;
     private IStoreRepository storeRepository;
     private IUserRepository userRepository;
@@ -58,16 +60,10 @@ public class StoreOwner_Add_product {
 
     private TestHelper testHelper;
 
-    int storeId;
-    int userId;
-    String productName;
-    String productDescription;
-    String category;
+    int productId;
 
     @BeforeEach
     void setUp() {
-        //Use-case: 4.1 StoreOwner - add a product
-
         storeRepository = new StoreRepository();
         userRepository = new UserRepository();
         productRepository = new ProductRepository();
@@ -83,87 +79,81 @@ public class StoreOwner_Add_product {
         systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
         testHelper = new TestHelper(systemService);
 
+        // Initialize the system with a store owner and a product
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        userId = StoreOwnerResult.getData().getUserId();
+        assertTrue(StoreOwnerResult.isSuccess());   
+         
+        int userId = StoreOwnerResult.getData().getUserId();
         // StoreOwner is registered and logged in
 
         Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        storeId = storeResult.getData(); 
+        assertTrue(storeResult.isSuccess());
+        int storeId = storeResult.getData(); 
         // StoreOwner is the owner of Store1
 
-        productName = "Test Product";
-        productDescription = "Test Description";
-        category = PCategory.ELECTRONICS.toString();
-    }
-
-    @Test
-    void testAddProductToStore_validArguments_Success(){
-        Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
-        assertTrue(storePResponse.isSuccess());
-
-        int productId = storePResponse.getData().getProductId();
-
-        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
-        assertTrue(resultGetProduct.isSuccess());
-        assertEquals(productName, resultGetProduct.getData().getName());
-    }
-
-    @Test
-    void testAddProductToStore_invalidCategory_Failure(){
-        assertEquals("Invalid category",systemService.addProductToStore
-                                        (storeId, userId, productName, productDescription, 1, 1, "invalidCategory").getMessage());
-    }
-
-    @Test
-    void testAddProductToStore_invalidStoreId_Failure(){     
-        assertEquals("Error during adding product to store: Store not found",systemService.addProductToStore
-                                        (-1, userId, productName, productDescription, 1, 1, category).getMessage());
-
-    }
-    
-    @Test
-    void testAddProductToStore_invalidUserId_Failure(){
-        assertEquals("Error during adding product to store: User with id: 9 has insufficient permissions for store ID: "+storeId,
-                systemService.addProductToStore(storeId, 9, productName, productDescription, 1, 1, category).getMessage());
-    }
-
-    @Test
-    void testAddProductToStore_emptyProductName_Failure(){
-        assertEquals("Product name must not be empty",systemService.addProductToStore
-                                        (storeId, userId, "", productDescription, 1, 1, category).getMessage());   
-    }                                  
-   
-
-    @Test
-    void testAddProductToStore_nullProductName_Failure(){
-        assertEquals("Product name must not be empty",systemService.addProductToStore
-                                        (storeId, userId, null, productDescription, 1, 1, category).getMessage());   
-    } 
-        
-    @Test
-    void testAddProductToStore_emptyProductDescription_Failure(){
-        assertEquals("Product description must not be empty",systemService.addProductToStore
-                                        (storeId, userId, productName, "", 1, 1, category).getMessage());   
-    }                                  
-   
-
-    @Test
-    void testAddProductToStore_nullProductDescription_Failure(){
-        assertEquals("Product description must not be empty",systemService.addProductToStore
-                                        (storeId, userId, productName, null, 1, 1, category).getMessage());   
-    } 
-                                        
-    @Test
-    void testAddProductToStore_ProductAlreadyExists_Failure(){
+        String productName = "Test Product";
+        String productDescription = "Test Description";
+        String category = PCategory.ELECTRONICS.toString();
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         assertNotNull(storePResponse);
         assertTrue(storePResponse.isSuccess());
-        int productId = storePResponse.getData().getProductId();
 
-        assertEquals("Error during adding product to store: Product "+ productId+" is already in store "+storeId,
-                        systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category).getMessage());
-
+        productId = storePResponse.getData().getProductId();
+        Response<ProductDTO> resultGetProduct = systemService.getProduct(productId);
+        assertTrue(resultGetProduct.isSuccess()); 
     }
+
+    @Test
+    void testDeleteProduct_validArguments_Success() {        
+        Response<Boolean> resultDeleteProduct = systemService.deleteProduct(productId);
+        assertTrue(resultDeleteProduct.isSuccess());    
+        assertTrue(resultDeleteProduct.getData());
+    }   
+
+    @Test
+    void testDeleteProduct_invalidProductId_Failure() {
+        int invalidProductId = -1; // Invalid product ID
+        Response<Boolean> resultDeleteProduct = systemService.deleteProduct(invalidProductId);
+        assertFalse(resultDeleteProduct.isSuccess());
+        assertEquals(resultDeleteProduct.getMessage(),"Error during deleting product");
+    }
+
+    @Test
+    void testDeleteProduct_productNotFound_Failure() {
+        // Delete the product first
+        Response<Boolean> resultDeleteProduct = systemService.deleteProduct(productId);
+        assertTrue(resultDeleteProduct.isSuccess());    
+        assertTrue(resultDeleteProduct.getData());
+
+        // Try to delete the same product again
+        Response<Boolean> resultDeleteProductAgain = systemService.deleteProduct(productId);
+        assertFalse(resultDeleteProductAgain.isSuccess());
+        assertEquals(resultDeleteProductAgain.getMessage(),"Error during deleting product");
+    }
+/* 
+    @Test
+    void testDeleteProduct_notStoreOwner_Failure() {
+        // Register a new user (not a store owner)
+        Response<UserDTO> newUserResult = testHelper.register_and_login2();
+        assertTrue(newUserResult.isSuccess());
+        int newUserId = newUserResult.getData().getUserId();
+
+        // Try to delete the product as a different user
+        Response<Boolean> resultDeleteProduct = systemService.deleteProduct(productId);
+        assertNull(systemService.deleteProduct(productId));
+        assertEquals(resultDeleteProduct.getMessage(),"Error during deleting product");
+    }
+
+    @Test
+    void testDeleteProduct_notLoggedIn_Failure() {
+        // Simulate a not logged-in user by creating a new SystemService instance
+        SystemService notLoggedInSystemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+
+        // Try to delete the product without logging in
+        Response<Boolean> resultDeleteProduct = notLoggedInSystemService.deleteProduct(productId);
+        assertFalse(resultDeleteProduct.isSuccess());
+        assertEquals(resultDeleteProduct.getMessage(),"Error during deleting product");
+    }
+*/
+
 }
