@@ -703,6 +703,23 @@ public class UserService implements IUserService {
         }
     }
 
+      /**
+     * Get all unsigned usersDTO
+     * 
+     * @return A list of all unsigned users DTO
+     */
+    @Override
+    public List<UserDTO> getAllUnsignedUsersDTO() {
+        try {
+            List<User> users = userRepository.getAllUnsignedUsers();
+            logger.info("Retrieved " + users.size() + " unsigned users");
+            return users.stream().map(User::toDTO).toList();
+        } catch (Exception e) {
+            logger.error("Error during getting all unsigned users: " + e.getMessage());
+            throw new IllegalArgumentException("Error getting all unsigned users: " + e.getMessage());
+        }
+    }
+
     /**
      * Remove an unsigned user from the repository
      * 

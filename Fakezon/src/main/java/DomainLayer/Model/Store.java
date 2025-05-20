@@ -820,7 +820,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Store: " + storeID + " is already closed");
             }
             this.isOpen = false;
-            this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
+            //this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
 
         } else {
             throw new IllegalArgumentException(

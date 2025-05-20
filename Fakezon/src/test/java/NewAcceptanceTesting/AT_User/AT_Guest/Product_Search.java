@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
+import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,6 +16,7 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -27,10 +29,6 @@ import ApplicationLayer.Services.UserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -40,6 +38,7 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import InfrastructureLayer.Security.TokenService;
 import NewAcceptanceTesting.TestHelper;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler; 
 
 public class Product_Search {
     //Use-case: 2.2 Product Search
@@ -53,6 +52,7 @@ public class Product_Search {
     private IAuthenticator authenticatorService;
     private IPayment paymentService;
     private ApplicationEventPublisher eventPublisher;
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private IStoreService storeService;
     private IProductService productService;
     private IUserService userService;
@@ -70,13 +70,14 @@ public class Product_Search {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService,
+                authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
         tokenService = new TokenService(); 
 
@@ -159,12 +160,13 @@ public class Product_Search {
         assertNotNull(storePResponse);
         // StoreOwner added a product to Store1
         
+        // NOTE: We're still generating the token for verification in the test, even though we don't pass it to systemService
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
 
-        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(guestToken, productName);
-        Response<List<ProductDTO>> result2 = systemService.searchByKeyword(guestToken, "Test");
-        Response<List<ProductDTO>> result3 = systemService.searchByKeyword(guestToken, "Product");
+        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(productName);
+        Response<List<ProductDTO>> result2 = systemService.searchByKeyword("Test");
+        Response<List<ProductDTO>> result3 = systemService.searchByKeyword("Product");
         int productIdFromResult2 = result1.getData().get(0).getId();
         int productIdFromResult3 = result1.getData().get(0).getId();
 
@@ -172,7 +174,6 @@ public class Product_Search {
         assertNotNull(result2.getData());
         assertNotNull(result3.getData());
         assertEquals(productIdFromResult2, productIdFromResult3);
-
     }
 
     @Test
@@ -194,20 +195,14 @@ public class Product_Search {
         assertNotNull(storePResponse);
         // StoreOwner added a product to Store1
         
+        // NOTE: We're still generating the token for verification in the test, even though we don't pass it to systemService
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
 
-        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(guestToken, productName);
-        Response<List<ProductDTO>> result2 = systemService.searchByKeyword(guestToken, "12");// Invalid keyword
+        Response<List<ProductDTO>> result1 = systemService.searchByKeyword(productName);
+        Response<List<ProductDTO>> result2 = systemService.searchByKeyword("12");// Invalid keyword
 
         assertNotNull(result1.getData());
         assertTrue(result2.getData().isEmpty());
-
     }
-
-    
-
-
-
-
 }

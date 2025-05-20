@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -39,10 +41,6 @@ import ApplicationLayer.Response;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Product;
 import DomainLayer.Model.Registered;
@@ -79,6 +77,7 @@ public class SystemServiceAcceptanceTest {
     private IOrderService orderService;
     private IDelivery deliveryService;
     private IPayment paymentService;
+    private INotificationWebSocketHandler notifyer;
 
     private ApplicationEventPublisher publisher;
 
@@ -94,10 +93,11 @@ public class SystemServiceAcceptanceTest {
         deliveryService = mock(IDelivery.class);
         paymentService = mock(IPayment.class);
         publisher = mock(ApplicationEventPublisher.class);
+        notifyer = mock(INotificationWebSocketHandler.class);
 
         // Inject the mocked services using the overloaded constructor
         systemService = new SystemService(storeService, userService, productService,orderService, deliveryService,
-                authenticatorService, paymentService, publisher);
+                authenticatorService, paymentService, publisher, notifyer);
 
     }
     
@@ -170,22 +170,19 @@ public class SystemServiceAcceptanceTest {
     @Test
     void GetProductByKeyword_Success() {
         // Arrange
-        String token = "validToken";
         String keyword = "Test";
         List<ProductDTO> mockProducts = Arrays.asList(
                 new ProductDTO("Test Product 1", "Description 1", 1, null),
                 new ProductDTO("Test Product 2", "Description 2", 2, null));
-        when(authenticatorService.isValid(token)).thenReturn(true);
         when(productService.searchProducts(keyword)).thenReturn(mockProducts);
 
          // Act
-        Response<List<ProductDTO>> response = systemService.searchByKeyword(token, keyword);
+        Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword);
 
         // Assert
         assertNotNull(response);
         assertTrue(response.isSuccess());
         assertEquals(2, response.getData().size());
-        verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
 
     }
@@ -193,18 +190,15 @@ public class SystemServiceAcceptanceTest {
     @Test
     void GetProductByKeyword_Failure() {
         // Arrange
-        String token = "validToken";
         String keyword = "Test";
-        when(authenticatorService.isValid(token)).thenReturn(true);
         when(productService.searchProducts(keyword)).thenThrow(new RuntimeException("Search failed"));
 
         // Act
-        Response<List<ProductDTO>> response = systemService.searchByKeyword(token, keyword);
+        Response<List<ProductDTO>> response = systemService.searchByKeyword(keyword);
 
         // Assert
         assertFalse(response.isSuccess());
         assertEquals("Error during getting product: Search failed", response.getMessage());
-        verify(authenticatorService, times(1)).isValid(token);
         verify(productService, times(1)).searchProducts(keyword);
         
     }

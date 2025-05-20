@@ -86,17 +86,19 @@ public class AuthenticatorAdapter implements IAuthenticator {
         return tokenService.validateToken(sessionToken);
     }
 
+    @Override
     public String getEmail(String sessionToken) {
         return tokenService.extractEmail(sessionToken);
     }
+    @Override
     public int getUserId(String sessionToken) {
         return tokenService.extractUserId(sessionToken);
     }
-
+    @Override
     public String generateGuestToken(){
         return tokenService.generateGuestToken();
     }
-
+    @Override
     public Boolean isGuestToken(String token){
         return tokenService.isGuestToken(token);
     }
