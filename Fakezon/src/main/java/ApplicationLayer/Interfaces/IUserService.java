@@ -17,6 +17,8 @@ import DomainLayer.Model.User;
 public interface IUserService {
     Optional<Registered> getUserByUserName(String userName);
 
+    void clearUserCart(int userId);
+
     Optional<Registered> getUserById(int userID);
 
     List<Registered> getAllUsers();
@@ -95,7 +97,9 @@ public interface IUserService {
     Optional<User> getUnsignedUserById(int userId);
     
     List<User> getAllUnsignedUsers();
-    
+
+    List<UserDTO> getAllUnsignedUsersDTO();
+
     boolean removeUnsignedUser(int userId);
     
     boolean isUnsignedUser(int userId);
@@ -103,4 +107,5 @@ public interface IUserService {
     int getUnsignedUserCount();
 
     void setCart(int userId, Map<Integer,Map<Integer,Integer>> validCart);
+
 }

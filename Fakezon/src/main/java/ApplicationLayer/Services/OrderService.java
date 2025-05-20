@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.DTO.BasketDTO;
 import DomainLayer.Interfaces.IProduct;
@@ -29,6 +30,7 @@ public class OrderService implements IOrderService {
 
     private final IOrderRepository orderRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+    protected static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public OrderService(IOrderRepository orderRepository) {
         this.orderRepository = orderRepository;
@@ -129,7 +131,7 @@ public class OrderService implements IOrderService {
                     orderedProducts.add(new OrderedProduct(storeProduct, quantity));
                 }
                 double price = prices.get(store.getStoreId());
-                Order order = new Order(1, store.getStoreId(), userId, OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
+                Order order = new Order(idCounter.incrementAndGet(), store.getStoreId(), userId, OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
                 orderRepository.addOrder(order);
             }
 

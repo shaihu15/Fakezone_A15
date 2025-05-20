@@ -14,4 +14,5 @@ public interface IProductRepository {
     Collection<IProduct> getAllProducts(); 
     Collection<IProduct> searchProducts(String keyword); 
     Collection<IProduct> getProductsByCategory(PCategory category); // Get all products in a specific category
+    Collection<IProduct> searchProductsByName(String name); // Search products by name
 }

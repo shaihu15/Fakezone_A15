@@ -19,6 +19,7 @@ import jakarta.validation.constraints.Email;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -53,7 +55,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
+    RestTemplate restTemplate;
     public MainLayout() {
+        restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
         createHeader();
     }
@@ -65,7 +70,6 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         String token = (String) session.getAttribute("token");
         if (token == null) {
-            RestTemplate restTemplate = new RestTemplate();
             String url = "http://localhost:8080/api/user/generateGuestToken";
             try{
                 ResponseEntity<Response> apiResponse = restTemplate.getForEntity(url, Response.class);
@@ -105,18 +109,23 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HorizontalLayout searchLayout = new HorizontalLayout();
         TextField searchField = new TextField();
         searchField.setPlaceholder("Search Everywhere...");
-
+        // search type selecting
+        ComboBox<String> searchType = new ComboBox<>();
+        searchType.setPlaceholder("Search by...");
+        searchType.setItems("Keyword", "Category", "Product Name");
+        searchType.setValue("Keyword"); // Default value
         Button searchButton = new Button(new Icon(VaadinIcon.SEARCH));
         searchButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-        searchLayout.add(searchField, searchButton);
+        searchLayout.add(searchType, searchField, searchButton);
         searchLayout.setAlignItems(Alignment.CENTER);
-        searchButton.addClickListener(event -> performSearch(searchField.getValue())); // Button click
-        searchField.addKeyDownListener(Key.ENTER, event -> performSearch(searchField.getValue())); // Enter key 
+        searchButton.addClickListener(event -> performSearch(searchField.getValue(),searchType.getValue())); // Search button
+        searchField.addKeyDownListener(Key.ENTER, event -> performSearch(searchField.getValue(),searchType.getValue())); // Enter key
         searchLayout.setFlexGrow(0.4, searchField);
 
         // LOGIN/REGISTER BUTTON
         Button loginRegisterLogoutButton = null;
+        Button notificationsButton = null;
         if(isGuestToken()){
             loginRegisterLogoutButton = new Button("Login/Register");
             loginRegisterLogoutButton.addClickListener(event -> loginRegisterClick());
@@ -124,12 +133,13 @@ public class MainLayout extends AppLayout implements RouterLayout {
         else{
             loginRegisterLogoutButton = new Button("Logout");
             loginRegisterLogoutButton.addClickListener(event -> logoutClick());
+        
+            //NOTIFS
+            Icon notificationsIcon = VaadinIcon.BELL.create();
+            notificationsIcon.setSize("30px");
+            notificationsButton = new Button(notificationsIcon);
+            notificationsButton.addClickListener(event -> showNotifications());
         }
-        //NOTIFS
-        Icon notificationsIcon = VaadinIcon.BELL.create();
-        notificationsIcon.setSize("30px");
-        Button notificationsButton = new Button(notificationsIcon);
-        notificationsButton.addClickListener(event -> showNotifications());
 
         // CART
         Icon cartIcon = VaadinIcon.CART.create();
@@ -139,7 +149,11 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         
         // HEADER LAYOUT
-        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout, notificationsButton, loginRegisterLogoutButton, cartButton);
+        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout);
+        if(notificationsButton != null){
+            header.add(notificationsButton);
+        }
+        header.add(loginRegisterLogoutButton, cartButton);
         header.setWidth("100%");
         header.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         header.getStyle().set("background", "#ffffff").set("padding", "10px");
@@ -153,21 +167,15 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
-        RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/api/user/isGuestToken";
-        try{
-            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
-            Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
-            if(response.isSuccess()){
-                return response.getData();
-            }
-            else{
-               Notification.show(response.getMessage());
-               return true;
-            }
+        ResponseEntity<Response<Boolean>> apiResponse = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(token), new ParameterizedTypeReference<Response<Boolean>>() {});
+        
+        Response<Boolean> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
         }
-        catch(Exception e){
-            Notification.show(e.getMessage());
+        else{
+            Notification.show(response.getMessage());
             return true;
         }
     }
@@ -258,29 +266,23 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         RegisterUserRequest regReq = new RegisterUserRequest(registerEmailField.getValue(), registerPasswordField.getValue(), dobField.getValue(), getCountryCodeFromName(countryComboBox.getValue()));
         Request<RegisterUserRequest> req = new Request<RegisterUserRequest>(token, regReq);
-        RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/api/user/register";
-        try{
-            ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(req),
-                new ParameterizedTypeReference<Response<String>>() {}
-            );
-            Response<String> response = (Response<String>) apiResponse.getBody();
-            if(response.isSuccess()){
-                Notification.show("Registered succefully");
-            }
-            else{
-               Notification.show(response.getMessage());
-            }
+    
+        ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(req),
+            new ParameterizedTypeReference<Response<String>>() {}
+        );
+        Response<String> response = (Response<String>) apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Registered succefully");
         }
-        catch(Exception e){
-            Notification.show(e.getMessage());
+        else{
+            Notification.show(response.getMessage());
         }
-        finally{
-            registerDialog.close();
-        }
+    
+        registerDialog.close();
 
     }
 
@@ -290,17 +292,45 @@ public class MainLayout extends AppLayout implements RouterLayout {
         testDialog.open();
     }
 
-    private void performSearch(String searchText){
-        //TO DO - RN JUST FOR TEST
-        if (searchText != null && !searchText.isEmpty()) {
-            // Perform the search operation with searchTerm
-            Notification.show("Searching for: " + searchText);  // Replace with your actual search logic
-        } else {
-            Notification.show("Please enter a search term.");
-        }
+    // private void performSearch(String searchText){
+    //     //TO DO - RN JUST FOR TEST
+    //     if (searchText != null && !searchText.isEmpty()) {
+    //         // Perform the search operation with searchTerm
+    //         Notification.show("Searching for: " + searchText);  // Replace with your actual search logic
+    //     } else {
+    //         Notification.show("Please enter a search term.");
+    //     }
        
-    }
+    // }
 
+    private void performSearch(String searchText, String type) {
+            if (searchText == null || searchText.trim().isEmpty()) {
+                Notification.show("Please enter a search term.");
+                return;
+            }
+              String trimmed = searchText.trim();
+            String queryType;
+            switch (type.toLowerCase()) {
+                case "category":
+                    queryType = "category";
+                    break;
+                case "product name":
+                    queryType = "product_name";
+                    break;
+                case "keyword":
+                default:
+                    queryType = "keyword";
+                    break;
+            }
+            UI.getCurrent().navigate("search",
+                new QueryParameters(
+                    Map.of(
+                        "type", List.of(queryType),
+                        "term", List.of(trimmed)
+                    )
+                )
+            );
+        }
     private void showNotifications(){
         testDialog();
     }
@@ -349,28 +379,21 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         LoginRequest logReq = new LoginRequest(loginEmailField.getValue(), loginPasswordField.getValue());
         Request<LoginRequest> req = new Request<LoginRequest>(token, logReq);
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = "http://localhost:8080/api/user/login";
-        try{
-            ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(req),
-                new ParameterizedTypeReference<Response<UserDTO>>() {}
-            );            
-            Response<UserDTO> response = apiResponse.getBody();
-            if(response.isSuccess()){
-                session.setAttribute("token", response.getToken());
-                session.setAttribute("userDTO", response.getData());
-                UI.getCurrent().getPage().reload();
-            }
-            else{
-                loginDialog.add(new Paragraph(response.getMessage()));
-            }
+        ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(req),
+            new ParameterizedTypeReference<Response<UserDTO>>() {}
+        );            
+        Response<UserDTO> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            session.setAttribute("token", response.getToken());
+            session.setAttribute("userDTO", response.getData());
+            UI.getCurrent().getPage().reload();
         }
-        catch(Exception e){
-            loginDialog.add(new Paragraph(e.getMessage()));
+        else{
+            loginDialog.add(new Paragraph(response.getMessage()));
         }
     }
     
@@ -379,29 +402,23 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
         Request<Integer> req = new Request<Integer>(token, ((UserDTO) session.getAttribute("userDTO")).getUserId());
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = "http://localhost:8080/api/user/logout";
-        try{
-            ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                new HttpEntity<>(req),
-                new ParameterizedTypeReference<Response<Void>>() {}
-            );            
-            Response<Void> response = apiResponse.getBody();
-            if(response.isSuccess()){
-                session.removeAttribute("token");
-                session.removeAttribute("userDTO");
-                UI.getCurrent().getPage().reload();
-            }
-            else{
-                Notification.show(response.getMessage());
-            }
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            new HttpEntity<>(req),
+            new ParameterizedTypeReference<Response<Void>>() {}
+        );            
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            session.removeAttribute("token");
+            session.removeAttribute("userDTO");
+            UI.getCurrent().getPage().reload();
         }
-        catch(Exception e){
-            Notification.show(e.getMessage());
+        else{
+            Notification.show(response.getMessage());
         }
+        
     }
 
 

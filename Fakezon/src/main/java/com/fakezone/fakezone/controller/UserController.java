@@ -11,6 +11,7 @@ import ApplicationLayer.RequestDataTypes.LoginRequest;
 import ApplicationLayer.RequestDataTypes.PurchaseRequest;
 import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
 import ApplicationLayer.Response;
+import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import org.slf4j.Logger;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.service.annotation.GetExchange;
 
 import java.time.LocalDate;
 import java.util.AbstractMap;
@@ -66,18 +69,19 @@ public class UserController {
         }
     }
 
-    @PostMapping("/addToBasket/{userId}/{storeId}")
+    @PostMapping("/addToBasket/{userId}/{storeId}/{productId}/{quantity}")
     public ResponseEntity<Response<Void>> addToBasket(@RequestHeader("Authorization") String token,
                                                @PathVariable int userId,
                                                @PathVariable int storeId,
-                                               @RequestBody StoreProductDTO product) {
+                                               @PathVariable int productId,
+                                               @PathVariable int quantity) {
         try {
             logger.info("Received request to add product to basket for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addToBasket(userId, product.getProductId(), storeId, product.getQuantity());
+            Response<Void> response = systemService.addToBasket(userId, productId, storeId, quantity);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
@@ -320,6 +324,265 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Error in isGuestToken: {}", e.getMessage());
             Response<Boolean> response = new Response<>(null, "An error occurred while generating guest token", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostAuthorize("/unsuspendUser/{requesterId}/{userId}")
+    public ResponseEntity<Response<Boolean>> unsuspendUser(@PathVariable("requesterId") int requesterId,@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to unsuspend user with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.unsuspendUser(requesterId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in unsuspendUser: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while unsuspending user", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/isUserSuspended/{userId}")
+    public ResponseEntity<Response<Boolean>> isUserSuspended(@PathVariable("userId") int userId, @RequestHeader("Authorization") String token ){
+        try {
+            logger.info("Received request to check if user is suspended with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.isUserSuspended(userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in isUserSuspended: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while checking user suspension", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getSuspensionEndDate/{requesterId}/{userId}")
+    public ResponseEntity<Response<LocalDate>> getSuspensionEndDate(@PathVariable("requesterId") int requesterId, @PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get suspension end date for user with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<LocalDate> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<LocalDate> response = systemService.getSuspensionEndDate(requesterId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getSuspensionEndDate: {}", e.getMessage());
+            Response<LocalDate> response = new Response<>(null, "An error occurred while retrieving suspension end date", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    @GetMapping("/getAllSuspendedUsers/{requesterId}")
+    public ResponseEntity<Response<List<Registered>>> getAllSuspendedUsers(@PathVariable("requesterId") int requesterId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get all suspended users");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<Registered>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<Registered>> response = systemService.getAllSuspendedUsers(requesterId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getAllSuspendedUsers: {}", e.getMessage());
+            Response<List<Registered>> response = new Response<>(null, "An error occurred while retrieving suspended users", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+
+    }
+    @PostMapping("/suspendUser/{requesterId}")
+    public ResponseEntity<Response<Integer>> cleanupExpiredSuspensions(@PathVariable("requesterId") int requesterId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to cleanup expired suspensions");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Integer> response = systemService.cleanupExpiredSuspensions(requesterId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in cleanupExpiredSuspensions: {}", e.getMessage());
+            Response<Integer> response = new Response<>(null, "An error occurred while cleaning up expired suspensions", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/addSystemAdmin/{requesterId}/{userId}")
+    public ResponseEntity<Response<Void>> addSystemAdmin(@PathVariable("requesterId") int requesterId,@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to add system admin for user with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.addSystemAdmin(requesterId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in addSystemAdmin: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred while adding system admin", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/removeSystemAdmin/{requesterId}/{userId}")
+    public ResponseEntity<Response<Boolean>> removeSystemAdmin(@PathVariable("requesterId") int requesterId,@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to remove system admin for user with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.removeSystemAdmin(requesterId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in removeSystemAdmin: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while removing system admin", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/isSystemAdmin/{userId}")
+    public ResponseEntity<Response<Boolean>> isSystemAdmin(@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to check if user is system admin with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.isSystemAdmin(userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in isSystemAdmin: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while checking system admin status", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getAllSystemAdmins/{requesterId}")
+    public ResponseEntity<Response<List<Registered>>> getAllSystemAdmins(@PathVariable("requesterId") int requesterId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get all system admins");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<Registered>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<Registered>> response = systemService.getAllSystemAdmins(requesterId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getAllSystemAdmins: {}", e.getMessage());
+            Response<List<Registered>> response = new Response<>(null, "An error occurred while retrieving system admins", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getSystemAdminCount/{requesterId}")
+    public ResponseEntity<Response<Integer>> getSystemAdminCount(@PathVariable("requesterId") int requesterId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get system admin count");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Integer> response = systemService.getSystemAdminCount(requesterId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getSystemAdminCount: {}", e.getMessage());
+            Response<Integer> response = new Response<>(null, "An error occurred while retrieving system admin count", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @DeleteMapping("/removeUnsignedUser/{userId}")
+    public ResponseEntity<Response<Boolean>> removeUnsignedUser(@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to remove unsigned user with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.removeUnsignedUser(userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in removeUnsignedUser: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while removing unsigned user", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getUnsignedUserById/{userId}")
+    public ResponseEntity<Response<Boolean>> isUnsignedUser(@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to check if user is unsigned with id: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.isUnsignedUser(userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in isUnsignedUser: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred while checking unsigned user status", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getAllUnsignedUsers/{adminId}")
+    ResponseEntity<Response<Integer>> getUnsignedUserCount(@PathVariable("adminId") int adminId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get unsigned user count");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Integer> response = systemService.getUnsignedUserCount(adminId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getUnsignedUserCount: {}", e.getMessage());
+            Response<Integer> response = new Response<>(null, "An error occurred while retrieving unsigned user count", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

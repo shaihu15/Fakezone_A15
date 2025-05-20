@@ -4,12 +4,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Product;
 
 public class ProductRepository implements IProductRepository {
+    private static final Logger logger = LoggerFactory.getLogger(ProductRepository.class);
     private final HashMap<Integer, IProduct> products;
 
     public ProductRepository( HashMap<Integer, IProduct> products) {
@@ -18,6 +25,9 @@ public class ProductRepository implements IProductRepository {
 
     public ProductRepository() {
         this.products =  new HashMap<>();
+
+        //FOR UI PUT IN COMMENT IF NOT NEEDED!
+        //init();
     }
 
     @Override
@@ -97,4 +107,18 @@ public class ProductRepository implements IProductRepository {
         return result;
     } 
 
+
+    @Override
+    public Collection<IProduct> searchProductsByName(String name) {
+        return products.values().stream()
+                .filter(product -> product.getName().toLowerCase().contains(name.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+    private void init(){
+        logger.info("product repo init");
+        products.put(1001, new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
+        products.put(1002, new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
+        products.get(1001).addStore(1001);
+        products.get(1002).addStore(1001);
+    }
 }

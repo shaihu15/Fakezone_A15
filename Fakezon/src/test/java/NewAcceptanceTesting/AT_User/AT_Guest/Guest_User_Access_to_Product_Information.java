@@ -3,16 +3,20 @@ package NewAcceptanceTesting.AT_User.AT_Guest;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
+import DomainLayer.Interfaces.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -21,12 +25,9 @@ import ApplicationLayer.Services.UserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
@@ -46,6 +47,7 @@ public class Guest_User_Access_to_Product_Information {
     private IAuthenticator authenticatorService;
     private IPayment paymentService;
     private ApplicationEventPublisher eventPublisher;
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private IStoreService storeService;
     private IProductService productService;
     private IUserService userService;
@@ -63,13 +65,14 @@ public class Guest_User_Access_to_Product_Information {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService, orderService,
+                deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
         tokenService = new TokenService(); 
     }
@@ -84,7 +87,7 @@ public class Guest_User_Access_to_Product_Information {
 
         String guestToken = tokenService.generateGuestToken(); 
         assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(guestToken, storeId); 
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(storeId); 
         StoreDTO store = accessStoreResponse.getData();
         assertNotNull(store);
         //gust user can access the store

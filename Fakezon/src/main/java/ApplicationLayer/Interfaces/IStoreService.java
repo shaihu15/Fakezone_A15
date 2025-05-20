@@ -23,7 +23,7 @@ import java.time.LocalDate;
 
 public interface IStoreService {
 
-  void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+  void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd);
 
   void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     List<AuctionProductDTO> getAuctionProductsFromStore(int storeId);
@@ -106,8 +106,8 @@ public interface IStoreService {
 
   Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId);
 
-  List<StoreProductDTO> decrementProductsQuantity(Map<Integer,Map<Integer,Integer>> productsToBuy, int userId);
-
+  Map<StoreDTO, Map<StoreProductDTO, Boolean>> decrementProductsInStores(int userId, Map<Integer,Map<Integer,Integer>> productsToBuy);
+  
   void removeProductFromStore(int storeId, int requesterId, int productId);
 
   StoreRolesDTO getStoreRoles(int storeId, int requesterId);
@@ -126,7 +126,9 @@ public interface IStoreService {
 
   List<Integer> getPendingManagers(int storeId, int requesterId);
 
-  Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(Map<Integer, Map<Integer, Integer>> cart);
+  Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(int userId, Map<Integer, Map<Integer, Integer>> cart);
+
+  void returnProductsToStores(int userId, Map<Integer,Map<Integer,Integer>> products);
 
   Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
 

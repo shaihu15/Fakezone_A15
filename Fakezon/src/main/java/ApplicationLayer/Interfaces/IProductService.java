@@ -29,4 +29,6 @@ public interface IProductService {
     List<ProductDTO> getProductsByCategory(PCategory category); // Get all products in a specific category
     
     IProduct getProduct(int productId);
+
+    List<ProductDTO> searchProductsByName(String name); // Search products by name
 }
