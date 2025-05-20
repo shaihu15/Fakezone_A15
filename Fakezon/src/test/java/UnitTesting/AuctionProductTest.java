@@ -27,23 +27,38 @@ public class AuctionProductTest {
     void constructor_ValidInput_ShouldCreateObject() {
         assertNotNull(auctionProduct, "AuctionProduct object should be created");
         assertEquals(50.0, auctionProduct.getCurrentHighestBid(), "Initial highest bid should match base price");
-        assertEquals(7, auctionProduct.getDaysToEnd(), "Days to end should match");
+        assertEquals(7, auctionProduct.getMinutesToEnd(), "Days to end should match");
         assertEquals(1, auctionProduct.getProductID(), "Product ID should match");
         assertEquals(-1, auctionProduct.getUserIDHighestBid(), "No bids should be placed initially");
     }
 
     @Test
-    void addBid_HigherBid_ShouldSucceed() {
-        boolean result = auctionProduct.addBid(101, 60.0);
-        assertTrue(result, "Bid should be accepted");
+    void addBidFirst_HigherBid_ShouldSucceed() {
+        int result = auctionProduct.addBid(101, 60.0);
+        assertTrue(result == -1, "Bid should be accepted");
         assertEquals(60.0, auctionProduct.getCurrentHighestBid(), "Highest bid should be updated");
         assertEquals(101, auctionProduct.getUserIDHighestBid(), "User ID of highest bidder should match");
     }
 
+    
+    @Test
+    void addBidNotFirst_HigherBid_ShouldSucceed() {
+        int userFirst =101;
+        int userNotFirst = 102;
+        auctionProduct.addBid(userFirst, 60.0);
+        int result = auctionProduct.addBid(userNotFirst, 65.0);
+
+        assertTrue(result == userFirst, "Bid should be accepted");
+        assertEquals(65.0, auctionProduct.getCurrentHighestBid(), "Highest bid should be updated");
+        assertEquals(userNotFirst, auctionProduct.getUserIDHighestBid(), "User ID of highest bidder should match");
+    }
+
     @Test
     void addBid_LowerBid_ShouldFail() {
-        boolean result = auctionProduct.addBid(101, 40.0);
-        assertFalse(result, "Bid should be rejected");
+        int userId = 101;
+        int result = auctionProduct.addBid(userId, 40.0);
+
+        assertTrue(result == userId, "Bid should be rejected");
         assertEquals(50.0, auctionProduct.getCurrentHighestBid(), "Highest bid should remain unchanged");
         assertEquals(-1, auctionProduct.getUserIDHighestBid(), "No highest bidder should be set");
     }
@@ -74,9 +89,9 @@ public class AuctionProductTest {
     }
 
     @Test
-    void addDays_ValidDays_ShouldIncreaseDaysToEnd() {
+    void addDays_ValidDays_ShouldIncreaseMinutesToEnd() {
         auctionProduct.addDays(3);
-        assertEquals(10, auctionProduct.getDaysToEnd(), "Days to end should be increased");
+        assertEquals(10, auctionProduct.getMinutesToEnd(), "Days to end should be increased");
     }
 
     @Test

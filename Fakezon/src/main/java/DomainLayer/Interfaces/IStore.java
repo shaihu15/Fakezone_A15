@@ -37,9 +37,7 @@ public interface IStore {
 
     void addDiscountPolicy(int userID, DiscountPolicy discountPolicy);
 
-    void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd);
-
-    boolean addBidToAuctionProduct(int requesterId, int productID, double bidAmount);
+    void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd);
 
     void isValidPurchaseAction(int requesterId, int productID);
 

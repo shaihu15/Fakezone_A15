@@ -22,7 +22,7 @@ import java.time.LocalDate;
 
 public interface IStoreService {
 
-  void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+  void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd);
 
   void addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     List<AuctionProductDTO> getAuctionProductsFromStore(int storeId);

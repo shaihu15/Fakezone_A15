@@ -9,15 +9,15 @@ import ApplicationLayer.DTO.StoreProductDTO;
 
 public class AuctionProduct extends StoreProduct {
     private double currentHighestBid;
-    private int daysToEnd;
+    private int MinutesToEnd;
     private int productID;
     private int userIDHighestBid;
     private Map<Integer, Boolean> bidApprovedByOwners = new HashMap<>(); // userID -> approved
 
-    public AuctionProduct(StoreProduct storeProduct, double basePrice, int daysToEnd) {
+    public AuctionProduct(StoreProduct storeProduct, double basePrice, int MinutesToEnd) {
         super(storeProduct);
         this.currentHighestBid = basePrice;
-        this.daysToEnd = daysToEnd;
+        this.MinutesToEnd = MinutesToEnd;
         this.productID = storeProduct.getSproductID();
         this.userIDHighestBid = -1;// -1 means no bids yet
         this.bidApprovedByOwners = new HashMap<>();
@@ -27,8 +27,8 @@ public class AuctionProduct extends StoreProduct {
         return currentHighestBid;
     }
 
-    public int getDaysToEnd() {
-        return daysToEnd;
+    public int getMinutesToEnd() {
+        return MinutesToEnd;
     }
 
     public int getProductID() {
@@ -37,14 +37,16 @@ public class AuctionProduct extends StoreProduct {
     public int getUserIDHighestBid() {
         return userIDHighestBid;
     }
-    public synchronized boolean addBid( int userID,double bidAmount) {
-        
+    //if userID did a higher bid it return the previous userIDHighestBid or -1 if he is the first
+    //if not it will return userID
+    public synchronized int addBid( int userID,double bidAmount) {
+        int prev = userID;
         if (bidAmount > currentHighestBid) {
+            prev = userIDHighestBid;
             currentHighestBid = bidAmount;
             userIDHighestBid = userID;
-            return true;
         }
-        return false;
+        return prev;
     }
 
     public void setOwnersToApprove(List<Integer> owners) {
@@ -74,7 +76,7 @@ public class AuctionProduct extends StoreProduct {
         if(days <= 0){
             throw new IllegalArgumentException("Added days must be greater than 0");
         }
-        daysToEnd += days;
+        MinutesToEnd += days;
     }
 
     

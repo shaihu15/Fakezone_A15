@@ -457,14 +457,14 @@ public class StoreService implements IStoreService {
         return toStoreProductDTO(product);
     }
 
-    public void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd) {
+    public void addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("addAuctionProductToStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         try {
-            store.addAuctionProduct(requesterId, productID, basePrice, daysToEnd);
+            store.addAuctionProduct(requesterId, productID, basePrice, MinutesToEnd);
             logger.info("Auction product added to store: " + storeId + " by user: " + requesterId + " with product ID: "
                     + productID);
         } catch (IllegalArgumentException e) {
