@@ -192,14 +192,22 @@ public class ProductController {
     public ResponseEntity<Response<List<ProductDTO>>> searchProductsByName(
             @PathVariable("name") String name,
             @RequestHeader("Authorization") String token) {
-         try{
+        try{
             logger.info("Received request to search products with name: {} from user this request token of: {}", name, token);
             if(!authenticatorAdapter.isValid(token)) {
                 Response<List<ProductDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             Response<List<ProductDTO>> response = systemService.searchProductsByName(name);
-
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e) {
+            logger.error("Error in ProductController: {}", e.getMessage());
+            Response<List<ProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+        
     @GetMapping("/topRated/{limit}")
     public ResponseEntity<Response<List<StoreProductDTO>>> getTopRatedProducts(@PathVariable("limit") int limit,  @RequestHeader("Authorization") String token) {
         try {
@@ -217,12 +225,11 @@ public class ProductController {
                 return ResponseEntity.status(500).body(response);
             }
             return ResponseEntity.status(400).body(response);
-        } catch (Exception e) {
-            logger.error("Error in ProductController during searchByProductName: {}", e.getMessage());
-            Response<List<ProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
-
-            return ResponseEntity.status(500).body(response);
-        }
+            } catch (Exception e) {
+                logger.error("Error in ProductController during searchByProductName: {}", e.getMessage());
+                Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token " + token, false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(500).body(response);
+            }
     }
 
 
