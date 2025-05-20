@@ -1,5 +1,7 @@
 package NewAcceptanceTesting.AT_User.AT_Guest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,7 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
@@ -55,6 +60,9 @@ public class Guest_User_Access_to_Product_Information {
     private TokenService tokenService;
 
     private TestHelper testHelper;
+    int storeId;
+    int userId;
+    int productId;
 
     @BeforeEach
     void setUp() {
@@ -75,23 +83,42 @@ public class Guest_User_Access_to_Product_Information {
                 deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
         tokenService = new TokenService(); 
+                
+        // Register a guest user
+        Response<UserDTO> registerResponse = testHelper.register_and_login();
+        assertTrue(registerResponse.isSuccess());
+        userId = registerResponse.getData().getUserId();
+        // Open a store
+        Response<Integer> resultAddStore = testHelper.openStore(userId);
+        assertTrue(resultAddStore.isSuccess());
+        storeId = resultAddStore.getData();
+        // Add a product to the store
+        Response<StoreProductDTO> resultAddProduct = testHelper.addProductToStore(storeId, userId);
+        assertTrue(resultAddProduct.isSuccess());
+        productId = resultAddProduct.getData().getProductId();
     }
 
     @Test
     void testGuestUserAccessToProductInformation_Succsses() {
-       Response<Integer> resultAddStore = testHelper.openStore();
-        assertNotNull(resultAddStore);
-        int storeId = resultAddStore.getData();
-        assertTrue(storeRepository.findById(storeId).isOpen());
-        //the store is open
+        Response<StoreProductDTO> productResponse = systemService.getProductFromStore(productId, storeId);
+        assertTrue(productResponse.isSuccess());
+        assertEquals(productId, productResponse.getData().getProductId());
+    }
 
-        String guestToken = tokenService.generateGuestToken(); 
-        assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(storeId); 
-        StoreDTO store = accessStoreResponse.getData();
-        assertNotNull(store);
-        //gust user can access the store
+    @Test
+    void testGuestUserAccessToProductInformation_storeIsClose_Fail() {
+        Response<StoreProductDTO> productResponse = systemService.getProductFromStore(productId, -1);
+        assertFalse(productResponse.isSuccess());
+        assertEquals("Error during getting product: Store not found", productResponse.getMessage());
+    }
+
+    @Test
+    void testGuestUserAccessToProductInformation_productNotInStore_Fail() {
+        Response<StoreProductDTO> productResponse = systemService.getProductFromStore(-1, storeId);
+        assertFalse(productResponse.isSuccess());
+        assertEquals("Error during getting product: Product with ID: -1 does not exist in store ID: " + storeId, productResponse.getMessage());
 
     }
+
 
 }

@@ -60,9 +60,7 @@ public class Guest_User_Access_to_Store {
 
     private TestHelper testHelper;
 
-    int storeOwnerId;
     int storeId;
-    int productId;
 
     @BeforeEach
     void setUp() {
@@ -83,49 +81,28 @@ public class Guest_User_Access_to_Store {
                 authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
 
-        Response<UserDTO> resultUser = testHelper.register_and_login();
-        storeOwnerId = resultUser.getData().getUserId();
-
         Response<Integer> resultAddStore = testHelper.openStore();
+        assertTrue(resultAddStore.isSuccess());
         storeId = resultAddStore.getData();
-        
-
-        Response<StoreProductDTO> resultAddProduct = testHelper.addProductToStore(storeId, storeOwnerId);
-        productId = resultAddProduct.getData().getProductId();
-
-
-
-    }
-/* 
-    @Test
-    void testGuestUserAccessStore_Succsses() {
-        //Response<StoreProductDTO> result = systemService.userAccessStore("guest", storeId);
-        assertTrue(result.isSuccess());
-        assertEquals(storeId, result.getData().getStoreId());
-        assertEquals(productId, result.getData().getProductId());
-    }*/
-
-    void testGuestUserAccessStore_StoreIsClose_Fail() {
-        Response<UserDTO> resultRegister = testHelper.register_and_login();
-        assertNotNull(resultRegister);
-        int userId = resultRegister.getData().getUserId();
-        // StoreFounder is registered and logged in
-
-        Response<Integer> resultAddStore = testHelper.openStore(userId);
-        assertNotNull(resultAddStore);
-        int storeId = resultAddStore.getData();
         assertTrue(storeRepository.findById(storeId).isOpen());
         //the store is open
 
-        systemService.closeStoreByFounder(userId, storeId);
-        assertFalse(storeRepository.findById(storeId).isOpen());
-        //the store is closed
-         
-        String guestToken = authenticatorService.generateGuestToken(); 
-        assertNotNull(guestToken);
-        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore( -1); 
 
+    }
+
+    @Test
+    void testGuestUserAccessStore_Succsses() {
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(storeId); 
+        assertTrue(accessStoreResponse.isSuccess());
+        StoreDTO store = accessStoreResponse.getData();
+        assertEquals(storeId, store.getStoreId());
+    }
+
+    @Test
+    void testGuestUserAccessStore_StoreIsClose_Fail() {
+        Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(-1); 
         assertFalse(accessStoreResponse.isSuccess());
+        assertEquals("Error during user access store: Store not found", accessStoreResponse.getMessage());
     }
 
 }
