@@ -382,6 +382,34 @@ public class StoreController {
         }
     }
 
+    @PostMapping("/addStoreManager/{storeId}/{requesterId}/{managerId}")
+    public ResponseEntity<Response<Void>> addStoreManager(@PathVariable("storeId") int storeId,
+                                                  @PathVariable("requesterId") int requesterId,
+                                                  @PathVariable("managerId") int managerId,
+                                                  @RequestParam("permissions") List<String> permissions,
+                                                  @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to add manager {} to store {} by user {} with token {}", managerId, storeId, requesterId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.addStoreManager(storeId, requesterId, managerId, permissions.stream()
+                    .map(StoreManagerPermission::valueOf)
+                    .toList());
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
     @DeleteMapping("/removeStoreManagerPermissions/{storeId}/{managerId}")
     public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariable("storeId") int storeId,

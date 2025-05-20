@@ -325,21 +325,39 @@ public class UserController {
         }
     }
     @GetMapping("/userRoles")
-    public ResponseEntity<Response<HashMap<Integer, IRegisteredRole>>> getUserRoles(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Response<Map<Integer, Map<String, String>>>> getUserRoles(@RequestHeader("Authorization") String token) {
         try {
             logger.info("Received request to get user roles");
             if (!authenticatorAdapter.isValid(token)) {
-                Response<HashMap<Integer, IRegisteredRole>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<Integer, Map<String, String>>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(token);
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
+
+            // Get the raw roles from systemService
+            Response<HashMap<Integer, IRegisteredRole>> rawResponse = systemService.getUserRoles(token);
+            if (!rawResponse.isSuccess()) {
+                // Transform the error response into the new type
+                Response<Map<Integer, Map<String, String>>> response = new Response<>(null, rawResponse.getMessage(), false, rawResponse.getErrorType(), null);
+                return ResponseEntity.status(400).body(response);
             }
-            return ResponseEntity.status(400).body(response);
+
+            // Transform HashMap<Integer, IRegisteredRole> into Map<Integer, Map<String, String>>
+            Map<Integer, Map<String, String>> transformedRoles = new HashMap<>();
+            if (rawResponse.getData() != null) {
+                for (Map.Entry<Integer, IRegisteredRole> entry : rawResponse.getData().entrySet()) {
+                    Map<String, String> roleData = new HashMap<>();
+                    IRegisteredRole role = entry.getValue();
+                    String roleType = (role != null && role.getRoleName() != null) ? role.getRoleName().name() : "UNASSIGNED";
+                    roleData.put("type", roleType);
+                    transformedRoles.put(entry.getKey(), roleData);
+                }
+            }
+
+            Response<Map<Integer, Map<String, String>>> response = new Response<>(transformedRoles, "Success", true, null, null);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error in getUserRoles: {}", e.getMessage());
-            Response<HashMap<Integer, IRegisteredRole>> response = new Response<>(null, "An error occurred while retrieving user roles", false, ErrorType.INTERNAL_ERROR, null);
+            Response<Map<Integer, Map<String, String>>> response = new Response<>(null, "An error occurred while retrieving user roles", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

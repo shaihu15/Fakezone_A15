@@ -13,6 +13,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -24,14 +25,14 @@ import com.vaadin.flow.server.VaadinRequest;
 
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
-import DomainLayer.Enums.RoleName;
 import ApplicationLayer.Response;
+import DomainLayer.Enums.RoleName;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Route(value = "user", layout = MainLayout.class)
 public class UserView extends VerticalLayout implements BeforeEnterObserver {
-   private final String backendUrl = "http://localhost:8080";
+  private final String backendUrl = "http://localhost:8080";
     private final RestTemplate restTemplate;
 
     // Define sets of roles for ownership and management
@@ -49,6 +50,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
 
         setPadding(true);
         setSpacing(true);
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center all content in the main layout
     }
 
     @Override
@@ -71,8 +73,8 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         Map<Integer, String> userRoles = getUserRoles(token);
-        List<StoreDTO> ownedStores = new ArrayList<>();
-        List<StoreDTO> managedStores = new ArrayList<>();
+        List<Component> ownedStores = new ArrayList<>();
+        List<Component> managedStores = new ArrayList<>();
 
         for (Map.Entry<Integer, String> entry : userRoles.entrySet()) {
             int storeId = entry.getKey();
@@ -82,9 +84,9 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             if (store != null) {
                 String effectiveRole = (roleType != null) ? roleType : RoleName.UNASSIGNED.name();
                 if (OWNERSHIP_ROLES.contains(effectiveRole)) {
-                    ownedStores.add(store);
+                    ownedStores.add(createStoreCard(store, effectiveRole));
                 } else if (MANAGEMENT_ROLES.contains(effectiveRole)) {
-                    managedStores.add(store);
+                    managedStores.add(createStoreCard(store, effectiveRole));
                 } else {
                     Notification.show("Unsupported role type '" + effectiveRole + "' for store ID: " + storeId + ". Treated as UNASSIGNED.", 3000, Notification.Position.MIDDLE);
                 }
@@ -93,19 +95,20 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             }
         }
 
+        // Move "Open a Store" button outside the "My Stores" card
+        Button openStoreButton = new Button("Open a Store", e -> openStoreDialog(userDTO.getUserId(), token));
+        add(openStoreButton);
+
         // Create card for "My Stores"
         VerticalLayout ownedStoresCard = new VerticalLayout();
         ownedStoresCard.setPadding(true);
         ownedStoresCard.setSpacing(true);
         ownedStoresCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
+        ownedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content in this card
         ownedStoresCard.add(new H2("My Stores"));
 
-        // Add "Open a Store" button as a general feature
-        Button openStoreButton = new Button("Open a Store", e -> openStoreDialog(userDTO.getUserId(), token));
-        ownedStoresCard.add(openStoreButton);
-
         if (!ownedStores.isEmpty()) {
-            ownedStores.forEach(store -> ownedStoresCard.add(createStoreCard(store)));
+            ownedStores.forEach(ownedStoresCard::add);
         }
 
         // Create card for "Stores I Manage"
@@ -113,10 +116,11 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         managedStoresCard.setPadding(true);
         managedStoresCard.setSpacing(true);
         managedStoresCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
+        managedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content in this card
         managedStoresCard.add(new H2("Stores I Manage"));
 
         if (!managedStores.isEmpty()) {
-            managedStores.forEach(store -> managedStoresCard.add(createStoreCard(store)));
+            managedStores.forEach(managedStoresCard::add);
         }
 
         // Add both cards to the main layout
@@ -193,7 +197,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         String url = backendUrl + "/api/user/userRoles";
 
         try {
-            ResponseEntity<Response<Map<Integer, LinkedHashMap<String, Object>>>> response =
+            ResponseEntity<Response<Map<Integer, Map<String, String>>>> response =
                 restTemplate.exchange(
                     url,
                     HttpMethod.GET,
@@ -203,14 +207,17 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
 
             Map<Integer, String> roleMap = new HashMap<>();
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                for (Map.Entry<Integer, LinkedHashMap<String, Object>> entry : response.getBody().getData().entrySet()) {
-                    Integer storeId = entry.getKey();
-                    LinkedHashMap<String, Object> value = entry.getValue();
-                    String type = (String) value.get("type"); // Safely get "type" (may be null)
-                    if (type != null) {
-                        roleMap.put(storeId, type);
-                    } else {
-                        roleMap.put(storeId, RoleName.UNASSIGNED.name()); // Default to UNASSIGNED
+                Map<Integer, Map<String, String>> roles = response.getBody().getData();
+                if (roles != null) {
+                    for (Map.Entry<Integer, Map<String, String>> entry : roles.entrySet()) {
+                        Integer storeId = entry.getKey();
+                        Map<String, String> roleData = entry.getValue();
+                        String type = roleData.get("type"); // Safely get "type"
+                        if (type != null) {
+                            roleMap.put(storeId, type);
+                        } else {
+                            Notification.show("Null role type for store ID: " + storeId + ". Skipping this role.", 3000, Notification.Position.MIDDLE);
+                        }
                     }
                 }
             }
@@ -246,21 +253,28 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
-    private Component createStoreCard(StoreDTO store) {
+    private Component createStoreCard(StoreDTO store, String role) {
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(false);
         layout.setSpacing(false);
+        layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content in the card
 
-        Map<String, String> parameters = Collections.singletonMap("storeId", String.valueOf(store.getStoreId()));
+        // Store name as a title
         RouterLink link = new RouterLink(store.getName(), StoreView.class);
-        link.setQueryParameters(QueryParameters.simple(parameters));
-        link.getStyle().set("font-size", "1.5em");
+        link.setQueryParameters(QueryParameters.simple(Collections.singletonMap("storeId", String.valueOf(store.getStoreId()))));
+        link.getStyle().set("font-size", "1.5em").set("font-weight", "bold");
 
-        layout.add(link);
-        layout.add(new Span("ID: " + store.getStoreId()));
-        layout.add(new Span("Open: " + (store.isOpen() ? "Yes" : "No")));
-        layout.add(new Span("Average Rating: " + store.getRatings().values().stream().mapToDouble(d -> d).average().orElse(0.0)));
+        // Info in one line using HorizontalLayout
+        HorizontalLayout infoLayout = new HorizontalLayout();
+        infoLayout.setSpacing(true);
+        infoLayout.add(
+            new Span("ID: " + store.getStoreId()),
+            new Span("Open: " + (store.isOpen() ? "Yes" : "No")),
+            new Span("Avg Rating: " + store.getRatings().values().stream().mapToDouble(d -> d).average().orElse(0.0)),
+            new Span("Role: " + role)
+        );
 
+        layout.add(link, infoLayout);
         return layout;
     }
 }
