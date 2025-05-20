@@ -72,11 +72,11 @@ public class AuctionProduct extends StoreProduct {
                 this.getAverageRating(), storeId, this.getCategory()); 
     }
 
-    public void addDays(int days){
-        if(days <= 0){
-            throw new IllegalArgumentException("Added days must be greater than 0");
+    public void addMinutes(int minutes){
+        if(minutes <= 0){
+            throw new IllegalArgumentException("Added minutes must be greater than 0");
         }
-        MinutesToEnd += days;
+        MinutesToEnd += minutes;
     }
 
     

@@ -27,7 +27,7 @@ public class AuctionProductTest {
     void constructor_ValidInput_ShouldCreateObject() {
         assertNotNull(auctionProduct, "AuctionProduct object should be created");
         assertEquals(50.0, auctionProduct.getCurrentHighestBid(), "Initial highest bid should match base price");
-        assertEquals(7, auctionProduct.getMinutesToEnd(), "Days to end should match");
+        assertEquals(7, auctionProduct.getMinutesToEnd(), "Minutes to end should match");
         assertEquals(1, auctionProduct.getProductID(), "Product ID should match");
         assertEquals(-1, auctionProduct.getUserIDHighestBid(), "No bids should be placed initially");
     }
@@ -89,17 +89,17 @@ public class AuctionProductTest {
     }
 
     @Test
-    void addDays_ValidDays_ShouldIncreaseMinutesToEnd() {
-        auctionProduct.addDays(3);
-        assertEquals(10, auctionProduct.getMinutesToEnd(), "Days to end should be increased");
+    void addMinutes_ValidMinutes_ShouldIncreaseMinutesToEnd() {
+        auctionProduct.addMinutes(3);
+        assertEquals(10, auctionProduct.getMinutesToEnd(), "Minutes to end should be increased");
     }
 
     @Test
-    void addDays_InvalidDays_ShouldThrowException() {
+    void addMinutes_InvalidMinutes_ShouldThrowException() {
         IllegalArgumentException thrown = assertThrows(
                 IllegalArgumentException.class,
-                () -> auctionProduct.addDays(0),
-                "Expected addDays to throw for invalid input"
+                () -> auctionProduct.addMinutes(0),
+                "Expected addMinutes to throw for invalid input"
         );
         assertTrue(thrown.getMessage().contains("greater than 0"), "Exception message should match");
     }

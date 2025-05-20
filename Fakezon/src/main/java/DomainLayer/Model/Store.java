@@ -279,7 +279,7 @@ public class Store implements IStore {
                             + productID + " in store ID: " + storeID);
                 }
                 if (MinutesToEnd <= 0) {
-                    throw new IllegalArgumentException("Days to end must be greater than 0 for auction product with ID: "
+                    throw new IllegalArgumentException("Minutes to end must be greater than 0 for auction product with ID: "
                             + productID + " in store ID: " + storeID);
                 }
                 auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, MinutesToEnd));
