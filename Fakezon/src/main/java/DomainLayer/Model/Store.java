@@ -1087,6 +1087,7 @@ public class Store implements IStore {
             int quantity = entry.getValue();
             StoreProduct storeProduct = storeProducts.get(productId);
             if (storeProduct == null) {
+                productsLock.unlock();
                 throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
                         + storeID);
             }
@@ -1094,9 +1095,11 @@ public class Store implements IStore {
             if(auctionProducts.containsKey(productId)){
                 AuctionProduct auctionProduct = auctionProducts.get(productId);
                 if(auctionProduct.getUserIDHighestBid() != userId  && !auctionProduct.isApprovedByAllOwners()){
+                    productsLock.unlock();
                     throw new IllegalArgumentException("User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
                 }
                 if(auctionProduct.getQuantity() < quantity) {
+                    productsLock.unlock();
                     throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
                 }
                 auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
