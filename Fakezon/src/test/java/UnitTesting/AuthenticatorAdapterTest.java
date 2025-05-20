@@ -1,6 +1,7 @@
 package UnitTesting;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -199,5 +200,93 @@ public class AuthenticatorAdapterTest {
         // Assert
         assertEquals(0, userId); // Assuming 0 is the default value for an invalid token
     }
+    @Test
+void getEmail_ShouldReturnEmailFromToken() {
+    // Arrange
+    String token = "session-token-123";
+    String expectedEmail = "user@example.com";
+    when(mockTokenService.extractEmail(token)).thenReturn(expectedEmail);
+
+    // Act
+    String actualEmail = authenticatorAdapter.getEmail(token);
+
+    // Assert
+    assertEquals(expectedEmail, actualEmail);
+    verify(mockTokenService).extractEmail(token);
+}
+
+@Test
+void generateGuestToken_ShouldReturnGuestToken() {
+    // Arrange
+    String expectedToken = "guest-token-abc";
+    when(mockTokenService.generateGuestToken()).thenReturn(expectedToken);
+
+    // Act
+    String actualToken = authenticatorAdapter.generateGuestToken();
+
+    // Assert
+    assertEquals(expectedToken, actualToken);
+    verify(mockTokenService).generateGuestToken();
+}
+
+@Test
+void isGuestToken_WhenTokenIsGuest_ShouldReturnTrue() {
+    // Arrange
+    String token = "guest-token-abc";
+    when(mockTokenService.isGuestToken(token)).thenReturn(true);
+
+    // Act
+    boolean result = authenticatorAdapter.isGuestToken(token);
+
+    // Assert
+    assertTrue(result);
+    verify(mockTokenService).isGuestToken(token);
+}
+
+@Test
+void isGuestToken_WhenTokenIsNotGuest_ShouldReturnFalse() {
+    // Arrange
+    String token = "user-token-xyz";
+    when(mockTokenService.isGuestToken(token)).thenReturn(false);
+
+    // Act
+    boolean result = authenticatorAdapter.isGuestToken(token);
+
+    // Assert
+    assertFalse(result);
+    verify(mockTokenService).isGuestToken(token);
+}
+@Test
+void login_WhenUserIsNotPresent_ShouldReturnNull() {
+    // Arrange
+    String email = "notfound@example.com";
+    String password = "irrelevant";
+    when(mockUserService.getUserByUserName(email)).thenReturn(Optional.empty());
+
+    // Act
+    String token = authenticatorAdapter.login(email, password);
+
+    // Assert
+    assertNull(token);
+    verify(mockUserService).getUserByUserName(email);
+    verify(mockTokenService, never()).generateToken(anyString(), anyInt());
+}
+
+@Test
+void login_WhenUserServiceThrowsException_ShouldReturnNull() {
+    // Arrange
+    String email = "error@example.com";
+    String password = "irrelevant";
+    when(mockUserService.getUserByUserName(email)).thenThrow(new RuntimeException("Database down"));
+
+    // Act
+    String token = authenticatorAdapter.login(email, password);
+
+    // Assert
+    assertNull(token);
+    verify(mockUserService).getUserByUserName(email);
+    verify(mockTokenService, never()).generateToken(anyString(), anyInt());
+}
+
     
 }
