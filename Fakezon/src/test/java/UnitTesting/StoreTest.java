@@ -240,7 +240,7 @@ public class StoreTest {
     }
 
     @Test
-    void addAuctionProduct_ZeroDays_Fails() {
+    void addAuctionProduct_ZeroMinutes_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
             store.addAuctionProduct(founderId, productId, 50.0, 0);
         });
@@ -248,7 +248,7 @@ public class StoreTest {
     }
 
     @Test
-    void addAuctionProduct_NegativeDays_Fails() {
+    void addAuctionProduct_NegativeMinutes_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
             store.addAuctionProduct(founderId, productId, 50.0, -1);
         });

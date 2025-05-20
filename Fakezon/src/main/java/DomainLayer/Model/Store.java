@@ -25,6 +25,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
@@ -123,6 +124,20 @@ public class Store implements IStore {
         }
     }
 
+    public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
+        productsLock.lock();
+        if (auctionProducts.containsKey(productID)) {
+            int prevId = auctionProducts.get(productID).addBid(requesterId, bidAmount);
+            productsLock.unlock();
+            if(prevId == requesterId) return false;
+            if(prevId != -1) handleRecivedHigherBid(prevId, productID);
+            return true;
+        } else {
+            productsLock.unlock();
+            throw new IllegalArgumentException(
+                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+        }
+    }
 
 
     
@@ -248,7 +263,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd) {
+    public void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd) {
         rolesLock.lock();
         productsLock.lock();
         try{
@@ -269,15 +284,15 @@ public class Store implements IStore {
                     throw new IllegalArgumentException("Base price must be greater than 0 for auction product with ID: "
                             + productID + " in store ID: " + storeID);
                 }
-                if (daysToEnd <= 0) {
-                    throw new IllegalArgumentException("Days to end must be greater than 0 for auction product with ID: "
+                if (MinutesToEnd <= 0) {
+                    throw new IllegalArgumentException("Minutes to end must be greater than 0 for auction product with ID: "
                             + productID + " in store ID: " + storeID);
                 }
-                auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, daysToEnd));
+                auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, MinutesToEnd));
                 scheduler.schedule(() -> {
                     handleAuctionEnd(productID);
                     //auctionProducts.remove(productID);
-                }, daysToEnd, TimeUnit.DAYS);
+                }, MinutesToEnd, TimeUnit.MINUTES);
         
                 
             } else {
@@ -295,26 +310,12 @@ public class Store implements IStore {
     }
 
     @Override
-    public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
-        productsLock.lock();
-        if (auctionProducts.containsKey(productID)) {
-            boolean ans = auctionProducts.get(productID).addBid(requesterId, bidAmount);
-            productsLock.unlock();
-            return ans;
-        } else {
-            productsLock.unlock();
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
-        }
-    }
-
-    @Override
     public void isValidPurchaseAction(int requesterId, int productID) {
         productsLock.lock();
         try{
             if (auctionProducts.containsKey(productID)) {
                 AuctionProduct auctionProduct = auctionProducts.get(productID);
-                if (auctionProduct.getDaysToEnd() <= 0) {
+                if (auctionProduct.getMinutesToEnd() <= 0) {
                     throw new IllegalArgumentException("Auction for product with ID: " + productID + " has ended.");
                 }
                 if (auctionProduct.getUserIDHighestBid() != requesterId) {
@@ -338,11 +339,19 @@ public class Store implements IStore {
         productsLock.unlock();
         return prods;
     }
-
-    public void handleAuctionEnd(int productID) {
+    private void handleRecivedHigherBid(int prevHigherBid,int productID) {
         if (auctionProducts.containsKey(productID)) {
             AuctionProduct auctionProduct = auctionProducts.get(productID);
-            if (auctionProduct.getDaysToEnd() <= 0) {
+            this.publisher.publishEvent(new AuctionGotHigherBidEvent(this.storeID, productID, prevHigherBid, auctionProduct.getCurrentHighestBid()));
+
+        }
+    }
+
+
+    private void handleAuctionEnd(int productID) {
+        if (auctionProducts.containsKey(productID)) {
+            AuctionProduct auctionProduct = auctionProducts.get(productID);
+            if (auctionProduct.getMinutesToEnd() <= 0) {
                 if(auctionProduct.getUserIDHighestBid() != -1) {
                     auctionProduct.setOwnersToApprove(storeOwners);
                     this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID, auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));

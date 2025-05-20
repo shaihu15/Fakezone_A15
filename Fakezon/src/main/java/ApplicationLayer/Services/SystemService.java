@@ -619,13 +619,11 @@ public class SystemService implements ISystemService {
         }
     }
 
-    @Override
-    public Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice,
-            int daysToEnd) {
+    public Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add auction product " + productID
-                    + " to store: " + storeId);
-            this.storeService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, daysToEnd);
+            logger.info("System service - user " + requesterId + " trying to add auction product " + productID + " to store: " + storeId);
+            this.storeService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, MinutesToEnd);
+
             return new Response<>(null, "Auction product added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding auction product to store: " + e.getMessage());
