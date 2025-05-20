@@ -152,7 +152,7 @@ class ProductControllerTest {
 
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
+        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds()))
                 .thenReturn(new Response<>(true, null, true, null, null));
 
         ResponseEntity<Response<Boolean>> response = productController.updateProduct(request, token);
@@ -160,7 +160,7 @@ class ProductControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
         assertTrue(response.getBody().getData());
-        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
+        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds());
     }
 
     @Test
@@ -170,7 +170,7 @@ class ProductControllerTest {
         Request<ProductDTO> request = new Request<>(token, productDTO);
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
-        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
+        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds()))
                 .thenReturn(new Response<>(false, "Invalid data", false, ErrorType.BAD_REQUEST, null));
 
         ResponseEntity<Response<Boolean>> response = productController.updateProduct(request, token);
@@ -178,7 +178,7 @@ class ProductControllerTest {
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
-        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
+        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds());
     }
 
     @Test
@@ -204,7 +204,7 @@ class ProductControllerTest {
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds()))
+        when(systemService.updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds()))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         ResponseEntity<Response<Boolean>> response = productController.updateProduct(request, token);
@@ -212,7 +212,7 @@ class ProductControllerTest {
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoresIds());
+        verify(systemService, times(1)).updateProduct(productDTO.getId(), productDTO.getName(), productDTO.getDescription(), productDTO.getStoreIds());
     }
 
     @Test
@@ -292,7 +292,7 @@ class ProductControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.searchByKeyword(keyword)).thenReturn(new Response<>(products, null, true, null, null));
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProducts(keyword, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByKeyword(keyword, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -309,7 +309,7 @@ class ProductControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.searchByKeyword(keyword)).thenReturn(new Response<>(null, "Invalid keyword", false, ErrorType.BAD_REQUEST, null));
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProducts(keyword, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByKeyword(keyword, token);
 
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -324,7 +324,7 @@ class ProductControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProducts(keyword, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByKeyword(keyword, token);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -340,7 +340,7 @@ class ProductControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.searchByKeyword(keyword)).thenThrow(new RuntimeException("Unexpected error"));
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProducts(keyword, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByKeyword(keyword, token);
 
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -411,7 +411,7 @@ class ProductControllerTest {
         when(systemService.searchByCategory(category))
                 .thenReturn(new Response<>(products, "Success", true, null, null));
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchByCategory(category, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByCategory(category, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -426,7 +426,7 @@ class ProductControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchByCategory(category, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByCategory(category, token);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -443,7 +443,7 @@ class ProductControllerTest {
         when(systemService.searchByCategory(category))
                 .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
 
-        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchByCategory(category, token);
+        ResponseEntity<Response<List<ProductDTO>>> response = productController.searchProductsByCategory(category, token);
 
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());

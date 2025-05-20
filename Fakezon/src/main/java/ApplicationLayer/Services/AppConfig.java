@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
@@ -55,5 +56,9 @@ public class AppConfig {
     @Bean
     public INotificationWebSocketHandler notificationWebSocketHandler() {
         return new NotificationWebSocketHandler();
+    }
+    @Bean
+    public IStoreService storeService(IStoreRepository storeRepository, ApplicationEventPublisher eventPublisher) {
+        return new StoreService(storeRepository, eventPublisher) ;
     }
 }

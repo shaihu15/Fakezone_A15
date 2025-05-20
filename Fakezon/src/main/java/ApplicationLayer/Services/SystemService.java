@@ -331,7 +331,7 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
-
+    @Override
     public LocalDate parseDate(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         try {
@@ -449,9 +449,9 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
-
-    // addProduct method should be with amount and store?
-    private Response<Integer> addProduct(String productName, String productDescription, String category) {
+    //addProduct method should be with amount and store?
+    @Override
+    public Response<Integer> addProduct(String productName, String productDescription, String category) {
         try {
             if (productName == null || productDescription == null || category == null) {
                 logger.error(
@@ -1024,7 +1024,7 @@ public class SystemService implements ISystemService {
 
             // 3. For each product, get its StoreProductDTO from each store it's in
             for (ProductDTO product : allProducts) {
-                for (Integer storeId : product.getStoresIds()) {
+                for (Integer storeId : product.getStoreIds()) {
                     try {
                         StoreProductDTO storeProduct = storeService.getProductFromStore(product.getId(), storeId);
                         // Only add products that have ratings
@@ -1557,7 +1557,8 @@ public class SystemService implements ISystemService {
             PCategory categoryEnum = isCategoryValid(category);
             if (categoryEnum == null) {
                 logger.error("System Service - Invalid category: " + category);
-                return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT, null);
+                List<ProductDTO> npProducts = new ArrayList<>();
+                return new Response<>(npProducts, "Invalid category", true, null, null);
             }
             List<ProductDTO> products = this.productService.getProductsByCategory(categoryEnum);
             return new Response<>(products, "Products retrieved successfully", true, null, null);
@@ -1718,7 +1719,17 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
-
+    @Override
+    public Response<List<ProductDTO>> searchProductsByName(String productName) {
+         try {
+            logger.info("System Service - Searching for products with name: " + productName);
+            List<ProductDTO> products = productService.searchProductsByName(productName);
+            return new Response<>(products, "Products retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all products: {}", e.getMessage());
+            return new Response<>(null, "Error during getting all products", false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
     private void init(){
         logger.info("system service init");
         this.login("testNormalUser1004@gmail.com", "a12345");
@@ -1726,5 +1737,6 @@ public class SystemService implements ISystemService {
         this.ratingStoreProduct(1001, 1001, 1004, 4.5, "Great!");
         this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
         this.userLogout(1004);
+
     }
 }

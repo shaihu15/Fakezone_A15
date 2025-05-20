@@ -61,6 +61,8 @@ public interface ISystemService {
 
     Response<List<ProductDTO>> searchByCategory(String category);
     
+    Response<List<ProductDTO>> searchProductsByName(String productName);
+
     Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId, List<StoreManagerPermission> perms);
     
     Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove);
@@ -163,4 +165,8 @@ public interface ISystemService {
     Response<Boolean> isUnsignedUser(int userId);
     
     Response<Integer> getUnsignedUserCount(int adminId);
+
+    Response<Integer> addProduct(String productName, String productDescription, String category); // add product to system
+
+    LocalDate parseDate(String dateString);
 }

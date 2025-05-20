@@ -203,6 +203,8 @@ public class NewSystemServiceAcceptanceTest {
         assertTrue(result.isSuccess(), "Search should succeed with valid category");
     }
 
+    // changed the logic of searchByCategory to return empty list if no products found instead of failure
+    //  I did it that the UI will not throw http exeption when the user types a wrong category
     @Test
     void testSearchByCategory_invalidCategory_Failure() {
         // Arrange
@@ -215,8 +217,9 @@ public class NewSystemServiceAcceptanceTest {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> resultUser=systemService.login(email, password);
         String invalidCategory = "INVALID_CATEGORY"; // Invalid category
         Response<List<ProductDTO>> result = systemService.searchByCategory(invalidCategory);
-        assertNull(result.getData());
-        assertFalse(result.isSuccess(), "Search should fail with invalid category");
+        assertTrue(result.getData().isEmpty(), "Data should be an empty list for invalid category");
+        assertTrue(result.isSuccess(), "Search should succeed even with invalid category, returning an empty list");
+        assertEquals("Invalid category", result.getMessage(), "Error message should indicate invalid category");
     }
 
     @Test

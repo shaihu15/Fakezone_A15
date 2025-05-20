@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +108,12 @@ public class ProductRepository implements IProductRepository {
     } 
 
 
+    @Override
+    public Collection<IProduct> searchProductsByName(String name) {
+        return products.values().stream()
+                .filter(product -> product.getName().toLowerCase().contains(name.toLowerCase()))
+                .collect(Collectors.toList());
+    }
     private void init(){
         logger.info("product repo init");
         products.put(1001, new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
@@ -114,5 +121,4 @@ public class ProductRepository implements IProductRepository {
         products.get(1001).addStore(1001);
         products.get(1002).addStore(1001);
     }
-
 }

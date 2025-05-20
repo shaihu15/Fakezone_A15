@@ -28,6 +28,10 @@ public class ProductDTO {
     @JsonProperty("category")
     private PCategory category;
 
+    // Add no-args constructor
+    public ProductDTO() {
+    // Default constructor
+    }
 
     public ProductDTO(String name, String description, int id,PCategory category, Set<Integer> storeIds) {
         this.name = name;
@@ -52,7 +56,7 @@ public class ProductDTO {
         this.category = product.getCategory();
     }
 
-    public Set<Integer> getStoresIds() {
+    public Set<Integer> getStoreIds() {
         return storeIds;
     }
 
