@@ -1729,7 +1729,7 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during getting all products: {}", e.getMessage());
             return new Response<>(null, "Error during getting all products", false, ErrorType.INTERNAL_ERROR, null);
         }
-
+    }
     private void init(){
         logger.info("system service init");
         this.login("testNormalUser1004@gmail.com", "a12345");
