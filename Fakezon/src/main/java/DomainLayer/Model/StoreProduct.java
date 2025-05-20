@@ -83,5 +83,19 @@ public class StoreProduct {
         this.quantity = quantity;
     }
 
+    public synchronized void decrementProductQuantity(int quantity){
+        if(this.quantity >= quantity)
+        {
+            this.quantity -=quantity;
+        }
+        else
+        {
+            throw new IllegalArgumentException("Quantity cannot be negative");
+        }
+    }
+    public synchronized void incrementProductQuantity(int quantity){
+        this.quantity +=quantity;
+    }
+
 }
 

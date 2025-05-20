@@ -17,6 +17,8 @@ import DomainLayer.Model.User;
 public interface IUserService {
     Optional<Registered> getUserByUserName(String userName);
 
+    void clearUserCart(int userId);
+
     Optional<Registered> getUserById(int userID);
 
     List<Registered> getAllUsers();

@@ -29,6 +29,9 @@ import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 import DomainLayer.Model.helpers.Tree;
+
+import static org.mockito.ArgumentMatchers.*;
+
 import java.time.LocalDate;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,6 +59,7 @@ public class Store implements IStore {
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
     private final ReentrantLock rolesLock = new ReentrantLock();    // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED BOTH!
     private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED BOTH
+    private final ReentrantLock ratingLock = new ReentrantLock();
     private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
     private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -96,12 +100,14 @@ public class Store implements IStore {
     // precondition: user is logged in and previously made a purchase from the store
     // - cheaked by service layer
     @Override
-    public synchronized void addRating(int userID, double rating, String comment) {
+    public void addRating(int userID, double rating, String comment) {
+        ratingLock.lock();
         if (Sratings.containsKey(userID)) {
             Sratings.get(userID).updateRating(rating, comment);
         } else {
             Sratings.put(userID, new StoreRating(userID, rating, comment));
         }
+        ratingLock.unlock();
     }
 
     @Override
@@ -117,19 +123,7 @@ public class Store implements IStore {
         }
     }
 
-    @Override
-    public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
-        productsLock.lock();
-        if (auctionProducts.containsKey(productID)) {
-            boolean ans = auctionProducts.get(productID).addBid(requesterId, bidAmount);
-            productsLock.unlock();
-            return ans;
-        } else {
-            productsLock.unlock();
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
-        }
-    }
+
 
     
 
@@ -301,7 +295,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public boolean addBidToAuctionProduct(int requesterId, int productID, double bidAmount) {
+    public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
         productsLock.lock();
         if (auctionProducts.containsKey(productID)) {
             boolean ans = auctionProducts.get(productID).addBid(requesterId, bidAmount);
@@ -959,39 +953,6 @@ public class Store implements IStore {
         return new Node[] {fatherNode, childNode};
     }
 
-    @Override
-    public synchronized List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy, int userId) {
-        List<StoreProductDTO> products = new ArrayList<>();
-        for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
-            int productId = entry.getKey();
-            int quantity = entry.getValue();
-            StoreProduct storeProduct = storeProducts.get(productId);
-            if (storeProduct == null) {
-                throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
-                        + storeID);
-            }
-            if(auctionProducts.containsKey(productId)){
-                AuctionProduct auctionProduct = auctionProducts.get(productId);
-                if(auctionProduct.getUserIDHighestBid() != userId  && !auctionProduct.isApprovedByAllOwners()){
-                    throw new IllegalArgumentException("User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
-                }
-                if(auctionProduct.getQuantity() < quantity) {
-                    throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
-                }
-                auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
-                auctionProducts.remove(productId);
-            }
-            else if (storeProduct.getQuantity() < quantity) {
-                throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
-            }
-            else{
-                storeProduct.setQuantity(storeProduct.getQuantity() - quantity);
-            }
-            products.add(new StoreProductDTO(storeProduct, quantity));
-        }
-        
-        return products;
-    }
 
     private boolean hasInventoryPermissions(int id){
         return (isOwner(id) || (isManager(id) && storeManagers.get(id).contains(StoreManagerPermission.INVENTORY)));
@@ -1008,17 +969,20 @@ public class Store implements IStore {
             throw new IllegalArgumentException("Product list is empty or null");
         }
         double amount = 0;
-        Map<StoreProductDTO, Boolean> products = checkIfProductsInStore(productToBuy);
-        for (Map.Entry<StoreProductDTO, Boolean> entry : products.entrySet()) {
-            StoreProductDTO product = entry.getKey();
-            int productId = product.getProductId();
+
+        Map<StoreProduct,Integer> products = new HashMap<>();
+        for (Map.Entry<Integer, Integer> entry : productToBuy.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
             if(!storeProducts.containsKey(productId)) {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productId + " does not exist in store ID: " + storeID);
             }
+            StoreProduct product = storeProducts.get(productId);
+            products.put(product, quantity);
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
-                if (!policy.canPurchase(dob, productId, product.getQuantity())) {
+                if (!policy.canPurchase(dob, productId, quantity)) {
                     throw new IllegalArgumentException(
                             "Purchase policy for product with ID: " + productId + " is not valid for the current basket.");
                 }
@@ -1041,8 +1005,8 @@ public class Store implements IStore {
                     List<DiscountCondition> conditions = policy.getConditions();
                     for(DiscountCondition condition : conditions) {
                         boolean con = products.entrySet().stream().anyMatch(e ->
-                        e.getKey().getProductId() == condition.getTriggerProductId() &&
-                        e.getKey().getQuantity() < condition.getTriggerQuantity());
+                        e.getKey().getSproductID() == condition.getTriggerProductId() &&
+                        e.getValue() < condition.getTriggerQuantity());
                         if (con){
                             isDiscountApplicable = false;
                             break;
@@ -1091,21 +1055,85 @@ public class Store implements IStore {
     }
 
     @Override
-    public Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products) {
+    public Map<StoreProductDTO, Boolean> checkIfProductsInStore(int userID, Map<Integer,Integer> products) {
+        productsLock.lock();
+
         Map<StoreProductDTO, Boolean> productsInStore = new HashMap<>();
         for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
             int productId = entry.getKey();
             int quantity = entry.getValue();
             if (storeProducts.containsKey(productId)) {
                 StoreProduct storeProduct = storeProducts.get(productId);
-                if (storeProduct.getQuantity() >= quantity) {
-                    productsInStore.put(new StoreProductDTO(storeProduct, quantity), true);
+                int newQuantity = Math.min(quantity, storeProduct.getQuantity());
+                if (storeProduct.getQuantity() == newQuantity) {
+                    productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
                 } else {
-                    productsInStore.put(new StoreProductDTO(storeProduct, quantity), false);
+                    productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), false);
                 }
             }
         }
+        productsLock.unlock();
+
         return productsInStore;
     }
+
+    @Override
+    public Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer,Integer> productsToBuy)
+    {
+        productsLock.lock();
+        Map<StoreProductDTO, Boolean> products = new HashMap<>();
+        for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
+            StoreProduct storeProduct = storeProducts.get(productId);
+            if (storeProduct == null) {
+                productsLock.unlock();
+                throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
+                        + storeID);
+            }
+            int newQuantity = Math.min(quantity, storeProduct.getQuantity());
+            if(auctionProducts.containsKey(productId)){
+                AuctionProduct auctionProduct = auctionProducts.get(productId);
+                if(auctionProduct.getUserIDHighestBid() != userId  && !auctionProduct.isApprovedByAllOwners()){
+                    productsLock.unlock();
+                    throw new IllegalArgumentException("User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
+                }
+                if(auctionProduct.getQuantity() < quantity) {
+                    productsLock.unlock();
+                    throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+                }
+                auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
+                auctionProducts.remove(productId);
+            }
+            else if (newQuantity == quantity) {
+                products.put(new StoreProductDTO(storeProduct, quantity),true);
+                storeProduct.decrementProductQuantity(newQuantity);
+            }
+            else{
+                storeProduct.decrementProductQuantity(newQuantity);
+                products.put(new StoreProductDTO(storeProduct, quantity),false);
+
+            }
+        }
+        productsLock.unlock();
+
+        return products;
+
+    }
+
+    @Override
+    public void returnProductsToStore(int userId, Map<Integer,Integer> products){
+        productsLock.lock();
+        for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
+            int productId = entry.getKey();
+            int quantity = entry.getValue();
+            if (storeProducts.containsKey(productId)) {
+                StoreProduct storeProduct = storeProducts.get(productId);
+                storeProduct.incrementProductQuantity(quantity);
+            }
+        }
+        productsLock.unlock();
+    }
+
 
 }
