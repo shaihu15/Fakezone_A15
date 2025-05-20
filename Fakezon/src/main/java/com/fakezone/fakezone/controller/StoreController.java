@@ -181,7 +181,7 @@ public class StoreController {
                                                             @PathVariable("requesterId") int requesterId,
                                                             @PathVariable("productId") int productId,
                                                             @RequestParam("basePrice") double basePrice,
-                                                            @RequestParam("daysToEnd") int daysToEnd,
+                                                            @RequestParam("MinutesToEnd") int MinutesToEnd,
                                                             @RequestHeader("Authorization") String token) {
         try {
             logger.info("Received request to add auction product {} to store {} by user {} with token {}", productId, storeId, requesterId, token);
@@ -189,7 +189,7 @@ public class StoreController {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd);
+            Response<Void> response = systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }

@@ -75,7 +75,7 @@ public interface ISystemService {
 
     Response<Void> addStoreOwner(int storeId, int requesterId, int ownerId);
     
-    Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd);
     
     Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     

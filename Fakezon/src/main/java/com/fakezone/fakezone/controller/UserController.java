@@ -69,18 +69,19 @@ public class UserController {
         }
     }
 
-    @PostMapping("/addToBasket/{userId}/{storeId}")
+    @PostMapping("/addToBasket/{userId}/{storeId}/{productId}/{quantity}")
     public ResponseEntity<Response<Void>> addToBasket(@RequestHeader("Authorization") String token,
                                                @PathVariable int userId,
                                                @PathVariable int storeId,
-                                               @RequestBody StoreProductDTO product) {
+                                               @PathVariable int productId,
+                                               @PathVariable int quantity) {
         try {
             logger.info("Received request to add product to basket for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Void> response = systemService.addToBasket(userId, product.getProductId(), storeId, product.getQuantity());
+            Response<Void> response = systemService.addToBasket(userId, productId, storeId, quantity);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }

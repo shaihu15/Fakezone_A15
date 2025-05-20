@@ -30,6 +30,17 @@ public class User {
         this.orders = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
+
+    /**
+     * **********DO NOT USE - JUST FOR UI PURPOSES**********
+     **/
+    public User(int userId){
+        this.userId = userId;
+        this.cart = new Cart();
+        this.isLoggedIn = false;
+        this.orders = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
+    }
     
     public boolean isRegistered() {
         return false;

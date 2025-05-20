@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.Enums.ErrorType;
 import org.slf4j.Logger;
@@ -23,7 +24,6 @@ import DomainLayer.Model.User;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
-
     public UserService(IUserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -62,6 +62,19 @@ public class UserService implements IUserService {
         }
         UserDTO userDTO = user.toDTO();
         return userDTO;
+    }
+
+    @Override
+    public void clearUserCart(int userId){
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            Registered user = optionalUser.get();
+            user.clearCart();
+            logger.info("User "+userId+" clear cart");
+        } else {
+            logger.warn("Clear cart failed: User with id {} not found", userId);
+            throw new IllegalArgumentException("User not found");
+        }
     }
 
     @Override
