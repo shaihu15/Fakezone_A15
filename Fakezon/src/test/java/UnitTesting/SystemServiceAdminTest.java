@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -23,6 +24,8 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 
 public class SystemServiceAdminTest {
 
@@ -35,6 +38,7 @@ public class SystemServiceAdminTest {
     private IAuthenticator mockAuthenticatorService;
     private IPayment mockPaymentService;
     private ApplicationEventPublisher mockPublisher;
+    private INotificationWebSocketHandler mockNotificationWebSocketHandler;
     
     private Registered adminUser;
     private Registered regularUser;
@@ -51,6 +55,7 @@ public class SystemServiceAdminTest {
         mockAuthenticatorService = mock(IAuthenticator.class);
         mockPaymentService = mock(IPayment.class);
         mockPublisher = mock(ApplicationEventPublisher.class);
+        mockNotificationWebSocketHandler = mock(INotificationWebSocketHandler.class);
         
         // Initialize SystemService with mocks
         systemService = new SystemService(
@@ -61,7 +66,8 @@ public class SystemServiceAdminTest {
             mockDeliveryService,
             mockAuthenticatorService,
             mockPaymentService,
-            mockPublisher
+            mockPublisher,
+            mockNotificationWebSocketHandler
         );
         
         // Create test user objects

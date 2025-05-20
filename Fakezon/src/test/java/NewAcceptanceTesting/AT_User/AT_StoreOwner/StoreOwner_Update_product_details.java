@@ -39,6 +39,9 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+
 
 public class StoreOwner_Update_product_details {
     //Use-case: 4.1 StoreOwner -Update product details
@@ -56,7 +59,7 @@ public class StoreOwner_Update_product_details {
     private IProductService productService;
     private IUserService userService;
     private IOrderService orderService;
-
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private TestHelper testHelper;
 
     int userId;
@@ -79,13 +82,13 @@ public class StoreOwner_Update_product_details {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher,notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
