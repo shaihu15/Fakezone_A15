@@ -264,7 +264,7 @@ class UserControllerTest {
         when(systemService.addToBasket(userId, product.getProductId(), storeId, product.getQuantity()))
                 .thenReturn(new Response<>(null, "Product added to basket", true, null, null));
 
-        ResponseEntity<Response<Void>> response = userController.addToBasket(token, userId, storeId, product);
+        ResponseEntity<Response<Void>> response = userController.addToBasket(token, userId, storeId, product.getProductId(), product.getQuantity());
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -281,7 +281,7 @@ class UserControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<Void>> response = userController.addToBasket(token, userId, storeId, product);
+        ResponseEntity<Response<Void>> response = userController.addToBasket(token, userId, storeId, product.getProductId(), product.getQuantity());
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());

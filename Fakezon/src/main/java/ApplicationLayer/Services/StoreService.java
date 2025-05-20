@@ -40,6 +40,7 @@ public class StoreService implements IStoreService {
         this.publisher = publisher;
 
         //FOR UI PUT IN COMMENT IF NOT NEEDED!
+        
         init();
     }
 
@@ -684,6 +685,7 @@ public class StoreService implements IStoreService {
     }
 
     private void init(){
+        logger.info("store service init");
         storeRepository.addStore(new Store("store1001", 1001, publisher, 1001));
         Store uiStore = storeRepository.findById(1001);
         uiStore.addStoreOwner(1001, 1002);
