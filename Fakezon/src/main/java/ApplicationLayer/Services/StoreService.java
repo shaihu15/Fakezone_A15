@@ -41,7 +41,7 @@ public class StoreService implements IStoreService {
 
         //FOR UI PUT IN COMMENT IF NOT NEEDED!
         
-        init();
+        //init();
     }
 
     // should store service catch the errors? who's printing to console??

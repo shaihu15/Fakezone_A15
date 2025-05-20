@@ -75,7 +75,7 @@ public class SystemService implements ISystemService {
         this.paymentService = new PaymentAdapter();
         logger.info("UI INIT");
         // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
-        init();
+        //init();
     }
 
     // Overloaded constructor for testing purposes

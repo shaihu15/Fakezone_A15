@@ -26,7 +26,7 @@ public class ProductRepository implements IProductRepository {
         this.products =  new HashMap<>();
 
         //FOR UI PUT IN COMMENT IF NOT NEEDED!
-        init();
+        //init();
     }
 
     @Override

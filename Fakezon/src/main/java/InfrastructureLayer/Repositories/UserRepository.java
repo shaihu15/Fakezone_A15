@@ -37,7 +37,7 @@ public class UserRepository implements IUserRepository {
 
 
         // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
-        init();
+        //init();
     }
 
     @Override
