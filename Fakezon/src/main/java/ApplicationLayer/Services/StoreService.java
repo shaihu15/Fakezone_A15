@@ -38,6 +38,10 @@ public class StoreService implements IStoreService {
     public StoreService(IStoreRepository storeRepository, ApplicationEventPublisher publisher) {
         this.storeRepository = storeRepository;
         this.publisher = publisher;
+
+        //FOR UI PUT IN COMMENT IF NOT NEEDED!
+        
+        //init();
     }
 
     // should store service catch the errors? who's printing to console??
@@ -655,6 +659,20 @@ public class StoreService implements IStoreService {
         return result;
     }
 
+
+    private void init(){
+        logger.info("store service init");
+        storeRepository.addStore(new Store("store1001", 1001, publisher, 1001));
+        Store uiStore = storeRepository.findById(1001);
+        uiStore.addStoreOwner(1001, 1002);
+        uiStore.acceptAssignment(1002);
+        uiStore.addStoreManager(1002, 1003, new ArrayList<>(List.of(StoreManagerPermission.INVENTORY)));
+        uiStore.acceptAssignment(1003);
+        uiStore.addStoreProduct(1001, 1001, "Product1001", 100.0, 10, PCategory.BOOKS);
+        uiStore.addStoreProduct(1001, 1002, "Product1002", 200.0, 20, PCategory.MUSIC);
+        
+    }
+
     @Override
     public Map<StoreDTO, Map<StoreProductDTO, Boolean>> decrementProductsInStores(
             int userID,Map<Integer, Map<Integer, Integer>> cart) {
@@ -685,6 +703,7 @@ public class StoreService implements IStoreService {
             store.returnProductsToStore(userId, productsInStore);
         }
     }
+
 
 
 }

@@ -2,14 +2,15 @@ package com.fakezone.fakezone.controller;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.SystemService;
-
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -179,6 +180,30 @@ public class ProductController {
         } catch (Exception e) {
             logger.error("Error in ProductController: {}", e.getMessage());
             Response<List<ProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/topRated/{limit}")
+    public ResponseEntity<Response<List<StoreProductDTO>>> getTopRatedProducts(@PathVariable("limit") int limit,  @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get top-rated products with limit: {}", limit);
+            if(!authenticatorAdapter.isValid(token)){
+                Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token " + token, false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<StoreProductDTO>> response = systemService.getTopRatedProducts(limit);
+
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in ProductController: {}", e.getMessage());
+            Response<List<StoreProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

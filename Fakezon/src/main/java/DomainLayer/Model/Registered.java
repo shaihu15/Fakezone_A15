@@ -47,8 +47,22 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
+    }
 
-
+    /**
+     * **********DO NOT USE - JUST FOR UI PURPOSES**********
+     **/
+    public Registered(String email, String password, LocalDate dateOfBirth,String state, int userId) {
+        super(userId);
+        this.email = email;
+        this.password = password;
+        this.roles = new HashMap<>();
+        this.isLoggedIn = false;
+        this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
+        messagesFromUser = new Stack<>();
+        messagesFromStore = new LinkedList<>();
+        assignmentMessages = new LinkedList<>();
+        auctionEndedMessages = new LinkedList<>();
     }
 
 

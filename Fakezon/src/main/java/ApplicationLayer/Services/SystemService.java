@@ -73,6 +73,9 @@ public class SystemService implements ISystemService {
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
+        logger.info("UI INIT");
+        // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
+        //init();
     }
 
     // Overloaded constructor for testing purposes
@@ -89,6 +92,7 @@ public class SystemService implements ISystemService {
         this.deliveryService = deliveryService;
         this.authenticatorService = authenticatorService;
         this.paymentService = paymentService;
+        logger.info("UI INIT2");
     }
 
     @Override
@@ -1713,5 +1717,14 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
         }
+    }
+
+    private void init(){
+        logger.info("system service init");
+        this.login("testNormalUser1004@gmail.com", "a12345");
+        this.purchaseCart(1004, "IL", LocalDate.of(1998, 10, 15), PaymentMethod.CREDIT_CARD, "deliver", "1234", "Yuval Bachar", "never", "123","address1004","Yuval Bachar", "details");
+        this.ratingStoreProduct(1001, 1001, 1004, 4.5, "Great!");
+        this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
+        this.userLogout(1004);
     }
 }

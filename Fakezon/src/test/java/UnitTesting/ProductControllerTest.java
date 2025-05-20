@@ -6,6 +6,8 @@ import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.ISystemService;
+import DomainLayer.Interfaces.IAuthenticator;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
+import java.net.Authenticator;
 import com.fakezone.fakezone.controller.ProductController;
 
 import ApplicationLayer.DTO.ProductDTO;
