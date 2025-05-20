@@ -36,6 +36,42 @@ class PaymentAdapterTest {
     }
 
     @Test
+    void givenInValidCardNumberPaymentDetails_WhenPayFails_ThenReturnsFalse() {
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
+                .thenReturn(false);
+
+        boolean result = adapter.pay(null, "John Doe", "12/25", "123", 100.0);
+
+        assertFalse(result);
+    }
+    @Test
+    void givenInValidcardHolderPaymentDetails_WhenPayFails_ThenReturnsFalse() {
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
+                .thenReturn(false);
+
+        boolean result = adapter.pay("1234567890123456", null, "12/25", "123", 100.0);
+
+        assertFalse(result);
+    }
+    @Test
+    void givenInValidexpDatePaymentDetails_WhenPayFails_ThenReturnsFalse() {
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
+                .thenReturn(false);
+
+        boolean result = adapter.pay("1234567890123456", "John Doe", null, "123", 100.0);
+
+        assertFalse(result);
+    }
+    @Test
+    void givenInValidcvvPaymentDetails_WhenPayFails_ThenReturnsFalse() {
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
+                .thenReturn(false);
+
+        boolean result = adapter.pay("1234567890123456", "John Doe", "12/25", null, 100.0);
+
+        assertFalse(result);
+    }
+    @Test
     void givenValidPaymentDetails_WhenPayFails_ThenReturnsFalse() {
         when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
                 .thenReturn(false);

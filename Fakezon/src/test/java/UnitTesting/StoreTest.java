@@ -3,6 +3,7 @@ package UnitTesting;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.AuctionProduct;
 import DomainLayer.Model.Store;
+import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 
@@ -24,7 +25,9 @@ import ApplicationLayer.Enums.PCategory;
 import static org.mockito.Mockito.*;
 
 import java.lang.management.ManagementPermission;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StoreTest {
     private Store store;
@@ -39,6 +42,7 @@ public class StoreTest {
     void setUp() {
         publisher = mock(ApplicationEventPublisher.class);
         store = new Store("Test Store", founderId, publisher);
+
         StoreProductDTO storeProductDTO = store.addStoreProduct(founderId ,productId, "Test Product", 100.0, 5, PCategory.ELECTRONICS);
 
     }
@@ -236,7 +240,7 @@ public class StoreTest {
     }
 
     @Test
-    void addAuctionProduct_ZeroDays_Fails() {
+    void addAuctionProduct_ZeroMinutes_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
             store.addAuctionProduct(founderId, productId, 50.0, 0);
         });
@@ -244,7 +248,7 @@ public class StoreTest {
     }
 
     @Test
-    void addAuctionProduct_NegativeDays_Fails() {
+    void addAuctionProduct_NegativeMinutes_Fails() {
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
             store.addAuctionProduct(founderId, productId, 50.0, -1);
         });
@@ -438,6 +442,91 @@ public class StoreTest {
 
         assertTrue(owners.contains(userId), "User should be in the list of store owners");
     }
-   
+
+    @Test
+void returnProductsToStore_ValidProduct_ShouldIncreaseQuantity() {
+    int userId = 1;
+    int productId = 100;
+    int originalQuantity = 10;
+    int returnQuantity = 5;
+
+    store.addStoreProduct(founderId, productId, "Test Product", 20.0, originalQuantity, PCategory.ELECTRONICS);
+    
+    Map<Integer, Integer> returnedProducts = new HashMap<>();
+    returnedProducts.put(productId, returnQuantity);
+
+    store.returnProductsToStore(userId, returnedProducts);
+
+    StoreProduct updatedProduct = store.getStoreProduct(productId);
+
+    assertEquals(originalQuantity + returnQuantity, updatedProduct.getQuantity(),
+            "Product quantity should be increased after return");
+}
+
+@Test
+void decrementProductsInStore_ValidPurchase_ShouldSucceed() {
+    int userId = 1;
+    int productId = 101;
+    int originalQuantity = 20;
+    int purchaseQuantity = 5;
+
+    store.addStoreProduct(founderId, productId, "Another Product", 15.0, originalQuantity, PCategory.ELECTRONICS);
+    
+    Map<Integer, Integer> toBuy = new HashMap<>();
+    toBuy.put(productId, purchaseQuantity);
+
+    Map<StoreProductDTO, Boolean> result = store.decrementProductsInStore(userId, toBuy);
+
+    StoreProduct updatedProduct = store.getStoreProduct(productId);
+
+    assertEquals(originalQuantity - purchaseQuantity, updatedProduct.getQuantity(),
+            "Product quantity should decrease after purchase");
+    
+    StoreProductDTO dto = result.keySet().iterator().next();
+    assertEquals(purchaseQuantity, dto.getQuantity(), "DTO should reflect purchase quantity");
+    assertTrue(result.get(dto), "Should return true when full quantity was available and purchased");
+}
+
+@Test
+void decrementProductsInStore_ProductNotExist_ShouldThrowException() {
+    int userId = 1;
+    int nonExistentProductId = 999;
+
+    Map<Integer, Integer> toBuy = new HashMap<>();
+    toBuy.put(nonExistentProductId, 1);
+
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        store.decrementProductsInStore(userId, toBuy);
+    });
+
+    String expectedMessage = "Product with ID: " + nonExistentProductId + " does not exist";
+    assertTrue(exception.getMessage().contains(expectedMessage), "Exception message should indicate missing product");
+}
+
+@Test
+void decrementProductsInStore_AuctionProductNotHighestBidder_ShouldThrowException() {
+    int productId = 102;
+    int userId = 1; // not the highest bidder
+    int highestBidderId = 3;
+    int basePrice = 1;
+    int quantity = 2;
+
+    store.addStoreProduct(founderId,productId,"p", basePrice,1,PCategory.AUTOMOTIVE);
+    store.addAuctionProduct(founderId, productId, basePrice, quantity);
+    store.addBidOnAuctionProduct(highestBidderId, productId, basePrice*3);
+    
+    Map<Integer, Integer> toBuy = new HashMap<>();
+    toBuy.put(productId, quantity);
+
+    assertThrows(IllegalArgumentException.class, () -> {
+        store.decrementProductsInStore(userId, toBuy);
+    });
+
+}
+
+
+
+
+
     
 }

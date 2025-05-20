@@ -79,7 +79,8 @@ public class SystemService implements ISystemService {
     }
 
     // Overloaded constructor for testing purposes
-    public SystemService(IStoreService storeService, IUserService userService, IProductService productService, IOrderService orderService,
+    public SystemService(IStoreService storeService, IUserService userService, IProductService productService,
+            IOrderService orderService,
             IDelivery deliveryService, IAuthenticator authenticatorService, IPayment paymentService,
             ApplicationEventPublisher publisher, INotificationWebSocketHandler notificationWebSocketHandler) {
         this.publisher = publisher;
@@ -128,27 +129,29 @@ public class SystemService implements ISystemService {
             product = this.storeService.getProductFromStore(productId, storeId);
         } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
-            return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
         if (product == null) {
             logger.error("System Service - Product not found: " + productId + " in store: " + storeId);
             return new Response<>(null, "Product not found", false, ErrorType.INVALID_INPUT, null);
         }
-        
+
         if (product.getQuantity() < quantity) {
             logger.error("System Service - Not enough product in stock: " + productId + " in store: " + storeId);
             return new Response<>(null, "Not enough product in stock", false, ErrorType.INVALID_INPUT, null);
         }
-        try{
+        try {
             this.userService.addToBasket(userId, storeId, productId, quantity);
             logger.info(
-                "System Service - User added product to basket: " + productId + " from store: " + storeId + " by user: "
-                        + userId + " with quantity: " + quantity);
+                    "System Service - User added product to basket: " + productId + " from store: " + storeId
+                            + " by user: "
+                            + userId + " with quantity: " + quantity);
             return new Response<>(null, "Product added to basket successfully", true, null, null);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("System Service - Error during adding to basket: " + e.getMessage());
-            return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding to basket: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -165,15 +168,18 @@ public class SystemService implements ISystemService {
                     return new Response<>(null, "Invalid rating value", false, ErrorType.INVALID_INPUT, null);
                 }
                 this.storeService.addStoreRating(storeId, userId, rating, comment);
-                logger.info("System Service - User rated store: " + storeId + " by user: " + userId + " with rating: " + rating);
+                logger.info("System Service - User rated store: " + storeId + " by user: " + userId + " with rating: "
+                        + rating);
                 return new Response<>(null, "Store rated successfully", true, null, null);
             } else {
                 logger.error("System Service - User did not purchase from this store: " + userId + " " + storeId);
-                return new Response<>(null, "User did not purchase from this store", false, ErrorType.INVALID_INPUT, null);
+                return new Response<>(null, "User did not purchase from this store", false, ErrorType.INVALID_INPUT,
+                        null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during rating store: " + e.getMessage());
-            return new Response<>(null, "Error during rating store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during rating store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
 
@@ -204,7 +210,8 @@ public class SystemService implements ISystemService {
             }
             if (this.userService.didPurchaseProduct(userId, storeId, productId)) {
                 this.storeService.addStoreProductRating(storeId, productId, userId, rating, comment);
-                logger.info("System Service - User rated product: " + productId + " in store: " + storeId + " by user: " + userId + " with rating: " + rating);
+                logger.info("System Service - User rated product: " + productId + " in store: " + storeId + " by user: "
+                        + userId + " with rating: " + rating);
                 return new Response<>(null, "Product rated successfully", true, null, null);
             } else {
                 logger.error("System Service - User did not purchase from this store that product: " + userId + " " + storeId + " " + productId);
@@ -212,7 +219,8 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during rating product: " + e.getMessage());
-            return new Response<>(null, "Error during rating product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during rating product: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -230,7 +238,8 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             // Handle exception if needed
             logger.error("System Service - Error during user access store: " + e.getMessage());
-            return new Response<StoreDTO>(null, "Error during user access store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<StoreDTO>(null, "Error during user access store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -240,7 +249,8 @@ public class SystemService implements ISystemService {
             if (this.userService.isUserLoggedIn(userId)) {
                 int storeId = this.storeService.addStore(userId, storeName);
                 this.userService.addRole(userId, storeId, new StoreFounder());
-                logger.info("System Service - User opened store: " + storeId + " by user: " + userId + " with name: " + storeName);
+                logger.info("System Service - User opened store: " + storeId + " by user: " + userId + " with name: "
+                        + storeName);
                 return new Response<>(storeId, "Store opened successfully", true, null, null);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
@@ -248,7 +258,8 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during opening store: " + e.getMessage());
-            return new Response<>(null, "Error during opening store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during opening store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -257,7 +268,8 @@ public class SystemService implements ISystemService {
         try {
             if (!this.userService.isUserLoggedIn(userId)) {
                 logger.error("System Service - User is not logged in: " + userId);
-                return new Response<List<OrderDTO>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                return new Response<List<OrderDTO>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT,
+                        null);
             }
             logger.info("System Service - User orders retrieved: " + userId);
             return this.userService.getOrdersByUser(userId);
@@ -290,7 +302,8 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during sending message to store: " + e.getMessage());
-            return new Response<>(null, "Error during sending message to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during sending message to store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -304,8 +317,7 @@ public class SystemService implements ISystemService {
                             "System Service - Store sent message to user: " + userToAnswer + " from store: " + storeId
                                     + " with message: " + message);
                     return new Response<>(null, "Message sent successfully", true, null, null);
-                } 
-                else {
+                } else {
                     logger.error("System Service - Store is closed: " + storeId);
                     return new Response<>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
                 }
@@ -315,9 +327,11 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during sending message to user: " + e.getMessage());
-            return new Response<>(null, "Error during sending message to user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during sending message to user: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
+
     public LocalDate parseDate(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         try {
@@ -332,10 +346,12 @@ public class SystemService implements ISystemService {
         try {
             logger.info("System service - user trying to view product " + productId + " in store: " + storeId);
             StoreDTO s = this.storeService.viewStore(storeId);
-            return new Response<StoreProductDTO>(s.getStoreProductById(productId), "Product retrieved successfully", true, null, null);
+            return new Response<StoreProductDTO>(s.getStoreProductById(productId), "Product retrieved successfully",
+                    true, null, null);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
-            return new Response<StoreProductDTO>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<StoreProductDTO>(null, "Error during getting product: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -353,12 +369,14 @@ public class SystemService implements ISystemService {
             return new Response<ProductDTO>(null, "Unexpected null value", false, ErrorType.INTERNAL_ERROR, null);
         } catch (Exception e) {
             logger.error("System Service - General error: " + e.getMessage());
-            return new Response<ProductDTO>(null, "An unexpected error occurred", false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<ProductDTO>(null, "An unexpected error occurred", false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
 
     @Override
-    public Response<Boolean> updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
+    public Response<Boolean> updateProduct(int productId, String productName, String productDescription,
+            Set<Integer> storesIds) {
         try {
             logger.info("System service - user trying to update product " + productId);
             this.productService.updateProduct(productId, productName, productDescription, storesIds);
@@ -389,15 +407,16 @@ public class SystemService implements ISystemService {
             dateOfBirthLocalDate = parseDate(dateOfBirth);
         } catch (Exception e) {
             logger.error("System Service - Error during guest registration: " + e.getMessage());
-            return new Response<>(null, "Invalid date of birth format. Expected format: YYYY-MM-DD", false, ErrorType.INVALID_INPUT, null);
+            return new Response<>(null, "Invalid date of birth format. Expected format: YYYY-MM-DD", false,
+                    ErrorType.INVALID_INPUT, null);
         }
-        if(isValidCountryCode(country)) {
+        if (isValidCountryCode(country)) {
             logger.info("System Service - Country code is valid: " + country);
         } else {
             logger.error("System Service - Invalid country code: " + country);
             return new Response<>(null, "Invalid country code", false, ErrorType.INVALID_INPUT, null);
         }
-        if(!isValidPassword(password)){
+        if (!isValidPassword(password)) {
             logger.error("System Service - Invalid password: " + password);
             return new Response<>(null, "Invalid password", false, ErrorType.INVALID_INPUT, null);
         }
@@ -411,29 +430,32 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during guest registration: " + email);
             return new Response<>(null, "Error during guest registration", false, ErrorType.INTERNAL_ERROR, null);
         }
-        logger.info("System Service - User got token successfully: " + email); 
+        logger.info("System Service - User got token successfully: " + email);
         logger.info("System Service - User registered successfully: " + email);
 
-        return new Response<> ( null, "Guest registered successfully", true, null, null);
-        
+        return new Response<>(null, "Guest registered successfully", true, null, null);
+
     }
 
     @Override
     public Response<List<ProductDTO>> searchByKeyword(String keyword) {
         try {
             logger.info("System service - user trying to view product " + keyword);
-            return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true, null, null);
+            return new Response<>(this.productService.searchProducts(keyword), "Products retrieved successfully", true,
+                    null, null);
         } catch (Exception e) {
             logger.error("System Service - Error during getting product: " + e.getMessage());
-            return new Response<>(null, "Error during getting product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during getting product: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
-    //addProduct method should be with amount and store?
+    // addProduct method should be with amount and store?
     private Response<Integer> addProduct(String productName, String productDescription, String category) {
         try {
             if (productName == null || productDescription == null || category == null) {
-                logger.error("System Service - Invalid input: " + productName + " " + productDescription + " " + category);
+                logger.error(
+                        "System Service - Invalid input: " + productName + " " + productDescription + " " + category);
                 return new Response<>(-1, "Invalid input", false, ErrorType.INVALID_INPUT, null);
             }
             PCategory categoryEnum = isCategoryValid(category);
@@ -442,13 +464,14 @@ public class SystemService implements ISystemService {
                 return new Response<>(-1, "Invalid category", false, ErrorType.INVALID_INPUT, null);
             }
             logger.info("System service - user trying to add product " + productName);
-            int productId = this.productService.addProduct(productName, productDescription,categoryEnum);
+            int productId = this.productService.addProduct(productName, productDescription, categoryEnum);
             return new Response<>(productId, "Product added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding product: " + e.getMessage());
-            return new Response<>(-1, "Error during adding product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(-1, "Error during adding product: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
-        //return -1;
+        // return -1;
     }
 
     private PCategory isCategoryValid(String category) {
@@ -478,7 +501,8 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting store roles: " + e.getMessage());
-            return new Response<>(null, "Error during getting store roles: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during getting store roles: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -490,10 +514,12 @@ public class SystemService implements ISystemService {
                 storeService.addStoreManagerPermissions(storeId, requesterId, managerId, perms);
                 return new Response<>(null, "Permissions added successfully", true, null, null);
         } catch (Exception e) {
-            return new Response<>(null, "Error during adding store manager permissions: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding store manager permissions: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    //add details to response
+
+    // add details to response
     @Override
     public Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
@@ -503,7 +529,8 @@ public class SystemService implements ISystemService {
             storeService.removeStoreManagerPermissions(storeId, requesterId, managerId, perms);
             return new Response<>(null, "Permissions removed successfully", true, null, null);
         } catch (Exception e) {
-            return new Response<>(null, "Error during removing store manager permissions: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during removing store manager permissions: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -515,7 +542,8 @@ public class SystemService implements ISystemService {
             userService.removeRole(managerId, storeId);
         } catch (Exception e) {
             logger.error("System service - failed to remove StoreManager role from user " + e.getMessage());
-            return new Response<>(null, "Error during removing store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during removing store manager: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
         try {
             storeService.removeStoreManager(storeId, requesterId, managerId);
@@ -523,18 +551,21 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System service - removeStoreManager failed" + e.getMessage());
             userService.addRole(managerId, storeId, new StoreManager()); // reverting
-            return new Response<>(null, "Error during removing store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during removing store manager: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
     public Response<Void> removeStoreOwner(int storeId, int requesterId, int ownerId) {
         try {
-            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId + " from store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId + " from store: "
+                    + storeId);
             userService.removeRole(ownerId, storeId);
         } catch (Exception e) {
             logger.error("System service - failed to remove StoreOwner role from user " + e.getMessage());
-            return new Response<>(null, "Error during removing store owner: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during removing store owner: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
         try {
             storeService.removeStoreOwner(storeId, requesterId, ownerId);
@@ -542,36 +573,44 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System service - removeStoreOwner failed" + e.getMessage());
             userService.addRole(ownerId, storeId, new StoreOwner()); // reverting
-            return new Response<>(null, "Error during removing store owner: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during removing store owner: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<Void> addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms) {
+    public Response<Void> addStoreManager(int storeId, int requesterId, int managerId,
+            List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: "
+                    + storeId);
             userService.addRole(managerId, storeId, new StoreManager());
         } catch (Exception e) {
             logger.error("System service - failed to add StoreManager role to user " + e.getMessage());
-            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);}
+            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
         try {
             storeService.addStoreManager(storeId, requesterId, managerId, perms);
             return new Response<>(null, "Store manager added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
             userService.removeRole(managerId, storeId); // reverting
-            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
     public Response<Void> addStoreOwner(int storeId, int requesterId, int ownerId) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add owner " + ownerId + " to store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to add owner " + ownerId + " to store: "
+                    + storeId);
             userService.addRole(ownerId, storeId, new StoreOwner());
         } catch (Exception e) {
             logger.error("System service - failed to add StoreOwner role to user " + e.getMessage());
-            return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
         try {
             storeService.addStoreOwner(storeId, requesterId, ownerId);
@@ -579,31 +618,35 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System service - failed to add owner to store " + e.getMessage());
             userService.removeRole(ownerId, storeId); // reverting
-            return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
-    @Override
-    public Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd) {
+
+    public Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd) {
         try {
             logger.info("System service - user " + requesterId + " trying to add auction product " + productID + " to store: " + storeId);
-            this.storeService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, daysToEnd);
+            this.storeService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, MinutesToEnd);
+
             return new Response<>(null, "Auction product added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding auction product to store: " + e.getMessage());
-            return new Response<>(null, "Error during adding auction product to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding auction product to store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product " + productID + " in store: " + storeId);
+            logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
+                    + productID + " in store: " + storeId);
             this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
             return new Response<>(null, "Bid added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
-            return new Response<>(null, "Error during adding bid to auction product in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding bid to auction product in store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -613,19 +656,21 @@ public class SystemService implements ISystemService {
             if (this.userService.isUserLoggedIn(userId)) {
                 this.storeService.closeStore(storeId, userId);
                 logger.info("System Service - User closed store: " + storeId + " by user: " + userId);
-                return new Response<String>("Store closed successfully","Store closed successfully", true, null, null);
+                return new Response<String>("Store closed successfully", "Store closed successfully", true, null, null);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
-                return new Response<String>(null, "User is not logged in",false, ErrorType.INVALID_INPUT, null);
+                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during closing store: " + e.getMessage());
-            return new Response<String>(null, "Error during closing store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<String>(null, "Error during closing store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
-    public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category) {
+    public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName,
+            String description, double basePrice, int quantity, String category) {
         String name = null;
         int productId;
         PCategory categoryEnum = null;
@@ -650,8 +695,8 @@ public class SystemService implements ISystemService {
             }
             List<ProductDTO> products = productService.getAllProducts();
             ProductDTO product = null;
-            for(ProductDTO prod : products){
-                if(prod.getName().equals(productName)){
+            for (ProductDTO prod : products) {
+                if (prod.getName().equals(productName)) {
                     product = prod;
                     break;
                 }
@@ -661,99 +706,105 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Invalid category: " + category);
                 return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT, null);
             }
-            if(product == null){
+            if (product == null) {
                 isNewProd = true;
                 productId = productService.addProduct(productName, description, categoryEnum);
                 productService.addProductsToStore(storeId, List.of(productId));
-            }
-            else{
+            } else {
                 productId = product.getId();
-                if(!product.getDescription().equals(description) || !product.getCategory().toString().equals(category)){
+                if (!product.getDescription().equals(description)
+                        || !product.getCategory().toString().equals(category)) {
                     throw new IllegalArgumentException("Product description/category is different than expected");
                 }
             }
 
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to fetch product " + e.getMessage());
-            return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
-        try{
-            
-            StoreProductDTO spDTO =storeService.addProductToStore(storeId, requesterId, productId, productName, basePrice, quantity, categoryEnum);
+        try {
+
+            StoreProductDTO spDTO = storeService.addProductToStore(storeId, requesterId, productId, productName,
+                    basePrice, quantity, categoryEnum);
             return new Response<>(spDTO, "Product added to store successfully", true, null, null);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to add product to store " + e.getMessage());
-            if(isNewProd){ // reverting
+            if (isNewProd) { // reverting
                 productService.removeStoreFromProducts(storeId, List.of(productId));
                 productService.deleteProduct(productId);
             }
-            return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during adding product to store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity){
+    public Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice,
+            int quantity) {
         String name = null;
-        try{
-            logger.info("System service - user " + requesterId + " trying to update product " + productId +" in store " + storeId);
+        try {
+            logger.info("System service - user " + requesterId + " trying to update product " + productId + " in store "
+                    + storeId);
             name = productService.viewProduct(productId).getName();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to fetch product " + e.getMessage());
-            return new Response<>(null, "Error during updating product in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during updating product in store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
-        try{
+        try {
             storeService.updateProductInStore(storeId, requesterId, productId, name, basePrice, quantity);
             return new Response<>(null, "Product updated in store successfully", true, null, null);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error("System service - failed to update product in store " + e.getMessage());
-            return new Response<>(null, "Error during updating product in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during updating product in store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<Void> removeProductFromStore(int storeId, int requesterId, int productId){
+    public Response<Void> removeProductFromStore(int storeId, int requesterId, int productId) {
         try {
-            logger.info("System service - user " + requesterId + " trying to remove product " + productId + " from store " + storeId);
+            logger.info("System service - user " + requesterId + " trying to remove product " + productId
+                    + " from store " + storeId);
             storeService.removeProductFromStore(storeId, requesterId, productId);
             return new Response<>(null, "Product removed from store successfully", true, null, null);
-        } 
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.info("System service - failed to remove product from store " + e.getMessage());
-            return new Response<>(null, "Error during removing product from store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during removing product from store: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
-    private Map<Integer, Map<Integer, Integer>> convertStoreCartToUserCatt(Map<StoreDTO,Map<StoreProductDTO,Boolean>> cart) {
-        Map<Integer,Map<Integer,Integer>> newCart = new HashMap<>();
-                for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : cart.entrySet()) {
-                    int storeId = entry.getKey().getStoreId();
-                    Map<StoreProductDTO,Boolean> products = entry.getValue();
-                    Map<Integer,Integer> newProducts = new HashMap<>();
-                    for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
-                        StoreProductDTO storeProduct = productEntry.getKey();
-                        newProducts.put(storeProduct.getProductId(), storeProduct.getQuantity());
-                    }
-                    newCart.put(storeId, newProducts);
-                }
+    private Map<Integer, Map<Integer, Integer>> convertStoreCartToUserCatt(
+            Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart) {
+        Map<Integer, Map<Integer, Integer>> newCart = new HashMap<>();
+        for (Map.Entry<StoreDTO, Map<StoreProductDTO, Boolean>> entry : cart.entrySet()) {
+            int storeId = entry.getKey().getStoreId();
+            Map<StoreProductDTO, Boolean> products = entry.getValue();
+            Map<Integer, Integer> newProducts = new HashMap<>();
+            for (Map.Entry<StoreProductDTO, Boolean> productEntry : products.entrySet()) {
+                StoreProductDTO storeProduct = productEntry.getKey();
+                newProducts.put(storeProduct.getProductId(), storeProduct.getQuantity());
+            }
+            newCart.put(storeId, newProducts);
+        }
         return newCart;
     }
 
     @Override
-    public Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId) {
+    public Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>> viewCart(int userId) {
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId)) {
-                Map<Integer,Map<Integer,Integer>> cart = this.userService.viewCart(userId);
+                Map<Integer, Map<Integer, Integer>> cart = this.userService.viewCart(userId);
                 if (cart.isEmpty()) {
                     logger.error("System Service - Cart is empty: " + userId);
                     return new Response<>(null, "Cart is empty", false, ErrorType.INVALID_INPUT, null);
                 }
-                Map<StoreDTO, Map<StoreProductDTO,Boolean>> validCart = storeService.checkIfProductsInStores(cart);
-                
+                Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart = storeService.checkIfProductsInStores(userId,
+                        cart);
+
                 this.userService.setCart(userId, convertStoreCartToUserCatt(validCart));
 
                 return new Response<>(validCart, "Cart retrieved successfully", true, null, null);
@@ -763,138 +814,169 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during viewing cart: " + e.getMessage());
-            return new Response<>(null, "Error during viewing cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during viewing cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
 
-	@Override
-	public Response<HashMap<Integer, String>> getAllMessages(int userID) {
-		try{
+    @Override
+    public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+        try {
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAllMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                        ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+                    false, ErrorType.INTERNAL_ERROR, null);
         }
-	}
+    }
 
-	@Override
-	public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
-		try{
+    @Override
+    public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
+        try {
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAssignmentMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                        ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }	}
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+                    false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
 
-	@Override
-	public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
-		try{
+    @Override
+    public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
+        try {
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAuctionEndedMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                        ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+                    false, ErrorType.INTERNAL_ERROR, null);
         }
-    	}
+    }
 
     @Override
-    public synchronized Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
+    public Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod,
+            String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails) {
-        Map<Integer,Double> prices = null;//storeId,price from store
+        Map<Integer, Double> prices = null;// storeId,price from store
         double totalPrice = 0;
         Cart cart = null;
-        Map<StoreDTO, Map<StoreProductDTO,Boolean>> validCart = null;
-        try{
+        boolean returnProductInCaseOfError = false;//so the return will happen only ones
+
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCartDTO = null;
+        try {
             logger.info("System service - user " + userId + " trying to purchase cart");
             cart = this.userService.getUserCart(userId);
-            if(cart.getAllProducts().isEmpty()){
+            if (cart.getAllProducts().isEmpty()) {
                 logger.error("System Service - Cart is empty: " + userId);
                 return new Response<String>(null, "Cart is empty", false, ErrorType.INVALID_INPUT, null);
             }
-            if(isValidCountryCode(country)) {
+            if (isValidCountryCode(country)) {
                 logger.info("System Service - Country code is valid: " + country);
             } else {
                 logger.error("System Service - Invalid country code: " + country);
                 return new Response<String>(null, "Invalid country code", false, ErrorType.INVALID_INPUT, null);
             }
             Optional<User> user = this.userService.getAnyUserById(userId);
-            if(!user.isPresent()){
+            if (!user.isPresent()) {
                 logger.error("System Service - User not found: " + userId);
                 return new Response<String>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
             }
-            validCart = this.storeService.checkIfProductsInStores(cart.getAllProducts());
-            for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : validCart.entrySet()) {
-                StoreDTO store = entry.getKey();
-                Map<StoreProductDTO,Boolean> products = entry.getValue();
-                for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
-                    StoreProductDTO storeProduct = productEntry.getKey();
-                    if (productEntry.getValue() == false) {
-                        logger.error("System Service - Product is not available: " + storeProduct.getName());
-                        return new Response<String>(null, "Product is not available: " + storeProduct.getName(), false, ErrorType.INVALID_INPUT, null);
-                    }
+        } catch (Exception e) {
+            logger.error("System Service - Error during purchase cart: " + e.getMessage());
+            return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+        try {
+            validCartDTO = this.storeService.decrementProductsInStores(userId, cart.getAllProducts());
+        } catch (Exception e) {
+            logger.error("System Service - Error during purchase cart - decrementProductsInStores: " + e.getMessage());
+            return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+        Map<Integer, Map<Integer, Integer>> validCart = convertStoreCartToUserCatt(validCartDTO);
+        for (Map.Entry<StoreDTO, Map<StoreProductDTO, Boolean>> entry : validCartDTO.entrySet()) {
+            Map<StoreProductDTO, Boolean> products = entry.getValue();
+            for (Map.Entry<StoreProductDTO, Boolean> productEntry : products.entrySet()) {
+                StoreProductDTO storeProduct = productEntry.getKey();
+                if (productEntry.getValue() == false) {
+                    logger.error("System Service - Product is not available: " + storeProduct.getName());
+                    userService.setCart(userId, validCart);
+                    storeService.returnProductsToStores(userId, validCart);
+                    returnProductInCaseOfError = true;
+                    return new Response<String>(null, "Product is not available: " + storeProduct.getName(), false,
+                            ErrorType.INVALID_INPUT, null);
                 }
             }
-            prices = this.storeService.calcAmount(userId,cart,dob);
-            logger.info("System Service - User "+userId + "cart price: " + totalPrice);
-            totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
         }
-        catch (Exception e) {
-            logger.error("System Service - Error during purchase cart: " + e.getMessage());
-            return new Response<String>(null, "Error during purchase cart: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }
+        //if payment/delivery won't work
+        userService.setCart(userId, validCart);
+
+        prices = this.storeService.calcAmount(userId, cart, dob);
+        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
+        totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
         try {
-            if(this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
-                logger.info("System Service - User " + userId + " cart purchased successfully, payment method: " + paymentMethod);
-            else
+            if (this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
+                logger.info("System Service - User " + userId + " cart purchased successfully, payment method: "
+                        + paymentMethod);
+            else {
+                if (!returnProductInCaseOfError) {
+                    storeService.returnProductsToStores(userId, validCart);
+                    returnProductInCaseOfError = true;
+                }
+
                 return new Response<String>(null, "Payment failed", false, ErrorType.INVALID_INPUT, null);
-        } catch (Exception e) {
+        }} catch (Exception e) {
             logger.error("System Service - Error during payment: " + e.getMessage());
-            return new Response<String>(null, "Error during payment: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            if (!returnProductInCaseOfError) {
+                storeService.returnProductsToStores(userId, validCart);
+                returnProductInCaseOfError = true;
+            }
+            return new Response<String>(null, "Error during payment: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
         try {
-            if(this.deliveryService.deliver(country, address, recipient, packageDetails))
-                logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: " + address);
-            else
+            if (this.deliveryService.deliver(country, address, recipient, packageDetails))
+                logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: "
+                        + address);
+            else {
+                if (!returnProductInCaseOfError) {
+                    storeService.returnProductsToStores(userId, validCart);
+                    returnProductInCaseOfError = true;
+                }
                 return new Response<String>(null, "Delivery failed", false, ErrorType.INVALID_INPUT, null);
-
+            }
         } catch (Exception e) {
-            this.paymentService.refund(cardNumber,totalPrice);
+            this.paymentService.refund(cardNumber, totalPrice);
+            if (!returnProductInCaseOfError) {
+                storeService.returnProductsToStores(userId, validCart);
+                returnProductInCaseOfError = true;
+            }
             logger.error("System Service - Error during delivery: " + e.getMessage());
-            logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder + " at card number: " + cardNumber);
+            logger.info("System Service - User " + userId + " cart purchase failed, refund issued to: " + cardHolder
+                    + " at card number: " + cardNumber);
         }
-        //update quantity in store
-        try{
-            Map<Integer,Map<Integer,Integer>> newCart = convertStoreCartToUserCatt(validCart);
-            this.storeService.decrementProductsQuantity(newCart,userId);
-            logger.info("System Service - User " + userId + " cart purchased successfully, products quantity updated in store");
-        }
-        catch (Exception e) {
-            logger.error("System Service - Error during updating products quantity in store: " + e.getMessage());
-            return new Response<String>(null, "Error during updating products quantity in store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-        }
-        //---------------------------------------------------------------//
-        List<Integer> productsPurchase = this.extractPurchasedProductIds(validCart);
-        int storeId = validCart.keySet().iterator().next().getStoreId();
-        this.userService.getUserById(userId).get().setproductsPurchase(storeId, productsPurchase);
-        //----------------------------------------------------------------//
-        this.orderService.addOrderCart(validCart,prices, userId, address, paymentMethod);
-        return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
 
+        this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod);
+        this.userService.clearUserCart(userId);
+        return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
     }
 
     @Override
@@ -924,7 +1006,8 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during sending response for auction: " + e.getMessage());
-            return new Response<>(null, "Error during sending response for auction: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during sending response for auction: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -932,13 +1015,13 @@ public class SystemService implements ISystemService {
     public Response<List<StoreProductDTO>> getTopRatedProducts(int limit) {
         try {
             logger.info("System service - fetching top " + limit + " rated products");
-            
+
             // 1. Fetch all products
             List<ProductDTO> allProducts = productService.getAllProducts();
-            
+
             // 2. Create a list to store products with their ratings
             List<StoreProductDTO> ratedProducts = new ArrayList<>();
-            
+
             // 3. For each product, get its StoreProductDTO from each store it's in
             for (ProductDTO product : allProducts) {
                 for (Integer storeId : product.getStoresIds()) {
@@ -950,22 +1033,24 @@ public class SystemService implements ISystemService {
                         }
                     } catch (Exception e) {
                         // Skip if product not found in store or other errors
-                        logger.warn("Could not retrieve product " + product.getId() + " from store " + storeId + ": " + e.getMessage());
+                        logger.warn("Could not retrieve product " + product.getId() + " from store " + storeId + ": "
+                                + e.getMessage());
                     }
                 }
             }
-            
+
             // 4. Sort products by average rating (highest first)
             ratedProducts.sort((p1, p2) -> Double.compare(p2.getAverageRating(), p1.getAverageRating()));
-            
+
             // 5. Return top 'limit' products (or all if there are fewer than 'limit')
             int resultSize = Math.min(limit, ratedProducts.size());
             List<StoreProductDTO> topRatedProducts = ratedProducts.subList(0, resultSize);
-            
+
             return new Response<>(topRatedProducts, "Top rated products retrieved successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System Service - Error while fetching top rated products: " + e.getMessage());
-            return new Response<>(null, "Error fetching top rated products: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error fetching top rated products: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -981,91 +1066,86 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<OrderDTO>> getAllStoreOrders(int storeId, int userId){
-        try{
+    public Response<List<OrderDTO>> getAllStoreOrders(int storeId, int userId) {
+        try {
             logger.info("System service - user " + userId + " trying to get all orders from " + storeId);
-            if(!storeService.canViewOrders(storeId, userId)){
-                return new Response<List<OrderDTO>>(null, "user " + userId + " has insufficient permissions to view orders from store " + storeId, false, ErrorType.INVALID_INPUT, null);
+            if (!storeService.canViewOrders(storeId, userId)) {
+                return new Response<List<OrderDTO>>(null,
+                        "user " + userId + " has insufficient permissions to view orders from store " + storeId, false,
+                        ErrorType.INVALID_INPUT, null);
             }
             List<IOrder> storeOrders = orderService.getOrdersByStoreId(storeId);
             List<OrderDTO> storeOrdersDTOs = new ArrayList<>();
-            for(IOrder order : storeOrders){
+            for (IOrder order : storeOrders) {
                 storeOrdersDTOs.add(createOrderDTO(order));
             }
             return new Response<List<OrderDTO>>(storeOrdersDTOs, "success", true, null, null);
-        }
-        catch(Exception e){
-            return new Response<List<OrderDTO>>(null, e.getMessage(), false,ErrorType.INTERNAL_ERROR, null);
+        } catch (Exception e) {
+            return new Response<List<OrderDTO>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<String> acceptAssignment(int storeId, int userId){
-        try{
+    public Response<String> acceptAssignment(int storeId, int userId) {
+        try {
             logger.info("system service - user " + userId + " trying to accept assignment for store " + storeId);
             storeService.acceptAssignment(storeId, userId);
             return new Response<String>("success", "success", true, null, null);
-        }
-        catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error("system service - acceptAssignment failed: " + e.getMessage());
             return new Response<String>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("system service - acceptAssignment failed: " + e.getMessage());
             return new Response<String>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<String> declineAssignment(int storeId, int userId){
-        try{
+    public Response<String> declineAssignment(int storeId, int userId) {
+        try {
             logger.info("system service - user " + userId + " trying to decline assignment for store " + storeId);
             storeService.declineAssignment(storeId, userId);
             return new Response<String>("success", "success", true, null, null);
-        }
-        catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error("system service - declineAssignment failed: " + e.getMessage());
             return new Response<String>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("system service - declineAssignment failed: " + e.getMessage());
             return new Response<String>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
-    public Response<List<Integer>> getPendingOwners(int storeId, int requesterId){
-        try{
+    public Response<List<Integer>> getPendingOwners(int storeId, int requesterId) {
+        try {
             logger.info("system service - user " + requesterId + " trying to get pending owners for store " + storeId);
             List<Integer> pending = storeService.getPendingOwners(storeId, requesterId);
             return new Response<List<Integer>>(pending, "success", true, null, null);
-        }
-        catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error("system service - getPendingOwners failed: " + e.getMessage());
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("system service - getPendingOwners failed: " + e.getMessage());
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<List<Integer>> getPendingManagers(int storeId, int requesterId){
-        try{
-            logger.info("system service - user " + requesterId + " trying to get pending managers for store " + storeId);
+    public Response<List<Integer>> getPendingManagers(int storeId, int requesterId) {
+        try {
+            logger.info(
+                    "system service - user " + requesterId + " trying to get pending managers for store " + storeId);
             List<Integer> pending = storeService.getPendingManagers(storeId, requesterId);
             return new Response<List<Integer>>(pending, "success", true, null, null);
-        }
-        catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             logger.error("system service - getPendingManagers failed: " + e.getMessage());
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             logger.error("system service - getPendingManagers failed: " + e.getMessage());
             return new Response<List<Integer>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+
     // county Validation method
     private boolean isValidCountryCode(String code) {
         String[] isoCountries = Locale.getISOCountries();
@@ -1144,12 +1224,14 @@ public class SystemService implements ISystemService {
 
         } catch (Exception e) {
             logger.error("System Service - Error during getting orders by store id: " + e.getMessage());
-            return new Response<>(null, "Error during getting orders by store id", false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during getting orders by store id", false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
+
     @Override
-    public Response<AbstractMap.SimpleEntry<UserDTO, String>> login(String email, String password){
-        try{
+    public Response<AbstractMap.SimpleEntry<UserDTO, String>> login(String email, String password) {
+        try {
             // Check if the user exists first
             Optional<Registered> optionalUser = userService.getUserByUserName(email);
             if (optionalUser.isPresent()) {
@@ -1157,10 +1239,11 @@ public class SystemService implements ISystemService {
                 // Check if the user is suspended before login
                 if (userService.isUserSuspended(user.getUserId())) {
                     logger.error("System Service - Login failed: User is suspended: " + email);
-                    return new Response<>(null, "Login failed: User is suspended", false, ErrorType.INVALID_INPUT, null);
+                    return new Response<>(null, "Login failed: User is suspended", false, ErrorType.INVALID_INPUT,
+                            null);
                 }
             }
-            
+
             String token = this.authenticatorService.login(email, password);
             UserDTO user = this.userService.login(email, password);
             return new Response<>(new AbstractMap.SimpleEntry<>(user, token), "Successful Login", true, null, token);
@@ -1171,22 +1254,25 @@ public class SystemService implements ISystemService {
     }
 
     // User suspension management methods (admin only)
-    
+
     @Override
     public Response<Void> suspendUser(int requesterId, int userId, LocalDate endOfSuspension) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to suspend user: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to suspend user: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             userService.suspendUser(requesterId, userId, endOfSuspension);
-            
+
             if (endOfSuspension == null) {
                 logger.info("System Service - User ID " + userId + " permanently suspended by admin ID " + requesterId);
                 return new Response<>(null, "User permanently suspended", true, null, null);
             } else {
-                logger.info("System Service - User ID " + userId + " suspended until " + endOfSuspension + " by admin ID " + requesterId);
+                logger.info("System Service - User ID " + userId + " suspended until " + endOfSuspension
+                        + " by admin ID " + requesterId);
                 return new Response<>(null, "User suspended until " + endOfSuspension, true, null, null);
             }
         } catch (IllegalArgumentException e) {
@@ -1194,25 +1280,29 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during suspension: " + e.getMessage());
-            return new Response<>(null, "Error during suspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during suspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
-    
+
     @Override
     public Response<Boolean> unsuspendUser(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to unsuspend user: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to unsuspend user: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(false, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             boolean wasUnsuspended = userService.unsuspendUser(requesterId, userId);
-            
+
             if (wasUnsuspended) {
                 logger.info("System Service - User ID " + userId + " unsuspended by admin ID " + requesterId);
                 return new Response<>(true, "User unsuspended successfully", true, null, null);
             } else {
-                logger.info("System Service - User ID " + userId + " was not suspended (unsuspend request by admin ID " + requesterId + ")");
+                logger.info("System Service - User ID " + userId + " was not suspended (unsuspend request by admin ID "
+                        + requesterId + ")");
                 return new Response<>(false, "User was not suspended", true, null, null);
             }
         } catch (IllegalArgumentException e) {
@@ -1220,35 +1310,40 @@ public class SystemService implements ISystemService {
             return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during unsuspension: " + e.getMessage());
-            return new Response<>(false, "Error during unsuspension: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(false, "Error during unsuspension: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Boolean> isUserSuspended(int userId) {
         try {
             boolean isSuspended = userService.isUserSuspended(userId);
-            logger.info("System Service - Checked suspension status for User ID " + userId + ": " + (isSuspended ? "Suspended" : "Not suspended"));
+            logger.info("System Service - Checked suspension status for User ID " + userId + ": "
+                    + (isSuspended ? "Suspended" : "Not suspended"));
             return new Response<>(isSuspended, "Suspension status checked successfully", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Error checking suspension status: " + e.getMessage());
             return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error checking suspension status: " + e.getMessage());
-            return new Response<>(false, "Error checking suspension status: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(false, "Error checking suspension status: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<LocalDate> getSuspensionEndDate(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to get suspension end date: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to get suspension end date: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             LocalDate endDate = userService.getSuspensionEndDate(requesterId, userId);
-            
+
             String message = endDate == null ? "User is permanently suspended" : "User is suspended until " + endDate;
             logger.info("System Service - " + message + " (checked by admin ID " + requesterId + ")");
             return new Response<>(endDate, message, true, null, null);
@@ -1257,43 +1352,52 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error getting suspension end date: " + e.getMessage());
-            return new Response<>(null, "Error getting suspension end date: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error getting suspension end date: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<List<Registered>> getAllSuspendedUsers(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to get suspended users: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to get suspended users: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             List<Registered> suspendedUsers = userService.getAllSuspendedUsers(requesterId);
-            
-            logger.info("System Service - Retrieved " + suspendedUsers.size() + " suspended users (requested by admin ID " + requesterId + ")");
+
+            logger.info("System Service - Retrieved " + suspendedUsers.size()
+                    + " suspended users (requested by admin ID " + requesterId + ")");
             return new Response<>(suspendedUsers, suspendedUsers.size() + " suspended users found", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Error retrieving suspended users: " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error retrieving suspended users: " + e.getMessage());
-            return new Response<>(null, "Error retrieving suspended users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error retrieving suspended users: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Integer> cleanupExpiredSuspensions(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to cleanup suspensions: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to cleanup suspensions: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(-1, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             int removedCount = userService.cleanupExpiredSuspensions(requesterId);
-            
-            logger.info("System Service - Cleaned up " + removedCount + " expired suspensions (requested by admin ID " + requesterId + ")");
-            return new Response<>(removedCount, "Cleaned up " + removedCount + " expired suspensions", true, null, null);
+
+            logger.info("System Service - Cleaned up " + removedCount + " expired suspensions (requested by admin ID "
+                    + requesterId + ")");
+            return new Response<>(removedCount, "Cleaned up " + removedCount + " expired suspensions", true, null,
+                    null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Error during cleanup: " + e.getMessage());
             return new Response<>(-1, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
@@ -1302,19 +1406,21 @@ public class SystemService implements ISystemService {
             return new Response<>(-1, "Error during cleanup: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     // System admin management methods
-    
+
     @Override
     public Response<Void> addSystemAdmin(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to add system admin: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to add system admin: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             userService.addSystemAdmin(userId);
-            
+
             logger.info("System Service - User ID " + userId + " added as system admin by admin ID " + requesterId);
             return new Response<>(null, "User added as system admin successfully", true, null, null);
         } catch (IllegalArgumentException e) {
@@ -1322,31 +1428,36 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error adding system admin: " + e.getMessage());
-            return new Response<>(null, "Error adding system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error adding system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
-    
+
     @Override
     public Response<Boolean> removeSystemAdmin(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to remove system admin: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to remove system admin: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(false, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             // Prevent removing yourself as an admin
             if (requesterId == userId) {
                 logger.error("System Service - Admin ID " + requesterId + " attempted to remove themselves as admin");
                 return new Response<>(false, "Cannot remove yourself as admin", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             boolean wasRemoved = userService.removeSystemAdmin(userId);
-            
+
             if (wasRemoved) {
-                logger.info("System Service - User ID " + userId + " removed from system admins by admin ID " + requesterId);
+                logger.info("System Service - User ID " + userId + " removed from system admins by admin ID "
+                        + requesterId);
                 return new Response<>(true, "User removed from system admins successfully", true, null, null);
             } else {
-                logger.info("System Service - User ID " + userId + " was not a system admin (remove request by admin ID " + requesterId + ")");
+                logger.info("System Service - User ID " + userId
+                        + " was not a system admin (remove request by admin ID " + requesterId + ")");
                 return new Response<>(false, "User was not a system admin", true, null, null);
             }
         } catch (IllegalArgumentException e) {
@@ -1354,64 +1465,75 @@ public class SystemService implements ISystemService {
             return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error removing system admin: " + e.getMessage());
-            return new Response<>(false, "Error removing system admin: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(false, "Error removing system admin: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Boolean> isSystemAdmin(int userId) {
         try {
             boolean isAdmin = userService.isSystemAdmin(userId);
-            logger.info("System Service - Checked admin status for User ID " + userId + ": " + (isAdmin ? "Admin" : "Not admin"));
+            logger.info("System Service - Checked admin status for User ID " + userId + ": "
+                    + (isAdmin ? "Admin" : "Not admin"));
             return new Response<>(isAdmin, "Admin status checked successfully", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Error checking admin status: " + e.getMessage());
             return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error checking admin status: " + e.getMessage());
-            return new Response<>(false, "Error checking admin status: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(false, "Error checking admin status: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<List<Registered>> getAllSystemAdmins(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to get system admins: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to get system admins: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             List<Registered> admins = userService.getAllSystemAdmins();
-            
-            logger.info("System Service - Retrieved " + admins.size() + " system admins (requested by admin ID " + requesterId + ")");
+
+            logger.info("System Service - Retrieved " + admins.size() + " system admins (requested by admin ID "
+                    + requesterId + ")");
             return new Response<>(admins, admins.size() + " system admins found", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Error retrieving system admins: " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error retrieving system admins: " + e.getMessage());
-            return new Response<>(null, "Error retrieving system admins: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error retrieving system admins: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Integer> getSystemAdminCount(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
-                logger.error("System Service - Unauthorized attempt to get admin count: Admin privileges required for user ID " + requesterId);
+                logger.error(
+                        "System Service - Unauthorized attempt to get admin count: Admin privileges required for user ID "
+                                + requesterId);
                 return new Response<>(-1, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             int count = userService.getSystemAdminCount();
-            
-            logger.info("System Service - Current system admin count: " + count + " (requested by admin ID " + requesterId + ")");
+
+            logger.info("System Service - Current system admin count: " + count + " (requested by admin ID "
+                    + requesterId + ")");
             return new Response<>(count, "Current system admin count: " + count, true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Error getting admin count: " + e.getMessage());
             return new Response<>(-1, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error getting admin count: " + e.getMessage());
-            return new Response<>(-1, "Error getting admin count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(-1, "Error getting admin count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
 
@@ -1426,9 +1548,8 @@ public class SystemService implements ISystemService {
     // } else {
     // logger.error("System Service - Invalid session token: " + sessionToken);
     // throw new IllegalArgumentException("Invalid session token");
-    // } 
     // }
-
+    // }
 
     @Override
     public Response<List<ProductDTO>> searchByCategory(String category) {
@@ -1438,12 +1559,13 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Invalid category: " + category);
                 return new Response<>(null, "Invalid category", false, ErrorType.INVALID_INPUT, null);
             }
-                List<ProductDTO> products = this.productService.getProductsByCategory(categoryEnum);
-                return new Response<>(products, "Products retrieved successfully", true, null, null);
+            List<ProductDTO> products = this.productService.getProductsByCategory(categoryEnum);
+            return new Response<>(products, "Products retrieved successfully", true, null, null);
 
         } catch (Exception e) {
             logger.error("System Service - Error during searching products by category: " + e.getMessage());
-            return new Response<>(null, "Error during searching products by category", false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during searching products by category", false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
 
@@ -1453,7 +1575,7 @@ public class SystemService implements ISystemService {
             logger.info("System service - user " + userID + " trying to logout");
             Optional<Registered> user = this.userService.getUserById(userID);
 
-            if(user == null) {
+            if (user == null) {
                 logger.error("System Service - User not found: " + userID);
                 return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
             }
@@ -1468,14 +1590,13 @@ public class SystemService implements ISystemService {
             }
         } catch (Exception e) {
             logger.error("System Service - Error during logout: " + e.getMessage());
-            return new Response<>(null, "Error during logout: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error during logout: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR,
+                    null);
         }
     }
-    
-
 
     // Unsigned (guest) user management methods
-    
+
     @Override
     public Response<Void> addUnsignedUser(User user) {
         try {
@@ -1487,10 +1608,11 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
-            return new Response<>(null, "Error adding unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error adding unsigned user: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<UserDTO> getUnsignedUserById(int userId) {
         try {
@@ -1509,15 +1631,18 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during getting unsigned user: " + e.getMessage());
-            return new Response<>(null, "Error getting unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error getting unsigned user: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<List<UserDTO>> getAllUnsignedUsers(int adminId) {
         try {
             if (!userService.isSystemAdmin(adminId)) {
-                logger.error("System Service - Unauthorized attempt to get all unsigned users: Admin privileges required for user ID " + adminId);
+                logger.error(
+                        "System Service - Unauthorized attempt to get all unsigned users: Admin privileges required for user ID "
+                                + adminId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
             
@@ -1529,10 +1654,11 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during getting all unsigned users: " + e.getMessage());
-            return new Response<>(null, "Error getting all unsigned users: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error getting all unsigned users: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Boolean> removeUnsignedUser(int userId) {
         try {
@@ -1549,10 +1675,11 @@ public class SystemService implements ISystemService {
             return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during removing unsigned user: " + e.getMessage());
-            return new Response<>(false, "Error removing unsigned user: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(false, "Error removing unsigned user: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Boolean> isUnsignedUser(int userId) {
         try {
@@ -1564,18 +1691,21 @@ public class SystemService implements ISystemService {
             return new Response<>(false, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during checking if user is unsigned: " + e.getMessage());
-            return new Response<>(false, "Error checking if user is unsigned: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(false, "Error checking if user is unsigned: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
-    
+
     @Override
     public Response<Integer> getUnsignedUserCount(int adminId) {
         try {
             if (!userService.isSystemAdmin(adminId)) {
-                logger.error("System Service - Unauthorized attempt to get unsigned user count: Admin privileges required for user ID " + adminId);
+                logger.error(
+                        "System Service - Unauthorized attempt to get unsigned user count: Admin privileges required for user ID "
+                                + adminId);
                 return new Response<>(null, "Admin privileges required", false, ErrorType.INVALID_INPUT, null);
             }
-            
+
             int count = userService.getUnsignedUserCount();
             logger.info("System Service - Retrieved unsigned user count: " + count);
             return new Response<>(count, "Retrieved unsigned user count: " + count, true, null, null);
@@ -1584,7 +1714,8 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during getting unsigned user count: " + e.getMessage());
-            return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<>(null, "Error getting unsigned user count: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 

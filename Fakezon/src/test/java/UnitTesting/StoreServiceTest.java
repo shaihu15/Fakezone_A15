@@ -1,4 +1,5 @@
 package UnitTesting;
+
 import static org.junit.jupiter.api.Assertions.*;
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IStoreRepository;
@@ -11,11 +12,15 @@ import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 
 import DomainLayer.Enums.StoreManagerPermission;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.*;
 
@@ -29,7 +34,8 @@ class StoreServiceTest {
     @BeforeEach
     void setUp() {
         publisher = mock(ApplicationEventPublisher.class);
-        storeRepository = new StoreRepository(); // Assuming StoreRepository is a concrete implementation of IStoreRepository
+        storeRepository = new StoreRepository(); // Assuming StoreRepository is a concrete implementation of
+                                                 // IStoreRepository
         storeService = new StoreService(storeRepository, publisher);
         mockStore = mock(Store.class);
     }
@@ -57,6 +63,7 @@ class StoreServiceTest {
         });
 
     }
+
     @Test
     void testAddStoreRating_Successful() {
         int userId = 10;
@@ -69,7 +76,9 @@ class StoreServiceTest {
         Store store1 = storeRepository.findById(storeId);
         assertNotNull(store1);
         storeService.addStoreRating(storeId, userId, rating, comment);
-        assertEquals(rating, store1.getStoreRatingByUser(userId).getRating());}
+        assertEquals(rating, store1.getStoreRatingByUser(userId).getRating());
+    }
+
     @Test
     void testAddStoreRating_StoreNotFound() {
         int storeId = 1;
@@ -84,6 +93,7 @@ class StoreServiceTest {
         });
 
     }
+
     @Test
     void testOpenStore_Successful() {
         String storeName = "Test Store";
@@ -97,6 +107,7 @@ class StoreServiceTest {
         assertTrue(store1.getStoreFounderID() == requesterId);
         assertTrue(store1.getName().equals(storeName));
     }
+
     @Test
     void testOpenStore_StoreAllreadyOpen() {
         String OldStoreName = "Test Store";
@@ -111,6 +122,7 @@ class StoreServiceTest {
             storeService.addStore(requesterId, newStoreName);
         });
     }
+
     @Test
     void testReceivingMessage_validStoreId_ShouldSucceed() {
         int founderId = 1;
@@ -122,8 +134,10 @@ class StoreServiceTest {
         storeService.receivingMessage(storeId, founderId, message);
 
         // Verify that the message was received successfully
-        assertEquals(message, storeService.getMessagesFromUsers(founderId, storeId).peek().getValue(), "Message should be received successfully");
+        assertEquals(message, storeService.getMessagesFromUsers(founderId, storeId).peek().getValue(),
+                "Message should be received successfully");
     }
+
     @Test
     void testReceivingMessage_invalidStoreId_ShouldThrow() {
         int invalidStoreId = 999; // Assuming this store ID does not exist
@@ -135,6 +149,7 @@ class StoreServiceTest {
             storeService.receivingMessage(invalidStoreId, founderId, message);
         }, "Expected receivingMessage to throw if the store ID is invalid");
     }
+
     @Test
     void testSendMessageToUser_validStoreId_ShouldSucceed() {
         int founderId = 1;
@@ -147,8 +162,10 @@ class StoreServiceTest {
         storeService.sendMessageToUser(founderId, storeId, userId, message);
 
         // Verify that the message was sent successfully
-        assertEquals(message, storeService.getMessagesFromStore(founderId, storeId).peek().getValue(), "Message should be sent successfully");
+        assertEquals(message, storeService.getMessagesFromStore(founderId, storeId).peek().getValue(),
+                "Message should be sent successfully");
     }
+
     @Test
     void testSendMessageToUser_invalidStoreId_ShouldThrow() {
         int invalidStoreId = 999; // Assuming this store ID does not exist
@@ -161,6 +178,7 @@ class StoreServiceTest {
             storeService.sendMessageToUser(founderId, invalidStoreId, userId, message);
         }, "Expected sendMessageToUser to throw if the store ID is invalid");
     }
+
     @Test
     void testSendMessageToUser_invalidFounderId_ShouldThrow() {
         int founderId = 1;
@@ -186,7 +204,7 @@ class StoreServiceTest {
         assertTrue(storeId > 0, "Store ID should be a positive number");
         int newOwnerId = 2;
         int managerId = 3;
-        storeService.addStoreOwner(storeId,founderId, newOwnerId);// Add a new owner
+        storeService.addStoreOwner(storeId, founderId, newOwnerId);// Add a new owner
         storeService.acceptAssignment(storeId, newOwnerId);
         // Define permissions for the manager
         List<StoreManagerPermission> permissions = List.of(StoreManagerPermission.VIEW_ROLES);
@@ -200,11 +218,15 @@ class StoreServiceTest {
         assertEquals(founderId, storeRolesDTO.getFounderId(), "Founder ID should match the expected value");
         // Check owners list
         assertTrue(storeRolesDTO.getStoreOwners().contains(founderId), "Founder should be in the list of store owners");
-        assertTrue(storeRolesDTO.getStoreOwners().contains(newOwnerId), "New owner should be in the list of store owners");
+        assertTrue(storeRolesDTO.getStoreOwners().contains(newOwnerId),
+                "New owner should be in the list of store owners");
         // Check managers list and permissions
-        assertTrue(storeRolesDTO.getStoreManagers().containsKey(managerId), "Manager should be in the list of store managers");
-        assertEquals(permissions, storeRolesDTO.getStoreManagers().get(managerId), "Manager permissions should match the expected value");
+        assertTrue(storeRolesDTO.getStoreManagers().containsKey(managerId),
+                "Manager should be in the list of store managers");
+        assertEquals(permissions, storeRolesDTO.getStoreManagers().get(managerId),
+                "Manager permissions should match the expected value");
     }
+
     @Test
     void testGetStoreRoles_UnauthorizedUser_ShouldFailAndThrow() {
         int founderId = 1;
@@ -217,22 +239,24 @@ class StoreServiceTest {
         assertThrows(IllegalArgumentException.class, () -> {
             storeService.getStoreRoles(storeId, unauthorizedUserId);
         });
-        // String expectedMessagePart = "not authorized"; // Adjust based on your actual exception message
+        // String expectedMessagePart = "not authorized"; // Adjust based on your actual
+        // exception message
         // assertTrue(exception.getMessage().toLowerCase().contains(expectedMessagePart),
-        //     "Exception message should indicate unauthorized access");
+        // "Exception message should indicate unauthorized access");
     }
+
     @Test
     void testAddAuctionProductToStore_Success() {
         int storeId = storeService.addStore(1, "AuctionStore1");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 101, "AuctionStore1",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO = storeService.addProductToStore(storeId, 1, 101, "AuctionStore1", 50.0, 5,
+                PCategory.ELECTRONICS);
         // Adding an auction product to the store
-        assertDoesNotThrow(() ->
-            storeService.addAuctionProductToStore(storeId, 1, 101, 50.0, 5)
-        );
+        assertDoesNotThrow(() -> storeService.addAuctionProductToStore(storeId, 1, 101, 50.0, 5));
 
         // Verify that the product was added successfully
-        List<ApplicationLayer.DTO.AuctionProductDTO> auctionProducts = storeService.getAuctionProductsFromStore(storeId);
+        List<ApplicationLayer.DTO.AuctionProductDTO> auctionProducts = storeService
+                .getAuctionProductsFromStore(storeId);
         assertNotNull(auctionProducts);
         assertEquals(1, auctionProducts.size());
         assertEquals(101, auctionProducts.get(0).getProductId());
@@ -241,82 +265,108 @@ class StoreServiceTest {
     @Test
     void testAddAuctionProductToStore_StoreNotFound() {
         int invalidStoreId = 999; // Assuming this store ID does not exist
-        assertThrows(IllegalArgumentException.class, () ->
-            storeService.addAuctionProductToStore(invalidStoreId, 1, 101, 50.0, 5)
-        );
-        
+        assertThrows(IllegalArgumentException.class,
+                () -> storeService.addAuctionProductToStore(invalidStoreId, 1, 101, 50.0, 5));
+
     }
 
     @Test
     void testAddBidOnAuctionProductInStore_Success() {
         int storeId = storeService.addStore(1, "AuctionStore2");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 102, "AuctionStore2",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO = storeService.addProductToStore(storeId, 1, 102, "AuctionStore2", 50.0, 5,
+                PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 102, 50.0, 5);
 
         // Adding a bid on the auction product
-        assertDoesNotThrow(() ->
-            storeService.addBidOnAuctionProductInStore(storeId, 1, 102, 55.0)
-        );
+        assertDoesNotThrow(() -> storeService.addBidOnAuctionProductInStore(storeId, 1, 102, 55.0));
     }
 
     @Test
     void testSendResponseForAuctionByOwner_Success() {
         int storeId = storeService.addStore(1, "AuctionStore4");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 104, "AuctionStore4",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO = storeService.addProductToStore(storeId, 1, 104, "AuctionStore4", 50.0, 5,
+                PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 104, 50.0, 1);
 
         // Sending a response for the auction
-        assertDoesNotThrow(() ->
-            storeService.sendResponseForAuctionByOwner(storeId, 1, 104, false)
-        );
+        assertDoesNotThrow(() -> storeService.sendResponseForAuctionByOwner(storeId, 1, 104, false));
     }
+
     @Test
     void testSendResponseForAuctionByOwner_InvalidStoreId() {
         int invalidStoreId = 999; // Assuming this store ID does not exist
-        assertThrows(IllegalArgumentException.class, () ->
-            storeService.sendResponseForAuctionByOwner(invalidStoreId, 1, 104, false)
-        );
+        assertThrows(IllegalArgumentException.class,
+                () -> storeService.sendResponseForAuctionByOwner(invalidStoreId, 1, 104, false));
     }
 
     @Test
     void testGetAuctionProductsFromStore_Success() {
         int storeId = storeService.addStore(1, "AuctionStore5");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 105, "AuctionStore5",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO = storeService.addProductToStore(storeId, 1, 105, "AuctionStore5", 50.0, 5,
+                PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 105, 50.0, 5);
 
         // Retrieving auction products from the store
-        List<ApplicationLayer.DTO.AuctionProductDTO> auctionProducts = storeService.getAuctionProductsFromStore(storeId);
+        List<ApplicationLayer.DTO.AuctionProductDTO> auctionProducts = storeService
+                .getAuctionProductsFromStore(storeId);
         assertNotNull(auctionProducts);
         assertEquals(1, auctionProducts.size());
         assertEquals(105, auctionProducts.get(0).getProductId());
     }
+
     @Test
     void testGetAuctionProductsFromStore_StoreNotFound() {
         int invalidStoreId = 999; // Assuming this store ID does not exist
-        assertThrows(IllegalArgumentException.class, () ->
-            storeService.getAuctionProductsFromStore(invalidStoreId)
-        );
+        assertThrows(IllegalArgumentException.class, () -> storeService.getAuctionProductsFromStore(invalidStoreId));
     }
+
     @Test
     void testAddBidOnAuctionProductInStore_BidTooLow() {
         int storeId = storeService.addStore(1, "AuctionStore6");
         assertTrue(storeId > 0, "Store ID should be a positive number");
-        StoreProductDTO storeProductDTO= storeService.addProductToStore(storeId, 1, 106, "AuctionStore6",50.0,5,PCategory.ELECTRONICS);
+        StoreProductDTO storeProductDTO = storeService.addProductToStore(storeId, 1, 106, "AuctionStore6", 50.0, 5,
+                PCategory.ELECTRONICS);
         // Adding an auction product to the store
         storeService.addAuctionProductToStore(storeId, 1, 106, 50.0, 5);
         storeService.addBidOnAuctionProductInStore(storeId, 2, 106, 60.0);
 
         // Attempting to bid lower than current highest bid
-        assertThrows(IllegalArgumentException.class, () ->
-            storeService.addBidOnAuctionProductInStore(storeId, 3, 106, 55.0)
-        );
+        assertThrows(IllegalArgumentException.class,
+                () -> storeService.addBidOnAuctionProductInStore(storeId, 3, 106, 55.0));
     }
 
+    @Test
+    void testDecrementProductsInStores_StoreNotFound_ShouldThrow() {
+        int userId = 1;
+        int storeId = 999;
 
+        Map<Integer, Integer> products = Map.of(100, 1);
+        Map<Integer, Map<Integer, Integer>> cart = Map.of(storeId, products);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            storeService.decrementProductsInStores(userId, cart);
+        });
+
+        assertEquals("Store not found", exception.getMessage());
+    }
+
+    @Test
+    void testReturnProductsToStores_StoreNotFound_ShouldThrow() {
+        int userId = 3;
+        int storeId = 404;
+
+        Map<Integer, Map<Integer, Integer>> returnMap = Map.of(storeId, Map.of(101, 1));
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> {
+            storeService.returnProductsToStores(userId, returnMap);
+        });
+
+        assertEquals("Store not found", ex.getMessage());
+    }
 }

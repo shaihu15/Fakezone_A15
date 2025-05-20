@@ -240,18 +240,18 @@ class StoreControllerTest {
         int requesterId = 1;
         int productId = 1;
         double basePrice = 200.0;
-        int daysToEnd = 7;
+        int MinutesToEnd = 7;
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd))
+        when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd))
                 .thenReturn(new Response<>(null, "Auction product added successfully", true, null, null));
 
-        ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd, token);
+        ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd, token);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
-        verify(systemService, times(1)).addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd);
+        verify(systemService, times(1)).addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd);
     }
 
     @Test
@@ -407,19 +407,19 @@ class StoreControllerTest {
         int requesterId = 1;
         int productId = 1;
         double basePrice = 200.0;
-        int daysToEnd = 7;
+        int MinutesToEnd = 7;
         String token = "valid-token";
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd))
+        when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd))
                 .thenReturn(new Response<>(null, "Internal server error", false, ErrorType.INTERNAL_ERROR, null));
 
-        ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd, token);
+        ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd, token);
 
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).addAuctionProductToStore(storeId, requesterId, productId, basePrice, daysToEnd);
+        verify(systemService, times(1)).addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd);
     }
 
     @Test
