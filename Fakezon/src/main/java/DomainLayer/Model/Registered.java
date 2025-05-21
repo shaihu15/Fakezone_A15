@@ -108,22 +108,22 @@ public class Registered extends User {
         
         // your logic to send to UI
     }
-    private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
-        if(event.getUserId() != this.userId) {
-            return false;
-        }
-        return true;
-    }
+    // private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
+    //     if(event.getUserId() != this.userId) {
+    //         return false;
+    //     }
+    //     return true;
+    // }
 
-    @EventListener(condition = "#root.target.shouldHandleAssignmentEvent(#event)")
-    public void handleAssignmentEvent(AssignmentEvent event) {
+    // @EventListener(condition = "#root.target.shouldHandleAssignmentEvent(#event)")
+    // public void handleAssignmentEvent(AssignmentEvent event) {
         
-        this.assignmentMessages.add(new SimpleEntry<>(event.getStoreId(), "Please approve or decline this role: " + event.getRoleName()+
-        " for store " + event.getStoreId()));
-        return;
+    //     this.assignmentMessages.add(new SimpleEntry<>(event.getStoreId(), "Please approve or decline this role: " + event.getRoleName()+
+    //     " for store " + event.getStoreId()));
+    //     return;
         
-        // your logic to send to UI
-    }
+    //     // your logic to send to UI
+    // }
 
     private boolean shouldHandleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
         if(!roles.containsKey(event.getStoreId())) {
@@ -295,6 +295,10 @@ public class Registered extends User {
     @Override
     public UserDTO toDTO() {
         return new UserDTO(userId, email, age);
+    }
+
+    public void AssignmentMessages(SimpleEntry simpleEntry) {
+        this.assignmentMessages.add(simpleEntry);
     }
 
     
