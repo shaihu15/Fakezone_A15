@@ -42,6 +42,8 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 
 public class Sending_Direct_Message_to_Store {
     //Use-case: 3.5 Sending a Direct Message to a Store
@@ -59,6 +61,7 @@ public class Sending_Direct_Message_to_Store {
     private IProductService productService;
     private IUserService userService;
     private IOrderService orderService;
+    private INotificationWebSocketHandler notificationWebSocketHandler;
 
     private TestHelper testHelper;
 
@@ -75,13 +78,13 @@ public class Sending_Direct_Message_to_Store {
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> storeOwner = testHelper.register_and_login();
