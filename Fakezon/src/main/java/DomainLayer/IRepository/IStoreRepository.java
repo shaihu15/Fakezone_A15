@@ -9,4 +9,6 @@ public interface IStoreRepository {
     void addStore(Store store);
     void delete(int storeID);
     Collection<Store> getTop10Stores();
+        void clearAllData();
+
 }

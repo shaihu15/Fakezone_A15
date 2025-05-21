@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Enums.PCategory;
@@ -15,7 +16,7 @@ import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Product;
 
-
+@Service
 public class ProductService implements IProductService {
 
     private final IProductRepository productRepository;
@@ -198,6 +199,11 @@ public class ProductService implements IProductService {
         } finally {
             logger.info("Product with keyword {} was searched", name);
         }
+    }
+
+    @Override
+    public void clearAllData() {
+        productRepository.clearAllData();
     }
   
 }

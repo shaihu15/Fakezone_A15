@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
@@ -849,6 +850,7 @@ public class Store implements IStore {
                 productsLock.unlock();
                 return rating;
             } else {
+                productsLock.unlock();
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
             }
@@ -1114,6 +1116,21 @@ public class Store implements IStore {
     }
 
     @Override
+    public HashMap<Integer, String> getAllStoreMessages(){
+        try{
+            HashMap<Integer, String> messages = new HashMap<>();
+            for (SimpleEntry<Integer, String> message : messagesFromUsers) {
+                messages.put(message.getKey(), message.getValue());
+            }
+            return messages ;
+        }
+        catch(Exception e){
+            throw e;
+        }
+
+    }
+
+
     public Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer,Integer> productsToBuy)
     {
         productsLock.lock();
@@ -1170,6 +1187,4 @@ public class Store implements IStore {
         }
         productsLock.unlock();
     }
-
-
 }

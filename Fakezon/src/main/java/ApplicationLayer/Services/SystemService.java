@@ -8,8 +8,9 @@ import java.util.*;
 import DomainLayer.Interfaces.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-
+import org.springframework.stereotype.Service;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -48,7 +49,7 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
-
+@Service
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
@@ -61,6 +62,7 @@ public class SystemService implements ISystemService {
     private final ApplicationEventPublisher publisher;
     private final INotificationWebSocketHandler notificationWebSocketHandler;
 
+     @Autowired 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
                          IProductRepository productRepository, IOrderRepository orderRepository,
                          ApplicationEventPublisher publisher, INotificationWebSocketHandler notificationWebSocketHandler) {
@@ -283,6 +285,10 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> sendMessageToStore(int userId, int storeId, String message) {
         try {
+            if (message == null || message.trim().isEmpty()) {
+                logger.error("System Service - Message is empty");
+                return new Response<>(null, "Message cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.isUserLoggedIn(userId)) {
                 if (this.storeService.isStoreOpen(storeId)) {
                     this.userService.sendMessageToStore(userId, storeId, message);
@@ -820,8 +826,25 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllMessages(int userID) {
-        try {
+    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId) {
+        try{
+            if (this.storeService.isStoreOpen(storeId)) {
+                return this.storeService.getAllStoreMessages(storeId);
+            } else {
+                logger.error("System Service - Store is closed: " + storeId);
+                return new Response<HashMap<Integer, String>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+
+    }
+
+
+	@Override
+	public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+		try{
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAllMessages(userID);
             } else {
@@ -1738,5 +1761,13 @@ public class SystemService implements ISystemService {
         this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
         this.userLogout(1004);
 
+    }
+
+    @Override
+    public void clearAllData() {
+        storeService.clearAllData();
+        userService.clearAllData();
+        orderService.clearAllData();
+        productService.clearAllData();
     }
 }

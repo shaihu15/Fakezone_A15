@@ -20,45 +20,5 @@ import org.springframework.context.ApplicationEventPublisher;
 
 @Configuration
 public class AppConfig {
-    @Bean
-    public IStoreRepository storeRepository() {
-        return new StoreRepository();
-    }
-
-    @Bean
-    public IUserRepository userRepository() {
-        return new UserRepository();
-    }
-
-    @Bean
-    public IProductRepository productRepository() {
-        return new ProductRepository();
-    }
-    @Bean
-    public IOrderRepository orderRepository() {
-        return new OrderRepository();
-    }
-    @Bean
-    public IUserService userService(IUserRepository userRepository) {
-        return new UserService(userRepository);
-    }
-
-    @Bean
-    public ISystemService systemService(ApplicationEventPublisher eventPublisher, INotificationWebSocketHandler notificationWebSocketHandler, IStoreRepository storeRepository, IProductRepository productRepository, IUserRepository userRepository, IOrderRepository orderRepository) {
-        return new SystemService(storeRepository, userRepository, productRepository,orderRepository, eventPublisher, notificationWebSocketHandler);
-    }
-
-    @Bean
-    public AuthenticatorAdapter authenticatorAdapter(IUserService userService) {
-        return new AuthenticatorAdapter(userService);
-    }
-
-    @Bean
-    public INotificationWebSocketHandler notificationWebSocketHandler() {
-        return new NotificationWebSocketHandler();
-    }
-    @Bean
-    public IStoreService storeService(IStoreRepository storeRepository, ApplicationEventPublisher eventPublisher) {
-        return new StoreService(storeRepository, eventPublisher) ;
-    }
+   
 }

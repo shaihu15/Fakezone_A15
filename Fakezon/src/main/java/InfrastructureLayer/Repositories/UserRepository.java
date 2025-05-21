@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IUserRepository;
@@ -21,7 +22,7 @@ import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
-
+@Repository
 public class UserRepository implements IUserRepository {
     private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
     private Map<Integer, Registered> users;
@@ -350,5 +351,22 @@ public class UserRepository implements IUserRepository {
         Registered uiUserNormal = this.findById(1004).get();
         uiUserNormal.addToBasket(1001, 1001, 1);
         uiUserNormal.addToBasket(1001, 1002, 2);
+    }
+
+    @Override
+    public void clearAllData() {
+        users.clear();
+        
+    }
+
+    @Override
+    public List<Registered> UsersWithRolesInStoreId(int storeID) {
+        List<Registered> rolesInStore = new ArrayList<>();
+        for (Registered user : users.values()) 
+        {
+            if(user.getAllRoles().containsKey(storeID))
+                rolesInStore.add(user);
+        }
+        return rolesInStore;
     }
 }

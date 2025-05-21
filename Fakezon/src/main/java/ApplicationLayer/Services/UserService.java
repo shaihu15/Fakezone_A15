@@ -20,7 +20,9 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
@@ -804,5 +806,10 @@ public class UserService implements IUserService {
         } else {
             throw new IllegalArgumentException("User not found");
         }
+    }
+
+    @Override
+    public void clearAllData() {
+        userRepository.clearAllData();
     }
 }
