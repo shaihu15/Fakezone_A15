@@ -850,6 +850,7 @@ public class Store implements IStore {
                 productsLock.unlock();
                 return rating;
             } else {
+                productsLock.unlock();
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
             }
