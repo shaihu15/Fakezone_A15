@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -128,5 +129,7 @@ public interface IStoreService {
   Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(int userId, Map<Integer, Map<Integer, Integer>> cart);
 
   void returnProductsToStores(int userId, Map<Integer,Map<Integer,Integer>> products);
+
+  Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
 
 }
