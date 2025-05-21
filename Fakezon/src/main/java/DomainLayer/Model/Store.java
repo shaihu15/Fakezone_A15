@@ -579,45 +579,41 @@ public class Store implements IStore {
         }
     }
 
-    @Override
+       @Override
     public void addStoreOwner(int appointor, int appointee) {
         rolesLock.lock();
-        try {
+        try{
             if (!isOwner(appointor)) {
-                rolesLock.unlock();
                 throw new IllegalArgumentException(
                         "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
             }
             if (isOwner(appointee)) {
-                rolesLock.unlock();
                 throw new IllegalArgumentException(
                         "User with ID: " + appointee + " is already a store owner for store with ID: " + storeID);
             }
-            if (pendingManagers.containsKey(appointee)) {
-                rolesLock.unlock();
+            if(pendingManagers.containsKey(appointee)){
                 throw new IllegalArgumentException("Already pending user " + appointee + " approval for managment");
             }
-            if (pendingOwners.containsKey(appointee)) {
-                rolesLock.unlock();
+            if(pendingOwners.containsKey(appointee)){
                 throw new IllegalArgumentException("Already pending user " + appointee + " approval for ownership");
             }
             if (isManager(appointee)) {
                 Node appointeeNode = rolesTree.getNode(appointee);
                 Node appointorNode = rolesTree.getNode(appointor);
                 if (!appointorNode.isChild(appointeeNode)) {
-                    rolesLock.unlock();
                     throw new IllegalArgumentException(
                             "Only the manager with id: " + appointee + "'s appointor can reassign them as Owner");
                 }
             }
             pendingOwners.put(appointee, appointor);
-            this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_OWNER));
             rolesLock.unlock();
-
-        } catch (Exception e) {
+            this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_OWNER));
+        }
+        catch(Exception e){
             rolesLock.unlock();
             throw e;
         }
+    
     }
 
     private void acceptStoreOwner(int appointor, int appointee) {
@@ -659,40 +655,33 @@ public class Store implements IStore {
     public boolean isManager(int userId) {
         return storeManagers.containsKey(userId);
     }
-
-    @Override
+ @Override
     public void addStoreManager(int appointor, int appointee, List<StoreManagerPermission> perms) {
         rolesLock.lock();
-        try {
+        try{
             if (!isOwner(appointor)) {
-                rolesLock.unlock();
                 throw new IllegalArgumentException(
                         "Appointor ID: " + appointor + " is not a valid store owner for store ID: " + storeID);
             }
             if (isManager(appointee) || isOwner(appointee)) {
-                rolesLock.unlock();
                 throw new IllegalArgumentException(
-                        "User with ID: " + appointee + " is already a store manager/owner for store with ID: "
-                                + storeID);
+                        "User with ID: " + appointee + " is already a store manager/owner for store with ID: " + storeID);
             }
-            if (pendingManagers.containsKey(appointee)) {
-                rolesLock.unlock();
+            if(pendingManagers.containsKey(appointee)){
                 throw new IllegalArgumentException("Already pending user " + appointee + " approval for managment");
             }
-            if (pendingOwners.containsKey(appointee)) {
-                rolesLock.unlock();
+            if(pendingOwners.containsKey(appointee)){
                 throw new IllegalArgumentException("Already pending user " + appointee + " approval for ownership");
             }
             if (perms == null || perms.isEmpty()) {
-                rolesLock.unlock();
                 throw new IllegalArgumentException("Permissions list is empty");
             }
             pendingManagersPerms.put(appointee, new ArrayList<>(perms));
             pendingManagers.put(appointee, appointor);
-            this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_MANAGER));
             rolesLock.unlock();
-
-        } catch (Exception e) {
+            this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_MANAGER));
+        }
+        catch(Exception e){
             rolesLock.unlock();
             throw e;
         }
