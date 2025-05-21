@@ -115,4 +115,6 @@ public interface IStore {
     Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer,Integer> productsToBuy);
 
     void returnProductsToStore(int userId, Map<Integer,Integer> products);
+
+    List<ProductRating> getStoreProductAllRatings(int productId);
 }

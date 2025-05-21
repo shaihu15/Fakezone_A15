@@ -1,6 +1,7 @@
 package com.fakezone.fakezone.controller;
 
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.ErrorType;
@@ -230,6 +231,34 @@ public class ProductController {
                 Response<List<StoreProductDTO>> response = new Response<>(null, "Invalid token " + token, false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(500).body(response);
             }
+    }
+
+    @GetMapping("/getStoreProductRatings/{storeId}/{prodId}")
+    public ResponseEntity<Response<List<ProductRatingDTO>>> getStoreProductRatings(
+            @PathVariable("storeId") int storeId,
+            @PathVariable("prodId") int prodId,
+            @RequestHeader("Authorization") String token) {
+
+        try{
+            logger.info("Received request to getStoreProductRatings from " +storeId + " product " + prodId);
+            if(!authenticatorAdapter.isValid(token)){
+                Response<List<ProductRatingDTO>> response = new Response<>(null, "Invalid token " + token, false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<ProductRatingDTO>> response = systemService.getStoreProductRatings(storeId, prodId);
+
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in ProductController during getStoreProductRatings: {}", e.getMessage());
+            Response<List<ProductRatingDTO>> response = new Response<>(null, "Invalid token " + token, false, ErrorType.UNAUTHORIZED, null);
+            return ResponseEntity.status(500).body(response);
+        }
     }
 
 
