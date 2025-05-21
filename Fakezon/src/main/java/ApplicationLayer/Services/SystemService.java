@@ -536,7 +536,7 @@ public class SystemService implements ISystemService {
     public Response<Void> addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> perms) {
         try {
             logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: " + storeId);
-            userService.addRole(managerId, storeId, new StoreManager());
+            //userService.addRole(managerId, storeId, new StoreManager());
         } catch (Exception e) {
             logger.error("System service - failed to add StoreManager role to user " + e.getMessage());
             return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);}
@@ -545,7 +545,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Store manager added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
-            userService.removeRole(managerId, storeId); // reverting
+           // userService.removeRole(managerId, storeId); // reverting
             return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
@@ -960,6 +960,7 @@ public class SystemService implements ISystemService {
         try{
             logger.info("system service - user " + userId + " trying to accept assignment for store " + storeId);
             storeService.acceptAssignment(storeId, userId);
+            userService.addRole(userId, storeId, new StoreManager());
             return new Response<String>("success", "success", true, null, null);
         }
         catch(IllegalArgumentException e){

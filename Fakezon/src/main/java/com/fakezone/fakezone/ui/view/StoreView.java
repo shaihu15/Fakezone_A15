@@ -10,6 +10,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.QueryParameters;
@@ -28,6 +29,9 @@ import org.springframework.http.*;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,10 +42,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @Route(value = "store", layout = MainLayout.class)
 public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
-    private final String backendUrl = "http://localhost:8080";
+     private final String backendUrl = "http://localhost:8080";
     private final RestTemplate restTemplate;
-    private VerticalLayout storeInfoCard;
-    private Button manageButton;
 
     public StoreView() {
         restTemplate = new RestTemplate();
@@ -87,7 +89,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         }
 
         // Show store info in a centered card (displayed initially)
-        storeInfoCard = new VerticalLayout();
+        VerticalLayout storeInfoCard = new VerticalLayout();
         storeInfoCard.setPadding(true);
         storeInfoCard.setSpacing(true);
         storeInfoCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
@@ -105,33 +107,98 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         storeInfoCard.add(new Span(storeDetailsLine));
 
         // Add "Manage" button
-        manageButton = new Button("Manage Store", e -> {
+        Button manageButton = new Button("Manage Store", e -> {
             int userId = userDTO.getUserId(); // Get userId from UserDTO
-            fetchAndShowStoreRoles(storeId, userId, token, userDTO);
+            fetchAndShowStoreRoles(storeId, userId, token);
         });
         add(storeInfoCard, manageButton);
     }
 
-    private void fetchAndShowStoreRoles(int storeId, int userId, String token, UserDTO userDTO) {
-        // Clear existing content (hides Store Details and Manage button)
+    private void fetchAndShowStoreRoles(int storeId, int userId, String token) {
+        // Clear existing content
         removeAll();
 
-        String url = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", storeId, userId);
+        // Rebuild store info and button
+        VerticalLayout storeInfoCard = new VerticalLayout();
+        storeInfoCard.setPadding(true);
+        storeInfoCard.setSpacing(true);
+        storeInfoCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
+        storeInfoCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        H2 title = new H2("Store Details");
+        title.getStyle().set("color", "#2E7D32"); // Green color for title
+        storeInfoCard.add(title);
+        StoreDTO store = getStoreDTO(storeId, token);
+        if (store == null) {
+            storeInfoCard.add(new Span("Failed to load store details for ID: " + storeId));
+        } else {
+            String storeDetailsLine = String.format(
+                "Name: %s  |  ID: %d  |  Open: %s  |  Average Rating: %.1f",
+                store.getName(),
+                store.getStoreId(),
+                store.isOpen() ? "Yes" : "No",
+                store.getRatings().values().stream().mapToDouble(d -> d).average().orElse(0.0)
+            );
+            storeInfoCard.add(new Span(storeDetailsLine));
+        }
+
+        Button manageButton = new Button("Manage Store", e -> fetchAndShowStoreRoles(storeId, userId, token));
+
+        String rolesUrl = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", storeId, userId);
+        String pendingManagersUrl = String.format(backendUrl + "/api/store/getPendingManagers/%d/%d", storeId, userId);
+        String pendingOwnersUrl = String.format(backendUrl + "/api/store/getPendingOwners/%d/%d", storeId, userId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<Response<StoreRolesDTO>> response =
+            // Fetch confirmed roles
+            ResponseEntity<Response<StoreRolesDTO>> rolesResponse =
                 restTemplate.exchange(
-                    url,
+                    rolesUrl,
                     HttpMethod.GET,
                     entity,
                     new ParameterizedTypeReference<>() {}
                 );
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                StoreRolesDTO roles = response.getBody().getData();
+            // Fetch pending managers
+            ResponseEntity<Response<List<Integer>>> pendingManagersResponse =
+                restTemplate.exchange(
+                    pendingManagersUrl,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+                );
+
+            // Fetch pending owners
+            ResponseEntity<Response<List<Integer>>> pendingOwnersResponse =
+                restTemplate.exchange(
+                    pendingOwnersUrl,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+                );
+
+            if (rolesResponse.getStatusCode().is2xxSuccessful() && rolesResponse.getBody().isSuccess()) {
+                StoreRolesDTO roles = rolesResponse.getBody().getData();
+                List<Integer> pendingManagers = null;
+                if (pendingManagersResponse.getStatusCode().is2xxSuccessful() && pendingManagersResponse.getBody().isSuccess()) {
+                    pendingManagers = pendingManagersResponse.getBody().getData();
+                } else {
+                    Span pendingError = new Span("Failed to fetch pending managers: " + (pendingManagersResponse.getBody() != null ? pendingManagersResponse.getBody().getMessage() : "Unknown error"));
+                    pendingError.getStyle().set("color", "red");
+                    add(pendingError);
+                    pendingManagers = new ArrayList<>(); // Fallback to empty list
+                }
+
+                List<Integer> pendingOwners = null;
+                if (pendingOwnersResponse.getStatusCode().is2xxSuccessful() && pendingOwnersResponse.getBody().isSuccess()) {
+                    pendingOwners = pendingOwnersResponse.getBody().getData();
+                } else {
+                    Span pendingError = new Span("Failed to fetch pending owners: " + (pendingOwnersResponse.getBody() != null ? pendingOwnersResponse.getBody().getMessage() : "Unknown error"));
+                    pendingError.getStyle().set("color", "red");
+                    add(pendingError);
+                    pendingOwners = new ArrayList<>(); // Fallback to empty list
+                }
 
                 // Create a card for roles in columns
                 VerticalLayout rolesCard = new VerticalLayout();
@@ -178,11 +245,36 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
                 }
                 rolesLayout.add(managersColumn);
 
+                // Column 4: Pending Managers
+                VerticalLayout pendingManagersColumn = new VerticalLayout();
+                pendingManagersColumn.setSpacing(false);
+                pendingManagersColumn.add(new Span("Pending Managers:"));
+                if (pendingManagers != null && !pendingManagers.isEmpty()) {
+                    pendingManagers.forEach(managerId -> {
+                        pendingManagersColumn.add(new Span("ID: " + managerId + " (awaiting approval)"));
+                    });
+                } else {
+                    pendingManagersColumn.add(new Span("None"));
+                }
+                rolesLayout.add(pendingManagersColumn);
+
+                // Column 5: Pending Owners
+                VerticalLayout pendingOwnersColumn = new VerticalLayout();
+                pendingOwnersColumn.setSpacing(false);
+                pendingOwnersColumn.add(new Span("Pending Owners:"));
+                if (pendingOwners != null && !pendingOwners.isEmpty()) {
+                    pendingOwners.forEach(ownerId -> {
+                        pendingOwnersColumn.add(new Span("ID: " + ownerId + " (awaiting approval)"));
+                    });
+                } else {
+                    pendingOwnersColumn.add(new Span("None"));
+                }
+                rolesLayout.add(pendingOwnersColumn);
+
                 // Add action buttons inside the Store Roles card
                 HorizontalLayout actions = new HorizontalLayout();
                 actions.setSpacing(true);
                 actions.setAlignItems(Alignment.CENTER);
-
                 Button addManagerButton = new Button("Add Manager");
                 addManagerButton.addClickListener(e -> showAddManagerDialog(storeId, userId, token));
 
@@ -196,15 +288,10 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
                 rolesCard.add(rolesLayout, actions);
 
-                // Add "Back" button to restore the initial view
-                Button backButton = new Button("Back", e -> {
-                    removeAll();
-                    add(storeInfoCard, manageButton);
-                });
-
-                add(rolesCard, backButton);
+                // Add Store Details card and Store Roles card
+                add(storeInfoCard, manageButton, rolesCard);
             } else {
-                add(new Span("Failed to fetch store roles: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error")));
+                add(new Span("Failed to fetch store roles: " + (rolesResponse.getBody() != null ? rolesResponse.getBody().getMessage() : "Unknown error")));
             }
         } catch (Exception ex) {
             add(new Span("Error while fetching roles: " + ex.getMessage()));
@@ -277,13 +364,19 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         TextField basePriceField = new TextField("Base Price");
         IntegerField quantityField = new IntegerField("Quantity");
         ComboBox<PCategory> categoryField = new ComboBox<>("Category");
-        categoryField.setItems(PCategory.values());
+        categoryField.setItems(PCategory.values()); // Use ComboBox with PCategory enum
         categoryField.setRequired(true);
 
         Button confirmButton = new Button("Add", e -> {
             String productName = productNameField.getValue();
             String description = descriptionField.getValue();
-            double basePrice = basePriceField.getValue() != null && !basePriceField.getValue().isEmpty() ? Double.parseDouble(basePriceField.getValue()) : 0.0;
+            double basePrice = 0.0;
+            try {
+                basePrice = basePriceField.getValue() != null && !basePriceField.getValue().isEmpty() ? Double.parseDouble(basePriceField.getValue()) : 0.0;
+            } catch (NumberFormatException ex) {
+                dialog.add(new Span("Invalid base price."));
+                return;
+            }
             int quantity = quantityField.getValue() != null ? quantityField.getValue() : 0;
             PCategory category = categoryField.getValue();
             if (!productName.isEmpty() && !description.isEmpty() && basePrice > 0 && quantity > 0 && category != null) {
@@ -304,13 +397,26 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     }
 
     private void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> permissions, String token) {
-        String url = String.format(backendUrl + "/api/store/addStoreManager/%d/%d/%d", storeId, requesterId, managerId);
+        // Construct the base URL with path variables
+        String baseUrl = String.format(
+            backendUrl + "/api/store/addStoreManager/%d/%d/%d",
+            storeId, requesterId, managerId
+        );
+        // Add permissions as repeated query parameters
+        StringBuilder queryParams = new StringBuilder();
+        queryParams.append("?");
+        for (int i = 0; i < permissions.size(); i++) {
+            if (i > 0) {
+                queryParams.append("&");
+            }
+            queryParams.append("permissions=")
+                    .append(URLEncoder.encode(permissions.get(i).name(), StandardCharsets.UTF_8));
+        }
+        String url = baseUrl + queryParams.toString();
+        
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
-        HttpEntity<Map<String, List<String>>> entity = new HttpEntity<>(
-            Map.of("permissions", permissions.stream().map(Enum::name).toList()),
-            headers
-        );
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
             ResponseEntity<Response<Void>> response = restTemplate.exchange(
@@ -320,12 +426,19 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
                 new ParameterizedTypeReference<>() {}
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                fetchAndShowStoreRoles(storeId, requesterId, token, null); // Refresh roles
+                Span successMessage = new Span("Manager added successfully.");
+                successMessage.getStyle().set("color", "green");
+                add(successMessage);
+                fetchAndShowStoreRoles(storeId, requesterId, token); // Refresh roles
             } else {
-                add(new Span("Failed to add manager: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error")));
+                Span errorMessage = new Span("Failed to add manager: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
+                errorMessage.getStyle().set("color", "red");
+                add(errorMessage);
             }
         } catch (Exception ex) {
-            add(new Span("Error adding manager: " + ex.getMessage()));
+            Span errorMessage = new Span("Error adding manager: " + ex.getMessage());
+            errorMessage.getStyle().set("color", "red");
+            add(errorMessage);
         }
     }
 
@@ -343,7 +456,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
                 new ParameterizedTypeReference<>() {}
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                fetchAndShowStoreRoles(storeId, requesterId, token, null); // Refresh roles
+                fetchAndShowStoreRoles(storeId, requesterId, token); // Refresh roles
             } else {
                 add(new Span("Failed to add owner: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error")));
             }
@@ -353,19 +466,18 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     }
 
     private void addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category, String token) {
-        String url = String.format(backendUrl + "/api/store/addProductToStore/%d/%d", storeId, requesterId);
+        String url = String.format(
+            backendUrl + "/api/store/addProductToStore/%d/%d?productName=%s&description=%s&basePrice=%f&quantity=%d&category=%s",
+            storeId, requesterId,
+            URLEncoder.encode(productName, StandardCharsets.UTF_8),
+            URLEncoder.encode(description, StandardCharsets.UTF_8),
+            basePrice,
+            quantity,
+            URLEncoder.encode(category, StandardCharsets.UTF_8)
+        );
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(
-            Map.of(
-                "productName", productName,
-                "description", description,
-                "basePrice", basePrice,
-                "quantity", quantity,
-                "category", category
-            ),
-            headers
-        );
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
             ResponseEntity<Response<Void>> response = restTemplate.exchange(
@@ -375,7 +487,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
                 new ParameterizedTypeReference<>() {}
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                fetchAndShowStoreRoles(storeId, requesterId, token, null); // Refresh roles (though product addition might need a separate view)
+                fetchAndShowStoreRoles(storeId, requesterId, token); // Refresh roles
             } else {
                 add(new Span("Failed to add product: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error")));
             }
@@ -402,7 +514,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = String.format(backendUrl + "/api/store/viewStore/%d", storeId);
+        String url = String.format(backendUrl + "/api/store/viewViewStore/%d", storeId); // Fixed typo in URL
 
         try {
             ResponseEntity<Response<StoreDTO>> response =
@@ -415,9 +527,12 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
                 return response.getBody().getData();
+            } else {
+                System.out.println("getStoreDTO failed: Status " + response.getStatusCode() + ", Message: " + (response.getBody() != null ? response.getBody().getMessage() : "No message"));
+                return null;
             }
-            return null;
         } catch (Exception e) {
+            System.out.println("getStoreDTO exception: " + e.getMessage());
             return null;
         }
     }
