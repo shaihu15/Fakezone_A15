@@ -69,8 +69,8 @@ public class Save_Products_in_Purchase_Basket {
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
         systemService = new SystemService(storeService, userService, productService,
-                orderService, deliveryService, authenticatorService,
-                paymentService, eventPublisher, notificationWebSocketHandler);
+        orderService, deliveryService, authenticatorService,
+        paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
     }
 
