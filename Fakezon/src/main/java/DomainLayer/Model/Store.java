@@ -1174,8 +1174,12 @@ public class Store implements IStore {
     @Override
     public List<ProductRating> getStoreProductAllRatings(int productId){
         //locks already happen in both sub methods
-        StoreProduct prod = getStoreProduct(productId);
-        return prod.getAllRatings();
+        try{
+            StoreProduct prod = getStoreProduct(productId);
+            return prod.getAllRatings();
+        catch (Exception e){
+            throw e;
+        }
     }
 
 
