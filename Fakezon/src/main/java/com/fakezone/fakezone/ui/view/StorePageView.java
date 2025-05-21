@@ -15,7 +15,7 @@ import ApplicationLayer.DTO.StoreDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
-@Route(value = "/store/:storeId", layout = MainLayout.class)
+@Route(value = "store/:storeId", layout = MainLayout.class)
 public class StorePageView extends VerticalLayout implements AfterNavigationObserver{
     private int storeId;
     private StoreDTO storeDto;
