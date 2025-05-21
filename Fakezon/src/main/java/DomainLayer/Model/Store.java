@@ -1177,6 +1177,7 @@ public class Store implements IStore {
         try{
             StoreProduct prod = getStoreProduct(productId);
             return prod.getAllRatings();
+        }
         catch (Exception e){
             throw e;
         }
