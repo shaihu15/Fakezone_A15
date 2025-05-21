@@ -2,6 +2,7 @@ package com.fakezone.fakezone.ui.view;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -44,10 +45,10 @@ public class StoreProductView extends VerticalLayout implements AfterNavigationO
     private H2 title = new H2();
     private Paragraph description = new Paragraph();
     private final RestTemplate restTemplate = new RestTemplate();
-    
+    private final String apiUrl;
 
-    public StoreProductView() {
-        
+    public StoreProductView(@Value("${api.url}") String apiUrl) {
+        this.apiUrl = apiUrl;
     }
 
     @Override
@@ -61,7 +62,7 @@ public class StoreProductView extends VerticalLayout implements AfterNavigationO
         productId = Integer.parseInt(params.get("productId").orElse("0"));
         title.setText("STUB PAGE FOR PRODUCT " + productId);
         description.setText("STORE ID " + storeId);
-        String url = "http://localhost:8080/api/product/getProductFromStore/" + storeId+"/"+productId;
+        String url = apiUrl + "product/getProductFromStore/" + storeId+"/"+productId;
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -99,7 +100,7 @@ public class StoreProductView extends VerticalLayout implements AfterNavigationO
             controls.setSpacing(true);
             controls.setPadding(false);
             add(controls);
-            url = "http://localhost:8080/api/product/getStoreProductRatings/" + storeId + "/" + productId;
+            url = apiUrl + "product/getStoreProductRatings/" + storeId + "/" + productId;
             headers.set("Authorization", token);
             entity = new HttpEntity<>(headers);
             ResponseEntity<Response<List<ProductRatingDTO>>> apiRES = restTemplate.exchange(
@@ -171,7 +172,7 @@ public class StoreProductView extends VerticalLayout implements AfterNavigationO
         }
         else{
             int userId = userDto.getUserId();
-            String url = "http://localhost:8080/api/user/addToBasket/" + userId +"/"+storeId+"/"+prodId+"/"+quantity;
+            String url = apiUrl + "user/addToBasket/" + userId +"/"+storeId+"/"+prodId+"/"+quantity;
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", token);
             HttpEntity<Void> entity = new HttpEntity<>(headers);

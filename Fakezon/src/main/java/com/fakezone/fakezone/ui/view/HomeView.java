@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -43,7 +44,9 @@ import com.vaadin.flow.component.notification.Notification;
 @Route(value = "", layout = MainLayout.class)
 public class HomeView extends Main {
     private final RestTemplate restTemplate = new RestTemplate();
-    public HomeView() {
+    private final String apiUrl;
+    public HomeView(@Value("${api.url}") String apiUrl) {
+        this.apiUrl = apiUrl;
         HttpServletRequest request = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = request.getSession(false); // true = create if not exist
         String token = (String) session.getAttribute("token");
@@ -56,7 +59,7 @@ public class HomeView extends Main {
         // title
         H1 title = new H1("Top Rated Products");
         title.getStyle().set("margin-bottom", "0.5em");
-        String url = "http://localhost:8080/api/product/topRated/" + lim;
+        String url = apiUrl + "product/topRated/" + lim;
         //api call
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
@@ -154,7 +157,7 @@ public class HomeView extends Main {
         }
         else{
             int userId = userDto.getUserId();
-            String url = "http://localhost:8080/api/user/addToBasket/" + userId +"/"+storeId+"/"+prodId+"/"+quantity;
+            String url = apiUrl + "user/addToBasket/" + userId +"/"+storeId+"/"+prodId+"/"+quantity;
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", token);
             HttpEntity<Void> entity = new HttpEntity<>(headers);

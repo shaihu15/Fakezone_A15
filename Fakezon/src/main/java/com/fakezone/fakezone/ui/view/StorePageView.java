@@ -1,5 +1,6 @@
 package com.fakezone.fakezone.ui.view;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 
 import com.vaadin.flow.component.html.H1;
@@ -19,9 +20,10 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
     private int storeId;
     private StoreDTO storeDto;
     private final RestTemplate restTemplate = new RestTemplate();
-
-    public StorePageView(){
-
+    private final String apiUrl;
+    
+    public StorePageView(@Value("${api.url}") String apiUrl){
+        this.apiUrl = apiUrl;
     }
 
     @Override
