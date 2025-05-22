@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -131,5 +132,8 @@ public interface IStoreService {
   void returnProductsToStores(int userId, Map<Integer,Map<Integer,Integer>> products);
 
   List<ProductRating> getStoreProductRatings(int storeId, int productID);
+
+  Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
+
 
 }

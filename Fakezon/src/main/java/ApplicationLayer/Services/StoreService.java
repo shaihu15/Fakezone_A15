@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -16,17 +17,23 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.method.P;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Interfaces.IStoreService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
+
 import DomainLayer.Model.ProductRating;
+
+import DomainLayer.Model.Registered;
+
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.User;
@@ -658,6 +665,28 @@ public class StoreService implements IStoreService {
             result.put(toStoreDTO(store), storeProducts);
         }
         return result;
+    }
+
+    @Override
+    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId){
+        Store store = storeRepository.findById(storeId);
+        if (store != null) {
+            try{
+                HashMap<Integer, String> messages = store.getAllStoreMessages();
+                if (messages.isEmpty()) {
+                    logger.info("No messages found for store: " + storeId);
+                    return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
+                }
+                logger.info("Messages retrieved for store: " + storeId);
+                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error during get messages: " + e.getMessage());
+                logger.error("Error during get messages: "+ e.getMessage());
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            }
+        }
+        logger.error("Store not found: " + storeId);
+        return new Response<>(null, "Store not found", false, ErrorType.INVALID_INPUT, null);
     }
 
 
