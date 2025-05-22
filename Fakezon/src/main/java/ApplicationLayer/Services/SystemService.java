@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -39,6 +40,7 @@ import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
@@ -73,7 +75,6 @@ public class SystemService implements ISystemService {
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
-        logger.info("UI INIT");
         // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
         //init();
     }
@@ -92,7 +93,6 @@ public class SystemService implements ISystemService {
         this.deliveryService = deliveryService;
         this.authenticatorService = authenticatorService;
         this.paymentService = paymentService;
-        logger.info("UI INIT2");
     }
 
     @Override
@@ -1759,5 +1759,33 @@ public class SystemService implements ISystemService {
         this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
         this.userLogout(1004);
 
+    }
+
+    @Override
+    public Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId){
+        try{
+            logger.info("System Service - request for all store product rating store " + storeId + " prodId "+ prodId);
+            List<ProductRating> ratings = storeService.getStoreProductRatings(storeId, prodId);
+            List<ProductRatingDTO> ratingsDTOs = new ArrayList<>();
+            for(ProductRating r : ratings){
+                ratingsDTOs.add(prodRatingToProdRatingDTO(r));
+            }
+            return new Response<List<ProductRatingDTO>>(ratingsDTOs, null, true, null, null);
+
+        }
+        catch(Exception e){
+            logger.error("System Service - error during getStoreProductRatings "+ e.getMessage());
+            return new Response<>(null, "Error during getStoreProductRatings " + e.getMessage(), false, ErrorType.INVALID_INPUT, null);
+        }
+    }
+
+    private ProductRatingDTO prodRatingToProdRatingDTO(ProductRating rating){
+        Optional<Registered> user = userService.getUserById(rating.getUserID());
+        if(user.isPresent()){
+            return new ProductRatingDTO(rating.getRating(), rating.getComment(), user.get().getEmail());
+        }
+        else{
+            throw new IllegalArgumentException("user " + rating.getUserID() + " does not exist - prodRatingToProdRatingDTO");
+        }
     }
 }
