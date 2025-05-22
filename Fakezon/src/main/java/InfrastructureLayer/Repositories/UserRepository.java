@@ -2,6 +2,7 @@ package InfrastructureLayer.Repositories;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.time.LocalDate;
@@ -9,11 +10,20 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.RegisteredRole;
+import DomainLayer.Model.StoreFounder;
+import DomainLayer.Model.StoreManager;
+import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
 
 public class UserRepository implements IUserRepository {
+    private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
     private Map<Integer, Registered> users;
     private Map<Integer, User> unsignedUsers; // Map to store unsigned (guest) users
     private Map<Integer, LocalDate> suspendedUsers; // Map of userId to suspension end date (null if permanent)
@@ -24,6 +34,10 @@ public class UserRepository implements IUserRepository {
         this.unsignedUsers = new HashMap<>(); // Initialize the unsigned users map
         this.suspendedUsers = new HashMap<>();
         this.systemAdmins = new HashSet<>();
+
+
+        // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
+        //init();
     }
 
     @Override
@@ -315,5 +329,26 @@ public class UserRepository implements IUserRepository {
      */
     public int getUnsignedUserCount() {
         return unsignedUsers.size();
+    }
+
+    private void init(){
+        logger.info("user repo init");
+        //UID: 1001 founder of store 1001
+        users.put(1001, new Registered("testFounder1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1001));
+        this.findById(1001).get().addRole(1001, new StoreFounder());
+
+        //UID: 1002 owner of store 1001
+        users.put(1002, new Registered("testOwner1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1002));
+        this.findById(1001).get().addRole(1001, new StoreOwner());
+
+        //UID: 1003 manager of store 1001
+        users.put(1003, new Registered("testManager1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1003));
+        this.findById(1001).get().addRole(1001, new StoreManager());
+
+        //UID: 1004 normal registered user
+        users.put(1004, new Registered("testNormalUser1004@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1004));
+        Registered uiUserNormal = this.findById(1004).get();
+        uiUserNormal.addToBasket(1001, 1001, 1);
+        uiUserNormal.addToBasket(1001, 1002, 2);
     }
 }

@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import DomainLayer.Interfaces.*;
+
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -13,6 +17,7 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
@@ -25,10 +30,6 @@ import ApplicationLayer.Services.UserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -37,8 +38,12 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+
 
 public class StoreOwner_Add_product {
+    //Use-case: 4.1 StoreOwner - Add a product
 
     private SystemService systemService;
     private IStoreRepository storeRepository;
@@ -49,6 +54,7 @@ public class StoreOwner_Add_product {
     private IAuthenticator authenticatorService;
     private IPayment paymentService;
     private ApplicationEventPublisher eventPublisher;
+    private INotificationWebSocketHandler notificationWebSocketHandler;
     private IStoreService storeService;
     private IProductService productService;
     private IUserService userService;
@@ -56,41 +62,49 @@ public class StoreOwner_Add_product {
 
     private TestHelper testHelper;
 
+    int storeId;
+    int userId;
+    String productName;
+    String productDescription;
+    String category;
+
     @BeforeEach
     void setUp() {
+        //Use-case: 4.1 StoreOwner - add a product
+
         storeRepository = new StoreRepository();
         userRepository = new UserRepository();
         productRepository = new ProductRepository();
         orderRepository = new OrderRepository();
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
-
+        notificationWebSocketHandler = new NotificationWebSocketHandler();
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher);
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
-    }
 
-    @Test
-    void testAddProductToStore_validArguments_Success(){
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
         assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
+        userId = StoreOwnerResult.getData().getUserId();
         // StoreOwner is registered and logged in
 
         Response<Integer> storeResult = systemService.addStore(userId, "Store1");
         assertNotNull(storeResult);
-        int storeId = storeResult.getData(); 
+        storeId = storeResult.getData(); 
         // StoreOwner is the owner of Store1
 
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
+        productName = "Test Product";
+        productDescription = "Test Description";
+        category = PCategory.ELECTRONICS.toString();
+    }
+
+    @Test
+    void testAddProductToStore_validArguments_Success(){
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
-        assertNotNull(storePResponse);
         assertTrue(storePResponse.isSuccess());
 
         int productId = storePResponse.getData().getProductId();
@@ -102,131 +116,51 @@ public class StoreOwner_Add_product {
 
     @Test
     void testAddProductToStore_invalidCategory_Failure(){
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        int storeId = storeResult.getData();
-        // StoreOwner is the owner of Store1
-
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        
         assertEquals("Invalid category",systemService.addProductToStore
                                         (storeId, userId, productName, productDescription, 1, 1, "invalidCategory").getMessage());
     }
 
-    /* 
-    //no test for invalid storeId in addProductToStore
     @Test
-    void testAddProductToStore_invalidStoreId_Failure(){
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        int storeId = storeResult.getData();
-        // StoreOwner is the owner of Store1
-
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-
-        
-        assertEquals("error",systemService.addProductToStore
-                                        (storeId, userId, productName, productDescription, 1, 1, category).getMessage());
+    void testAddProductToStore_invalidStoreId_Failure(){     
+        assertEquals("Error during adding product to store: Store not found",systemService.addProductToStore
+                                        (-1, userId, productName, productDescription, 1, 1, category).getMessage());
 
     }
     
-    //no test for invalid userId in addProductToStore
     @Test
     void testAddProductToStore_invalidUserId_Failure(){
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        int storeId = storeResult.getData(); 
-        // StoreOwner is the owner of Store1
-
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-
-        
-        assertEquals("error",systemService.addProductToStore
-                                        (storeId, 9, productName, productDescription, 1, 1, category).getMessage());
+        assertEquals("Error during adding product to store: User with id: 9 has insufficient permissions for store ID: "+storeId,
+                systemService.addProductToStore(storeId, 9, productName, productDescription, 1, 1, category).getMessage());
     }
 
-    //no test for invalid productId in addProductToStore
     @Test
-    void testAddProductToStore_invalidProductName_Failure(){
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        int storeId = storeResult.getData(); 
-        // StoreOwner is the owner of Store1
-
-        String productName = ""; 
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-
-        
-        assertEquals("error",systemService.addProductToStore
-                                        (storeId, userId, productName, productDescription, 1, 1, category).getMessage());   
+    void testAddProductToStore_emptyProductName_Failure(){
+        assertEquals("Product name must not be empty",systemService.addProductToStore
+                                        (storeId, userId, "", productDescription, 1, 1, category).getMessage());   
     }                                  
    
 
     @Test
-    void testAddProductToStore_invalidProductName_Failure(){
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        int storeId = storeResult.getData(); 
-        // StoreOwner is the owner of Store1
-
-        //String productName = ""; 
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-
-        
-        assertEquals("error",systemService.addProductToStore
+    void testAddProductToStore_nullProductName_Failure(){
+        assertEquals("Product name must not be empty",systemService.addProductToStore
                                         (storeId, userId, null, productDescription, 1, 1, category).getMessage());   
     } 
-                                        
-    */
+        
+    @Test
+    void testAddProductToStore_emptyProductDescription_Failure(){
+        assertEquals("Product description must not be empty",systemService.addProductToStore
+                                        (storeId, userId, productName, "", 1, 1, category).getMessage());   
+    }                                  
+   
 
     @Test
+    void testAddProductToStore_nullProductDescription_Failure(){
+        assertEquals("Product description must not be empty",systemService.addProductToStore
+                                        (storeId, userId, productName, null, 1, 1, category).getMessage());   
+    } 
+                                        
+    @Test
     void testAddProductToStore_ProductAlreadyExists_Failure(){
-        Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
-        assertNotNull(StoreOwnerResult);
-        int userId = StoreOwnerResult.getData().getUserId();
-        // StoreOwner is registered and logged in
-
-        Response<Integer> storeResult = systemService.addStore(userId, "Store1");
-        assertNotNull(storeResult);
-        int storeId = storeResult.getData(); 
-        // StoreOwner is the owner of Store1
-
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
-
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         assertNotNull(storePResponse);
         assertTrue(storePResponse.isSuccess());

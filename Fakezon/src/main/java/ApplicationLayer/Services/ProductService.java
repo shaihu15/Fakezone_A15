@@ -127,8 +127,9 @@ public class ProductService implements IProductService {
         try {
             for (Integer productId : productsIds) {
                 IProduct product = productRepository.getProductById(productId);
-                product.addStore(storeId);
-                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), new HashSet<>(product.getStoresIds()));
+                Set<Integer> storeSet = new HashSet<>();
+                storeSet.add(storeId);
+                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), storeSet);
             }
         } catch (IllegalArgumentException e) {
             logger.error("While trying to add products to store, recived error {}", e);
@@ -182,6 +183,21 @@ public class ProductService implements IProductService {
         } catch (IllegalArgumentException e) {
             logger.error("While trying to get product, recived error {}", e);
             throw e;
+        }
+    }
+    @Override
+    public List<ProductDTO> searchProductsByName(String name) {
+        try {
+            Collection<IProduct> products = productRepository.searchProductsByName(name);
+            List<ProductDTO> productDTOs = products.stream()
+                .map(product -> new ProductDTO(product.getName(), product.getDescription(), product.getId(),product.getCategory(), new HashSet<>(product.getStoresIds())))
+                .toList();
+            return productDTOs;
+        } catch (Exception e) {
+            logger.error("While trying to search, recived error {}", e);
+            throw e;
+        } finally {
+            logger.info("Product with keyword {} was searched", name);
         }
     }
   

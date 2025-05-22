@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -37,9 +38,8 @@ public interface IStore {
 
     void addDiscountPolicy(int userID, DiscountPolicy discountPolicy);
 
-    void addAuctionProduct(int requesterId, int productID, double basePrice, int daysToEnd);
+    void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd);
 
-    boolean addBidToAuctionProduct(int requesterId, int productID, double bidAmount);
 
     void isValidPurchaseAction(int requesterId, int productID);
 
@@ -89,8 +89,6 @@ public interface IStore {
 
     void removeStoreManager(int requesterId, int toRemoveId);
 
-    List<StoreProductDTO> decrementProductsQuantity(Map<Integer, Integer> productsToBuy, int userId);
-
     boolean isOwner(int userId);
 
     boolean isManager(int userId);
@@ -113,5 +111,12 @@ public interface IStore {
     
     double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
 
-    Map<StoreProductDTO, Boolean> checkIfProductsInStore(Map<Integer,Integer> products);
+    HashMap<Integer, String> getAllStoreMessages();
+
+    Map<StoreProductDTO, Boolean> checkIfProductsInStore(int userID, Map<Integer,Integer> products);
+
+    Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer,Integer> productsToBuy);
+
+    void returnProductsToStore(int userId, Map<Integer,Integer> products);
+
 }

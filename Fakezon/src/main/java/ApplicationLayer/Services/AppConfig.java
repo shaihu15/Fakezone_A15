@@ -1,5 +1,7 @@
 package ApplicationLayer.Services;
 
+import ApplicationLayer.Interfaces.IStoreService;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
 import DomainLayer.IRepository.IProductRepository;
@@ -7,6 +9,7 @@ import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Interfaces.IOrderRepository;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
@@ -41,12 +44,21 @@ public class AppConfig {
     }
 
     @Bean
-    public ISystemService systemService(ApplicationEventPublisher eventPublisher, IStoreRepository storeRepository, IProductRepository productRepository, IUserRepository userRepository, IOrderRepository orderRepository) {
-        return new SystemService(storeRepository, userRepository, productRepository,orderRepository, eventPublisher);
+    public ISystemService systemService(ApplicationEventPublisher eventPublisher, INotificationWebSocketHandler notificationWebSocketHandler, IStoreRepository storeRepository, IProductRepository productRepository, IUserRepository userRepository, IOrderRepository orderRepository) {
+        return new SystemService(storeRepository, userRepository, productRepository,orderRepository, eventPublisher, notificationWebSocketHandler);
     }
 
     @Bean
     public AuthenticatorAdapter authenticatorAdapter(IUserService userService) {
         return new AuthenticatorAdapter(userService);
+    }
+
+    @Bean
+    public INotificationWebSocketHandler notificationWebSocketHandler() {
+        return new NotificationWebSocketHandler();
+    }
+    @Bean
+    public IStoreService storeService(IStoreRepository storeRepository, ApplicationEventPublisher eventPublisher) {
+        return new StoreService(storeRepository, eventPublisher) ;
     }
 }

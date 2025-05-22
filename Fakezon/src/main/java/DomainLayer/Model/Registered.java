@@ -20,6 +20,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
@@ -46,15 +47,28 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
+    }
 
-
+    /**
+     * **********DO NOT USE - JUST FOR UI PURPOSES**********
+     **/
+    public Registered(String email, String password, LocalDate dateOfBirth,String state, int userId) {
+        super(userId);
+        this.email = email;
+        this.password = password;
+        this.roles = new HashMap<>();
+        this.isLoggedIn = false;
+        this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
+        messagesFromUser = new Stack<>();
+        messagesFromStore = new LinkedList<>();
+        assignmentMessages = new LinkedList<>();
+        auctionEndedMessages = new LinkedList<>();
     }
 
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
         this.productsPurchase.put(storeID, productsPurchase);
     }
-
 
     @Override
     public boolean isRegistered() {
@@ -156,6 +170,23 @@ public class Registered extends User {
         if(!isLoggedIn) {
             this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We are pleased to inform you that your bid has won the auction on product: "+event.getProductID()+", at a price of: "+event.getCurrentHighestBid()+"! The product has been added to your shopping cart, please purchase it as soon as possible."));
             addToBasket(event.getStoreId(), event.getStoreProductDTO().getProductId(), 1);
+            return;
+        }
+        // your logic to send to UI
+    }
+
+    
+    private boolean shouldHandleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
+        if(event.getUserIDPrevHighestBid() != this.userId) {
+            return false;
+        }
+        return true;
+    }
+
+    @EventListener(condition = "#root.target.shouldHandleAuctionGotHigherBidEvent(#event)")
+    public void handleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
+        if(!isLoggedIn) {
+            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "Your auction bid on product: "+event.getProductID()+" was rejected due to a higher bid of:: "+event.getCurrentHighestBid()+"."));
             return;
         }
         // your logic to send to UI

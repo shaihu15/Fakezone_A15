@@ -33,7 +33,7 @@ public class ProductDTOTest {
         assertEquals("This is a test product", productDTO.getDescription(), "Product description should match");
         assertEquals(1001, productDTO.getId(), "Product ID should match");
         assertEquals(PCategory.ELECTRONICS, productDTO.getCategory(), "Product category should match");
-        assertEquals(2, productDTO.getStoresIds().size(), "Product should be associated with 2 stores");
+        assertEquals(2, productDTO.getStoreIds().size(), "Product should be associated with 2 stores");
     }
 
     @Test
@@ -44,12 +44,12 @@ public class ProductDTOTest {
         assertEquals("This is a test product", productWithoutStores.getDescription(), "Product description should match");
         assertEquals(1002, productWithoutStores.getId(), "Product ID should match");
         assertEquals(PCategory.BEAUTY, productWithoutStores.getCategory(), "Product category should match");
-        assertNull(productWithoutStores.getStoresIds(), "Store IDs should be null");
+        assertNull(productWithoutStores.getStoreIds(), "Store IDs should be null");
     }
 
     @Test
     void getStoresIds_ShouldReturnCorrectStoreIds() {
-        Set<Integer> retrievedStoreIds = productDTO.getStoresIds();
+        Set<Integer> retrievedStoreIds = productDTO.getStoreIds();
         assertEquals(2, retrievedStoreIds.size(), "Store IDs size should match");
         assertTrue(retrievedStoreIds.contains(1), "Store ID 1 should be present");
         assertTrue(retrievedStoreIds.contains(2), "Store ID 2 should be present");

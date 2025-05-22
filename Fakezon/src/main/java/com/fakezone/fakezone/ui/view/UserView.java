@@ -32,10 +32,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Route(value = "user", layout = MainLayout.class)
 public class UserView extends VerticalLayout implements BeforeEnterObserver {
-    private final String backendUrl = "http://localhost:8080";
+     private final String backendUrl = "http://localhost:8080";
     private final RestTemplate restTemplate;
+    private VerticalLayout pendingAssignmentsCard;
 
-    // Define sets of roles for ownership and management
     private static final Set<String> OWNERSHIP_ROLES = Set.of(
         RoleName.STORE_FOUNDER.name(),
         RoleName.STORE_OWNER.name()
@@ -50,7 +50,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
 
         setPadding(true);
         setSpacing(true);
-        setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center all content in the main layout
+        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         int userId = userDTO.getUserId();
-        String tokenValue = token; // For use in lambda expressions
+        String tokenValue = token;
 
         Map<Integer, String> userRoles = getUserRoles(token);
         List<Component> ownedStores = new ArrayList<>();
@@ -98,16 +98,14 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             }
         }
 
-        // Move "Open a Store" button outside the "My Stores" card
         Button openStoreButton = new Button("Open a Store", e -> openStoreDialog(userId, token));
         add(openStoreButton);
 
-        // Create card for "My Stores"
         VerticalLayout ownedStoresCard = new VerticalLayout();
         ownedStoresCard.setPadding(true);
         ownedStoresCard.setSpacing(true);
         ownedStoresCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
-        ownedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content in this card
+        ownedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         ownedStoresCard.add(new H2("My Stores"));
 
         if (!ownedStores.isEmpty()) {
@@ -116,12 +114,11 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             ownedStoresCard.add(new Span("You do not own any stores."));
         }
 
-        // Create card for "Stores I Manage"
         VerticalLayout managedStoresCard = new VerticalLayout();
         managedStoresCard.setPadding(true);
         managedStoresCard.setSpacing(true);
         managedStoresCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
-        managedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content in this card
+        managedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         managedStoresCard.add(new H2("Stores I Manage"));
 
         if (!managedStores.isEmpty()) {
@@ -130,12 +127,82 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             managedStoresCard.add(new Span("You do not manage any stores."));
         }
 
-        // Create card for "Pending Assignments"
-        VerticalLayout pendingAssignmentsCard = new VerticalLayout();
+        pendingAssignmentsCard = new VerticalLayout();
         pendingAssignmentsCard.setPadding(true);
         pendingAssignmentsCard.setSpacing(true);
         pendingAssignmentsCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
         pendingAssignmentsCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        pendingAssignmentsCard.add(new H2("Pending Assignments"));
+
+        refreshPendingAssignments(userId, token);
+
+        add(ownedStoresCard, managedStoresCard, pendingAssignmentsCard);
+    }
+
+    private void acceptAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
+        String url = String.format(backendUrl + "/api/store/acceptAssignment/%d/%d", storeId, userId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<String>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Span successMessage = new Span("Assignment accepted successfully.");
+                successMessage.getStyle().set("color", "green");
+                assignmentCard.removeAll();
+                assignmentCard.add(successMessage);
+                refreshPendingAssignments(userId, token);
+            } else {
+                Span errorMessage = new Span("Failed to accept assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
+                errorMessage.getStyle().set("color", "red");
+                assignmentCard.add(errorMessage);
+            }
+        } catch (Exception ex) {
+            Span errorMessage = new Span("Error accepting assignment: " + ex.getMessage());
+            errorMessage.getStyle().set("color", "red");
+            assignmentCard.add(errorMessage);
+        }
+    }
+
+    private void declineAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
+        String url = String.format(backendUrl + "/api/store/declineAssignment/%d/%d", storeId, userId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<String>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Span successMessage = new Span("Assignment declined successfully.");
+                successMessage.getStyle().set("color", "green");
+                assignmentCard.removeAll();
+                assignmentCard.add(successMessage);
+                refreshPendingAssignments(userId, token);
+            } else {
+                Span errorMessage = new Span("Failed to decline assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
+                errorMessage.getStyle().set("color", "red");
+                assignmentCard.add(errorMessage);
+            }
+        } catch (Exception ex) {
+            Span errorMessage = new Span("Error declining assignment: " + ex.getMessage());
+            errorMessage.getStyle().set("color", "red");
+            assignmentCard.add(errorMessage);
+        }
+    }
+
+    private void refreshPendingAssignments(int userId, String token) {
+        pendingAssignmentsCard.removeAll();
         pendingAssignmentsCard.add(new H2("Pending Assignments"));
 
         String assignmentsUrl = String.format(backendUrl + "/api/user/getAssignmentMessages/%d", userId);
@@ -168,15 +235,8 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                         HorizontalLayout actionButtons = new HorizontalLayout();
                         actionButtons.setSpacing(true);
 
-                        Button acceptButton = new Button("Accept", e -> {
-                            acceptAssignment(storeId, userId, tokenValue, assignmentCard);
-                        });
-                        acceptButton.getStyle().set("background-color", "#4CAF50").set("color", "white");
-
-                        Button declineButton = new Button("Decline", e -> {
-                            declineAssignment(storeId, userId, tokenValue, assignmentCard);
-                        });
-                        declineButton.getStyle().set("background-color", "#F44336").set("color", "white");
+                        Button acceptButton = new Button("Accept", e -> acceptAssignment(storeId, userId, token, assignmentCard));
+                        Button declineButton = new Button("Decline", e -> declineAssignment(storeId, userId, token, assignmentCard));
 
                         actionButtons.add(acceptButton, declineButton);
                         assignmentCard.add(assignmentInfo, actionButtons);
@@ -192,73 +252,6 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             }
         } catch (Exception ex) {
             pendingAssignmentsCard.add(new Span("Error fetching assignments: " + ex.getMessage()));
-        }
-
-        // Add all cards to the main layout
-        add(ownedStoresCard, managedStoresCard, pendingAssignmentsCard);
-    }
-
-    private void acceptAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
-        String url = String.format(backendUrl + "/api/store/acceptAssignment/%d/%d", storeId, userId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<Response<String>> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<>() {}
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                Span successMessage = new Span("Assignment accepted successfully.");
-                successMessage.getStyle().set("color", "green");
-                assignmentCard.removeAll();
-                assignmentCard.add(successMessage);
-                // Refresh the page to update roles and assignments
-                getUI().ifPresent(ui -> ui.getPage().reload());
-            } else {
-                Span errorMessage = new Span("Failed to accept assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
-                errorMessage.getStyle().set("color", "red");
-                assignmentCard.add(errorMessage);
-            }
-        } catch (Exception ex) {
-            Span errorMessage = new Span("Error accepting assignment: " + ex.getMessage());
-            errorMessage.getStyle().set("color", "red");
-            assignmentCard.add(errorMessage);
-        }
-    }
-
-    private void declineAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
-        String url = String.format(backendUrl + "/api/store/declineAssignment/%d/%d", storeId, userId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<Response<String>> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<>() {}
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                Span successMessage = new Span("Assignment declined successfully.");
-                successMessage.getStyle().set("color", "green");
-                assignmentCard.removeAll();
-                assignmentCard.add(successMessage);
-                // Refresh the page to update roles and assignments
-                getUI().ifPresent(ui -> ui.getPage().reload());
-            } else {
-                Span errorMessage = new Span("Failed to decline assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
-                errorMessage.getStyle().set("color", "red");
-                assignmentCard.add(errorMessage);
-            }
-        } catch (Exception ex) {
-            Span errorMessage = new Span("Error declining assignment: " + ex.getMessage());
-            errorMessage.getStyle().set("color", "red");
-            assignmentCard.add(errorMessage);
         }
     }
 
@@ -300,7 +293,6 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
                 Notification.show("Store created successfully!", 3000, Notification.Position.MIDDLE);
                 dialog.close();
-                // Refresh the page to reflect the new store
                 getUI().ifPresent(ui -> ui.getPage().reload());
             } else {
                 Notification.show(response.getBody().getMessage(), 3000, Notification.Position.MIDDLE);
@@ -347,7 +339,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                     for (Map.Entry<Integer, Map<String, String>> entry : roles.entrySet()) {
                         Integer storeId = entry.getKey();
                         Map<String, String> roleData = entry.getValue();
-                        String type = roleData.get("type"); // Safely get "type"
+                        String type = roleData.get("type");
                         if (type != null) {
                             roleMap.put(storeId, type);
                         } else {
@@ -390,18 +382,31 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
 
     private Component createStoreCard(StoreDTO store, String role) {
         VerticalLayout layout = new VerticalLayout();
-        layout.setPadding(false);
-        layout.setSpacing(false);
-        layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content in the card
+        layout.setPadding(true);
+        layout.setSpacing(true);
+        layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content
+        layout.getStyle()
+            .set("border-radius", "8px")
+            .set("padding", "10px")
+            .set("transition", "transform 0.2s, box-shadow 0.2s")
+            .set("cursor", "pointer");
+        layout.getElement().addEventListener("mouseover", e ->
+            layout.getStyle()
+                .set("transform", "scale(1.02)")
+                .set("box-shadow", "0 6px 12px rgba(0,0,0,0.15)"));
+        layout.getElement().addEventListener("mouseout", e ->
+            layout.getStyle()
+                .set("transform", "scale(1)")
+                .set("box-shadow", "none"));
 
-        // Store name as a title
         RouterLink link = new RouterLink(store.getName(), StoreView.class);
         link.setQueryParameters(QueryParameters.simple(Collections.singletonMap("storeId", String.valueOf(store.getStoreId()))));
-        link.getStyle().set("font-size", "1.5em").set("font-weight", "bold");
+        link.getStyle().set("font-size", "1.5em").set("font-weight", "bold").set("text-align", "center");
 
-        // Info in one line using HorizontalLayout
         HorizontalLayout infoLayout = new HorizontalLayout();
         infoLayout.setSpacing(true);
+        infoLayout.setAlignItems(Alignment.CENTER);
+        infoLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         infoLayout.add(
             new Span("ID: " + store.getStoreId()),
             new Span("Open: " + (store.isOpen() ? "Yes" : "No")),

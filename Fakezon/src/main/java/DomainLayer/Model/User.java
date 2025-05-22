@@ -30,6 +30,17 @@ public class User {
         this.orders = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
+
+    /**
+     * **********DO NOT USE - JUST FOR UI PURPOSES**********
+     **/
+    public User(int userId){
+        this.userId = userId;
+        this.cart = new Cart();
+        this.isLoggedIn = false;
+        this.orders = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
+    }
     
     public boolean isRegistered() {
         return false;
@@ -83,7 +94,7 @@ public class User {
         return userId;
     }
 
-        public UserDTO toDTO() {
+    public UserDTO toDTO() {
         return new UserDTO(userId, null, -1);
     }
     public void setUserId(int userId) { ///this one is only for testing purposes, will 

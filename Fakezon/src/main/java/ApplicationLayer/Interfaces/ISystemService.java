@@ -34,7 +34,7 @@ public interface ISystemService {
 
     IPayment getPaymentService();
 
-    Response<StoreDTO> userAccessStore(String token , int storeId);
+    Response<StoreDTO> userAccessStore(int storeId);
 
     Response<Void> ratingStore(int storeId, int userId, double rating, String comment);
 
@@ -58,13 +58,15 @@ public interface ISystemService {
 
     Response<String> guestRegister(String email, String password,String dobInput, String country);
     
-    Response<List<ProductDTO>> searchByKeyword(String token, String keyword);
+    Response<List<ProductDTO>> searchByKeyword(String keyword);
 
     Response<List<ProductDTO>> searchByCategory(String category);
     
-    Response<Void> addStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> perms);
+    Response<List<ProductDTO>> searchProductsByName(String productName);
+
+    Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId, List<StoreManagerPermission> perms);
     
-    Response<Void> removeStoreManagerPermissions(int storeId, String sessionToken, int managerId, List<StoreManagerPermission> toRemove);
+    Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId, List<StoreManagerPermission> toRemove);
 
     Response<Void> removeStoreManager(int storeId, int requesterId, int managerId);
     
@@ -74,7 +76,7 @@ public interface ISystemService {
 
     Response<Void> addStoreOwner(int storeId, int requesterId, int ownerId);
     
-    Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int daysToEnd);
+    Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd);
     
     Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     
@@ -87,6 +89,8 @@ public interface ISystemService {
     Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
+
+    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId); 
 
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
   
@@ -101,6 +105,8 @@ public interface ISystemService {
     Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod, String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
             String recipient, String packageDetails); // purchase the cart
+
+    List<Integer> extractPurchasedProductIds(Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart); //convert cart to list of product ids
 
     Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice, int quantity);
 
@@ -118,13 +124,13 @@ public interface ISystemService {
 
     Response<List<StoreProductDTO>> getTopRatedProducts(int limit);
 
-    Response<Boolean> deleteOrder(int orderId, String token);
+    Response<Boolean> deleteOrder(int orderId, int userId);
 
-    Response<OrderDTO> viewOrder(int orderId, String token);
+    Response<OrderDTO> viewOrder(int orderId, int userId);
 
-    Response<List<OrderDTO>> searchOrders(String keyword, String token);
+    Response<List<OrderDTO>> searchOrders(String keyword, int userId);
 
-    Response<List<OrderDTO>> getOrdersByStoreId(int storeId, String token);
+    Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId);
 
     Response<Void> userLogout(int userID);
 
@@ -155,13 +161,17 @@ public interface ISystemService {
     // Unsigned (guest) user management
     Response<Void> addUnsignedUser(User user);
     
-    Response<User> getUnsignedUserById(int userId);
+    Response<UserDTO> getUnsignedUserById(int userId);
     
-    Response<List<User>> getAllUnsignedUsers(int adminId);
+    Response<List<UserDTO>> getAllUnsignedUsers(int adminId);
     
     Response<Boolean> removeUnsignedUser(int userId);
     
     Response<Boolean> isUnsignedUser(int userId);
     
     Response<Integer> getUnsignedUserCount(int adminId);
+
+    Response<Integer> addProduct(String productName, String productDescription, String category); // add product to system
+
+    LocalDate parseDate(String dateString);
 }
