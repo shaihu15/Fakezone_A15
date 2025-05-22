@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
@@ -143,30 +144,35 @@ public class Store implements IStore {
     @Override
     public void addStoreProductRating(int userID, int productID, double rating, String comment) {
         productsLock.lock();
-        if (storeProducts.containsKey(productID)) {
-            storeProducts.get(productID).addRating(userID, rating, comment);
+        try{
+            if (storeProducts.containsKey(productID)) {
+                storeProducts.get(productID).addRating(userID, rating, comment);
+            } else {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+            }
+        }
+        finally{
             productsLock.unlock();
-        } else {
-            productsLock.unlock();
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
 
     public boolean addBidOnAuctionProduct(int requesterId, int productID, double bidAmount) {
         productsLock.lock();
-        if (auctionProducts.containsKey(productID)) {
-            int prevId = auctionProducts.get(productID).addBid(requesterId, bidAmount);
+
+        try{
+            if (auctionProducts.containsKey(productID)) {
+                int prevId = auctionProducts.get(productID).addBid(requesterId, bidAmount);
+                if(prevId == requesterId) return false;
+                if(prevId != -1) handleRecivedHigherBid(prevId, productID);
+                return true;
+            } else {
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " does not exist in store ID: " + storeID);
+            }
+        }
+        finally{
             productsLock.unlock();
-            if (prevId == requesterId)
-                return false;
-            if (prevId != -1)
-                handleRecivedHigherBid(prevId, productID);
-            return true;
-        } else {
-            productsLock.unlock();
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " does not exist in store ID: " + storeID);
         }
     }
 
@@ -192,16 +198,18 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-        } catch (Exception e) {
-            productsLock.unlock();
-            rolesLock.unlock();
+           
+            StoreProduct storeProduct = new StoreProduct(productID,storeID, name, basePrice, quantity, category);
+            storeProducts.put(productID, storeProduct); //overrides old product
+            return new StoreProductDTO(storeProduct); //returns the productDTO
+        }
+        catch(Exception e){
             throw e;
         }
-        StoreProduct storeProduct = new StoreProduct(productID, storeID, name, basePrice, quantity, category);
-        storeProducts.put(productID, storeProduct); // overrides old product
-        productsLock.unlock();
-        rolesLock.unlock();
-        return new StoreProductDTO(storeProduct); // returns the productDTO
+        finally{
+            productsLock.unlock();
+            rolesLock.unlock();
+        }
     }
 
     @Override
@@ -225,18 +233,18 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-        } catch (Exception e) {
-            productsLock.unlock();
-            rolesLock.unlock();
+            StoreProduct storeProduct = storeProducts.get(productID);
+            storeProducts.put(productID, new StoreProduct(productID,storeID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
+
+        }
+        catch(Exception e){
             throw e;
         }
-        StoreProduct storeProduct = storeProducts.get(productID);
-        storeProducts.put(productID,
-                new StoreProduct(productID, storeID, name, basePrice, quantity, storeProduct.getCategory())); // overrides
-                                                                                                              // old
-                                                                                                              // product
-        productsLock.unlock();
-        rolesLock.unlock();
+        finally{
+            productsLock.unlock();
+            rolesLock.unlock();
+        }
+
     }
 
     public void removeStoreProduct(int requesterId, int productID) {
@@ -250,17 +258,19 @@ public class Store implements IStore {
             if (!storeProducts.containsKey(productID)) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
             }
-        } catch (Exception e) {
-            productsLock.unlock();
-            rolesLock.unlock();
+
+            if (auctionProducts.containsKey(productID)) {
+                auctionProducts.remove(productID);
+            }
+            storeProducts.remove(productID);
+        }
+        catch(Exception e){
             throw e;
         }
-        if (auctionProducts.containsKey(productID)) {
-            auctionProducts.remove(productID);
+        finally{
+            productsLock.unlock();
+            rolesLock.unlock();
         }
-        storeProducts.remove(productID);
-        productsLock.unlock();
-        rolesLock.unlock();
     }
 
     // To Do: change the paramers of the function and decide on the structure of
@@ -268,15 +278,18 @@ public class Store implements IStore {
     @Override
     public void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy) {
         rolesLock.lock();
-        if (isOwner(userID)
-                || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))) {
-            purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
-        } else {
-            rolesLock.unlock();
-            throw new IllegalArgumentException(
-                    "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.PURCHASE_POLICY))) {
+                purchasePolicies.put(purchasePolicy.getPolicyID(), purchasePolicy);
+            } else {
+                throw new IllegalArgumentException(
+                        "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+            }
         }
-        rolesLock.unlock();
+        finally{
+            rolesLock.unlock();
+        }
     }
 
     // To Do: change the paramers of the function and decide on the structure of
@@ -284,15 +297,18 @@ public class Store implements IStore {
     @Override
     public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
         rolesLock.lock();
-        if (isOwner(userID)
-                || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-            discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
-        } else {
-            rolesLock.unlock();
-            throw new IllegalArgumentException(
-                    "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            } else {
+                throw new IllegalArgumentException(
+                        "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
+            }
         }
-        rolesLock.unlock();
+        finally{
+            rolesLock.unlock();
+        }
     }
 
     @Override
@@ -333,13 +349,14 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
             }
-        } catch (Exception e) {
-            productsLock.unlock();
-            rolesLock.unlock();
+        }
+        catch(Exception e){
             throw e;
         }
-        productsLock.unlock();
-        rolesLock.unlock();
+        finally{
+            productsLock.unlock();
+            rolesLock.unlock();
+        }
     }
 
     @Override
@@ -358,11 +375,15 @@ public class Store implements IStore {
             } else {
                 throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
             }
-        } catch (Exception e) {
-            productsLock.unlock();
+
+        }
+        catch(Exception e){
+
             throw e;
         }
-        productsLock.unlock();
+        finally{
+            productsLock.unlock();
+        }
     }
 
     public List<AuctionProduct> getAuctionProducts() {
@@ -464,9 +485,13 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User with ID: " + managerId + " has insufficient permissions for store ID: " + storeID);
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally{
+            rolesLock.unlock();
         }
     }
 
@@ -476,16 +501,18 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-
-                rolesLock.unlock();
                 return messagesFromUsers;
             } else {
                 throw new IllegalArgumentException(
                         "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -495,15 +522,18 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                rolesLock.unlock();
                 return messagesFromStore;
             } else {
                 throw new IllegalArgumentException(
                         "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -534,7 +564,6 @@ public class Store implements IStore {
             if (isOwner(requesterId) || (isManager(requesterId)
                     && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))) {
                 List<Integer> ownersCopy = new ArrayList<>(storeOwners); // copy of store owners
-                rolesLock.unlock();
                 return ownersCopy;
             } else {
                 logger.warn("User {} tried to access store roles without permission for store {}", requesterId,
@@ -542,9 +571,13 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -565,7 +598,6 @@ public class Store implements IStore {
             if (isOwner(requesterId) || (isManager(requesterId)
                     && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))) {
                 HashMap<Integer, List<StoreManagerPermission>> managersCopy = copyStoreManagersMap();
-                rolesLock.unlock();
                 return managersCopy;
             } else {
                 logger.warn("User {} tried to access store roles without permission for store {}", requesterId,
@@ -573,9 +605,12 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User with id: " + requesterId + " has insufficient permissions for store ID: " + storeID);
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -606,14 +641,15 @@ public class Store implements IStore {
                 }
             }
             pendingOwners.put(appointee, appointor);
-            rolesLock.unlock();
             this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_OWNER));
         }
         catch(Exception e){
-            rolesLock.unlock();
             throw e;
         }
-    
+
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     private void acceptStoreOwner(int appointor, int appointee) {
@@ -678,12 +714,13 @@ public class Store implements IStore {
             }
             pendingManagersPerms.put(appointee, new ArrayList<>(perms));
             pendingManagers.put(appointee, appointor);
-            rolesLock.unlock();
             this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_MANAGER));
         }
         catch(Exception e){
-            rolesLock.unlock();
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -736,10 +773,13 @@ public class Store implements IStore {
                 acceptStoreOwner(pendingOwners.get(userId), userId);
             else
                 acceptStoreManager(pendingManagers.get(userId), userId);
-            rolesLock.unlock();
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -759,10 +799,13 @@ public class Store implements IStore {
                 declineStoreOwner(pendingOwners.get(userId), userId);
             else
                 declineStoreManager(pendingManagers.get(userId), userId);
-            rolesLock.unlock();
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            rolesLock.unlock();
         }
     }
 
@@ -784,11 +827,14 @@ public class Store implements IStore {
                 if (!currentPerms.contains(perm))
                     currentPerms.add(perm);
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
         }
-        rolesLock.unlock();
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     @Override
@@ -819,11 +865,14 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "permissions can not be empty. reseting manager: " + managerId + " permissions to original");
             }
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
         }
-        rolesLock.unlock();
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     @Override
@@ -861,15 +910,18 @@ public class Store implements IStore {
         try {
             if (storeProducts.containsKey(productID)) {
                 ProductRating rating = storeProducts.get(productID).getRatingByUser(userID);
-                productsLock.unlock();
                 return rating;
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
             }
-        } catch (Exception e) {
-            productsLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally{
+            productsLock.unlock();
         }
     }
 
@@ -900,16 +952,19 @@ public class Store implements IStore {
         productsLock.lock();
         try {
             if (storeProducts.containsKey(productID)) {
-                StoreProduct prod = storeProducts.get(productID);
-                productsLock.unlock();
+                StoreProduct prod =  storeProducts.get(productID);
                 return prod;
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
             }
-        } catch (Exception e) {
-            productsLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
+        }
+        finally {
+            productsLock.unlock();
         }
     }
 
@@ -934,11 +989,14 @@ public class Store implements IStore {
             removeAllChildrenRoles(childNode); // remove all children from their respective roles list/hashmap
             if (requesterId != toRemoveId)
                 fatherNode.removeChild(childNode); // remove child & all descendants from the actual tree
-        } catch (Exception e) {
-            rolesLock.unlock();
+
+        }
+        catch(Exception e){
             throw e;
         }
-        rolesLock.unlock();
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     @Override
@@ -959,11 +1017,14 @@ public class Store implements IStore {
             }
             storeManagers.remove(toRemoveId);
             fatherNode.removeChild(childNode);// remove child from the actual tree
-        } catch (Exception e) {
-            rolesLock.unlock();
-            throw e;
+
         }
-        rolesLock.unlock();
+        catch(Exception e){
+            throw e;
+        } 
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     private void removeAllChildrenRoles(Node toRemove) {
@@ -1090,109 +1151,152 @@ public class Store implements IStore {
                 && storeManagers.get(userId).contains(StoreManagerPermission.VIEW_PURCHASES));
         rolesLock.unlock();
         return ans;
-    }
 
+    }   
     @Override
-    public List<Integer> getPendingOwners(int requesterId) {
+    public List<Integer> getPendingOwners(int requesterId){
         rolesLock.lock();
-        if (!isOwner(requesterId)) {
-            rolesLock.unlock();
-            throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
+        try{
+            if(!isOwner(requesterId)){
+                throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
+            }
+            List<Integer> pending = new ArrayList<>(pendingOwners.keySet());
+            return pending;
         }
-        List<Integer> pending = new ArrayList<>(pendingOwners.keySet());
-        rolesLock.unlock();
-        return pending;
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     @Override
     public List<Integer> getPendingManagers(int requesterId) {
         rolesLock.lock();
-        if (!isOwner(requesterId)) {
-            rolesLock.unlock();
-            throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
+
+        try{
+            if(!isOwner(requesterId)){
+                throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
+            }
+            List<Integer> pending = new ArrayList<>(pendingManagers.keySet());
+            return pending;
         }
-        List<Integer> pending = new ArrayList<>(pendingManagers.keySet());
-        rolesLock.unlock();
-        return pending;
+        finally {
+            rolesLock.unlock();
+        }
     }
 
     @Override
     public Map<StoreProductDTO, Boolean> checkIfProductsInStore(int userID, Map<Integer, Integer> products) {
         productsLock.lock();
-
-        Map<StoreProductDTO, Boolean> productsInStore = new HashMap<>();
-        for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
-            int productId = entry.getKey();
-            int quantity = entry.getValue();
-            if (storeProducts.containsKey(productId)) {
-                StoreProduct storeProduct = storeProducts.get(productId);
-                int newQuantity = Math.min(quantity, storeProduct.getQuantity());
-                if (storeProduct.getQuantity() == newQuantity) {
-                    productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
-                } else {
-                    productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), false);
+        try{
+            Map<StoreProductDTO, Boolean> productsInStore = new HashMap<>();
+            for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
+                int productId = entry.getKey();
+                int quantity = entry.getValue();
+                if (storeProducts.containsKey(productId)) {
+                    StoreProduct storeProduct = storeProducts.get(productId);
+                    int newQuantity = Math.min(quantity, storeProduct.getQuantity());
+                    if (storeProduct.getQuantity() == newQuantity) {
+                        productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
+                    } else {
+                        productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), false);
+                    }
                 }
             }
+            return productsInStore;
         }
-        productsLock.unlock();
-
-        return productsInStore;
+        finally{
+            productsLock.unlock();
+        }
     }
 
     @Override
-    public Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer, Integer> productsToBuy) {
-        productsLock.lock();
-        Map<StoreProductDTO, Boolean> products = new HashMap<>();
-        for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
-            int productId = entry.getKey();
-            int quantity = entry.getValue();
-            StoreProduct storeProduct = storeProducts.get(productId);
-            if (storeProduct == null) {
-                productsLock.unlock();
-                throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
-                        + storeID);
+    public HashMap<Integer, String> getAllStoreMessages(){
+        try{
+            HashMap<Integer, String> messages = new HashMap<>();
+            for (SimpleEntry<Integer, String> message : messagesFromUsers) {
+                messages.put(message.getKey(), message.getValue());
             }
-            int newQuantity = Math.min(quantity, storeProduct.getQuantity());
-            if (auctionProducts.containsKey(productId)) {
-                AuctionProduct auctionProduct = auctionProducts.get(productId);
-                if (auctionProduct.getUserIDHighestBid() != userId && !auctionProduct.isApprovedByAllOwners()) {
-                    productsLock.unlock();
-                    throw new IllegalArgumentException(
-                            "User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
-                }
-                if (auctionProduct.getQuantity() < quantity) {
-                    productsLock.unlock();
-                    throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
-                }
-                auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
-                auctionProducts.remove(productId);
-            } else if (newQuantity == quantity) {
-                products.put(new StoreProductDTO(storeProduct, quantity), true);
-                storeProduct.decrementProductQuantity(newQuantity);
-            } else {
-                storeProduct.decrementProductQuantity(newQuantity);
-                products.put(new StoreProductDTO(storeProduct, quantity), false);
-
-            }
+            return messages ;
         }
-        productsLock.unlock();
+        catch(Exception e){
+            throw e;
+        }
 
-        return products;
+    }
+
+
+    public Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer,Integer> productsToBuy)
+    {
+        productsLock.lock();
+        try{
+            Map<StoreProductDTO, Boolean> products = new HashMap<>();
+            for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
+                int productId = entry.getKey();
+                int quantity = entry.getValue();
+                StoreProduct storeProduct = storeProducts.get(productId);
+                if (storeProduct == null) {
+                    throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
+                            + storeID);
+                }
+                int newQuantity = Math.min(quantity, storeProduct.getQuantity());
+                if(auctionProducts.containsKey(productId)){
+                    AuctionProduct auctionProduct = auctionProducts.get(productId);
+                    if(auctionProduct.getUserIDHighestBid() != userId  && !auctionProduct.isApprovedByAllOwners()){
+                        throw new IllegalArgumentException("User with ID: " + userId + " is not the highest bidder for product with ID: " + productId);
+                    }
+                    if(auctionProduct.getQuantity() < quantity) {
+                        throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
+                    }
+                    auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
+                    auctionProducts.remove(productId);
+                }
+                else if (newQuantity == quantity) {
+                    products.put(new StoreProductDTO(storeProduct, quantity),true);
+                    storeProduct.decrementProductQuantity(newQuantity);
+                }
+                else{
+                    storeProduct.decrementProductQuantity(newQuantity);
+                    products.put(new StoreProductDTO(storeProduct, quantity),false);
+
+                }
+            }
+
+            return products;
+        }
+        finally{
+            productsLock.unlock();
+        }
 
     }
 
     @Override
     public void returnProductsToStore(int userId, Map<Integer, Integer> products) {
         productsLock.lock();
-        for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
-            int productId = entry.getKey();
-            int quantity = entry.getValue();
-            if (storeProducts.containsKey(productId)) {
-                StoreProduct storeProduct = storeProducts.get(productId);
-                storeProduct.incrementProductQuantity(quantity);
+        try{
+            for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
+                int productId = entry.getKey();
+                int quantity = entry.getValue();
+                if (storeProducts.containsKey(productId)) {
+                    StoreProduct storeProduct = storeProducts.get(productId);
+                    storeProduct.incrementProductQuantity(quantity);
+                }
             }
         }
-        productsLock.unlock();
+        finally{
+            productsLock.unlock();  
+        }
+    }
+
+    @Override
+    public List<ProductRating> getStoreProductAllRatings(int productId){
+        //locks already happen in both sub methods
+        try{
+            StoreProduct prod = getStoreProduct(productId);
+            return prod.getAllRatings();
+        }
+        catch (Exception e){
+            throw e;
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
+import ApplicationLayer.Response;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -17,6 +18,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.User;
 import java.time.LocalDate;
 
@@ -128,5 +130,10 @@ public interface IStoreService {
   Map<StoreDTO, Map<StoreProductDTO, Boolean>> checkIfProductsInStores(int userId, Map<Integer, Map<Integer, Integer>> cart);
 
   void returnProductsToStores(int userId, Map<Integer,Map<Integer,Integer>> products);
+
+  List<ProductRating> getStoreProductRatings(int storeId, int productID);
+
+  Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
+
 
 }

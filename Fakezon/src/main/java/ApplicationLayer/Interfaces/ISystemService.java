@@ -10,6 +10,7 @@ import java.util.Set;
 import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -86,6 +87,8 @@ public interface ISystemService {
     Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
+
+    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId); 
 
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
   
@@ -169,4 +172,6 @@ public interface ISystemService {
     Response<Integer> addProduct(String productName, String productDescription, String category); // add product to system
 
     LocalDate parseDate(String dateString);
+
+    Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
 }
