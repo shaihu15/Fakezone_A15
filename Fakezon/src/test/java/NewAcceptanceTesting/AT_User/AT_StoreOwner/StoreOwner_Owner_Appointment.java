@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -18,66 +17,17 @@ import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
+
 import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
 import DomainLayer.Enums.StoreManagerPermission;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+
 import NewAcceptanceTesting.TestHelper;
-import ApplicationLayer.UserEventListener;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 public class StoreOwner_Owner_Appointment {
 
     @Autowired
     private SystemService systemService;
-    @Autowired
-    private IStoreRepository storeRepository;
-    @Autowired
-    private IUserRepository userRepository;
-    @Autowired
-    private IProductRepository productRepository;
-    @Autowired
-    private IOrderRepository orderRepository;
-    @Autowired
-    private IDelivery deliveryService;
-    @Autowired
-    private IAuthenticator authenticatorService;
-    @Autowired
-    private IPayment paymentService;
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-    @Autowired
-    private IStoreService storeService;
-    @Autowired
-    private IProductService productService;
-    @Autowired
-    private IUserService userService;
-    @Autowired
-    private IOrderService orderService;
-    @Autowired
-    private INotificationWebSocketHandler notificationWebSocketHandler;
 
     private TestHelper testHelper;
 
@@ -88,6 +38,7 @@ public class StoreOwner_Owner_Appointment {
     @BeforeEach
     void setUp() {
         systemService.clearAllData();
+        
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> OwnerUser = testHelper.register_and_login();
@@ -106,6 +57,10 @@ public class StoreOwner_Owner_Appointment {
         perms.add(StoreManagerPermission.INVENTORY);
         Response<Void> addManagerRes = systemService.addStoreManager(storeId, OwnerUserId, ManagerUserId, perms);
         assertTrue(addManagerRes.isSuccess());
+
+        Response<HashMap<Integer, String>> AssignmentMessagesRes = systemService.getAssignmentMessages(ManagerUserId);
+        assertTrue(AssignmentMessagesRes.isSuccess());
+        assertTrue(AssignmentMessagesRes.getData().keySet().contains(storeId));
 
         Response<String> acceptRes = systemService.acceptAssignment(storeId, ManagerUserId);
         assertTrue(acceptRes.isSuccess());
