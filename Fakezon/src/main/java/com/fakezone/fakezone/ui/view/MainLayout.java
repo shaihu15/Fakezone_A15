@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -59,7 +60,9 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
     RestTemplate restTemplate;
-    public MainLayout() {
+    private final String apiUrl;
+    public MainLayout(@Value("${api.url}") String apiUrl) {
+        this.apiUrl = apiUrl;
         restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
@@ -73,7 +76,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         String token = (String) session.getAttribute("token");
         if (token == null) {
-            String url = "http://localhost:8080/api/user/generateGuestToken";
+            String url = apiUrl + "user/generateGuestToken";
             try{
                 ResponseEntity<Response> apiResponse = restTemplate.getForEntity(url, Response.class);
                 Response<String> tokenResponse = (Response<String>) apiResponse.getBody();
@@ -182,7 +185,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
-        String url = "http://localhost:8080/api/user/isGuestToken";
+        String url = apiUrl + "user/isGuestToken";
         ResponseEntity<Response<Boolean>> apiResponse = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(token), new ParameterizedTypeReference<Response<Boolean>>() {});
         
         Response<Boolean> response = apiResponse.getBody();
@@ -281,7 +284,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         RegisterUserRequest regReq = new RegisterUserRequest(registerEmailField.getValue(), registerPasswordField.getValue(), dobField.getValue(), getCountryCodeFromName(countryComboBox.getValue()));
         Request<RegisterUserRequest> req = new Request<RegisterUserRequest>(token, regReq);
-        String url = "http://localhost:8080/api/user/register";
+        String url = apiUrl + "user/register";
     
         ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
             url,
@@ -394,7 +397,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String token = (String) session.getAttribute("token");
         LoginRequest logReq = new LoginRequest(loginEmailField.getValue(), loginPasswordField.getValue());
         Request<LoginRequest> req = new Request<LoginRequest>(token, logReq);
-        String url = "http://localhost:8080/api/user/login";
+        String url = apiUrl + "user/login";
         ResponseEntity<Response<UserDTO>> apiResponse = restTemplate.exchange(
             url,
             HttpMethod.POST,
@@ -417,7 +420,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
         Request<Integer> req = new Request<Integer>(token, ((UserDTO) session.getAttribute("userDTO")).getUserId());
-        String url = "http://localhost:8080/api/user/logout";
+        String url = apiUrl + "user/logout";
         ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
             url,
             HttpMethod.POST,

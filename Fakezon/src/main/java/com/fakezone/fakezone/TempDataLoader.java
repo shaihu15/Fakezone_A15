@@ -132,7 +132,7 @@ public class TempDataLoader implements ApplicationRunner {
                     System.out.println("Updated product ID " + productId + " with storeIds: " + storeSet);
                 }
             }
-
+            userService.logout(email);
             System.out.println("Dev data initialized successfully.");
             userService.logout("dev@fakezone.bgu.ac.il");
         } catch (Exception e) {

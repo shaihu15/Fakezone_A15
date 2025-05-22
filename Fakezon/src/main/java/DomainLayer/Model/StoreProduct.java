@@ -1,6 +1,8 @@
 package DomainLayer.Model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ApplicationLayer.Enums.PCategory;
@@ -95,6 +97,10 @@ public class StoreProduct {
     }
     public synchronized void incrementProductQuantity(int quantity){
         this.quantity +=quantity;
+    }
+
+    public synchronized List<ProductRating> getAllRatings(){
+        return new ArrayList<>(this.Pratings.values());
     }
 
 }
