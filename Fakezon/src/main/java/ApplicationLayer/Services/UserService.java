@@ -184,17 +184,16 @@ public class UserService implements IUserService {
         @Override
         public HashMap<Integer, IRegisteredRole> getAllRoles(int userID) {
             Optional<Registered> user = userRepository.findById(userID);
-            if (user.isPresent()) {
-                try {
-                    return user.get().getAllRoles();
-                } catch (Exception e) {
-                    // Handle exception if needed
-                    System.out.println("Error during get all roles: " + e.getMessage());
-                }
-            } else {
-                throw new IllegalArgumentException("User not found");
+            if (!user.isPresent()) {
+                throw new IllegalArgumentException("User not found with ID: " + userID);
             }
-            return null;
+
+            try {
+                HashMap<Integer, IRegisteredRole> roles = user.get().getAllRoles();
+                return roles != null ? roles : new HashMap<>();
+            } catch (Exception e) {
+                throw new RuntimeException("Error retrieving roles for user " + userID + ": " + e.getMessage(), e);
+            }
         }
 
     public boolean didPurchaseStore(int userID, int storeID) {

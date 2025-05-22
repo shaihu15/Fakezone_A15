@@ -82,7 +82,7 @@ public interface ISystemService {
     
     Response<StoreRolesDTO> getStoreRoles(int storeId, int userId); // owner gets store roles information
 
-    Response<HashMap<Integer, IRegisteredRole>> getUserRoles(String sessionToken); // get all the roles of the user
+    Response<HashMap<Integer, IRegisteredRole>> getUserRoles(int userId); // get all the roles of the user
 
     Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 

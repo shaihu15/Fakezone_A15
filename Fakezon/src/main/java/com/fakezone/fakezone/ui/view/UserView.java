@@ -75,7 +75,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         int userId = userDTO.getUserId();
         String tokenValue = token;
 
-        Map<Integer, String> userRoles = getUserRoles(token);
+        Map<Integer, String> userRoles = getUserRoles(token, userId);
         List<Component> ownedStores = new ArrayList<>();
         List<Component> managedStores = new ArrayList<>();
 
@@ -316,12 +316,12 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
-    private Map<Integer, String> getUserRoles(String token) {
+    private Map<Integer, String> getUserRoles(String token, int userId) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = backendUrl + "/api/user/userRoles";
+        String url = String.format(backendUrl + "/api/user/userRoles/%d", userId);
 
         try {
             ResponseEntity<Response<Map<Integer, Map<String, String>>>> response =
@@ -384,7 +384,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         VerticalLayout layout = new VerticalLayout();
         layout.setPadding(true);
         layout.setSpacing(true);
-        layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER); // Center content
+        layout.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
         layout.getStyle()
             .set("border-radius", "8px")
             .set("padding", "10px")

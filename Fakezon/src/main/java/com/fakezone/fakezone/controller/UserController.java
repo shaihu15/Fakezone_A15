@@ -568,46 +568,35 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getAllUnsignedUsers/{adminId}")
-    ResponseEntity<Response<Integer>> getUnsignedUserCount(@PathVariable("adminId") int adminId, @RequestHeader("Authorization") String token) {
+    @GetMapping("/userRoles/{userId}")
+    public ResponseEntity<Response<Map<Integer, Map<String, String>>>> getUserRoles(
+            @PathVariable("userId") int userId,
+            @RequestHeader("Authorization") String token) {
         try {
-            logger.info("Received request to get unsigned user count");
-            if (!authenticatorAdapter.isValid(token)) {
-                Response<Integer> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
-                return ResponseEntity.status(401).body(response);
-            }
-            Response<Integer> response = systemService.getUnsignedUserCount(adminId);
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (Exception e) {
-            logger.error("Error in getUnsignedUserCount: {}", e.getMessage());
-            Response<Integer> response = new Response<>(null, "An error occurred while retrieving unsigned user count", false, ErrorType.INTERNAL_ERROR, null);
-            return ResponseEntity.status(500).body(response);
-        }
-    }
-    @GetMapping("/userRoles")
-    public ResponseEntity<Response<Map<Integer, Map<String, String>>>> getUserRoles(@RequestHeader("Authorization") String token) {
-        try {
-            logger.info("Received request to get user roles");
+            logger.info("Received request to get user roles for userId: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Map<Integer, Map<String, String>>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
 
-            // Get the raw roles from systemService
-            Response<HashMap<Integer, IRegisteredRole>> rawResponse = systemService.getUserRoles(token);
-            if (!rawResponse.isSuccess()) {
-                // Transform the error response into the new type
-                Response<Map<Integer, Map<String, String>>> response = new Response<>(null, rawResponse.getMessage(), false, rawResponse.getErrorType(), null);
-                return ResponseEntity.status(400).body(response);
+            // Verify token belongs to userId or user has sufficient permissions
+            int requesterId = authenticatorAdapter.getUserId(token);
+            if (requesterId != userId) {
+                logger.error("Controller - Unauthorized access for userId: {} by requester: {}", userId, requesterId);
+                Response<Map<Integer, Map<String, String>>> response = new Response<>(null, "Unauthorized access to user roles", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(403).body(response);
+            }
+            // Get the raw roles from systemService, passing userId
+            Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(userId);
+            if (!response.isSuccess()) {
+                Response<Map<Integer, Map<String, String>>> transformedResponse = new Response<>(null, response.getMessage(), false, response.getErrorType(), null);
+                return ResponseEntity.status(400).body(transformedResponse);
             }
 
             // Transform HashMap<Integer, IRegisteredRole> into Map<Integer, Map<String, String>>
             Map<Integer, Map<String, String>> transformedRoles = new HashMap<>();
-            if (rawResponse.getData() != null) {
-                for (Map.Entry<Integer, IRegisteredRole> entry : rawResponse.getData().entrySet()) {
+            if (response.getData() != null) {
+                for (Map.Entry<Integer, IRegisteredRole> entry : response.getData().entrySet()) {
                     Map<String, String> roleData = new HashMap<>();
                     IRegisteredRole role = entry.getValue();
                     String roleType = (role != null && role.getRoleName() != null) ? role.getRoleName().name() : "UNASSIGNED";
@@ -616,10 +605,10 @@ public class UserController {
                 }
             }
 
-            Response<Map<Integer, Map<String, String>>> response = new Response<>(transformedRoles, "Success", true, null, null);
-            return ResponseEntity.ok(response);
+            Response<Map<Integer, Map<String, String>>> transformedResponse = new Response<>(transformedRoles, "Success", true, null, null);
+            return ResponseEntity.ok(transformedResponse);
         } catch (Exception e) {
-            logger.error("Error in getUserRoles: {}", e.getMessage());
+            logger.error("Error in getUserRoles for userId {}: {}", userId, e.getMessage());
             Response<Map<Integer, Map<String, String>>> response = new Response<>(null, "An error occurred while retrieving user roles", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
