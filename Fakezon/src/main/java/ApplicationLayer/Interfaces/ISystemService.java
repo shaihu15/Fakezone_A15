@@ -158,7 +158,7 @@ public interface ISystemService {
 
     // Unsigned (guest) user management
     
-    Response<Void> createUnsignedUser();
+    Response<UserDTO> createUnsignedUser();
 
     Response<UserDTO> getUnsignedUserById(int userId);
     

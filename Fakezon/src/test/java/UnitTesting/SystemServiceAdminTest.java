@@ -21,6 +21,7 @@ import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
+import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
@@ -399,7 +400,7 @@ public class SystemServiceAdminTest {
         when(mockUserService.createUnsignedUser()).thenReturn(mockUser);
 
         // Act
-        Response<Void> response = systemService.createUnsignedUser();
+        Response<UserDTO> response = systemService.createUnsignedUser();
 
         // Assert
         assertTrue(response.isSuccess());
@@ -413,7 +414,7 @@ public class SystemServiceAdminTest {
         when(mockUserService.createUnsignedUser()).thenThrow(new IllegalArgumentException("User already exists"));
 
         // Act
-        Response<Void> response = systemService.createUnsignedUser();
+        Response<UserDTO> response = systemService.createUnsignedUser();
 
         // Assert
         assertFalse(response.isSuccess());
@@ -429,7 +430,7 @@ public class SystemServiceAdminTest {
                 .thenThrow(new RuntimeException("Database failure"));
 
         // Act
-        Response<Void> response = systemService.createUnsignedUser();
+        Response<UserDTO> response = systemService.createUnsignedUser();
 
         // Assert
         assertFalse(response.isSuccess());

@@ -97,6 +97,7 @@ public class User {
     public UserDTO toDTO() {
         return new UserDTO(userId, null, -1);
     }
+
     public void setUserId(int userId) { ///this one is only for testing purposes, will 
         this.userId = userId;
     }
