@@ -119,7 +119,7 @@ public class StoreTest {
                 "Expected addStoreProductRating to throw if the product is not found");
 
         assertThrows(
-                IllegalMonitorStateException.class,
+                IllegalArgumentException.class,
                 () -> store.getStoreProductRating(userId, productId),
                 "Expected getStoreProductRating to throw if the product is not found");
     }
