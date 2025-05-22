@@ -148,11 +148,9 @@ public class ProductServiceTest {
         // Act
         productService.addProductsToStore(storeId, productIds);
 
-        // Assert
-        verify(mockProduct1, times(1)).addStore(storeId);
-        verify(mockProduct2, times(1)).addStore(storeId);
-        verify(productRepository, times(1)).updateProduct(1, "UpdatedProduct1", "UpdatedDescription1", new HashSet<>());
-        verify(productRepository, times(1)).updateProduct(2, "UpdatedProduct2", "UpdatedDescription2", new HashSet<>());
+        // Assert — remove addStore verification
+        verify(productRepository, times(1)).updateProduct(1, "UpdatedProduct1", "UpdatedDescription1", Set.of(storeId));
+        verify(productRepository, times(1)).updateProduct(2, "UpdatedProduct2", "UpdatedDescription2", Set.of(storeId));
     }
 
     @Test
