@@ -92,7 +92,9 @@ public interface IUserService {
     int cleanupExpiredSuspensions(int adminId);
     
     // Unsigned (guest) user management
-    void addUnsignedUser(User user);
+    //void addUnsignedUser(User user);
+
+    User createUnsignedUser();
     
     Optional<User> getUnsignedUserById(int userId);
     

@@ -1618,7 +1618,7 @@ public class SystemService implements ISystemService {
     }
 
     // Unsigned (guest) user management methods
-
+/* 
     @Override
     public Response<Void> addUnsignedUser(User user) {
         try {
@@ -1627,6 +1627,22 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Unsigned user added successfully", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("System Service - Failed to add unsigned user: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
+            return new Response<>(null, "Error adding unsigned user: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    *///new shai
+    @Override
+    public Response<Void> createUnsignedUser() {
+        try {
+            User unsignedUser = userService.createUnsignedUser(); 
+            logger.info("System Service - created unsigned user with ID: " + unsignedUser.getUserId());
+            return new Response<>(null, "Unsigned user created successfully", true, null, null);
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to create unsigned user: " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
