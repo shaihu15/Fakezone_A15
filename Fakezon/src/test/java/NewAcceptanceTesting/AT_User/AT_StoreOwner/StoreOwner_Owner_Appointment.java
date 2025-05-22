@@ -171,6 +171,54 @@ public class StoreOwner_Owner_Appointment {
     }
 
     @Test
+    void testAddStoreOwner_ManagementCircle_Failure() {
+        
+        Response<Void> response = systemService.addStoreOwner(storeId, OwnerUserId, ManagerUserId);
+        assertTrue(response.isSuccess());
+        assertEquals("Store owner added successfully", response.getMessage());
+
+        Response<List<Integer>> pendingOwnerRes = systemService.getPendingOwners(storeId, OwnerUserId);
+        assertTrue(pendingOwnerRes.isSuccess());
+        assertTrue(pendingOwnerRes.getData().contains(ManagerUserId));
+        
+        Response<String> acceptRes = systemService.acceptAssignment(storeId, ManagerUserId);
+        assertTrue(acceptRes.isSuccess());
+        
+        //third manager assignee by second manager
+        Response<UserDTO> ManagerUser2 = testHelper.register_and_login3();
+        assertTrue(ManagerUser2.isSuccess());
+        int ManagerUserId2 = ManagerUser2.getData().getUserId();
+
+        List<StoreManagerPermission> perms = new ArrayList<>();
+        perms.add(StoreManagerPermission.INVENTORY);
+        Response<Void> addManagerRes = systemService.addStoreManager(storeId, ManagerUserId, ManagerUserId2, perms);
+        assertTrue(addManagerRes.isSuccess());
+
+
+        // The new manager accepts the assignment for manager
+        acceptRes = systemService.acceptAssignment(storeId, ManagerUserId2);
+        assertTrue(acceptRes.isSuccess());
+
+        response = systemService.addStoreOwner(storeId, ManagerUserId, ManagerUserId2);
+        assertTrue(response.isSuccess());
+        assertEquals("Store owner added successfully", response.getMessage());
+
+        // The new manager accepts the assignment for owner
+        acceptRes = systemService.acceptAssignment(storeId, ManagerUserId2);
+        assertTrue(acceptRes.isSuccess());
+
+        //third manager tries to make second owner manager
+        addManagerRes = systemService.addStoreManager(storeId, ManagerUserId2, ManagerUserId, perms);
+        assertFalse(addManagerRes.isSuccess());
+
+        //third manager tries to make first owner manager
+        addManagerRes = systemService.addStoreManager(storeId, ManagerUserId2, OwnerUserId, perms);
+        assertFalse(addManagerRes.isSuccess());
+
+    }
+
+
+    @Test
     void testAddStoreOwner_FailureInvalidUser() {
         int invalidUserId = -999;
 
@@ -191,4 +239,4 @@ public class StoreOwner_Owner_Appointment {
     }
 
     
-}  
+}
