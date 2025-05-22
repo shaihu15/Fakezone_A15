@@ -658,30 +658,10 @@ public class UserService implements IUserService {
     // Unsigned (guest) user management methods
     
     /**
-     * Add an unsigned (guest) user to the repository
-     * 
-     * @param user The user to add
-     * @throws IllegalArgumentException If a user with the same ID already exists
-     *//*
-    @Override
-    public void addUnsignedUser(User user) {
-        try {
-            userRepository.addUnsignedUser(user);
-            logger.info("Added unsigned user with ID: " + user.getUserId());
-        } catch (IllegalArgumentException e) {
-            logger.error("Failed to add unsigned user: " + e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            logger.error("Error during adding unsigned user: " + e.getMessage());
-            throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
-        }
-    } */
-    /**
      * Create a new unsigned (guest) user
      * 
      * @return The created user
      */
-    //new shai
     @Override
     public User createUnsignedUser() {
         try {
