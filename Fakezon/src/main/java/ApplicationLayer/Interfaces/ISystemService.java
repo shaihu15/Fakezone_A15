@@ -157,8 +157,9 @@ public interface ISystemService {
     Response<Integer> getSystemAdminCount(int requesterId);
 
     // Unsigned (guest) user management
-    Response<Void> addUnsignedUser(User user);
     
+    Response<Void> createUnsignedUser();
+
     Response<UserDTO> getUnsignedUserById(int userId);
     
     Response<List<UserDTO>> getAllUnsignedUsers(int adminId);

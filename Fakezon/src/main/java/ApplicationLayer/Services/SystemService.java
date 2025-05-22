@@ -1620,13 +1620,13 @@ public class SystemService implements ISystemService {
     // Unsigned (guest) user management methods
 
     @Override
-    public Response<Void> addUnsignedUser(User user) {
+    public Response<Void> createUnsignedUser() {
         try {
-            userService.addUnsignedUser(user);
-            logger.info("System Service - Added unsigned user with ID: " + user.getUserId());
-            return new Response<>(null, "Unsigned user added successfully", true, null, null);
+            User unsignedUser = userService.createUnsignedUser(); 
+            logger.info("System Service - created unsigned user with ID: " + unsignedUser.getUserId());
+            return new Response<>(null, "Unsigned user created successfully", true, null, null);
         } catch (IllegalArgumentException e) {
-            logger.error("System Service - Failed to add unsigned user: " + e.getMessage());
+            logger.error("System Service - Failed to create unsigned user: " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
