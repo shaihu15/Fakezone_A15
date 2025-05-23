@@ -11,6 +11,7 @@ import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -157,8 +158,9 @@ public interface ISystemService {
     Response<Integer> getSystemAdminCount(int requesterId);
 
     // Unsigned (guest) user management
-    Response<Void> addUnsignedUser(User user);
     
+    Response<Void> createUnsignedUser();
+
     Response<UserDTO> getUnsignedUserById(int userId);
     
     Response<List<UserDTO>> getAllUnsignedUsers(int adminId);
@@ -174,4 +176,6 @@ public interface ISystemService {
     LocalDate parseDate(String dateString);
 
     Response<Double> getCartFinalPrice(int userId, LocalDate dob);
+
+    Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
 }

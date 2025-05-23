@@ -18,6 +18,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.User;
 import java.time.LocalDate;
 
@@ -130,6 +131,9 @@ public interface IStoreService {
 
   void returnProductsToStores(int userId, Map<Integer,Map<Integer,Integer>> products);
 
+  List<ProductRating> getStoreProductRatings(int storeId, int productID);
+
   Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
+
 
 }

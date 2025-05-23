@@ -29,7 +29,11 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
+
+import DomainLayer.Model.ProductRating;
+
 import DomainLayer.Model.Registered;
+
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.User;
@@ -728,6 +732,16 @@ public class StoreService implements IStoreService {
             }
             store.returnProductsToStore(userId, productsInStore);
         }
+    }
+
+    @Override
+    public List<ProductRating> getStoreProductRatings(int storeId, int productID){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("returnProductsToStores - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.getStoreProductAllRatings(productID);
     }
 
 
