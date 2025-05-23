@@ -128,8 +128,9 @@ public class ProductService implements IProductService {
         try {
             for (Integer productId : productsIds) {
                 IProduct product = productRepository.getProductById(productId);
-                product.addStore(storeId);
-                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), new HashSet<>(product.getStoresIds()));
+                Set<Integer> storeSet = new HashSet<>();
+                storeSet.add(storeId);
+                productRepository.updateProduct(product.getId(), product.getName(), product.getDescription(), storeSet);
             }
         } catch (IllegalArgumentException e) {
             logger.error("While trying to add products to store, recived error {}", e);
