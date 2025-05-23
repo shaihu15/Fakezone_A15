@@ -134,6 +134,7 @@ public class TempDataLoader implements ApplicationRunner {
             }
             userService.logout(email);
             System.out.println("Dev data initialized successfully.");
+            userService.logout("dev@fakezone.bgu.ac.il");
         } catch (Exception e) {
             System.err.println("Error initializing dev data: " + e.getMessage());
             e.printStackTrace();

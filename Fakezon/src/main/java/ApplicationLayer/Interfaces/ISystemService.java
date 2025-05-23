@@ -18,6 +18,7 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -81,6 +82,8 @@ public interface ISystemService {
     Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     
     Response<StoreRolesDTO> getStoreRoles(int storeId, int userId); // owner gets store roles information
+
+    Response<HashMap<Integer, IRegisteredRole>> getUserRoles(int userId); // get all the roles of the user
 
     Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 
