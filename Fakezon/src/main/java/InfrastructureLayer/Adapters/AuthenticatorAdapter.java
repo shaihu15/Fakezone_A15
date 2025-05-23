@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IUserService;
@@ -15,6 +16,7 @@ import InfrastructureLayer.Security.TokenService;
 import ApplicationLayer.Response;
 import ApplicationLayer.Enums.ErrorType;
 
+@Component
 public class AuthenticatorAdapter implements IAuthenticator {
     private TokenService tokenService;
     private IUserService userService;

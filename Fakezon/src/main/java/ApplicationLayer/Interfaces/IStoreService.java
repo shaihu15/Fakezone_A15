@@ -135,5 +135,6 @@ public interface IStoreService {
 
   Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
 
+  void clearAllData();
 
 }

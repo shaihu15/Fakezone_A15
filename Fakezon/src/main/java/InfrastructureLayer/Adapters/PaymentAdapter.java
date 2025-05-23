@@ -2,10 +2,12 @@ package InfrastructureLayer.Adapters;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.ExternalPaymentSystem;
 
+@Component
 
 public class PaymentAdapter implements IPayment {
     private final ExternalPaymentSystem externalSystem;

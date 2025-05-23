@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.springframework.stereotype.Repository;
+
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 
-
+@Repository
 public class OrderRepository implements IOrderRepository {
     
     private final HashMap<Integer, IOrder> orders; 
@@ -51,5 +53,10 @@ public class OrderRepository implements IOrderRepository {
     @Override
     public List<IOrder> getAllOrders() {
         return new ArrayList<>(orders.values());    
+    }
+
+    @Override
+    public void clearAllData() {
+        orders.clear();
     }
 }

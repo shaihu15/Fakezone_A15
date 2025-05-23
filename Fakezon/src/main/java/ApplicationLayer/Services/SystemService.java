@@ -8,8 +8,9 @@ import java.util.*;
 import DomainLayer.Interfaces.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-
+import org.springframework.stereotype.Service;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.ProductRatingDTO;
@@ -50,7 +51,7 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
-
+@Service
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
@@ -63,6 +64,7 @@ public class SystemService implements ISystemService {
     private final ApplicationEventPublisher publisher;
     private final INotificationWebSocketHandler notificationWebSocketHandler;
 
+     @Autowired 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
                          IProductRepository productRepository, IOrderRepository orderRepository,
                          ApplicationEventPublisher publisher, INotificationWebSocketHandler notificationWebSocketHandler) {
@@ -1761,6 +1763,13 @@ public class SystemService implements ISystemService {
 
     }
 
+    @Override
+    public void clearAllData() {
+        storeService.clearAllData();
+        userService.clearAllData();
+        orderService.clearAllData();
+        productService.clearAllData();
+    }
     @Override
     public Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId){
         try{
