@@ -696,4 +696,148 @@ class UserControllerTest {
         verify(systemService, times(1)).getSystemAdminCount(requesterId);
     }
 
+    @Test
+    void testGetCartFinalPrice_Success() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "validToken";
+        double finalPrice = 99.99;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getCartFinalPrice(userId, dob))
+                .thenReturn(new Response<>(finalPrice, "Final price calculated", true, null, null));
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(finalPrice, response.getBody().getData());
+        assertEquals("Final price calculated", response.getBody().getMessage());
+        verify(systemService, times(1)).getCartFinalPrice(userId, dob);
+    }
+
+    @Test
+    void testGetCartFinalPrice_InvalidToken() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getCartFinalPrice(anyInt(), any(LocalDate.class));
+    }
+
+    @Test
+    void testGetCartFinalPrice_Failure() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getCartFinalPrice(userId, dob))
+                .thenReturn(new Response<>(null, "Calculation failed", false, ErrorType.INVALID_INPUT, null));
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Calculation failed", response.getBody().getMessage());
+        verify(systemService, times(1)).getCartFinalPrice(userId, dob);
+    }
+
+    @Test
+    void testGetCartFinalPrice_InternalError() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getCartFinalPrice(userId, dob)).thenThrow(new RuntimeException("Unexpected error"));
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("An error occurred while retrieving getCartFinalPrice", response.getBody().getMessage());
+        verify(systemService, times(1)).getCartFinalPrice(userId, dob);
+    }
+
+    @Test
+    void testRemoveFromBasket_Success() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeFromBasket(userId, productId, storeId))
+                .thenReturn(new Response<>(null, "Item removed from basket", true, null, null));
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Item removed from basket", response.getBody().getMessage());
+        verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
+    }
+
+    @Test
+    void testRemoveFromBasket_InvalidToken() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).removeFromBasket(anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
+    void testRemoveFromBasket_Failure() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeFromBasket(userId, productId, storeId))
+                .thenReturn(new Response<>(null, "Remove failed", false, ErrorType.INVALID_INPUT, null));
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Remove failed", response.getBody().getMessage());
+        verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
+    }
+
+    @Test
+    void testRemoveFromBasket_InternalError() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeFromBasket(userId, productId, storeId)).thenThrow(new RuntimeException("Unexpected error"));
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("An error occurred while  removeFromBasket", response.getBody().getMessage());
+        verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
+    }
+
 }

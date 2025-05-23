@@ -65,6 +65,5 @@ public class Cart {
         if(baskets.containsKey(storeId)){
             baskets.get(storeId).removeItem(productId);
         }
-        
     }
 }
