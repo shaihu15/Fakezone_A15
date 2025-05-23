@@ -1198,35 +1198,16 @@ public class Store implements IStore {
             }
             else
             {
-                // boolean isDiscountApplicable = true;
-                // IDiscountPolicy discountPolicy = this.discountPolicies.get(productId);
-                // if(discountPolicy == null) {
-                //     isDiscountApplicable = false;
-                // }
-                // if (discountPolicy!= null) {
-                //     IDiscountPolicy policy = this.discountPolicies.get(productId);
-                //     List<DiscountCondition> conditions = policy.getConditions();
-                //     for(DiscountCondition condition : conditions) {
-                //         boolean con = products.entrySet().stream().anyMatch(e ->
-                //         e.getKey().getSproductID() == condition.getTriggerProductId() &&
-                //         e.getValue() < condition.getTriggerQuantity());
-                //         if (con){
-                //             isDiscountApplicable = false;
-                //             break;
-                //         }
-                //     }
-                // }
-                // if(isDiscountApplicable && discountPolicy != null) {
-                //     discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-                //     amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-                // } else {
-                //     amount += product.getBasePrice() * product.getQuantity();
-                // }
-                double totalDiscount = discountPolicies.values().stream()
-                    .mapToDouble(d -> d.apply(cart)).sum();
-                amount -= totalDiscount;
+                // Add the base price of the product
+                amount += product.getBasePrice() * quantity;
             }
         }
+        
+        // Apply discounts once at the end for all non-auction products
+        double totalDiscount = discountPolicies.values().stream()
+            .mapToDouble(d -> d.apply(cart)).sum();
+        amount -= totalDiscount;
+        
         return amount;
     }
 

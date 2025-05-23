@@ -1859,8 +1859,6 @@ public class SystemService implements ISystemService {
             }
 
             storeService.addConditionDiscountWithProductsScope(storeId, requesterId, productIDs, conditions, percentage);
-
-            storeService.addConditionDiscountWithProductsScope(storeId, requesterId, productIDs, conditions, percentage);
             logger.info("System Service - Condition discount with products scope added to store: " + storeId + " by user: " + requesterId);
             return new Response<>(null, "Condition discount with products scope added successfully", true, null, null);
         } catch (Exception e) {
