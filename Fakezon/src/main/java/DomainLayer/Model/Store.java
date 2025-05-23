@@ -10,6 +10,7 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Interfaces.IStore;
+import DomainLayer.Interfaces.IDiscountPolicy;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
@@ -49,7 +51,7 @@ public class Store implements IStore {
     private HashMap<Integer, StoreProduct> storeProducts; // HASH productID to store product
     private HashMap<Integer, AuctionProduct> auctionProducts; // HASH productID to auction product
     private HashMap<Integer, PurchasePolicy> purchasePolicies; // HASH policyID to purchase policy
-    private HashMap<Integer, DiscountPolicy> discountPolicies; // HASH policyID to discount policy
+    private HashMap<Integer, IDiscountPolicy> discountPolicies; // HASH policyID to discount policy
     private List<Integer> storeOwners;
     private HashMap<Integer, Integer> pendingOwners; // appointee : appointor
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
@@ -57,6 +59,7 @@ public class Store implements IStore {
     private Queue<SimpleEntry<Integer, String>> messagesFromUsers; // HASH userID to message
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    private static final AtomicInteger policyIDCounter = new AtomicInteger(0);
     private final ApplicationEventPublisher publisher;
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
     private final ReentrantLock rolesLock = new ReentrantLock();    // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED BOTH!
@@ -285,14 +288,13 @@ public class Store implements IStore {
         }
     }
 
-    // To Do: change the paramers of the function and decide on the structure of
-    // purchase policy and discount policy
-    @Override
-    public void addDiscountPolicy(int userID, DiscountPolicy discountPolicy) {
+    public void addSimpleDiscountWithProductsScope(int userID, List<Integer> productIDs, double percentage) {
         rolesLock.lock();
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new SimpleDiscount(policyIDCounter.incrementAndGet(), percentage,
+                     new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             } else {
                 throw new IllegalArgumentException(
@@ -303,6 +305,142 @@ public class Store implements IStore {
             rolesLock.unlock();
         }
     }
+
+    public void addSimpleDiscountWithStoreScope(int userID, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new SimpleDiscount(policyIDCounter.incrementAndGet(), percentage,
+                     new StoreDiscountScope(storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addConditionDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new ProductsDiscountScope(productIDs, storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addConditionDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new StoreDiscountScope(storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addAndDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new ProductsDiscountScope(productIDs, storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addAndDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new StoreDiscountScope(storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addOrDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new OrDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new ProductsDiscountScope(productIDs, storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addOrDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new OrDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new StoreDiscountScope(storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
+    public void addXorDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new XorDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new ProductsDiscountScope(productIDs, storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }   
+
+    public void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage) { 
+        rolesLock.lock();
+        try{
+            if (isOwner(userID)
+                    || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
+                IDiscountPolicy discountPolicy = new XorDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                     new StoreDiscountScope(storeID, storeProducts));
+                discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
+            }
+        }
+        finally{
+            rolesLock.unlock();
+        }
+    }
+
 
     @Override
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd) {
@@ -530,7 +668,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public HashMap<Integer, DiscountPolicy> getDiscountPolicies() {
+    public HashMap<Integer, IDiscountPolicy> getDiscountPolicies() {
         return discountPolicies;
     }
 
@@ -1063,30 +1201,32 @@ public class Store implements IStore {
             }
             else
             {
-                boolean isDiscountApplicable = true;
-                DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
-                if(discountPolicy == null) {
-                    isDiscountApplicable = false;
-                }
-                if (discountPolicy!= null) {
-                    DiscountPolicy policy = this.discountPolicies.get(productId);
-                    List<DiscountCondition> conditions = policy.getConditions();
-                    for(DiscountCondition condition : conditions) {
-                        boolean con = products.entrySet().stream().anyMatch(e ->
-                        e.getKey().getSproductID() == condition.getTriggerProductId() &&
-                        e.getValue() < condition.getTriggerQuantity());
-                        if (con){
-                            isDiscountApplicable = false;
-                            break;
-                        }
-                    }
-                }
-                if(isDiscountApplicable && discountPolicy != null) {
-                    discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-                    amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-                } else {
-                    amount += product.getBasePrice() * product.getQuantity();
-                }
+                // boolean isDiscountApplicable = true;
+                // IDiscountPolicy discountPolicy = this.discountPolicies.get(productId);
+                // if(discountPolicy == null) {
+                //     isDiscountApplicable = false;
+                // }
+                // if (discountPolicy!= null) {
+                //     IDiscountPolicy policy = this.discountPolicies.get(productId);
+                //     List<DiscountCondition> conditions = policy.getConditions();
+                //     for(DiscountCondition condition : conditions) {
+                //         boolean con = products.entrySet().stream().anyMatch(e ->
+                //         e.getKey().getSproductID() == condition.getTriggerProductId() &&
+                //         e.getValue() < condition.getTriggerQuantity());
+                //         if (con){
+                //             isDiscountApplicable = false;
+                //             break;
+                //         }
+                //     }
+                // }
+                // if(isDiscountApplicable && discountPolicy != null) {
+                //     discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                //     amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                // } else {
+                //     amount += product.getBasePrice() * product.getQuantity();
+                // }
+                double totalDiscount = discountPolicies.values().stream()
+                    .mapToDouble(d -> d.apply(cart)).sum();
             }
     }
         return amount;
