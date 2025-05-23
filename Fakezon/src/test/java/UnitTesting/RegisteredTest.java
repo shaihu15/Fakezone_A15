@@ -1,7 +1,7 @@
 package UnitTesting;
 
 import java.time.LocalDate;
-import java.time.Period;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.List;
 
@@ -215,5 +215,45 @@ public class RegisteredTest {
     public void testToDTO() {
         UserDTO dto = registeredUser.toDTO();
         assertEquals("email@gmail.com", dto.getUserEmail());
+    }
+    @Test
+    void testAddMessageFromStoreAndGetMessagesFromStore() {
+        int storeID = 5;
+        String message = "Store message!";
+        registeredUser.addMessageFromStore(new SimpleEntry<>(storeID, message));
+        assertEquals(message, registeredUser.getMessagesFromStore().get(storeID));
+    }
+
+    @Test
+    void testAddAuctionEndedMessageAndGetAuctionEndedMessages() {
+        int storeID = 7;
+        String message = "Auction ended!";
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(storeID, message));
+        assertEquals(message, registeredUser.getAuctionEndedMessages().get(storeID));
+    }
+
+    @Test
+    void testAssignmentMessagesAndGetAssignmentMessages() {
+        int storeID = 3;
+        String message = "Assignment!";
+        registeredUser.AssignmentMessages(new SimpleEntry<>(storeID, message));
+        assertEquals(message, registeredUser.getAssignmentMessages().get(storeID));
+    }
+
+    @Test
+    void testGetAllMessagesCombinesAll() {
+        int storeID1 = 1, storeID2 = 2, storeID3 = 3;
+        registeredUser.addMessageFromStore(new SimpleEntry<>(storeID1, "store"));
+        registeredUser.AssignmentMessages(new SimpleEntry<>(storeID2, "assign"));
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(storeID3, "auction"));
+        var all = registeredUser.getAllMessages();
+        assertEquals("store", all.get(storeID1));
+        assertEquals("assign", all.get(storeID2));
+        assertEquals("auction", all.get(storeID3));
+    }
+
+    @Test
+    void testGetPasswordReturnsPassword() {
+        assertEquals(password, registeredUser.getPassword());
     }
 }

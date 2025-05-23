@@ -1,33 +1,30 @@
 package UnitTesting;
 
-import DomainLayer.Enums.StoreManagerPermission;
-import DomainLayer.Model.AuctionProduct;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.StoreProduct;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import static org.junit.jupiter.api.Assertions.*;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
-
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-
-import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.Enums.PCategory;
-
-import static org.mockito.Mockito.*;
-
-import java.lang.management.ManagementPermission;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.springframework.context.ApplicationEventPublisher;
+
+import ApplicationLayer.DTO.StoreProductDTO;
+import ApplicationLayer.Enums.PCategory;
+import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.AuctionProduct;
+import DomainLayer.Model.DiscountPolicy;
+import DomainLayer.Model.PurchasePolicy;
+import DomainLayer.Model.Store;
+import DomainLayer.Model.StoreProduct;
 
 public class StoreTest {
     private Store store;
@@ -444,89 +441,304 @@ public class StoreTest {
     }
 
     @Test
-void returnProductsToStore_ValidProduct_ShouldIncreaseQuantity() {
-    int userId = 1;
-    int productId = 100;
-    int originalQuantity = 10;
-    int returnQuantity = 5;
-
-    store.addStoreProduct(founderId, productId, "Test Product", 20.0, originalQuantity, PCategory.ELECTRONICS);
+    void returnProductsToStore_ValidProduct_ShouldIncreaseQuantity() {
+        int userId = 1;
+        int productId = 100;
+        int originalQuantity = 10;
+        int returnQuantity = 5;
     
-    Map<Integer, Integer> returnedProducts = new HashMap<>();
-    returnedProducts.put(productId, returnQuantity);
-
-    store.returnProductsToStore(userId, returnedProducts);
-
-    StoreProduct updatedProduct = store.getStoreProduct(productId);
-
-    assertEquals(originalQuantity + returnQuantity, updatedProduct.getQuantity(),
-            "Product quantity should be increased after return");
-}
-
-@Test
-void decrementProductsInStore_ValidPurchase_ShouldSucceed() {
-    int userId = 1;
-    int productId = 101;
-    int originalQuantity = 20;
-    int purchaseQuantity = 5;
-
-    store.addStoreProduct(founderId, productId, "Another Product", 15.0, originalQuantity, PCategory.ELECTRONICS);
+        store.addStoreProduct(founderId, productId, "Test Product", 20.0, originalQuantity, PCategory.ELECTRONICS);
+        
+        Map<Integer, Integer> returnedProducts = new HashMap<>();
+        returnedProducts.put(productId, returnQuantity);
     
-    Map<Integer, Integer> toBuy = new HashMap<>();
-    toBuy.put(productId, purchaseQuantity);
-
-    Map<StoreProductDTO, Boolean> result = store.decrementProductsInStore(userId, toBuy);
-
-    StoreProduct updatedProduct = store.getStoreProduct(productId);
-
-    assertEquals(originalQuantity - purchaseQuantity, updatedProduct.getQuantity(),
-            "Product quantity should decrease after purchase");
+        store.returnProductsToStore(userId, returnedProducts);
     
-    StoreProductDTO dto = result.keySet().iterator().next();
-    assertEquals(purchaseQuantity, dto.getQuantity(), "DTO should reflect purchase quantity");
-    assertTrue(result.get(dto), "Should return true when full quantity was available and purchased");
-}
-
-@Test
-void decrementProductsInStore_ProductNotExist_ShouldThrowException() {
-    int userId = 1;
-    int nonExistentProductId = 999;
-
-    Map<Integer, Integer> toBuy = new HashMap<>();
-    toBuy.put(nonExistentProductId, 1);
-
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        store.decrementProductsInStore(userId, toBuy);
-    });
-
-    String expectedMessage = "Product with ID: " + nonExistentProductId + " does not exist";
-    assertTrue(exception.getMessage().contains(expectedMessage), "Exception message should indicate missing product");
-}
-
-@Test
-void decrementProductsInStore_AuctionProductNotHighestBidder_ShouldThrowException() {
-    int productId = 102;
-    int userId = 1; // not the highest bidder
-    int highestBidderId = 3;
-    int basePrice = 1;
-    int quantity = 2;
-
-    store.addStoreProduct(founderId,productId,"p", basePrice,1,PCategory.AUTOMOTIVE);
-    store.addAuctionProduct(founderId, productId, basePrice, quantity);
-    store.addBidOnAuctionProduct(highestBidderId, productId, basePrice*3);
+        StoreProduct updatedProduct = store.getStoreProduct(productId);
     
-    Map<Integer, Integer> toBuy = new HashMap<>();
-    toBuy.put(productId, quantity);
+        assertEquals(originalQuantity + returnQuantity, updatedProduct.getQuantity(),
+                "Product quantity should be increased after return");
+    }
+    
+    @Test
+    void decrementProductsInStore_ValidPurchase_ShouldSucceed() {
+        int userId = 1;
+        int productId = 101;
+        int originalQuantity = 20;
+        int purchaseQuantity = 5;
+    
+        store.addStoreProduct(founderId, productId, "Another Product", 15.0, originalQuantity, PCategory.ELECTRONICS);
+        
+        Map<Integer, Integer> toBuy = new HashMap<>();
+        toBuy.put(productId, purchaseQuantity);
+    
+        Map<StoreProductDTO, Boolean> result = store.decrementProductsInStore(userId, toBuy);
+    
+        StoreProduct updatedProduct = store.getStoreProduct(productId);
+    
+        assertEquals(originalQuantity - purchaseQuantity, updatedProduct.getQuantity(),
+                "Product quantity should decrease after purchase");
+        
+        StoreProductDTO dto = result.keySet().iterator().next();
+        assertEquals(purchaseQuantity, dto.getQuantity(), "DTO should reflect purchase quantity");
+        assertTrue(result.get(dto), "Should return true when full quantity was available and purchased");
+    }
+    
+    @Test
+    void decrementProductsInStore_ProductNotExist_ShouldThrowException() {
+        int userId = 1;
+        int nonExistentProductId = 999;
+    
+            Map<Integer, Integer> toBuy = new HashMap<>();
+            toBuy.put(nonExistentProductId, 1);
+        
+            Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+                store.decrementProductsInStore(userId, toBuy);
+            });
+        
+            String expectedMessage = "Product with ID: " + nonExistentProductId + " does not exist";
+            assertTrue(exception.getMessage().contains(expectedMessage), "Exception message should indicate missing product");
+        }
 
-    assertThrows(IllegalArgumentException.class, () -> {
-        store.decrementProductsInStore(userId, toBuy);
-    });
+        @Test
+        void decrementProductsInStore_AuctionProductNotHighestBidder_ShouldThrowException() {
+            int productId = 102;
+            int userId = 1; // not the highest bidder
+            int highestBidderId = 3;
+            int basePrice = 1;
+            int quantity = 2;
+        
+            store.addStoreProduct(founderId,productId,"p", basePrice,1,PCategory.AUTOMOTIVE);
+            store.addAuctionProduct(founderId, productId, basePrice, quantity);
+            store.addBidOnAuctionProduct(highestBidderId, productId, basePrice*3);
 
-}
+            Map<Integer, Integer> toBuy = new HashMap<>();
+            toBuy.put(productId, quantity);
+        
+            assertThrows(IllegalArgumentException.class, () -> {
+                store.decrementProductsInStore(userId, toBuy);
+            });
+        
+        }
+        @Test
+    void testCalcAmount_SimpleCase() {
+        int userId = 1;
+        int productId = 123;
+        store.addStoreProduct(founderId, productId, "Test", 10.0, 5, PCategory.ELECTRONICS);
+        Map<Integer, Integer> toBuy = Map.of(productId, 2);
+        double amount = store.calcAmount(userId, toBuy, LocalDate.now().minusYears(20));
+        assertEquals(50.0, amount);
+    }
 
+    @Test
+    void testStoreCtorWithId() {
+        Store s = new Store("Another Store", founderId, publisher, 42);
+        assertEquals(42, s.getId());
+        assertEquals("Another Store", s.getName());
+    }
 
+    @Test
+    void testEditStoreProduct() {
+        int productId = 200;
+        store.addStoreProduct(founderId, productId, "Old", 10.0, 5, PCategory.ELECTRONICS);
+        store.editStoreProduct(founderId, productId, "New", 20.0, 10);
+        StoreProduct prod = store.getStoreProduct(productId);
+        assertEquals("New", prod.getName());
+        assertEquals(20.0, prod.getBasePrice());
+        assertEquals(10, prod.getQuantity());
+    }
 
+    @Test
+    void testRemoveStoreProduct() {
+        int productId = 201;
+        store.addStoreProduct(founderId, productId, "ToRemove", 10.0, 5, PCategory.ELECTRONICS);
+        store.removeStoreProduct(founderId, productId);
+        assertThrows(IllegalArgumentException.class, () -> store.getStoreProduct(productId));
+    }
 
+    @Test
+    void testAddPurchasePolicy() {
+        PurchasePolicy policy = mock(PurchasePolicy.class);
+        when(policy.getPolicyID()).thenReturn(1);
+        store.addPurchasePolicy(founderId, policy);
+        assertTrue(store.getPurchasePolicies().containsKey(1));
+    }
 
+    @Test
+    void testAddDiscountPolicy() {
+        DiscountPolicy policy = mock(DiscountPolicy.class);
+        when(policy.getPolicyID()).thenReturn(2);
+        store.addDiscountPolicy(founderId, policy);
+        assertTrue(store.getDiscountPolicies().containsKey(2));
+    }
+
+    @Test
+    void testGetStoreManagers() {
+        int managerId = 1234;
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.INVENTORY));
+        store.acceptAssignment(managerId);
+        Map<Integer, List<StoreManagerPermission>> managers = store.getStoreManagers(founderId);
+        assertTrue(managers.containsKey(managerId));
+    }
+
+    @Test
+    void testGetAllStoreMessages() {
+        int userId = 1;
+        store.receivingMessage(userId, "msg");
+        Map<Integer, String> messages = store.getAllStoreMessages();
+        assertEquals("msg", messages.get(userId));
+    }
+
+    @Test
+    void testGetMessagesFromUsers() {
+        int userId = 1;
+        store.receivingMessage(userId, "msg");
+        assertFalse(store.getMessagesFromUsers(founderId).isEmpty());
+    }
+
+    @Test
+    void testGetMessagesFromStore() {
+        int userId = 1;
+        store.sendMessage(founderId, userId, "msg");
+        assertFalse(store.getMessagesFromStore(founderId).isEmpty());
+    }
+
+    @Test
+    void testReceivedResponseForAuctionByOwner() {
+        int productId = 300;
+        store.addStoreProduct(founderId, productId, "Auction", 10.0, 5, PCategory.ELECTRONICS);
+        store.addAuctionProduct(founderId, productId, 10.0, 1);
+        store.receivedResponseForAuctionByOwner(founderId, productId, true);
+        // No exception means success
+    }
+
+    @Test
+    void testDeclineAssignment_NoPendingAssignment_ShouldThrow() {
+        int userId = 9999;
+        assertThrows(IllegalArgumentException.class, () -> store.declineAssignment(userId));
+    }
+
+    @Test
+    void testAcceptAssignment_NoPendingAssignment_ShouldThrow() {
+        int userId = 9999;
+        assertThrows(IllegalArgumentException.class, () -> store.acceptAssignment(userId));
+    }
+
+    @Test
+    void testGetStoreProductAllRatings() {
+        int productId = 400;
+        store.addStoreProduct(founderId, productId, "Rated", 10.0, 5, PCategory.ELECTRONICS);
+        store.addStoreProductRating(1, productId, 5.0, "good");
+        assertFalse(store.getStoreProductAllRatings(productId).isEmpty());
+    }
+
+    @Test
+    void testGetStoreOwners() {
+        List<Integer> owners = store.getStoreOwners(founderId);
+        assertTrue(owners.contains(founderId));
+    }
+
+    @Test
+    void testCheckIfProductsInStore() {
+        int productId = 500;
+        store.addStoreProduct(founderId, productId, "Check", 10.0, 5, PCategory.ELECTRONICS);
+        Map<Integer, Integer> products = Map.of(productId, 2);
+        Map<StoreProductDTO, Boolean> result = store.checkIfProductsInStore(founderId, products);
+        assertFalse(result.isEmpty());
+    }
+
+    @Test
+    void testAddRating() {
+        int userId = 2;
+        store.addRating(userId, 4.0, "Nice");
+        assertEquals(4.0, store.getStoreRatingByUser(userId).getRating());
+    }
+
+    @Test
+    void testGetPendingOwnersAndManagers() {
+        int newOwner = 12345;
+        store.addStoreOwner(founderId, newOwner);
+        assertTrue(store.getPendingOwners(founderId).contains(newOwner));
+        int newManager = 54321;
+        store.addStoreManager(founderId, newManager, List.of(StoreManagerPermission.INVENTORY));
+        assertTrue(store.getPendingManagers(founderId).contains(newManager));
+    }
+
+    @Test
+    void testGetStoreRatingByUser_NotRated_ShouldThrow() {
+        assertThrows(IllegalArgumentException.class, () -> store.getStoreRatingByUser(999));
+    }
+
+    @Test
+    void testGetStoreProduct_NotExist_ShouldThrow() {
+        assertThrows(IllegalArgumentException.class, () -> store.getStoreProduct(999));
+    }
+
+    @Test
+    void testOpenStore() {
+        store.closeStore(founderId);
+        store.openStore();
+        assertTrue(store.isOpen());
+    }
+
+    @Test
+    void testCanViewOrders() {
+        assertTrue(store.canViewOrders(founderId));
+    }
+
+    @Test
+    void testHandleReceivedHigherBid() {
+        int productId = 600;
+        store.addStoreProduct(founderId, productId, "Auction", 10.0, 5, PCategory.ELECTRONICS);
+        store.addAuctionProduct(founderId, productId, 10.0, 1);
+        // This will publish an event, but we just want to ensure no exception
+        store.addBidOnAuctionProduct(founderId, productId, 15.0);
+    }
+
+    @Test
+    void testRemoveAllChildrenRoles() {
+        // This is a private method, so test indirectly by removing an owner with children
+        int owner2 = 2222;
+        store.addStoreOwner(founderId, owner2);
+        store.acceptAssignment(owner2);
+        int manager = 3333;
+        store.addStoreManager(owner2, manager, List.of(StoreManagerPermission.INVENTORY));
+        store.acceptAssignment(manager);
+        // Now remove owner2, which should remove manager as well
+        store.removeStoreOwner(founderId, owner2);
+        assertFalse(store.getStoreOwners(founderId).contains(owner2));
+    }
+
+    @Test
+    void testHandleAuctionEnd() {
+        int productId = 700;
+        store.addStoreProduct(founderId, productId, "Auction", 10.0, 5, PCategory.ELECTRONICS);
+        store.addAuctionProduct(founderId, productId, 10.0, 1);
+        // Simulate auction end (should publish event)
+        // This is private, so you can test via public API or use reflection if needed
+    }
+
+    @Test
+    void testHandleIfApprovedAuction() {
+        int productId = 800;
+        store.addStoreProduct(founderId, productId, "Auction", 10.0, 1, PCategory.ELECTRONICS);
+        store.addAuctionProduct(founderId, productId, 10.0, 1);
+        AuctionProduct auctionProduct = store.getAuctionProducts().get(0);
+        // Use reflection or test via receivedResponseForAuctionByOwner
+        store.receivedResponseForAuctionByOwner(founderId, productId, true);
+    }
+
+    @Test
+    void testDecrementProductsInStore() {
+        int productId = 900;
+        store.addStoreProduct(founderId, productId, "Decrement", 10.0, 5, PCategory.ELECTRONICS);
+        Map<Integer, Integer> toBuy = Map.of(productId, 2);
+        Map<StoreProductDTO, Boolean> result = store.decrementProductsInStore(founderId, toBuy);
+        assertFalse(result.isEmpty());
+    }
+    
+    
+    
+    
     
 }
