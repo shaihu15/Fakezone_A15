@@ -3,9 +3,11 @@ package DomainLayer.Model;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
@@ -26,7 +28,8 @@ import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
 @Component
 public class Registered extends User {
-
+    protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
+    protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
     private String email;
@@ -47,6 +50,8 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
+        this.orders = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
     }
 
     /**
@@ -63,6 +68,8 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
+        this.orders = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
     }
 
 
@@ -173,6 +180,23 @@ public class Registered extends User {
             return;
         }
         // your logic to send to UI
+    }
+
+    @Override
+    public void saveCartOrderAndDeleteIt() {
+        Map<Integer,Map<Integer,Integer>> products = cart.getAllProducts();
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> productQuantities = entry.getValue();
+            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
+                int productId = productEntry.getKey();
+                if (!productsPurchase.containsKey(storeId)) {
+                    productsPurchase.put(storeId, new ArrayList<>());
+                }
+                productsPurchase.get(storeId).add(productId);
+            }
+        }
+        this.cart.clear();
     }
 
     

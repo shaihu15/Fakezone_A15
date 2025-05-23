@@ -69,7 +69,7 @@ public class UserService implements IUserService {
         Optional<Registered> optionalUser = userRepository.findById(userId);
         if (optionalUser.isPresent()) {
             Registered user = optionalUser.get();
-            user.clearCart();
+            user.saveCartOrderAndDeleteIt();
             logger.info("User "+userId+" clear cart");
         } else {
             logger.warn("Clear cart failed: User with id {} not found", userId);
@@ -338,7 +338,7 @@ public class UserService implements IUserService {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
-                user.get().saveCartOrder();
+                user.get().saveCartOrderAndDeleteIt();
                 logger.info("Order saved for user: " + userId);
             } catch (Exception e) {
                 // Handle exception if needed
