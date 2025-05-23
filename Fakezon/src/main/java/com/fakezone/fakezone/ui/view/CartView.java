@@ -168,6 +168,10 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
                    .setKey("quantity-editor") // good practice to set a key
                    .setFlexGrow(1)
                    .setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.CENTER);
+        inStockGrid.addComponentColumn(item -> createRemoveButton(item))
+                .setHeader("Remove")
+                .setFlexGrow(0)
+                .setTextAlign(ColumnTextAlign.CENTER);
         inStockGrid.addColumn(item ->
                                 String.format(Locale.US, "$%.2f",item.getUnitPrice())
                                 ).setHeader("Price").setFlexGrow(0);
@@ -190,6 +194,10 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
                 .setKey("quantity-editor") // good practice to set a key
                 .setFlexGrow(1)
                 .setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.CENTER);
+        outOfStockGrid.addComponentColumn(item -> createRemoveButton(item))
+                .setHeader("Remove")
+                .setFlexGrow(0)
+                .setTextAlign(ColumnTextAlign.CENTER);
         outOfStockGrid.addColumn(item -> String.format(Locale.US, "$%.2f", item.getUnitPrice())).setHeader("Price")
                 .setFlexGrow(0);
         Grid.Column<CartItemInfoDTO> outOfStockTotalCol = outOfStockGrid.addColumn(item -> String.format(Locale.US, "$%.2f", item.getUnitPrice() * item.getQuantityInCart()))
@@ -363,6 +371,7 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
         else{
             dialog.add(new H1(res.getMessage()));
         }
+        loadCartData();
         dialog.open();
     }
 
@@ -489,6 +498,48 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
             // Re-enable confirm button if it's still meant to be visible (e.g. if not hidden on success/failure)
             // In this case, loadCartData() rebuilds it, or it's hidden, so this might not be needed.
             // If you weren't hiding it, you'd do: confirmButton.setEnabled(true);
+        }
+    }
+
+    private Button createRemoveButton(CartItemInfoDTO item) {
+        Button btn = new Button(new Icon(VaadinIcon.TRASH));
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_ICON);
+        btn.getElement().setAttribute("title", "Remove from cart");
+        btn.addClickListener(e -> {
+            removeCartItem(item.getProductId(), item.getStoreId());
+        });
+        return btn;
+    }
+
+    private void removeCartItem(int productId, int storeId) {
+        String url = apiUrl + "user/removeFromBasket/" + this.userId
+                + "/" + storeId + "/" + productId;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST, // or POST if your API uses POST
+                    entity,
+                    new ParameterizedTypeReference<Response<Void>>() {
+                    });
+            Response<Void> response = apiResponse.getBody();
+
+            if (response.isSuccess()) {
+                Notification.show("Item removed", 2000, Notification.Position.BOTTOM_START)
+                        .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                // rebuild the grid in-place
+                loadCartData();
+            } else {
+                String err = response != null ? response.getMessage() : "Remove failed";
+                Notification.show(err, 3000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error: " + ex.getMessage(), 3000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
         }
     }
 

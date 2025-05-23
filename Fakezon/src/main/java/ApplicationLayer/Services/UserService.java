@@ -807,4 +807,20 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User not found");
         }
     }
+
+    @Override
+    public void removeFromBasket(int userId, int storeId, int productId){
+        Optional<User> user = userRepository.findAllById(userId);
+        if (user.isPresent()) {
+            try {
+                user.get().removeFromBasket(storeId, productId);
+                logger.info("Cart for user: " + userId + " removed product " + productId + " from store " + storeId);
+            } catch (Exception e) {
+                logger.error("Error during set cart: " + e.getMessage());
+                throw e;
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+    }
 }

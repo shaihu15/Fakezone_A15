@@ -60,4 +60,11 @@ public class Cart {
             baskets.put(storeId, newBasket);
         }
     }
+
+    public void removeItem(int storeId, int productId){
+        if(baskets.containsKey(storeId)){
+            baskets.get(storeId).removeItem(productId);
+        }
+        
+    }
 }

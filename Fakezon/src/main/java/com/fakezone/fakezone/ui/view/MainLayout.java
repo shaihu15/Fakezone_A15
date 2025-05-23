@@ -58,13 +58,11 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
     RestTemplate restTemplate;
-    private final String apiUrl;
     private final String webUrl;
     private final String apiUrl;
-    public MainLayout(@Value("${api.url}") String apiUrl, @Value("${website.url}") String webUrl@Value("${api.url}") String apiUrl) {
+    public MainLayout(@Value("${api.url}") String apiUrl, @Value("${website.url}") String webUrl) {
         this.apiUrl = apiUrl;
         this.webUrl = webUrl;
-        this.apiUrl = apiUrl;
         restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
@@ -97,8 +95,6 @@ public class MainLayout extends AppLayout implements RouterLayout {
             catch(Exception e){
                 Notification.show(e.getMessage());
             }
-
-            
         }
     }
 

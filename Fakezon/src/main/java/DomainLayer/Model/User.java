@@ -113,4 +113,8 @@ public class User {
         }
     }
 
+    public void removeFromBasket(int storeId, int productId){
+        cart.removeItem(storeId, productId);
+    }
+
 }

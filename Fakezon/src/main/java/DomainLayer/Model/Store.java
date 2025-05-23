@@ -1255,8 +1255,8 @@ public class Store implements IStore {
                     storeProduct.decrementProductQuantity(newQuantity);
                 }
                 else{
-                    storeProduct.decrementProductQuantity(newQuantity);
-                    products.put(new StoreProductDTO(storeProduct, quantity),false);
+                    //storeProduct.decrementProductQuantity(newQuantity);
+                    products.put(new StoreProductDTO(storeProduct, newQuantity),false);
 
                 }
             }

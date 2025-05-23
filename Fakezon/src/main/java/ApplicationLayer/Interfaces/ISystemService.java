@@ -178,4 +178,6 @@ public interface ISystemService {
     Response<Double> getCartFinalPrice(int userId, LocalDate dob);
 
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
+
+    Response<Void> removeFromBasket(int userId, int productId, int storeId);
 }

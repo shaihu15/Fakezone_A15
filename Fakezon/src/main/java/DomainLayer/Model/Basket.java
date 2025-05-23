@@ -35,4 +35,8 @@ public class Basket {
     public void setProduct(int productId, int quantity){
         productQuantities.put(productId, quantity);
     }
+
+    public void removeItem(int productId){
+        productQuantities.remove(productId);
+    }
 }

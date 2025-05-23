@@ -952,8 +952,8 @@ public class SystemService implements ISystemService {
         userService.setCart(userId, validCart);
 
         prices = this.storeService.calcAmount(userId, cart, dob);
-        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
         totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
+        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
         try {
             if (this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
                 logger.info("System Service - User " + userId + " cart purchased successfully, payment method: "
@@ -998,6 +998,7 @@ public class SystemService implements ISystemService {
 
         this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod);
         this.userService.clearUserCart(userId);
+
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
     }
 
@@ -1830,6 +1831,34 @@ public class SystemService implements ISystemService {
         }
         else{
             throw new IllegalArgumentException("user " + rating.getUserID() + " does not exist - prodRatingToProdRatingDTO");
+        }
+    }
+
+    @Override
+    public Response<Void> removeFromBasket(int userId, int productId, int storeId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing from basket: " + e.getMessage());
+            return new Response<>(null, "Error during removing from basket: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+        try {
+            this.userService.removeFromBasket(userId, storeId, productId);
+            logger.info(
+                    "System Service - User Removed basket product: " + productId + " from store: " + storeId
+                            + " by user: "
+                            + userId);
+            return new Response<>(null, "Product removed from basket successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing from basket: " + e.getMessage());
+            return new Response<>(null, "Error during removing from basket: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 }

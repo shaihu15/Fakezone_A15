@@ -109,4 +109,6 @@ public interface IUserService {
 
     void setCart(int userId, Map<Integer,Map<Integer,Integer>> validCart);
 
+    void removeFromBasket(int userId, int storeId, int productId);
+
 }

@@ -597,7 +597,7 @@ public class UserController {
             @RequestHeader("Authorization") String token
     ) {
         try {
-            logger.info("Received request to get unsigned user count");
+            logger.info("Received request to getCartFinalPrice");
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Double> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
@@ -613,5 +613,32 @@ public class UserController {
                     false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
+    }
+
+    @PostMapping("/removeFromBasket/{userId}/{storeId}/{productId}")
+    public ResponseEntity<Response<Void>> removeFromBasket(
+            @PathVariable("userId") int userId,
+            @PathVariable("storeId") int storeId,
+            @PathVariable("productId") int productId,
+            @RequestHeader("Authorization") String token
+    ){
+        try{
+            logger.info("Received request to remove item from basket" );
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.removeFromBasket(userId, productId, storeId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in removeFromBasket: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred while  removeFromBasket",
+                    false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+        
     }
 }
