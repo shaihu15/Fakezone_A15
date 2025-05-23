@@ -1791,7 +1791,6 @@ public class SystemService implements ISystemService {
     @Override
     public Response<HashMap<Integer, IRegisteredRole>> getUserRoles(int requesterId){
         try {
-           // int requesterId = this.authenticatorService.getUserId(sessionToken);
             if(this.userService.isUserLoggedIn(requesterId)) {
                 HashMap<Integer, IRegisteredRole> roles = this.userService.getAllRoles(requesterId);
                 return new Response<>(roles, "User roles retrieved successfully", true, null, null);

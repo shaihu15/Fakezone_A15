@@ -184,7 +184,9 @@ public class UserService implements IUserService {
         @Override
         public HashMap<Integer, IRegisteredRole> getAllRoles(int userID) {
             Optional<Registered> user = userRepository.findById(userID);
+            logger.info("Getting all roles for user: " + userID);
             if (!user.isPresent()) {
+                logger.error("User not found with ID: " + userID);
                 throw new IllegalArgumentException("User not found with ID: " + userID);
             }
 
@@ -192,6 +194,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, IRegisteredRole> roles = user.get().getAllRoles();
                 return roles != null ? roles : new HashMap<>();
             } catch (Exception e) {
+                logger.error("Error retrieving roles for user " + userID + ": " + e.getMessage());
                 throw new RuntimeException("Error retrieving roles for user " + userID + ": " + e.getMessage(), e);
             }
         }
