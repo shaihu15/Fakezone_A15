@@ -256,4 +256,62 @@ public class RegisteredTest {
     void testGetPasswordReturnsPassword() {
         assertEquals(password, registeredUser.getPassword());
     }
+    @Test
+    void testAddMultipleMessagesFromStore() {
+        registeredUser.addMessageFromStore(new SimpleEntry<>(1, "msg1"));
+        registeredUser.addMessageFromStore(new SimpleEntry<>(2, "msg2"));
+        HashMap<Integer, String> messages = registeredUser.getMessagesFromStore();
+        assertEquals("msg1", messages.get(1));
+        assertEquals("msg2", messages.get(2));
+    }
+
+    @Test
+    void testAddMultipleAuctionEndedMessages() {
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(1, "auction1"));
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(2, "auction2"));
+        HashMap<Integer, String> messages = registeredUser.getAuctionEndedMessages();
+        assertEquals("auction1", messages.get(1));
+        assertEquals("auction2", messages.get(2));
+    }
+    @Test
+    void testGetMessagesFromStore() {
+        registeredUser.addMessageFromStore(new SimpleEntry<>(1, "store1"));
+        registeredUser.addMessageFromStore(new SimpleEntry<>(2, "store2"));
+        HashMap<Integer, String> messages = registeredUser.getMessagesFromStore();
+        assertEquals(2, messages.size());
+        assertEquals("store1", messages.get(1));
+        assertEquals("store2", messages.get(2));
+    }
+    
+    @Test
+    void testGetAssignmentMessages() {
+        registeredUser.AssignmentMessages(new SimpleEntry<>(10, "assign1"));
+        registeredUser.AssignmentMessages(new SimpleEntry<>(20, "assign2"));
+        HashMap<Integer, String> messages = registeredUser.getAssignmentMessages();
+        assertEquals(2, messages.size());
+        assertEquals("assign1", messages.get(10));
+        assertEquals("assign2", messages.get(20));
+    }
+    
+    @Test
+    void testGetAuctionEndedMessages() {
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(100, "auction1"));
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(200, "auction2"));
+        HashMap<Integer, String> messages = registeredUser.getAuctionEndedMessages();
+        assertEquals(2, messages.size());
+        assertEquals("auction1", messages.get(100));
+        assertEquals("auction2", messages.get(200));
+    }
+    
+    @Test
+    void testGetAllMessagesCombinesAllTypes() {
+        registeredUser.addMessageFromStore(new SimpleEntry<>(1, "storeMsg"));
+        registeredUser.AssignmentMessages(new SimpleEntry<>(2, "assignMsg"));
+        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(3, "auctionMsg"));
+        HashMap<Integer, String> all = registeredUser.getAllMessages();
+        assertEquals(3, all.size());
+        assertEquals("storeMsg", all.get(1));
+        assertEquals("assignMsg", all.get(2));
+        assertEquals("auctionMsg", all.get(3));
+    }
 }
