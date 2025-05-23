@@ -112,6 +112,23 @@ class UserControllerTest {
         assertEquals("Invalid token", response.getBody().getMessage());
         verify(systemService, never()).viewCart(anyInt());
     }
+    @Test
+    void testViewCart_Failure() {
+        int userId = 1;
+        String token = "validToken";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        // Simulate a failed response from the service
+        Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>> failedResponse =
+                new Response<>(null, "Failed to retrieve cart", false, ErrorType.INVALID_INPUT, null);
+        when(systemService.viewCart(userId)).thenReturn(failedResponse);
+
+        ResponseEntity<Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>>> response = userController.viewCart(token, userId);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to retrieve cart", response.getBody().getMessage());
+        verify(systemService, times(1)).viewCart(userId);
+    }
 
     @Test
     void testGetOrdersByUser_Success() {
@@ -690,6 +707,138 @@ class UserControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals(adminCount, response.getBody().getData());
         verify(systemService, times(1)).getSystemAdminCount(requesterId);
+    }
+    @Test
+    void testRegisterUser_Failure() {
+        RegisterUserRequest registerUserRequest = new RegisterUserRequest("test@example.com", "password", "2000-01-01", "USA");
+        Request<RegisterUserRequest> request = new Request<>("validToken", registerUserRequest);
+        when(authenticatorAdapter.isValid("validToken")).thenReturn(true);
+        when(systemService.guestRegister(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new Response<>(null, "Registration failed", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<String>> response = userController.registerUser(request);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Registration failed", response.getBody().getMessage());
+        verify(systemService, times(1)).guestRegister(anyString(), anyString(), anyString(), anyString());
+    }
+    
+    @Test
+    void testGetOrdersByUser_Failure() {
+        int userId = 1;
+        String token = "validToken";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getOrdersByUser(userId))
+                .thenReturn(new Response<>(null, "Failed to retrieve orders", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<List<OrderDTO>>> response = userController.getOrdersByUser(token, userId);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to retrieve orders", response.getBody().getMessage());
+        verify(systemService, times(1)).getOrdersByUser(userId);
+    }
+    
+    @Test
+    void testAddToBasket_Failure() {
+        String token = "validToken";
+        int userId = 1, storeId = 1, productId = 1, quantity = 2;
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addToBasket(userId, productId, storeId, quantity))
+                .thenReturn(new Response<>(null, "Failed to add to basket", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<Void>> response = userController.addToBasket(token, userId, storeId, productId, quantity);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to add to basket", response.getBody().getMessage());
+        verify(systemService, times(1)).addToBasket(userId, productId, storeId, quantity);
+    }
+    
+    @Test
+    void testPurchaseCart_Failure() {
+        String token = "validToken";
+        PurchaseRequest purchaseRequest = new PurchaseRequest(1, "USA", LocalDate.parse("2000-01-01"), PaymentMethod.CREDIT_CARD, "Delivery", "1234567890123456", "John Doe", "12/25", "123", "123 Main St", "John Doe", "Package Details");
+        Request<PurchaseRequest> request = new Request<>(token, purchaseRequest);
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.purchaseCart(anyInt(), anyString(), any(LocalDate.class), any(PaymentMethod.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new Response<>(null, "Purchase failed", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<String>> response = userController.purchaseCart(token, request);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Purchase failed", response.getBody().getMessage());
+        verify(systemService, times(1)).purchaseCart(anyInt(), anyString(), any(LocalDate.class), any(PaymentMethod.class), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+    
+    @Test
+    void testGetAllMessages_Failure() {
+        String token = "validToken";
+        int userId = 1;
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getAllMessages(userId))
+                .thenReturn(new Response<>(null, "Failed to retrieve messages", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAllMessages(token, userId);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to retrieve messages", response.getBody().getMessage());
+        verify(systemService, times(1)).getAllMessages(userId);
+    }
+    
+    @Test
+    void testSendMessageToStore_Failure() {
+        String token = "validToken";
+        int userId = 1, storeId = 1;
+        String message = "Hello, Store!";
+        Request<String> request = new Request<>(token, message);
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.sendMessageToStore(userId, storeId, message))
+                .thenReturn(new Response<>(null, "Failed to send message", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<Void>> response = userController.sendMessageToStore(userId, storeId, request);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to send message", response.getBody().getMessage());
+        verify(systemService, times(1)).sendMessageToStore(userId, storeId, message);
+    }
+    
+    @Test
+    void testGetAuctionEndedMessages_Failure() {
+        String token = "validToken";
+        int userId = 1;
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getAuctionEndedMessages(userId))
+                .thenReturn(new Response<>(null, "Failed to retrieve auction ended messages", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAuctionEndedMessages(token, userId);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to retrieve auction ended messages", response.getBody().getMessage());
+        verify(systemService, times(1)).getAuctionEndedMessages(userId);
+    }
+    
+    @Test
+    void testGetAssignmentMessages_Failure() {
+        String token = "validToken";
+        int userId = 1;
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getAssignmentMessages(userId))
+                .thenReturn(new Response<>(null, "Failed to retrieve assignment messages", false, ErrorType.INVALID_INPUT, null));
+    
+        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAssignmentMessages(token, userId);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Failed to retrieve assignment messages", response.getBody().getMessage());
+        verify(systemService, times(1)).getAssignmentMessages(userId);
     }
 
 }

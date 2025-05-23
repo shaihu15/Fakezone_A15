@@ -384,22 +384,7 @@ class StoreControllerTest {
         verify(systemService, times(1)).userAccessStore(storeId);
     }
 
-    @Test
-    void testRemoveProductFromStore_InvalidToken() {
-        int storeId = 1;
-        int requesterId = 1;
-        int productId = 1;
-        String token = "invalid-token";
 
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        ResponseEntity<Response<Void>> response = storeController.removeProductFromStore(storeId, requesterId, productId, token);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
-        verify(systemService, never()).removeProductFromStore(anyInt(), anyInt(), anyInt());
-    }
 
     @Test
     void testAddAuctionProductToStore_InternalServerError() {
@@ -587,22 +572,7 @@ class StoreControllerTest {
         verify(systemService, times(1)).addStore(userId, storeName);
     }
 
-    @Test
-    void testRemoveStoreOwner_InvalidToken() {
-        int storeId = 1;
-        int requesterId = 1;
-        int ownerId = 2;
-        String token = "invalid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        ResponseEntity<Response<Void>> response = storeController.removeStoreOwner(storeId, requesterId, ownerId, token);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
-        verify(systemService, never()).removeStoreOwner(anyInt(), anyInt(), anyInt());
-    }
+    
 
     @Test
     void testGetAllStoreOrders_InternalServerError() {
@@ -661,21 +631,6 @@ class StoreControllerTest {
         verify(systemService, times(1)).getPendingManagers(storeId, requesterId);
     }
 
-    @Test
-    void testCloseStoreByFounder_InvalidToken() {
-        int storeId = 1;
-        int userId = 1;
-        String token = "invalid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        ResponseEntity<Response<String>> response = storeController.closeStoreByFounder(storeId, userId, token);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
-        verify(systemService, never()).closeStoreByFounder(anyInt(), anyInt());
-    }
 
     @Test
     void testSendResponseForAuctionByOwner_Success() {
@@ -696,26 +651,6 @@ class StoreControllerTest {
         assertEquals("Auction response sent successfully", response.getBody().getData());
         verify(systemService, times(1)).sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
     }
-
-
-
-
-    @Test
-    void testAcceptAssignment_InvalidToken() {
-        int storeId = 1;
-        int userId = 1;
-        String token = "invalid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        ResponseEntity<Response<String>> response = storeController.acceptAssignment(storeId, userId, token);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
-        verify(systemService, never()).acceptAssignment(anyInt(), anyInt());
-    }
-
 
 
     @Test
@@ -812,102 +747,6 @@ class StoreControllerTest {
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
         verify(systemService, times(1)).declineAssignment(storeId, userId);
-    }
-
-    @Test
-    void testAddStore_ExceptionHandling() {
-        int userId = 1;
-        String storeName = "Test Store";
-        String token = "valid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addStore(userId, storeName)).thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).addStore(userId, storeName);
-    }
-
-    @Test
-    void testAddProductToStore_ExceptionHandling() {
-        int storeId = 1;
-        int requesterId = 1;
-        String productName = "Test Product";
-        String description = "Test Description";
-        double basePrice = 100.0;
-        int quantity = 10;
-        String category = "ELECTRONICS";
-        String token = "valid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
-                .thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
-    }
-
-    @Test
-    void testViewStore_ExceptionHandling() {
-        int storeId = 1;
-        String token = "valid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.userAccessStore(storeId)).thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).userAccessStore(storeId);
-    }
-
-    @Test
-    void testUpdateProductInStore_ExceptionHandling() {
-        int storeId = 1;
-        int requesterId = 1;
-        int productId = 1;
-        double basePrice = 100.0;
-        int quantity = 5;
-        String token = "valid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.updateProductInStore(storeId, requesterId, productId, basePrice, quantity))
-                .thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<Void>> response = storeController.updateProductInStore(storeId, requesterId, productId, basePrice, quantity, token);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).updateProductInStore(storeId, requesterId, productId, basePrice, quantity);
-    }
-
-    @Test
-    void testRemoveProductFromStore_ExceptionHandling() {
-        int storeId = 1;
-        int requesterId = 1;
-        int productId = 1;
-        String token = "valid-token";
-
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.removeProductFromStore(storeId, requesterId, productId))
-                .thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity<Response<Void>> response = storeController.removeProductFromStore(storeId, requesterId, productId, token);
-
-        assertEquals(500, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
-        verify(systemService, times(1)).removeProductFromStore(storeId, requesterId, productId);
     }
 
     @Test
@@ -1160,7 +999,505 @@ class StoreControllerTest {
         assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
         verify(systemService, times(1)).getTopRatedProducts(limit);
     }
-
-
+    @Test
+    void testAddStore_BadResponse() {
+        int userId = 1;
+        String storeName = "Test Store";
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addStore(userId, storeName))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).addStore(userId, storeName);
+    }
+    
+    @Test
+    void testAddProductToStore_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        String productName = "Test Product";
+        String description = "Test Description";
+        double basePrice = 100.0;
+        int quantity = 10;
+        String category = "ELECTRONICS";
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
+    }
+    
+    @Test
+    void testAddProductToStore_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        String productName = "Test Product";
+        String description = "Test Description";
+        double basePrice = 100.0;
+        int quantity = 10;
+        String category = "ELECTRONICS";
+        String token = "invalid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).addProductToStore(anyInt(), anyInt(), anyString(), anyString(), anyDouble(), anyInt(), anyString());
+    }
+    @Test
+    void testAddStore_ExceptionHandling() {
+        int userId = 1;
+        String storeName = "Test Store";
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addStore(userId, storeName)).thenThrow(new RuntimeException("Unexpected error"));
+    
+        ResponseEntity<Response<Integer>> response = storeController.addStore(userId, storeName, token);
+    
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).addStore(userId, storeName);
+    }
+    
+    @Test
+    void testAddProductToStore_ExceptionHandling() {
+        int storeId = 1;
+        int requesterId = 1;
+        String productName = "Test Product";
+        String description = "Test Description";
+        double basePrice = 100.0;
+        int quantity = 10;
+        String category = "ELECTRONICS";
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category))
+                .thenThrow(new RuntimeException("Unexpected error"));
+    
+        ResponseEntity<Response<StoreProductDTO>> response = storeController.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category, token);
+    
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
+    }
+    
+    @Test
+    void testViewStore_ExceptionHandling() {
+        int storeId = 1;
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.userAccessStore(storeId)).thenThrow(new RuntimeException("Unexpected error"));
+    
+        ResponseEntity<Response<StoreDTO>> response = storeController.viewStore(storeId, token);
+    
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).userAccessStore(storeId);
+    }
+    
+    @Test
+    void testUpdateProductInStore_ExceptionHandling() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        double basePrice = 100.0;
+        int quantity = 5;
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.updateProductInStore(storeId, requesterId, productId, basePrice, quantity))
+                .thenThrow(new RuntimeException("Unexpected error"));
+    
+        ResponseEntity<Response<Void>> response = storeController.updateProductInStore(storeId, requesterId, productId, basePrice, quantity, token);
+    
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).updateProductInStore(storeId, requesterId, productId, basePrice, quantity);
+    }
+    
+    @Test
+    void testRemoveProductFromStore_ExceptionHandling() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeProductFromStore(storeId, requesterId, productId))
+                .thenThrow(new RuntimeException("Unexpected error"));
+    
+        ResponseEntity<Response<Void>> response = storeController.removeProductFromStore(storeId, requesterId, productId, token);
+    
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+        verify(systemService, times(1)).removeProductFromStore(storeId, requesterId, productId);
+    }
+    @Test
+    void testRemoveProductFromStore_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        String token = "valid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeProductFromStore(storeId, requesterId, productId))
+            .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Void>> response = storeController.removeProductFromStore(storeId, requesterId, productId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).removeProductFromStore(storeId, requesterId, productId);
+    }
+    
+    @Test
+    void testRemoveProductFromStore_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        String token = "invalid-token";
+    
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<Void>> response = storeController.removeProductFromStore(storeId, requesterId, productId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).removeProductFromStore(anyInt(), anyInt(), anyInt());
+    }
+    // BAD RESPONSE TESTS
+    
+    @Test
+    void testCloseStoreByFounder_BadResponse() {
+        int storeId = 1;
+        int userId = 1;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.closeStoreByFounder(storeId, userId))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<String>> response = storeController.closeStoreByFounder(storeId, userId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).closeStoreByFounder(storeId, userId);
+    }
+    
+    @Test
+    void testGetPendingOwners_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getPendingOwners(storeId, requesterId))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<List<Integer>>> response = storeController.getPendingOwners(storeId, requesterId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).getPendingOwners(storeId, requesterId);
+    }
+    
+    @Test
+    void testAcceptAssignment_BadResponse() {
+        int storeId = 1;
+        int userId = 1;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.acceptAssignment(storeId, userId))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<String>> response = storeController.acceptAssignment(storeId, userId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).acceptAssignment(storeId, userId);
+    }
+    
+    @Test
+    void testDeclineAssignment_BadResponse() {
+        int storeId = 1;
+        int userId = 1;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.declineAssignment(storeId, userId))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<String>> response = storeController.declineAssignment(storeId, userId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).declineAssignment(storeId, userId);
+    }
+    
+    @Test
+    void testAddAuctionProductToStore_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        double basePrice = 200.0;
+        int MinutesToEnd = 7;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd);
+    }
+    
+    @Test
+    void testAddBidOnAuctionProductInStore_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        double bid = 250.0;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addBidOnAuctionProductInStore(storeId, requesterId, productId, bid))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Void>> response = storeController.addBidOnAuctionProductInStore(storeId, requesterId, productId, bid, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).addBidOnAuctionProductInStore(storeId, requesterId, productId, bid);
+    }
+    
+    @Test
+    void testAddStoreOwner_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        int ownerId = 2;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.addStoreOwner(storeId, requesterId, ownerId))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Void>> response = storeController.addStoreOwner(storeId, requesterId, ownerId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).addStoreOwner(storeId, requesterId, ownerId);
+    }
+    
+    @Test
+    void testRemoveStoreOwner_BadResponse() {
+        int storeId = 1;
+        int requesterId = 1;
+        int ownerId = 2;
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeStoreOwner(storeId, requesterId, ownerId))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Void>> response = storeController.removeStoreOwner(storeId, requesterId, ownerId, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).removeStoreOwner(storeId, requesterId, ownerId);
+    }
+    
+    @Test
+    void testSendMessageToUser_BadResponse() {
+        int managerId = 1;
+        int storeId = 1;
+        int userId = 2;
+        String message = "Hello!";
+        String token = "valid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.sendMessageToUser(managerId, storeId, userId, message))
+                .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
+    
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+    
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.BAD_REQUEST, response.getBody().getErrorType());
+        verify(systemService, times(1)).sendMessageToUser(managerId, storeId, userId, message);
+    }
+    
+    // INVALID TOKEN TESTS
+    
+    @Test
+    void testCloseStoreByFounder_InvalidToken() {
+        int storeId = 1;
+        int userId = 1;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<String>> response = storeController.closeStoreByFounder(storeId, userId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).closeStoreByFounder(anyInt(), anyInt());
+    }
+    
+    @Test
+    void testGetPendingOwners_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<List<Integer>>> response = storeController.getPendingOwners(storeId, requesterId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).getPendingOwners(anyInt(), anyInt());
+    }
+    
+    @Test
+    void testAcceptAssignment_InvalidToken() {
+        int storeId = 1;
+        int userId = 1;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<String>> response = storeController.acceptAssignment(storeId, userId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).acceptAssignment(anyInt(), anyInt());
+    }
+    
+    @Test
+    void testDeclineAssignment_InvalidToken() {
+        int storeId = 1;
+        int userId = 1;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<String>> response = storeController.declineAssignment(storeId, userId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).declineAssignment(anyInt(), anyInt());
+    }
+    
+    @Test
+    void testAddAuctionProductToStore_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        double basePrice = 200.0;
+        int MinutesToEnd = 7;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<Void>> response = storeController.addAuctionProductToStore(storeId, requesterId, productId, basePrice, MinutesToEnd, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).addAuctionProductToStore(anyInt(), anyInt(), anyInt(), anyDouble(), anyInt());
+    }
+    
+    @Test
+    void testAddBidOnAuctionProductInStore_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        int productId = 1;
+        double bid = 250.0;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<Void>> response = storeController.addBidOnAuctionProductInStore(storeId, requesterId, productId, bid, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).addBidOnAuctionProductInStore(anyInt(), anyInt(), anyInt(), anyDouble());
+    }
+    
+    @Test
+    void testAddStoreOwner_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        int ownerId = 2;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<Void>> response = storeController.addStoreOwner(storeId, requesterId, ownerId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).addStoreOwner(anyInt(), anyInt(), anyInt());
+    }
+    
+    @Test
+    void testRemoveStoreOwner_InvalidToken() {
+        int storeId = 1;
+        int requesterId = 1;
+        int ownerId = 2;
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<Void>> response = storeController.removeStoreOwner(storeId, requesterId, ownerId, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).removeStoreOwner(anyInt(), anyInt(), anyInt());
+    }
+    
+    @Test
+    void testSendMessageToUser_InvalidToken() {
+        int managerId = 1;
+        int storeId = 1;
+        int userId = 2;
+        String message = "Hello!";
+        String token = "invalid-token";
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+    
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+    
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+        verify(systemService, never()).sendMessageToUser(anyInt(), anyInt(), anyInt(), anyString());
+    }
 
 }
