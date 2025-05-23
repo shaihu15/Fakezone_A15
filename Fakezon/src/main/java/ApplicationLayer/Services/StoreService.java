@@ -547,7 +547,7 @@ public class StoreService implements IStoreService {
                 logger.error("calcAmount - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            double storeAmount = store.calcAmount(userId, basket, dob);
+            double storeAmount = store.calcAmount(userId, basket, dob, cart);
             prices.put(storeId, storeAmount);
             }
         return prices;
