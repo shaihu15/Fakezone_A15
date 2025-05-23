@@ -19,6 +19,7 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
@@ -82,6 +83,8 @@ public interface ISystemService {
     Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid);
     
     Response<StoreRolesDTO> getStoreRoles(int storeId, int userId); // owner gets store roles information
+
+    Response<HashMap<Integer, IRegisteredRole>> getUserRoles(int userId); // get all the roles of the user
 
     Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 
@@ -158,8 +161,9 @@ public interface ISystemService {
     Response<Integer> getSystemAdminCount(int requesterId);
 
     // Unsigned (guest) user management
-    Response<Void> addUnsignedUser(User user);
     
+    Response<Void> createUnsignedUser();
+
     Response<UserDTO> getUnsignedUserById(int userId);
     
     Response<List<UserDTO>> getAllUnsignedUsers(int adminId);
@@ -174,6 +178,7 @@ public interface ISystemService {
 
     LocalDate parseDate(String dateString);
 
+    void clearAllData();
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
 
     // Discount Policy Methods

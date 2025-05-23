@@ -9,8 +9,9 @@ import java.util.function.Predicate;
 import DomainLayer.Interfaces.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-
+import org.springframework.stereotype.Service;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.ProductRatingDTO;
@@ -30,6 +31,7 @@ import ApplicationLayer.Response;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IProductRepository;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
 
@@ -51,7 +53,7 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 
-
+@Service
 public class SystemService implements ISystemService {
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
@@ -64,6 +66,7 @@ public class SystemService implements ISystemService {
     private final ApplicationEventPublisher publisher;
     private final INotificationWebSocketHandler notificationWebSocketHandler;
 
+     @Autowired 
     public SystemService(IStoreRepository storeRepository, IUserRepository userRepository,
                          IProductRepository productRepository, IOrderRepository orderRepository,
                          ApplicationEventPublisher publisher, INotificationWebSocketHandler notificationWebSocketHandler) {
@@ -587,9 +590,8 @@ public class SystemService implements ISystemService {
     public Response<Void> addStoreManager(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: "
-                    + storeId);
-            userService.addRole(managerId, storeId, new StoreManager());
+            logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: " + storeId);
+            //userService.addRole(managerId, storeId, new StoreManager());
         } catch (Exception e) {
             logger.error("System service - failed to add StoreManager role to user " + e.getMessage());
             return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false,
@@ -600,9 +602,8 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Store manager added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
-            userService.removeRole(managerId, storeId); // reverting
-            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
+           // userService.removeRole(managerId, storeId); // reverting
+            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -1112,6 +1113,7 @@ public class SystemService implements ISystemService {
         try {
             logger.info("system service - user " + userId + " trying to accept assignment for store " + storeId);
             storeService.acceptAssignment(storeId, userId);
+            userService.addRole(userId, storeId, new StoreManager());
             return new Response<String>("success", "success", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("system service - acceptAssignment failed: " + e.getMessage());
@@ -1621,13 +1623,13 @@ public class SystemService implements ISystemService {
     // Unsigned (guest) user management methods
 
     @Override
-    public Response<Void> addUnsignedUser(User user) {
+    public Response<Void> createUnsignedUser() {
         try {
-            userService.addUnsignedUser(user);
-            logger.info("System Service - Added unsigned user with ID: " + user.getUserId());
-            return new Response<>(null, "Unsigned user added successfully", true, null, null);
+            User unsignedUser = userService.createUnsignedUser(); 
+            logger.info("System Service - created unsigned user with ID: " + unsignedUser.getUserId());
+            return new Response<>(null, "Unsigned user created successfully", true, null, null);
         } catch (IllegalArgumentException e) {
-            logger.error("System Service - Failed to add unsigned user: " + e.getMessage());
+            logger.error("System Service - Failed to create unsigned user: " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
@@ -1762,6 +1764,13 @@ public class SystemService implements ISystemService {
 
     }
 
+    @Override
+    public void clearAllData() {
+        storeService.clearAllData();
+        userService.clearAllData();
+        orderService.clearAllData();
+        productService.clearAllData();
+    }
     @Override
     public Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId){
         try{
@@ -2051,6 +2060,25 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during adding XOR discount with store scope: " + e.getMessage());
             return new Response<>(null, "Error during adding XOR discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<HashMap<Integer, IRegisteredRole>> getUserRoles(int requesterId){
+        try {
+            if(this.userService.isUserLoggedIn(requesterId)) {
+                HashMap<Integer, IRegisteredRole> roles = this.userService.getAllRoles(requesterId);
+                return new Response<>(roles, "User roles retrieved successfully", true, null, null);
+            }
+            logger.error("System Service - User is not logged in: " + requesterId);
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("System Service - Failed to get user roles: " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting user roles: " + e.getMessage());
+            return new Response<>(null, "Error getting user roles: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 }

@@ -1,6 +1,8 @@
 package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
@@ -15,6 +17,7 @@ import org.mockito.Mockito;
 import ApplicationLayer.Services.UserService;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.User;
 
 public class UserServiceAdminTest {
 
@@ -249,4 +252,87 @@ public class UserServiceAdminTest {
             userService.cleanupExpiredSuspensions(regularUser.getUserId());
         });
     }
+
+    //---------------------------------------Unsigned User Tests---------------------------------------
+    
+    @Test
+    void testCreateUnsignedUser_Success() {
+        // Arrange
+        when(mockUserRepository.getNextNegativeId()).thenReturn(-1);
+
+        // Act
+        User user = userService.createUnsignedUser();
+
+        // Assert
+        assertNotNull(user);
+        assertEquals(-1, user.getUserId());
+        verify(mockUserRepository, times(1)).getNextNegativeId();
+        verify(mockUserRepository, times(1)).addUnsignedUser(user);
+    }
+
+    @Test
+    void testCreateUnsignedUser_IllegalArgumentException() {
+        // Arrange
+        when(mockUserRepository.getNextNegativeId()).thenReturn(-2);
+        doThrow(new IllegalArgumentException("User ID already exists"))
+                .when(mockUserRepository).addUnsignedUser(any(User.class));
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUnsignedUser();
+        });
+
+        assertEquals("User ID already exists", exception.getMessage());
+        verify(mockUserRepository, times(1)).getNextNegativeId();
+        verify(mockUserRepository, times(1)).addUnsignedUser(any(User.class));
+    }
+
+    @Test
+    void testCreateUnsignedUser_GenericException() {
+        // Arrange
+        when(mockUserRepository.getNextNegativeId()).thenReturn(-3);
+        doThrow(new RuntimeException("DB is down"))
+                .when(mockUserRepository).addUnsignedUser(any(User.class));
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUnsignedUser();
+        });
+
+        assertTrue(exception.getMessage().contains("Error adding unsigned user: DB is down"));
+        verify(mockUserRepository, times(1)).getNextNegativeId();
+        verify(mockUserRepository, times(1)).addUnsignedUser(any(User.class));
+    }
+
+    @Test
+    void testRemoveUnsignedUser_Success() {
+        when(mockUserRepository.removeUnsignedUser(-1)).thenReturn(true);
+
+        boolean result = userService.removeUnsignedUser(-1);
+
+        assertTrue(result);
+        verify(mockUserRepository, times(1)).removeUnsignedUser(-1);
+    }
+
+    @Test
+    void testRemoveUnsignedUser_NotFound() {
+        when(mockUserRepository.removeUnsignedUser(-99)).thenReturn(false);
+
+        boolean result = userService.removeUnsignedUser(-99);
+
+        assertFalse(result);
+        verify(mockUserRepository, times(1)).removeUnsignedUser(-99);
+    }
+
+    @Test
+    void testRemoveUnsignedUser_Exception() {
+        when(mockUserRepository.removeUnsignedUser(anyInt())).thenThrow(new RuntimeException("DB error"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            userService.removeUnsignedUser(-1);
+        });
+
+        assertTrue(ex.getMessage().contains("Error removing unsigned user: DB error"));
+    }
+
 }

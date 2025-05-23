@@ -92,7 +92,8 @@ public interface IUserService {
     int cleanupExpiredSuspensions(int adminId);
     
     // Unsigned (guest) user management
-    void addUnsignedUser(User user);
+
+    User createUnsignedUser();
     
     Optional<User> getUnsignedUserById(int userId);
     
@@ -107,5 +108,7 @@ public interface IUserService {
     int getUnsignedUserCount();
 
     void setCart(int userId, Map<Integer,Map<Integer,Integer>> validCart);
+
+    void clearAllData();
 
 }

@@ -1,14 +1,18 @@
 package InfrastructureLayer.Repositories;
+import static org.mockito.ArgumentMatchers.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Repository;
+
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 
-
+@Repository
 public class StoreRepository implements IStoreRepository {
     private Map<Integer, Store> stores;
     
@@ -55,6 +59,10 @@ public class StoreRepository implements IStoreRepository {
     @Override
     public Collection<Store> getTop10Stores() {
        return stores.values().stream().sorted((s1, s2) -> Double.compare(s2.getAverageRating(), s1.getAverageRating())).limit(10).collect(Collectors.toList());
+    }
+    @Override
+    public void clearAllData() {
+        stores.clear();
     }
 
 }

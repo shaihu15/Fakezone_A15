@@ -20,7 +20,9 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
@@ -181,21 +183,23 @@ public class UserService implements IUserService {
         return null;
     }
 
-    @Override
-    public HashMap<Integer, IRegisteredRole> getAllRoles(int userID) {
-        Optional<Registered> user = userRepository.findById(userID);
-        if (user.isPresent()) {
-            try {
-                return user.get().getAllRoles();
-            } catch (Exception e) {
-                // Handle exception if needed
-                System.out.println("Error during get all roles: " + e.getMessage());
+        @Override
+        public HashMap<Integer, IRegisteredRole> getAllRoles(int userID) {
+            Optional<Registered> user = userRepository.findById(userID);
+            logger.info("Getting all roles for user: " + userID);
+            if (!user.isPresent()) {
+                logger.error("User not found with ID: " + userID);
+                throw new IllegalArgumentException("User not found with ID: " + userID);
             }
-        } else {
-            throw new IllegalArgumentException("User not found");
+
+            try {
+                HashMap<Integer, IRegisteredRole> roles = user.get().getAllRoles();
+                return roles != null ? roles : new HashMap<>();
+            } catch (Exception e) {
+                logger.error("Error retrieving roles for user " + userID + ": " + e.getMessage());
+                throw new RuntimeException("Error retrieving roles for user " + userID + ": " + e.getMessage(), e);
+            }
         }
-        return null;
-    }
 
     public boolean didPurchaseStore(int userID, int storeID) {
         Optional<Registered> user = userRepository.findById(userID);
@@ -658,24 +662,26 @@ public class UserService implements IUserService {
     // Unsigned (guest) user management methods
     
     /**
-     * Add an unsigned (guest) user to the repository
+     * Create a new unsigned (guest) user
      * 
-     * @param user The user to add
-     * @throws IllegalArgumentException If a user with the same ID already exists
+     * @return The created user
      */
     @Override
-    public void addUnsignedUser(User user) {
+    public User createUnsignedUser() {
         try {
-            userRepository.addUnsignedUser(user);
-            logger.info("Added unsigned user with ID: " + user.getUserId());
-        } catch (IllegalArgumentException e) {
-            logger.error("Failed to add unsigned user: " + e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            logger.error("Error during adding unsigned user: " + e.getMessage());
-            throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
-        }
+            int nextNegativeId = userRepository.getNextNegativeId();
+            User unsignedUser = new User(nextNegativeId);
+            userRepository.addUnsignedUser(unsignedUser);
+            logger.info("Created unsigned user with ID: " + unsignedUser.getUserId());
+            return unsignedUser;
+          } catch (IllegalArgumentException e) {
+        logger.error("Failed to add unsigned user: " + e.getMessage());
+        throw e;
+    } catch (Exception e) {
+        logger.error("Error during adding unsigned user: " + e.getMessage());
+        throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
     }
+}
     
     /**
      * Find an unsigned user by ID
@@ -804,5 +810,10 @@ public class UserService implements IUserService {
         } else {
             throw new IllegalArgumentException("User not found");
         }
+    }
+
+    @Override
+    public void clearAllData() {
+        userRepository.clearAllData();
     }
 }

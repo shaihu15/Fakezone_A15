@@ -38,7 +38,9 @@ import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.User;
+import org.springframework.stereotype.Service;
 
+@Service
 public class StoreService implements IStoreService {
     private final IStoreRepository storeRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
@@ -735,6 +737,10 @@ public class StoreService implements IStoreService {
         }
     }
 
+    @Override
+    public void clearAllData() {
+        storeRepository.clearAllData();
+    }
     @Override
     public List<ProductRating> getStoreProductRatings(int storeId, int productID){
         Store store = storeRepository.findById(storeId);

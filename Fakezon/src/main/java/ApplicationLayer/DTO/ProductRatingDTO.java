@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProductRatingDTO {
-    private String userEmail;
     private double rating;
+    private String userEmail;
     private String comment;
 
     @JsonCreator
