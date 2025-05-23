@@ -119,4 +119,6 @@ public interface IStore {
 
     void returnProductsToStore(int userId, Map<Integer,Integer> products);
 
+    List<ProductRating> getStoreProductAllRatings(int productId);
+
 }

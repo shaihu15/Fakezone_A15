@@ -660,24 +660,26 @@ public class UserService implements IUserService {
     // Unsigned (guest) user management methods
     
     /**
-     * Add an unsigned (guest) user to the repository
+     * Create a new unsigned (guest) user
      * 
-     * @param user The user to add
-     * @throws IllegalArgumentException If a user with the same ID already exists
+     * @return The created user
      */
     @Override
-    public void addUnsignedUser(User user) {
+    public User createUnsignedUser() {
         try {
-            userRepository.addUnsignedUser(user);
-            logger.info("Added unsigned user with ID: " + user.getUserId());
-        } catch (IllegalArgumentException e) {
-            logger.error("Failed to add unsigned user: " + e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            logger.error("Error during adding unsigned user: " + e.getMessage());
-            throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
-        }
+            int nextNegativeId = userRepository.getNextNegativeId();
+            User unsignedUser = new User(nextNegativeId);
+            userRepository.addUnsignedUser(unsignedUser);
+            logger.info("Created unsigned user with ID: " + unsignedUser.getUserId());
+            return unsignedUser;
+          } catch (IllegalArgumentException e) {
+        logger.error("Failed to add unsigned user: " + e.getMessage());
+        throw e;
+    } catch (Exception e) {
+        logger.error("Error during adding unsigned user: " + e.getMessage());
+        throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
     }
+}
     
     /**
      * Find an unsigned user by ID

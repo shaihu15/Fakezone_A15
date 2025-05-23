@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -369,4 +370,13 @@ public class UserRepository implements IUserRepository {
         }
         return rolesInStore;
     }
+    
+    public int getNextNegativeId() {
+    return Stream.concat(users.values().stream(),unsignedUsers.values().stream())
+        .mapToInt(User::getUserId)
+        .filter(id -> id < 0)
+        .min()
+        .orElse(0) - 1;
+}
+
 }

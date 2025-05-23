@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -40,6 +41,7 @@ import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
@@ -75,7 +77,6 @@ public class SystemService implements ISystemService {
         this.deliveryService = new DeliveryAdapter();
         this.authenticatorService = new AuthenticatorAdapter(userService);
         this.paymentService = new PaymentAdapter();
-        logger.info("UI INIT");
         // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
         //init();
     }
@@ -94,7 +95,6 @@ public class SystemService implements ISystemService {
         this.deliveryService = deliveryService;
         this.authenticatorService = authenticatorService;
         this.paymentService = paymentService;
-        logger.info("UI INIT2");
     }
 
     @Override
@@ -1622,13 +1622,13 @@ public class SystemService implements ISystemService {
     // Unsigned (guest) user management methods
 
     @Override
-    public Response<Void> addUnsignedUser(User user) {
+    public Response<Void> createUnsignedUser() {
         try {
-            userService.addUnsignedUser(user);
-            logger.info("System Service - Added unsigned user with ID: " + user.getUserId());
-            return new Response<>(null, "Unsigned user added successfully", true, null, null);
+            User unsignedUser = userService.createUnsignedUser(); 
+            logger.info("System Service - created unsigned user with ID: " + unsignedUser.getUserId());
+            return new Response<>(null, "Unsigned user created successfully", true, null, null);
         } catch (IllegalArgumentException e) {
-            logger.error("System Service - Failed to add unsigned user: " + e.getMessage());
+            logger.error("System Service - Failed to create unsigned user: " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INVALID_INPUT, null);
         } catch (Exception e) {
             logger.error("System Service - Error during adding unsigned user: " + e.getMessage());
@@ -1769,5 +1769,32 @@ public class SystemService implements ISystemService {
         userService.clearAllData();
         orderService.clearAllData();
         productService.clearAllData();
+    }
+    @Override
+    public Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId){
+        try{
+            logger.info("System Service - request for all store product rating store " + storeId + " prodId "+ prodId);
+            List<ProductRating> ratings = storeService.getStoreProductRatings(storeId, prodId);
+            List<ProductRatingDTO> ratingsDTOs = new ArrayList<>();
+            for(ProductRating r : ratings){
+                ratingsDTOs.add(prodRatingToProdRatingDTO(r));
+            }
+            return new Response<List<ProductRatingDTO>>(ratingsDTOs, null, true, null, null);
+
+        }
+        catch(Exception e){
+            logger.error("System Service - error during getStoreProductRatings "+ e.getMessage());
+            return new Response<>(null, "Error during getStoreProductRatings " + e.getMessage(), false, ErrorType.INVALID_INPUT, null);
+        }
+    }
+
+    private ProductRatingDTO prodRatingToProdRatingDTO(ProductRating rating){
+        Optional<Registered> user = userService.getUserById(rating.getUserID());
+        if(user.isPresent()){
+            return new ProductRatingDTO(rating.getRating(), rating.getComment(), user.get().getEmail());
+        }
+        else{
+            throw new IllegalArgumentException("user " + rating.getUserID() + " does not exist - prodRatingToProdRatingDTO");
+        }
     }
 }
