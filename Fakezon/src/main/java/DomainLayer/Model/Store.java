@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
@@ -29,12 +28,10 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
-import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 import DomainLayer.Model.helpers.Tree;
 
-import static org.mockito.ArgumentMatchers.*;
 
 import java.time.LocalDate;
 import java.util.concurrent.Executors;
@@ -1167,7 +1164,7 @@ public class Store implements IStore {
 
 
     @Override
-    public double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob) {
+    public double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob, Cart cart) {
         if(!isOpen) {
             throw new IllegalArgumentException("Store is closed, can not purchase products");
         }
@@ -1227,8 +1224,9 @@ public class Store implements IStore {
                 // }
                 double totalDiscount = discountPolicies.values().stream()
                     .mapToDouble(d -> d.apply(cart)).sum();
+                amount -= totalDiscount;
             }
-    }
+        }
         return amount;
     }
 

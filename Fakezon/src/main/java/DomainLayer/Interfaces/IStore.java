@@ -12,6 +12,7 @@ import java.util.Stack;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
@@ -30,7 +31,6 @@ public interface IStore {
 
     void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy);
 
-    void addDiscountPolicy(int userID, IDiscountPolicy discountPolicy);
 
     void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd);
 
@@ -103,7 +103,7 @@ public interface IStore {
     
     void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
     
-    double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
+    double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob, Cart cart);
 
     HashMap<Integer, String> getAllStoreMessages();
 
