@@ -108,7 +108,7 @@ public class User {
             for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
                 int productId = productEntry.getKey();
                 int quantity = productEntry.getValue();
-                cart.addProduct(storeId, productId, quantity);
+                cart.setProduct(storeId, productId, quantity);
             }
         }
     }

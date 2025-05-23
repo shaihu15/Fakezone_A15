@@ -21,11 +21,7 @@ public class Basket {
     }
 
     public void addProduct(int productId, int quantity) {
-        if (productQuantities.containsKey(productId)) {
-            productQuantities.put(productId, productQuantities.get(productId) + quantity);
-        } else {
-            productQuantities.put(productId, quantity);
-        }
+        productQuantities.put(productId, quantity);
     }
 
     public int getStoreID() {
@@ -34,5 +30,9 @@ public class Basket {
 
     public Map<Integer,Integer> getProducts() {
         return productQuantities;
+    }
+
+    public void setProduct(int productId, int quantity){
+        productQuantities.put(productId, quantity);
     }
 }

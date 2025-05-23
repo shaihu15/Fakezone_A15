@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -56,7 +57,11 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
     RestTemplate restTemplate;
-    public MainLayout() {
+    private final String apiUrl;
+    private final String webUrl;
+    public MainLayout(@Value("${api.url}") String apiUrl, @Value("${website.url}") String webUrl) {
+        this.apiUrl = apiUrl;
+        this.webUrl = webUrl;
         restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
@@ -143,7 +148,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         // CART
         Icon cartIcon = VaadinIcon.CART.create();
-        cartIcon.setSize("30px");// TO DO: ADD ANCHOR TO NAVIGATE TO CART
+        cartIcon.setSize("30px");
         Button cartButton = new Button(cartIcon);
         cartButton.addClickListener(event -> showCart());
 
@@ -337,7 +342,15 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
 
     private void showCart(){
-        testDialog();
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        if(user != null){
+            UI.getCurrent().navigate(webUrl+"cart/" + user.getUserId());
+        }
+        else{
+            testDialog();
+        }
     }
 
     private void loginRegisterClick(){

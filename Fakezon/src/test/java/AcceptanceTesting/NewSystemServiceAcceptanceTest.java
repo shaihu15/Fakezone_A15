@@ -12,8 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.method.P;
 
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -341,7 +343,7 @@ public class NewSystemServiceAcceptanceTest {
         Response<StoreProductDTO> storePResponse = systemService.addProductToStore(storeId, userId, productName, productDescription, 1, 1, category);
         int productId = storePResponse.getData().getProductId();
         systemService.addToBasket(userId, productId, storeId, 1);
-        Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> cart = systemService.viewCart(userId);
+        Response<List<CartItemInfoDTO>> cart = systemService.viewCart(userId);
         assertNotNull(cart, "Cart should not be null");
         assertTrue(cart.isSuccess(), "Cart retrieval should succeed");
         assertTrue(cart.getData().size() > 0, "Cart should contain products");

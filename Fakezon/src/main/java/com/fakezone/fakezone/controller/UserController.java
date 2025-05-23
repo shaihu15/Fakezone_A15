@@ -1,5 +1,6 @@
 package com.fakezone.fakezone.controller;
 
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -17,6 +18,7 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -94,22 +96,22 @@ public class UserController {
     }
 
     @GetMapping("/viewCart/{userId}")
-    public ResponseEntity<Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>>> viewCart(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<List<CartItemInfoDTO>>> viewCart(@RequestHeader("Authorization") String token,
                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to view cart for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<List<CartItemInfoDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> response = systemService.viewCart(userId);
+            Response<List<CartItemInfoDTO>> response = systemService.viewCart(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in viewCart: {}", e.getMessage());
-            Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> response = new Response<>(null, "An error occurred while retrieving the cart", false, ErrorType.INTERNAL_ERROR, null);
+            Response<List<CartItemInfoDTO>> response = new Response<>(null, "An error occurred while retrieving the cart", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -583,6 +585,32 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Error in getUnsignedUserCount: {}", e.getMessage());
             Response<Integer> response = new Response<>(null, "An error occurred while retrieving unsigned user count", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getCartFinalPrice/{userId}")
+    public ResponseEntity<Response<Double>> getCartFinalPrice(
+            @PathVariable("userId") int userId,
+            @RequestParam("dob")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dob,
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            logger.info("Received request to get unsigned user count");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Double> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Double> response = systemService.getCartFinalPrice(userId, dob);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getCartFinalPrice: {}", e.getMessage());
+            Response<Double> response = new Response<>(null, "An error occurred while retrieving getCartFinalPrice",
+                    false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

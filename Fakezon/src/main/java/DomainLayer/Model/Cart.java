@@ -50,4 +50,14 @@ public class Cart {
         }
         return allProducts;
     }
+
+    public void setProduct(int storeId, int productId, int quantity){
+        if (baskets.containsKey(storeId)) {
+            baskets.get(storeId).setProduct(productId, quantity);
+        } else {
+            Basket newBasket = new Basket(storeId);
+            newBasket.setProduct(productId, quantity);
+            baskets.put(storeId, newBasket);
+        }
+    }
 }
