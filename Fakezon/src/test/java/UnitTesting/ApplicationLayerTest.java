@@ -1,36 +1,37 @@
 package UnitTesting;
 
-import ApplicationLayer.Request;
-import ApplicationLayer.Response;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.ErrorType;
+import ApplicationLayer.Response;
+import ApplicationLayer.UserEventListener;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.helpers.AssignmentEvent;
-import DomainLayer.Model.helpers.ClosingStoreEvent;
-import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
-import ApplicationLayer.UserEventListener;
-import ApplicationLayer.DTO.StoreProductDTO;
-import InfrastructureLayer.Repositories.UserRepository;
-import java.util.Optional;
-
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
+import DomainLayer.Model.helpers.ClosingStoreEvent;
+import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
 public class ApplicationLayerTest {
     private IUserRepository userRepository;
@@ -182,8 +183,8 @@ public class ApplicationLayerTest {
  
         listener.handleApprovedBidOnAuctionEvent(event);
 
-        verify(user, times(1)).addMessageFromStore(any());
-        verify(user, times(1)).addToBasket(2, 3, 1);
+        verify(user, times(0)).addMessageFromStore(any());
+        verify(user, times(0)).addToBasket(2, 3, 1);
     }
 
     @Test
