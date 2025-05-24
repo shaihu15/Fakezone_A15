@@ -178,5 +178,6 @@ public interface ISystemService {
     LocalDate parseDate(String dateString);
 
     void clearAllData();
+    
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
 }
