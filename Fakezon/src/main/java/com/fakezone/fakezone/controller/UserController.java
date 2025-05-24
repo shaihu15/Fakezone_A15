@@ -614,7 +614,7 @@ public class UserController {
         }
     }
     @GetMapping("/getAllUnsignedUsers/{adminId}")
-    ResponseEntity<Response<Integer>> getUnsignedUserCount(@PathVariable("adminId") int adminId, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<Response<Integer>> getUnsignedUserCount(@PathVariable("adminId") int adminId, @RequestHeader("Authorization") String token) {
         try {
             logger.info("Received request to get unsigned user count");
             if (!authenticatorAdapter.isValid(token)) {
