@@ -3,25 +3,20 @@ package DomainLayer.Interfaces;
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
 
-import org.springframework.security.access.method.P;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
-import DomainLayer.Model.Basket;
-import DomainLayer.Model.DiscountPolicy;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
 import  DomainLayer.Model.StoreRating;
-import DomainLayer.Model.User;
 
 public interface IStore {
     String getName();
@@ -36,7 +31,6 @@ public interface IStore {
 
     void addPurchasePolicy(int userID, PurchasePolicy purchasePolicy);
 
-    void addDiscountPolicy(int userID, DiscountPolicy discountPolicy);
 
     void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd);
 
@@ -57,7 +51,7 @@ public interface IStore {
 
     HashMap<Integer, PurchasePolicy> getPurchasePolicies();
 
-    HashMap<Integer, DiscountPolicy> getDiscountPolicies();
+    HashMap<Integer, IDiscountPolicy> getDiscountPolicies();
 
     List<Integer> getStoreOwners(int requesterId);
 
@@ -109,7 +103,7 @@ public interface IStore {
     
     void editStoreProduct(int requesterId, int productID, String name, double basePrice, int quantity);
     
-    double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob);
+    double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob, Cart cart);
 
     HashMap<Integer, String> getAllStoreMessages();
 

@@ -1,11 +1,7 @@
 package DomainLayer.Model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Cart {
 
@@ -49,5 +45,14 @@ public class Cart {
             allProducts.put(storeID, products);
         }
         return allProducts;
+    }
+
+    public boolean containsProduct(int productId) {
+        for (Basket basket : baskets.values()) {
+            if (basket.containsProduct(productId)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

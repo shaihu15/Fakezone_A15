@@ -21,7 +21,6 @@ import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.AuctionProduct;
-import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
@@ -520,15 +519,6 @@ public class StoreTest {
             });
         
         }
-        @Test
-    void testCalcAmount_SimpleCase() {
-        int userId = 1;
-        int productId = 123;
-        store.addStoreProduct(founderId, productId, "Test", 10.0, 5, PCategory.ELECTRONICS);
-        Map<Integer, Integer> toBuy = Map.of(productId, 2);
-        double amount = store.calcAmount(userId, toBuy, LocalDate.now().minusYears(20));
-        assertEquals(50.0, amount);
-    }
 
     @Test
     void testStoreCtorWithId() {
@@ -562,14 +552,6 @@ public class StoreTest {
         when(policy.getPolicyID()).thenReturn(1);
         store.addPurchasePolicy(founderId, policy);
         assertTrue(store.getPurchasePolicies().containsKey(1));
-    }
-
-    @Test
-    void testAddDiscountPolicy() {
-        DiscountPolicy policy = mock(DiscountPolicy.class);
-        when(policy.getPolicyID()).thenReturn(2);
-        store.addDiscountPolicy(founderId, policy);
-        assertTrue(store.getDiscountPolicies().containsKey(2));
     }
 
     @Test

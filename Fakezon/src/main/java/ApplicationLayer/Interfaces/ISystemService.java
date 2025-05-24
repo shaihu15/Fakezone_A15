@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.OrderDTO;
@@ -179,4 +180,25 @@ public interface ISystemService {
 
     void clearAllData();
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
+
+    // Discount Policy Methods
+    Response<Void> addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage);
+
+    Response<Void> addSimpleDiscountWithStoreScope(int storeId, int requesterId, double percentage);
+
+    Response<Void> addConditionDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addConditionDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addAndDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addAndDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addOrDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addOrDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addXorDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<Void> addXorDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
 }

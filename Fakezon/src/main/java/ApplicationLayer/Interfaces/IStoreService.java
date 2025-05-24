@@ -80,6 +80,27 @@ public interface IStoreService {
 
   void removeDiscountPolicy(int storeId, int requesterId, int policyId);
 
+  // --- Specific Discount Policy Methods ---
+  void addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage);
+
+  void addSimpleDiscountWithStoreScope(int storeId, int requesterId, double percentage);
+
+  void addConditionDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addConditionDiscountWithStoreScope(int storeId, int requesterId, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addAndDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addAndDiscountWithStoreScope(int storeId, int requesterId, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addOrDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addOrDiscountWithStoreScope(int storeId, int requesterId, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addXorDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
+  void addXorDiscountWithStoreScope(int storeId, int requesterId, List<java.util.function.Predicate<Cart>> conditions, double percentage);
+
   // --- Ownership & Management ---
   void addStoreOwner(int storeId, int requesterId, int newOwnerId);
 

@@ -1,29 +1,17 @@
 package DomainLayer.Model;
 
+import java.util.function.Predicate;
+
 public class DiscountCondition {
-    private int triggerProductId;
-    private int triggerQuantity;
-    private int targetProductId;
-    private int targetQuantity;
+    // public static Predicate<Cart> totalAbove(double threshold) {
+    //     return cart -> cart.getTotalPrice() > threshold;
+    // }
 
-    public DiscountCondition(int triggerProductId, int triggerQuantity, int targetProductId, int targetQuantity) {
-        this.triggerProductId = triggerProductId;
-        this.triggerQuantity = triggerQuantity;
-        this.targetProductId = targetProductId;
-        this.targetQuantity = targetQuantity;
-
-       
-    }
-    public boolean isApplicable(int quantity) {
-        return quantity >= triggerQuantity;
+    public static Predicate<Cart> containsProduct(int productId) {
+        return cart -> cart.containsProduct(productId);
     }
 
-    
-    public int getTriggerProductId() {
-        return triggerProductId;
+    public static Predicate<Cart> alwaysTrue() {
+        return cart -> true;
     }
-    public int getTriggerQuantity() {
-        return triggerQuantity;
-    }
-
 }
