@@ -669,8 +669,7 @@ public class UserService implements IUserService {
     @Override
     public User createUnsignedUser() {
         try {
-            int nextNegativeId = userRepository.getNextNegativeId();
-            User unsignedUser = new User(nextNegativeId);
+            User unsignedUser = new User();
             userRepository.addUnsignedUser(unsignedUser);
             logger.info("Created unsigned user with ID: " + unsignedUser.getUserId());
             return unsignedUser;

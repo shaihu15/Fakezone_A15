@@ -371,12 +371,5 @@ public class UserRepository implements IUserRepository {
         return rolesInStore;
     }
     
-    public int getNextNegativeId() {
-    return Stream.concat(users.values().stream(),unsignedUsers.values().stream())
-        .mapToInt(User::getUserId)
-        .filter(id -> id < 0)
-        .min()
-        .orElse(0) - 1;
-}
 
 }
