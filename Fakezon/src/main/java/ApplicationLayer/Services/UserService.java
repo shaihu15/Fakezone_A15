@@ -118,10 +118,6 @@ public class UserService implements IUserService {
                 logger.error("Login failed: Incorrect password for user with email {}", email);
                 throw new IllegalArgumentException("Incorrect password");
             }
-            if(user.isLoggedIn()) {
-                logger.error("User already logged in: " + email);
-                throw new IllegalArgumentException("User already logged in");
-            }
             user.login();
             return user.toDTO();
         } catch (Exception e) {
