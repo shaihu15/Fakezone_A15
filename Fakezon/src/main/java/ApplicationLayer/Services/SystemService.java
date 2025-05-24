@@ -942,7 +942,6 @@ public class SystemService implements ISystemService {
                 if (productEntry.getValue() == false) {
                     logger.error("System Service - Product is not available: " + storeProduct.getName());
                     userService.setCart(userId, validCart);
-                    storeService.returnProductsToStores(userId, validCart);
                     returnProductInCaseOfError = true;
                     return new Response<String>(null, "Product is not available: " + storeProduct.getName(), false,
                             ErrorType.INVALID_INPUT, null);
