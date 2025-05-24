@@ -1114,6 +1114,7 @@ public class SystemService implements ISystemService {
             logger.info("system service - user " + userId + " trying to accept assignment for store " + storeId);
             storeService.acceptAssignment(storeId, userId);
             userService.addRole(userId, storeId, new StoreManager());
+            userService.removeAssignmentMessage(storeId, userId);
             return new Response<String>("success", "success", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("system service - acceptAssignment failed: " + e.getMessage());
@@ -1129,6 +1130,7 @@ public class SystemService implements ISystemService {
         try {
             logger.info("system service - user " + userId + " trying to decline assignment for store " + storeId);
             storeService.declineAssignment(storeId, userId);
+            userService.removeAssignmentMessage(storeId, userId);
             return new Response<String>("success", "success", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("system service - declineAssignment failed: " + e.getMessage());

@@ -11,20 +11,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
-import DomainLayer.Model.helpers.AssignmentEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
-import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
-import DomainLayer.Model.helpers.ClosingStoreEvent;
-import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
 public class Registered extends User {
     protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
@@ -201,5 +190,14 @@ public class Registered extends User {
             }
         }
         this.cart.clear();
+    }
+
+    public void removeAssignmentMessage(int storeId){
+        for (SimpleEntry<Integer,String> simpleEntry : assignmentMessages) {
+            if(simpleEntry.getKey().equals(storeId)){
+                assignmentMessages.remove(simpleEntry);
+                return;
+            }
+        }
     }
 }
