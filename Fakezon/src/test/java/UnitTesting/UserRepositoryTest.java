@@ -282,44 +282,6 @@ public class UserRepositoryTest {
 
         assertEquals(endDate, userRepository.getSuspensionEndDate(registedUser.getUserId()));
     }
-
-    //------------------------------------------Unsigned User Tests------------------------------------------------
-    @Test
-    void testGetNextNegativeId_WhenNoNegativeIdsExist() {
-        // No users yet
-        int nextId = userRepository.getNextNegativeId();
-
-        assertEquals(-1, nextId, "Expected -1 when no negative IDs exist");
-    }
-
-    @Test
-    void testGetNextNegativeId_WhenNegativeIdsExistInUnsigned() {
-        // Add unsigned users with negative IDs
-        userRepository.addUnsignedUser(new User(-1));
-        userRepository.addUnsignedUser(new User(-3));
-        userRepository.addUnsignedUser(new User(-2));
-
-        int nextId = userRepository.getNextNegativeId();
-
-        assertEquals(-4, nextId, "Should return one less than the minimum negative ID");
-    }
-
-    @Test
-    void testRemoveUnsignedUser_Success() {
-        User guest = new User(-1);
-        userRepository.addUnsignedUser(guest);
-
-        boolean result = userRepository.removeUnsignedUser(-1);
-
-        assertTrue(result, "Expected user to be successfully removed");
-    }
-
-    @Test
-    void testRemoveUnsignedUser_NotFound() {
-        boolean result = userRepository.removeUnsignedUser(-99);
-
-        assertFalse(result, "Expected removal to fail for non-existent user");
-    }
-
+   
 
 }

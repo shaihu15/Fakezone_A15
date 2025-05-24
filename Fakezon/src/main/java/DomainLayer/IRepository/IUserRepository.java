@@ -160,10 +160,4 @@ public interface IUserRepository {
      */
     int getUnsignedUserCount();
 
-    /**
-     * Get the next available negative ID for a user
-     * 
-     * @return The next negative ID
-     */
-    int getNextNegativeId();
 }

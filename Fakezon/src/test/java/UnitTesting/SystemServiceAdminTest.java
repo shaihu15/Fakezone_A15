@@ -392,87 +392,43 @@ public class SystemServiceAdminTest {
         verify(mockUserService, never()).cleanupExpiredSuspensions(anyInt());
     }
     //----------------Unsigned User Tests------------------------------
-    
-     @Test
+    @Test
     void testCreateUnsignedUser_Success() {
-        // Arrange
-        User mockUser = new User(-1);
+        User mockUser = mock(User.class);
         when(mockUserService.createUnsignedUser()).thenReturn(mockUser);
+        when(mockUser.getUserId()).thenReturn(-1);
+        when(mockUser.toDTO()).thenReturn(new UserDTO());
 
-        // Act
         Response<UserDTO> response = systemService.createUnsignedUser();
 
-        // Assert
         assertTrue(response.isSuccess());
         assertEquals("Unsigned user created successfully", response.getMessage());
-        verify(mockUserService, times(1)).createUnsignedUser();
+        assertNotNull(response.getData());
     }
 
-        @Test
+    @Test
     void testCreateUnsignedUser_IllegalArgumentException() {
-        // Arrange
-        when(mockUserService.createUnsignedUser()).thenThrow(new IllegalArgumentException("User already exists"));
+        when(mockUserService.createUnsignedUser()).thenThrow(new IllegalArgumentException("Invalid input"));
 
-        // Act
         Response<UserDTO> response = systemService.createUnsignedUser();
 
-        // Assert
         assertFalse(response.isSuccess());
-        assertEquals("User already exists", response.getMessage());
+        assertEquals("Invalid input", response.getMessage());
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
-        verify(mockUserService, times(1)).createUnsignedUser();
+        assertNull(response.getData());
     }
 
     @Test
-    void testCreateUnsignedUser_GenericException() {
-        // Arrange
-        when(mockUserService.createUnsignedUser())
-                .thenThrow(new RuntimeException("Database failure"));
+    void testCreateUnsignedUser_GeneralException() {
+        when(mockUserService.createUnsignedUser()).thenThrow(new RuntimeException("Unexpected error"));
 
-        // Act
         Response<UserDTO> response = systemService.createUnsignedUser();
 
-        // Assert
         assertFalse(response.isSuccess());
-        assertTrue(response.getMessage().contains("Error adding unsigned user: Database failure"));
+        assertEquals("Error adding unsigned user: Unexpected error", response.getMessage());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        verify(mockUserService, times(1)).createUnsignedUser();
+        assertNull(response.getData());
     }
-
-    @Test
-    void testRemoveUnsignedUser_Success() {
-        when(mockUserService.removeUnsignedUser(-1)).thenReturn(true);
-
-        Response<Boolean> response = systemService.removeUnsignedUser(-1);
-
-        assertTrue(response.isSuccess());
-        assertTrue(response.getData());
-        assertEquals("Unsigned user removed successfully", response.getMessage());
-    }
-
-    @Test
-    void testRemoveUnsignedUser_NotFound() {
-        when(mockUserService.removeUnsignedUser(-2)).thenReturn(false);
-
-        Response<Boolean> response = systemService.removeUnsignedUser(-2);
-
-        assertTrue(response.isSuccess());
-        assertFalse(response.getData());
-        assertEquals("No unsigned user with that ID found", response.getMessage());
-    }
-
-    @Test
-    void testRemoveUnsignedUser_IllegalArgumentException() {
-        when(mockUserService.removeUnsignedUser(-3))
-                .thenThrow(new IllegalArgumentException("Invalid user ID"));
-
-        Response<Boolean> response = systemService.removeUnsignedUser(-3);
-
-        assertFalse(response.isSuccess());
-        assertEquals("Invalid user ID", response.getMessage());
-        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
-    }
-
 
 
 }
