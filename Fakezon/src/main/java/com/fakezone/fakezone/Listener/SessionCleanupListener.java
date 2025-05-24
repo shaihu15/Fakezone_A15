@@ -27,9 +27,9 @@ import ApplicationLayer.DTO.UserDTO;
 @Component
 public class SessionCleanupListener implements HttpSessionListener {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate = new RestTemplate();
     @Value("${api.url}") 
-    String apiUrl;
+    private String apiUrl;
 
 
     @Override
@@ -81,6 +81,14 @@ public class SessionCleanupListener implements HttpSessionListener {
         else{
             return true;
         }
+    }
+
+    public void setApiUrl(String url){
+        this.apiUrl = url;
+    }
+
+    public void setRestTemplate(RestTemplate restTemplate){
+        this.restTemplate = restTemplate;
     }
 
 }
