@@ -124,8 +124,8 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Store is closed: " + storeId);
                 return new Response<>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
             }
-            if (this.userService.isUserLoggedIn(userId)) {
-                logger.info("System Service - User is logged in: " + userId);
+            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
+                logger.info("System Service - User is logged in or Guest: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
@@ -802,7 +802,7 @@ public class SystemService implements ISystemService {
     public Response<List<CartItemInfoDTO>> viewCart(int userId) { //storeid -> <prodId -> bool>
         try {
             logger.info("System service - user " + userId + " trying to view cart");
-            if (this.userService.isUserLoggedIn(userId)) {
+            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
                 Map<Integer, Map<Integer, Integer>> cart = this.userService.viewCart(userId);
                 if (cart.isEmpty()) {
                     logger.error("System Service - Cart is empty: " + userId);
@@ -1627,6 +1627,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<UserDTO> createUnsignedUser() {
         try {
+            logger.info("System Service - attempting createUnsignedUser");
             User unsignedUser = userService.createUnsignedUser(); 
             int userId = unsignedUser.getUserId();
             logger.info("System Service - created unsigned user with ID: " + unsignedUser.getUserId());

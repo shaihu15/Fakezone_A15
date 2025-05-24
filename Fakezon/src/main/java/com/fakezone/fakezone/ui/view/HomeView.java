@@ -154,30 +154,24 @@ public class HomeView extends Main {
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
-        //ASSUMING ONLY REGISTERED RIGHT NOW
         UserDTO userDto = (UserDTO) session.getAttribute("userDTO");
-        if(userDto == null){
-            // TO DO : GUEST
+        int userId = userDto.getUserId();
+        String url = apiUrl + "user/addToBasket/" + userId +"/"+storeId+"/"+prodId+"/"+quantity;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            entity,
+            new ParameterizedTypeReference<Response<String>>() {}
+        );            
+        Response<String> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Added to Cart succefully");
         }
         else{
-            int userId = userDto.getUserId();
-            String url = apiUrl + "user/addToBasket/" + userId +"/"+storeId+"/"+prodId+"/"+quantity;
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", token);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-            ResponseEntity<Response<String>> apiResponse = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<Response<String>>() {}
-            );            
-            Response<String> response = apiResponse.getBody();
-            if(response.isSuccess()){
-                Notification.show("Added to Cart succefully");
-            }
-            else{
-                Notification.show(response.getMessage());
-            }
+            Notification.show(response.getMessage());
         }
     }
 }

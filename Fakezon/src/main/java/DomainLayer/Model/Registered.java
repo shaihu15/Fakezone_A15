@@ -107,7 +107,6 @@ public class Registered extends User {
 
     @Override
     public boolean logout() {
-        this.cart.clear();
         this.isLoggedIn = false;
         return true;
     }
