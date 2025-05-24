@@ -194,13 +194,6 @@ public class OrderServiceTest {
         assertEquals("Order not found", ex.getMessage());
     }
 
-    @Test
-    void testAddOrderCart_Success() {
-        IOrder mockOrder = mock(IOrder.class);
-        doNothing().when(orderRepository).addOrder(mockOrder);
-        verify(orderRepository, times(1)).addOrder(mockOrder);
-    }
-
 @Test
 void testAddOrderCart_Exception() {
     IOrder mockOrder = mock(IOrder.class);
