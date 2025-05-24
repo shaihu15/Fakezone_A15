@@ -68,9 +68,9 @@ public class UserService implements IUserService {
 
     @Override
     public void clearUserCart(int userId){
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<User> optionalUser = userRepository.findAllById(userId);
         if (optionalUser.isPresent()) {
-            Registered user = optionalUser.get();
+            User user = optionalUser.get();
             user.saveCartOrderAndDeleteIt();
             logger.info("User "+userId+" clear cart");
         } else {

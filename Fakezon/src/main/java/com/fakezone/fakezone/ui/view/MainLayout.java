@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -90,14 +91,29 @@ public class MainLayout extends AppLayout implements RouterLayout {
                     cookie.setPath("/");
                     cookie.setMaxAge(60 * 60 * 5); // 5 hours
                     response.addCookie(cookie);
+                    token = tokenResponse.getData();
                 }
                 else{
                     Notification.show(apiResponse.getBody().getMessage());
+                }
+                url = apiUrl + "user/createUnsignedUser";
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", token);
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                ResponseEntity<Response<UserDTO>> apiCreateGuestResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<Response<UserDTO>>() {});
+                Response<UserDTO> guestRes = apiCreateGuestResponse.getBody();
+                if(guestRes.isSuccess()){
+                    session.setAttribute("userDTO", guestRes.getData());
                 }
             }
             catch(Exception e){
                 Notification.show(e.getMessage());
             }
+
         }
     }
 
