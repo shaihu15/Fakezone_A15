@@ -13,10 +13,14 @@ public interface IUserRepository {
     List<Registered> findAll();
 
     void deleteByUserName(String email);
+        void clearAllData();
+
 
     void addUser(Registered user);
 
     Optional<Registered> findById(int userID);
+
+    List<Registered> UsersWithRolesInStoreId(int storeID);
 
     Optional<User> findAllById(int userID); // Added method to find user by ID as String
     

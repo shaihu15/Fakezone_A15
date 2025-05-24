@@ -5,6 +5,7 @@ import ApplicationLayer.Services.ProductService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+@Component
 
 public class NotificationWebSocketHandler extends TextWebSocketHandler implements INotificationWebSocketHandler {
     // Need to set up and create events for the client to subscribe to those events can be created from string or enum

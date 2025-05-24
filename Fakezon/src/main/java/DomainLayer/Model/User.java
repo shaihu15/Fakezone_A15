@@ -1,19 +1,13 @@
 package DomainLayer.Model;
 
-import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.UserDTO;
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
-
-import org.apache.commons.lang3.ObjectUtils.Null;
+import ApplicationLayer.DTO.UserDTO;
 
 public class User {
     protected boolean isLoggedIn;
@@ -39,6 +33,9 @@ public class User {
     
     public boolean isRegistered() {
         return false;
+    }
+    public HashMap<Integer, List<Integer>> getProductsPurchase() {
+        return productsPurchase;
     }
     public boolean isLoggedIn() {
         return isLoggedIn;
@@ -83,6 +80,7 @@ public class User {
     public UserDTO toDTO() {
         return new UserDTO(userId, null, -1);
     }
+
     public void setUserId(int userId) { ///this one is only for testing purposes, will 
         this.userId = userId;
     }

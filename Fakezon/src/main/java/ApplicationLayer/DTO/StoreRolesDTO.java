@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Store;
@@ -23,9 +24,22 @@ public class StoreRolesDTO {
     @JsonProperty("founderId")
     private final int founderId; // Founder ID
 
-    public StoreRolesDTO(int storeId, String storeName, int founderId,
-            Collection<Integer> storeOwners,
-            HashMap<Integer, List<StoreManagerPermission>> storeManagers) {
+    // Default constructor with empty fields
+    public StoreRolesDTO() {
+        this.storeId = 0;
+        this.storeName = null;
+        this.founderId = 0;
+        this.storeOwners = null; // Will be replaced by Jackson if present in JSON
+        this.storeManagers = null; // Will be replaced by Jackson if present in JSON
+    }
+
+    @JsonCreator
+    public StoreRolesDTO(
+            @JsonProperty("storeId") int storeId,
+            @JsonProperty("storeName") String storeName,
+            @JsonProperty("founderId") int founderId,
+            @JsonProperty("storeOwners") Collection<Integer> storeOwners,
+            @JsonProperty("storeManagers") HashMap<Integer, List<StoreManagerPermission>> storeManagers) {
         this.storeId = storeId;
         this.storeName = storeName;
         this.founderId = founderId;

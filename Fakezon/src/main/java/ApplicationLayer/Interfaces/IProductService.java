@@ -31,4 +31,6 @@ public interface IProductService {
     IProduct getProduct(int productId);
 
     List<ProductDTO> searchProductsByName(String name); // Search products by name
+
+    void clearAllData();
 }

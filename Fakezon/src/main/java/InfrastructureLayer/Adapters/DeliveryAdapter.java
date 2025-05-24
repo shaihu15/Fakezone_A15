@@ -3,11 +3,16 @@ package InfrastructureLayer.Adapters;
 import DomainLayer.Interfaces.IDelivery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import InfrastructureLayer.Adapters.ExternalDeliverySystem;
+@Component
+
 public class DeliveryAdapter implements IDelivery {
     private final ExternalDeliverySystem externalSystem;
     private final Logger logger = LoggerFactory.getLogger(DeliveryAdapter.class);
 
+    
     public DeliveryAdapter() {
         this.externalSystem = new ExternalDeliverySystem();
     }

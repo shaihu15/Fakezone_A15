@@ -26,7 +26,6 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
-@Component
 public class Registered extends User {
     protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
     protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
@@ -87,151 +86,13 @@ public class Registered extends User {
 
     }
 
-    private boolean shouldHandleClosingStore(ClosingStoreEvent event) {
-        if(!roles.containsKey(event.getId())) {
-            return false;
-        }
-        return true;
+    public void addMessageFromStore(SimpleEntry<Integer, String> message) {
+        this.messagesFromStore.add(message);
     }
 
-    @EventListener(condition = "#root.target.shouldHandleClosingStore(#event)")
-    public void handleCloseStore(ClosingStoreEvent event) {
-        this.messagesFromStore.add(new SimpleEntry<>(event.getId(), "Store " + event.getId() + " is now close."));
-        return;
-        
-        // your logic to send to UI
+    public void addAuctionEndedMessage(SimpleEntry<Integer, String> message) {
+        this.auctionEndedMessages.add(message);
     }
-    private boolean shouldHandleResposeFromStore(ResponseFromStoreEvent event) {
-        if(event.getUserId() != this.userId) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleResposeFromStore(#event)")
-    public void handleResposeFromStore(ResponseFromStoreEvent event) {
-        this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), event.getMessage()));
-        return;
-        
-        // your logic to send to UI
-    }
-    private boolean shouldHandleAssignmentEvent(AssignmentEvent event) {
-        if(event.getUserId() != this.userId) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleAssignmentEvent(#event)")
-    public void handleAssignmentEvent(AssignmentEvent event) {
-        
-        this.assignmentMessages.add(new SimpleEntry<>(event.getStoreId(), "Please approve or decline this role: " + event.getRoleName()+
-        " for store " + event.getStoreId()));
-        return;
-        
-        // your logic to send to UI
-    }
-
-    private boolean shouldHandleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
-        if(!roles.containsKey(event.getStoreId())) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleAuctionEndedToOwnersEvent(#event)")
-    public void handleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
-        if(!isLoggedIn) {
-            this.auctionEndedMessages.add(new SimpleEntry<>(event.getStoreId(), "Auction ended for product " + event.getProductID() +". Highest bid was " + event.getCurrentHighestBid() +
-            " by user " + event.getUserIDHighestBid()+". Please approve or decline this bid."));
-            return;
-        }
-        // your logic to send to UI
-    }
-
-    private boolean shouldHandleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
-        if(!roles.containsKey(event.getStoreId())) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleAuctionFailedToOwnersEvent(#event)")
-    public void handleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
-        if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "Auction failed for product " + event.getProductID() +". Base price was " + event.getBasePrice()+". "+event.getMessage()));
-            return;
-        }
-        // your logic to send to UI
-    }
-
-    private boolean shouldHandleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
-        if(event.getUserIDHighestBid() != this.userId) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleApprovedBidOnAuctionEvent(#event)")
-    public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
-        if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We are pleased to inform you that your bid has won the auction on product: "+event.getProductID()+", at a price of: "+event.getCurrentHighestBid()+"! The product has been added to your shopping cart, please purchase it as soon as possible."));
-            addToBasket(event.getStoreId(), event.getStoreProductDTO().getProductId(), 1);
-            return;
-        }
-        // your logic to send to UI
-    }
-
-    @Override
-    public void saveCartOrderAndDeleteIt() {
-        Map<Integer,Map<Integer,Integer>> products = cart.getAllProducts();
-        for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
-            int storeId = entry.getKey();
-            Map<Integer, Integer> productQuantities = entry.getValue();
-            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
-                int productId = productEntry.getKey();
-                if (!productsPurchase.containsKey(storeId)) {
-                    productsPurchase.put(storeId, new ArrayList<>());
-                }
-                productsPurchase.get(storeId).add(productId);
-            }
-        }
-        this.cart.clear();
-    }
-
-    
-    private boolean shouldHandleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
-        if(event.getUserIDPrevHighestBid() != this.userId) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleAuctionGotHigherBidEvent(#event)")
-    public void handleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
-        if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "Your auction bid on product: "+event.getProductID()+" was rejected due to a higher bid of:: "+event.getCurrentHighestBid()+"."));
-            return;
-        }
-        // your logic to send to UI
-    }
-    private boolean shouldHandleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
-        if(event.getUserIDHighestBid() != this.userId) {
-            return false;
-        }
-        return true;
-    }
-
-    @EventListener(condition = "#root.target.shouldHandleDeclinedBidOnAuctionEvent(#event)")
-    public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
-        if(!isLoggedIn) {
-            this.messagesFromStore.add(new SimpleEntry<>(event.getStoreId(), "We regret to inform you that the offer for product: "+event.getProductID()+" was not approved by the store."));
-            return;
-        }
-        // your logic to send to UI
-    }
-
-
 
     public HashMap<Integer, String> getMessagesFromUser() {
         return messagesFromUser.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
@@ -319,6 +180,10 @@ public class Registered extends User {
     @Override
     public UserDTO toDTO() {
         return new UserDTO(userId, email, age);
+    }
+
+    public void AssignmentMessages(SimpleEntry simpleEntry) {
+        this.assignmentMessages.add(simpleEntry);
     }
 
     

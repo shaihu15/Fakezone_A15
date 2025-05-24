@@ -1,23 +1,23 @@
 package UnitTesting;
 
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import DomainLayer.Enums.OrderState;
-import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Model.Order;
-import DomainLayer.Model.OrderedProduct;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.Basket;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
+import DomainLayer.Enums.OrderState;
+import DomainLayer.Enums.PaymentMethod;
+import DomainLayer.Model.Basket;
+import DomainLayer.Model.Order;
+import DomainLayer.Model.OrderedProduct;
 
 public class OrderTest {
     private Order order;
@@ -112,4 +112,21 @@ public class OrderTest {
             order.setPaymentMethod(PaymentMethod.CREDIT_CARD);
         });
         assertEquals("Payment method can only be changed if it is CASH_ON_DELIVERY.", exception.getMessage());}
+    @Test
+    void testOrderConstructorAndGetProductsAndGetTotalPrice() {
+        List<OrderedProduct> orderedProducts = Arrays.asList(
+                new OrderedProduct(product1, 2),
+                new OrderedProduct(product2, 1)
+        );
+        double expectedTotal = product1.getBasePrice() * 2 + product2.getBasePrice() * 1;
+        Order customOrder = new Order(99, 88, 77, OrderState.PENDING, orderedProducts, "Test Address", PaymentMethod.CREDIT_CARD, expectedTotal);
+
+        // Test getProducts
+        List<OrderedProduct> productsFromOrder = customOrder.getProducts();
+        assertEquals(2, productsFromOrder.size());
+        assertEquals(product1.getProductId(), productsFromOrder.get(0).getProductId());
+
+        // Test getTotalPrice
+        assertEquals(expectedTotal, customOrder.getTotalPrice());
+    }
 }
