@@ -528,6 +528,28 @@ public class UserController {
         }
     }
 
+    
+    @PostMapping("/createUnsignedUser")
+    public ResponseEntity<Response<UserDTO>> createUnsignedUser(@RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to create unsigned user");
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<UserDTO> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+
+            Response<UserDTO> response = systemService.createUnsignedUser();
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in createUnsignedUser: {}", e.getMessage());
+            Response<UserDTO> response = new Response<>(null, "An error occurred while creating unsigned user", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
     @DeleteMapping("/removeUnsignedUser/{userId}")
     public ResponseEntity<Response<Boolean>> removeUnsignedUser(@PathVariable("userId") int userId, @RequestHeader("Authorization") String token) {
         try {
@@ -632,4 +654,6 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+
 }
