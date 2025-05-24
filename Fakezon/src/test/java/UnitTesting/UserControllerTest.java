@@ -127,11 +127,11 @@ class UserControllerTest {
         String token = "validToken";
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         // Simulate a failed response from the service
-        Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>> failedResponse =
+        Response<List<CartItemInfoDTO>> failedResponse =
                 new Response<>(null, "Failed to retrieve cart", false, ErrorType.INVALID_INPUT, null);
         when(systemService.viewCart(userId)).thenReturn(failedResponse);
 
-        ResponseEntity<Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>>> response = userController.viewCart(token, userId);
+        ResponseEntity<Response<List<CartItemInfoDTO>>> response = userController.viewCart(token, userId);
 
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());

@@ -527,7 +527,7 @@ public class StoreTest {
         store.addStoreProduct(founderId, productId, "Test", 10.0, 5, PCategory.ELECTRONICS);
         Map<Integer, Integer> toBuy = Map.of(productId, 2);
         double amount = store.calcAmount(userId, toBuy, LocalDate.now().minusYears(20));
-        assertEquals(50.0, amount);
+        assertEquals(20.0, amount);
     }
 
     @Test
