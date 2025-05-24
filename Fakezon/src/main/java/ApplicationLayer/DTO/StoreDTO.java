@@ -23,30 +23,13 @@ public class StoreDTO {
     @JsonProperty("storeProducts")
     private final Collection<StoreProductDTO> storeProducts;
 
-    // @JsonProperty("storeOwners")
-    // private final Collection<Integer> storeOwners; // Collection of Owner IDs
-
-    // @JsonProperty("storeManagers")
-    // private final Collection<Integer> storeManagers; // Collection of Manager User IDs
-
     @JsonProperty("ratings")
     private final Map<Integer, Double> ratings; // Map of userId -> rating (no DTO)
 
     @JsonProperty("averageRating")
     private final double averageRating; // Assuming you want to include this as well
 
-    // Add no-args constructor with default values for final fields
-    // public StoreDTO() {
-    //     this.storeId = 0;
-    //     this.name = null;
-    //     this.founderId = 0;
-    //     this.isOpen = false;
-    //     this.storeProducts = null;
-    //     // this.storeOwners = null;
-    //     // this.storeManagers = null;
-    //     this.ratings = null;
-    //     this.averageRating = 0.0;
-    // }
+    
     @JsonCreator
     public StoreDTO(int storeId, String name, int founderId, boolean isOpen,
                     Collection<StoreProductDTO> storeProducts,
