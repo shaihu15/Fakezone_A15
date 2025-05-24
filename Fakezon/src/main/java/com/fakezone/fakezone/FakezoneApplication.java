@@ -2,14 +2,21 @@ package com.fakezone.fakezone;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableAsync; 
 
-import com.vaadin.flow.component.page.AppShellConfigurator;
+@EnableAsync
+@SpringBootApplication
+@ComponentScan(basePackages = {
+    "com.fakezone.fakezone",     
+    "ApplicationLayer",           
+    "DomainLayer",                
+    "InfrastructureLayer"         
+})
+public class FakezoneApplication {
 
-@SpringBootApplication(scanBasePackages = {"com.fakezone.fakezone", "ApplicationLayer.Services","com.fakezone.fakezone.ui.view"})
-public class FakezoneApplication implements AppShellConfigurator {
-
-	public static void main(String[] args) {
-		SpringApplication.run(FakezoneApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(FakezoneApplication.class, args);
+    }
 
 }

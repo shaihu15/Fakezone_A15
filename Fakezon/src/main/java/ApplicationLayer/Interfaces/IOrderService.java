@@ -25,4 +25,5 @@ public interface IOrderService {
     List<Integer> getOrderProductIds(int orderId);
     List<IOrder> getOrdersByStoreId(int storeId);
     void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod);
+    void clearAllData();
 }

@@ -164,6 +164,9 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/fakezone/fakezone/ui/view/**</exclude>
+                                <exclude>com/fakezone/fakezone/FakezoneApplication.class</exclude>
+                                <exclude>com/fakezone/fakezone/SecurityConfig.class</exclude>
+                                <exclude>com/fakezone/fakezone/TempDataLoader.class</exclude>
                             </excludes>
                         </configuration>
                     </execution>

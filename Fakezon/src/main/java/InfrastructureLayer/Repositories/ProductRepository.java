@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
 
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.StoreService;
@@ -15,6 +16,7 @@ import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Product;
 
+@Repository
 public class ProductRepository implements IProductRepository {
     private static final Logger logger = LoggerFactory.getLogger(ProductRepository.class);
     private final HashMap<Integer, IProduct> products;
@@ -120,5 +122,10 @@ public class ProductRepository implements IProductRepository {
         products.put(1002, new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
         products.get(1001).addStore(1001);
         products.get(1002).addStore(1001);
+    }
+
+    @Override
+    public void clearAllData() {
+        products.clear();
     }
 }

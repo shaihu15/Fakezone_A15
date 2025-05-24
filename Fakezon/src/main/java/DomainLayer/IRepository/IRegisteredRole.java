@@ -4,4 +4,5 @@ import DomainLayer.Enums.RoleName;
 
 public interface IRegisteredRole {
     RoleName getRoleName();
+
 }

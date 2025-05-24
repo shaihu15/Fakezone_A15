@@ -11,6 +11,7 @@ import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.StoreProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -26,6 +27,7 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.OrderedProduct;
 
+@Service
 public class OrderService implements IOrderService {
 
     private final IOrderRepository orderRepository;
@@ -139,5 +141,10 @@ public class OrderService implements IOrderService {
             logger.error("While trying to add order, recived error {}", e);
             throw e;
         }
+    }
+
+    @Override
+    public void clearAllData() {
+        orderRepository.clearAllData();
     }
 }

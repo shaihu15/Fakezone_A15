@@ -111,4 +111,6 @@ public interface IUserService {
 
     void removeFromBasket(int userId, int storeId, int productId);
 
+    void clearAllData();
+
 }

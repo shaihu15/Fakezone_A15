@@ -29,6 +29,9 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 
 import com.vaadin.flow.component.Key;
@@ -128,6 +131,8 @@ public class MainLayout extends AppLayout implements RouterLayout {
         searchLayout.setFlexGrow(0.4, searchField);
 
         // LOGIN/REGISTER BUTTON
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
         Button loginRegisterLogoutButton = null;
         Button notificationsButton = null;
         if(isGuestToken()){
@@ -151,12 +156,22 @@ public class MainLayout extends AppLayout implements RouterLayout {
         Button cartButton = new Button(cartIcon);
         cartButton.addClickListener(event -> showCart());
 
-        
+        // USER VIEW BUTTON
+        Button userViewButton = new Button("User area", click -> {
+            if (!isGuestToken() || session.getAttribute("userDTO") != null) {
+                UI.getCurrent().navigate("user");
+            } else {
+                Notification.show("Please log in to view this page.");
+                UI.getCurrent().navigate(""); // Optional, to reset to home
+            }
+        });
+
         // HEADER LAYOUT
         HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout);
         if(notificationsButton != null){
             header.add(notificationsButton);
         }
+        header.add(userViewButton);
         header.add(loginRegisterLogoutButton, cartButton);
         header.setWidth("100%");
         header.setDefaultVerticalComponentAlignment(Alignment.CENTER);
