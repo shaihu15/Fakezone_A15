@@ -1134,10 +1134,10 @@ public class Store implements IStore {
                     }
                 }
                 if (isDiscountApplicable && discountPolicy != null) {
-                    discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
-                    amount += discountPolicy.calculateNewPrice(product.getBasePrice(), product.getQuantity());
+                    discountPolicy.calculateNewPrice(product.getBasePrice(), quantity);
+                    amount += discountPolicy.calculateNewPrice(product.getBasePrice(), quantity);
                 } else {
-                    amount += product.getBasePrice() * product.getQuantity();
+                    amount += product.getBasePrice() * quantity;
                 }
             }
         }
@@ -1195,7 +1195,7 @@ public class Store implements IStore {
                 if (storeProducts.containsKey(productId)) {
                     StoreProduct storeProduct = storeProducts.get(productId);
                     int newQuantity = Math.min(quantity, storeProduct.getQuantity());
-                    if (storeProduct.getQuantity() == newQuantity) {
+                    if (quantity == newQuantity) {
                         productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
                     } else {
                         productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), false);
@@ -1255,8 +1255,8 @@ public class Store implements IStore {
                     storeProduct.decrementProductQuantity(newQuantity);
                 }
                 else{
-                    storeProduct.decrementProductQuantity(newQuantity);
-                    products.put(new StoreProductDTO(storeProduct, quantity),false);
+                    //storeProduct.decrementProductQuantity(newQuantity);
+                    products.put(new StoreProductDTO(storeProduct, newQuantity),false);
 
                 }
             }

@@ -11,6 +11,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -26,6 +27,7 @@ public class UserEventListener {
         this.userRepository = userRepository;
     }
 
+    @Async
     @EventListener
     public void handleAssignmentEvent(AssignmentEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserId());
@@ -38,6 +40,7 @@ public class UserEventListener {
         }
     }
 
+    @Async
     @EventListener
     public void handleClosingStore(ClosingStoreEvent event) {
         // As requested, fetching all users with roles in the store
@@ -50,7 +53,7 @@ public class UserEventListener {
             // Here would be logic to send to UI if user is logged in
         }
     }
-
+    @Async
     @EventListener
     public void handleResponseFromStore(ResponseFromStoreEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserId());
@@ -63,6 +66,7 @@ public class UserEventListener {
         });
     }
 
+    @Async
     @EventListener
     public void handleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
         // As requested, fetching all users with roles in the store
@@ -78,6 +82,7 @@ public class UserEventListener {
         }
     }
 
+    @Async
     @EventListener
     public void handleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
         // As requested, fetching all users with roles in the store
@@ -92,6 +97,7 @@ public class UserEventListener {
         }
     }
 
+    @Async
     @EventListener
     public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder
@@ -108,6 +114,7 @@ public class UserEventListener {
         });
     }
 
+    @Async
     @EventListener
     public void handleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDPrevHighestBid()); // Event targets the previously highest bidder
@@ -121,6 +128,7 @@ public class UserEventListener {
         });
     }
 
+    @Async
     @EventListener
     public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder whose bid was declined

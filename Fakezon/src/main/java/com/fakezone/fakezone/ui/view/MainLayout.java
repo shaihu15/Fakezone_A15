@@ -24,8 +24,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -60,9 +62,11 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 
 public class MainLayout extends AppLayout implements RouterLayout {
     RestTemplate restTemplate;
+    private final String webUrl;
     private final String apiUrl;
-    public MainLayout(@Value("${api.url}") String apiUrl) {
+    public MainLayout(@Value("${api.url}") String apiUrl, @Value("${website.url}") String webUrl) {
         this.apiUrl = apiUrl;
+        this.webUrl = webUrl;
         restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
@@ -87,16 +91,29 @@ public class MainLayout extends AppLayout implements RouterLayout {
                     cookie.setPath("/");
                     cookie.setMaxAge(60 * 60 * 5); // 5 hours
                     response.addCookie(cookie);
+                    token = tokenResponse.getData();
                 }
                 else{
                     Notification.show(apiResponse.getBody().getMessage());
+                }
+                url = apiUrl + "user/createUnsignedUser";
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", token);
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                ResponseEntity<Response<UserDTO>> apiCreateGuestResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<Response<UserDTO>>() {});
+                Response<UserDTO> guestRes = apiCreateGuestResponse.getBody();
+                if(guestRes.isSuccess()){
+                    session.setAttribute("userDTO", guestRes.getData());
                 }
             }
             catch(Exception e){
                 Notification.show(e.getMessage());
             }
 
-            
         }
     }
 
@@ -151,7 +168,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         // CART
         Icon cartIcon = VaadinIcon.CART.create();
-        cartIcon.setSize("30px");// TO DO: ADD ANCHOR TO NAVIGATE TO CART
+        cartIcon.setSize("30px");
         Button cartButton = new Button(cartIcon);
         cartButton.addClickListener(event -> showCart());
 
@@ -355,7 +372,15 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
 
     private void showCart(){
-        testDialog();
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        if(user != null){
+            UI.getCurrent().navigate(webUrl+"cart/" + user.getUserId());
+        }
+        else{
+            testDialog();
+        }
     }
 
     private void loginRegisterClick(){

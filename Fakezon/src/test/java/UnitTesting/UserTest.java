@@ -126,11 +126,8 @@ public class UserTest {
         int quantity = 2;
         user.addToBasket(storeId, productId, quantity);
 
-        user.saveCartOrder();
-
-        // After saving, productsPurchase should contain the productId for the storeId
-        // (quantity is not tracked in productsPurchase, only productId presence)
-        assertTrue(user.getProductsPurchase().containsKey(storeId));
-        assertTrue(user.getProductsPurchase().get(storeId).contains(productId));
+        user.saveCartOrderAndDeleteIt();
+        Map<Integer, Map<Integer, Integer>> cartProducts = user.viewCart();
+        assertTrue(cartProducts.isEmpty(), "Cart should be empty after saving order");
     }
 }
