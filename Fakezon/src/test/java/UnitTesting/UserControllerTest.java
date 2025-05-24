@@ -1,5 +1,6 @@
 package UnitTesting;
 
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -28,6 +29,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.RegisteredRole;
 import java.time.LocalDate;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,9 +98,11 @@ class UserControllerTest {
         StoreDTO storeDTO = mock(StoreDTO.class);
 
         Map<StoreDTO, Map<StoreProductDTO, Boolean>> cartMap = Map.of(storeDTO, storeProductMap);
-        when(systemService.viewCart(userId)).thenReturn(new Response<>(cartMap, "Cart retrieved successfully", true, null, null));
+        List<CartItemInfoDTO> cartList = new ArrayList<>(List.of(new CartItemInfoDTO(storeId, productId, "test", "Product", quantity, true, 10.0)));
 
-        ResponseEntity<Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>>> response = userController.viewCart(token, userId);
+        when(systemService.viewCart(userId)).thenReturn(new Response<>(cartList, "Cart retrieved successfully", true, null, null));
+
+        ResponseEntity<Response<List<CartItemInfoDTO>>> response = userController.viewCart(token, userId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Cart retrieved successfully", response.getBody().getMessage());
@@ -111,7 +115,7 @@ class UserControllerTest {
         String token = "invalidToken";
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>>> response = userController.viewCart(token, userId);
+        ResponseEntity<Response<List<CartItemInfoDTO>>> response = userController.viewCart(token, userId);
 
         assertEquals(401, response.getStatusCodeValue());
         assertEquals("Invalid token", response.getBody().getMessage());
@@ -123,11 +127,11 @@ class UserControllerTest {
         String token = "validToken";
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         // Simulate a failed response from the service
-        Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>> failedResponse =
+        Response<List<CartItemInfoDTO>> failedResponse =
                 new Response<>(null, "Failed to retrieve cart", false, ErrorType.INVALID_INPUT, null);
         when(systemService.viewCart(userId)).thenReturn(failedResponse);
 
-        ResponseEntity<Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>>> response = userController.viewCart(token, userId);
+        ResponseEntity<Response<List<CartItemInfoDTO>>> response = userController.viewCart(token, userId);
 
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1276,4 +1280,148 @@ class UserControllerTest {
         assertEquals("An error occurred while retrieving unsigned user count", response.getBody().getMessage());
         verify(systemService, times(1)).getUnsignedUserCount(adminId);
     }
+    @Test
+    void testGetCartFinalPrice_Success() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "validToken";
+        double finalPrice = 99.99;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getCartFinalPrice(userId, dob))
+                .thenReturn(new Response<>(finalPrice, "Final price calculated", true, null, null));
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(finalPrice, response.getBody().getData());
+        assertEquals("Final price calculated", response.getBody().getMessage());
+        verify(systemService, times(1)).getCartFinalPrice(userId, dob);
+    }
+
+    @Test
+    void testGetCartFinalPrice_InvalidToken() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getCartFinalPrice(anyInt(), any(LocalDate.class));
+    }
+
+    @Test
+    void testGetCartFinalPrice_Failure() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getCartFinalPrice(userId, dob))
+                .thenReturn(new Response<>(null, "Calculation failed", false, ErrorType.INVALID_INPUT, null));
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Calculation failed", response.getBody().getMessage());
+        verify(systemService, times(1)).getCartFinalPrice(userId, dob);
+    }
+
+    @Test
+    void testGetCartFinalPrice_InternalError() {
+        int userId = 1;
+        LocalDate dob = LocalDate.of(2000, 1, 1);
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getCartFinalPrice(userId, dob)).thenThrow(new RuntimeException("Unexpected error"));
+
+        ResponseEntity<Response<Double>> response = userController.getCartFinalPrice(userId, dob, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("An error occurred while retrieving getCartFinalPrice", response.getBody().getMessage());
+        verify(systemService, times(1)).getCartFinalPrice(userId, dob);
+    }
+
+    @Test
+    void testRemoveFromBasket_Success() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeFromBasket(userId, productId, storeId))
+                .thenReturn(new Response<>(null, "Item removed from basket", true, null, null));
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Item removed from basket", response.getBody().getMessage());
+        verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
+    }
+
+    @Test
+    void testRemoveFromBasket_InvalidToken() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "invalidToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).removeFromBasket(anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
+    void testRemoveFromBasket_Failure() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeFromBasket(userId, productId, storeId))
+                .thenReturn(new Response<>(null, "Remove failed", false, ErrorType.INVALID_INPUT, null));
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Remove failed", response.getBody().getMessage());
+        verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
+    }
+
+    @Test
+    void testRemoveFromBasket_InternalError() {
+        int userId = 1;
+        int storeId = 2;
+        int productId = 3;
+        String token = "validToken";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.removeFromBasket(userId, productId, storeId)).thenThrow(new RuntimeException("Unexpected error"));
+
+        ResponseEntity<Response<Void>> response = userController.removeFromBasket(userId, storeId, productId, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("An error occurred while  removeFromBasket", response.getBody().getMessage());
+        verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
+    }
+
 }

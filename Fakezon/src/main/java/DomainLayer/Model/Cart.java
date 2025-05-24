@@ -50,4 +50,20 @@ public class Cart {
         }
         return allProducts;
     }
+
+    public void setProduct(int storeId, int productId, int quantity){
+        if (baskets.containsKey(storeId)) {
+            baskets.get(storeId).setProduct(productId, quantity);
+        } else {
+            Basket newBasket = new Basket(storeId);
+            newBasket.setProduct(productId, quantity);
+            baskets.put(storeId, newBasket);
+        }
+    }
+
+    public void removeItem(int storeId, int productId){
+        if(baskets.containsKey(storeId)){
+            baskets.get(storeId).removeItem(productId);
+        }
+    }
 }

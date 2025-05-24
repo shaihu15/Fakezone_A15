@@ -147,6 +147,10 @@ public class HomeView extends Main {
     }
 
     private void addToCart(int storeId, int prodId, int quantity){
+        if(quantity == 0){
+            Notification.show("Has to be at least 1");
+            return;
+        }
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");

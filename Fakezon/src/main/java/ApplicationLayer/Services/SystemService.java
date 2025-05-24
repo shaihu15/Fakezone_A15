@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.ProductRatingDTO;
@@ -798,7 +799,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Map<StoreDTO, Map<StoreProductDTO, Boolean>>> viewCart(int userId) {
+    public Response<List<CartItemInfoDTO>> viewCart(int userId) { //storeid -> <prodId -> bool>
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId)) {
@@ -809,10 +810,10 @@ public class SystemService implements ISystemService {
                 }
                 Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart = storeService.checkIfProductsInStores(userId,
                         cart);
-
                 this.userService.setCart(userId, convertStoreCartToUserCatt(validCart));
-
-                return new Response<>(validCart, "Cart retrieved successfully", true, null, null);
+                
+                List<CartItemInfoDTO> items = cartToList(validCart);
+                return new Response<>(items, "Cart retrieved successfully", true, null, null);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
@@ -952,8 +953,8 @@ public class SystemService implements ISystemService {
         userService.setCart(userId, validCart);
 
         prices = this.storeService.calcAmount(userId, cart, dob);
-        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
         totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
+        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
         try {
             if (this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
                 logger.info("System Service - User " + userId + " cart purchased successfully, payment method: "
@@ -998,6 +999,7 @@ public class SystemService implements ISystemService {
 
         this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod);
         this.userService.clearUserCart(userId);
+
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
     }
 
@@ -1764,6 +1766,49 @@ public class SystemService implements ISystemService {
 
     }
 
+    private List<CartItemInfoDTO> cartToList(Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart) {
+        List<CartItemInfoDTO> items = new ArrayList<>();
+        for (StoreDTO store : cart.keySet()) {
+            for (StoreProductDTO product : cart.get(store).keySet()) {
+                items.add(new CartItemInfoDTO(store.getStoreId(), product.getProductId(), store.getName(), product.getName(), product.getQuantity(), cart.get(store).get(product), product.getBasePrice()));
+            }
+        }
+        return items;
+    }
+
+    @Override
+    public Response<Double> getCartFinalPrice(int userId, LocalDate dob){
+        Cart cart = null;
+        try {
+            logger.info("System service - user " + userId + " checking final cart price");
+            cart = this.userService.getUserCart(userId);
+            if (cart.getAllProducts().isEmpty()) {
+                logger.error("System Service - Cart is empty: " + userId);
+                return new Response<Double>(null, "Cart is empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            Optional<User> user = this.userService.getAnyUserById(userId);
+            if (!user.isPresent()) {
+                logger.error("System Service - User not found: " + userId);
+                return new Response<Double>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during final cart price: " + e.getMessage());
+            return new Response<Double>(null, "Error during final cart price: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+        try{
+            Map<Integer, Double> map = this.storeService.calcAmount(userId, cart, dob);
+            Double finalPrice = 0.0;
+            for(Integer storeId : map.keySet()){
+                finalPrice += map.get(storeId);
+            }
+            return new Response<Double>(finalPrice, "success", true, null, null);
+        }
+        catch(Exception e){
+            return new Response<Double>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
     @Override
     public void clearAllData() {
         storeService.clearAllData();
@@ -1796,6 +1841,34 @@ public class SystemService implements ISystemService {
         }
         else{
             throw new IllegalArgumentException("user " + rating.getUserID() + " does not exist - prodRatingToProdRatingDTO");
+        }
+    }
+
+    @Override
+    public Response<Void> removeFromBasket(int userId, int productId, int storeId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing from basket: " + e.getMessage());
+            return new Response<>(null, "Error during removing from basket: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+        try {
+            this.userService.removeFromBasket(userId, storeId, productId);
+            logger.info(
+                    "System Service - User Removed basket product: " + productId + " from store: " + storeId
+                            + " by user: "
+                            + userId);
+            return new Response<>(null, "Product removed from basket successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing from basket: " + e.getMessage());
+            return new Response<>(null, "Error during removing from basket: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
     @Override

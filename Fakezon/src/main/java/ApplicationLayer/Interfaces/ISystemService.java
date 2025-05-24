@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ApplicationLayer.DTO.BasketDTO;
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.ProductRatingDTO;
@@ -87,7 +88,7 @@ public interface ISystemService {
 
     Response<Void> addToBasket(int userId, int productId, int storeId, int quantity);
 
-    Response<Map<StoreDTO,Map<StoreProductDTO,Boolean>>> viewCart(int userId); // returns a list of products in the cart
+    Response<List<CartItemInfoDTO>> viewCart(int userId); // returns a list of products in the cart
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
@@ -177,6 +178,11 @@ public interface ISystemService {
 
     LocalDate parseDate(String dateString);
 
+    Response<Double> getCartFinalPrice(int userId, LocalDate dob);
+
     void clearAllData();
+    
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
+
+    Response<Void> removeFromBasket(int userId, int productId, int storeId);
 }
