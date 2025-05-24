@@ -113,4 +113,6 @@ public interface IUserService {
 
     void clearAllData();
 
+    void removeAssignmentMessage(int storeId, int userId);
+
 }

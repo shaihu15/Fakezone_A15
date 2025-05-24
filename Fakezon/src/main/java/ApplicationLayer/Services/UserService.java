@@ -832,4 +832,17 @@ public class UserService implements IUserService {
     public void clearAllData() {
         userRepository.clearAllData();
     }
+
+    @Override
+    public void removeAssignmentMessage(int storeId, int userId){
+        Optional<Registered> user = userRepository.findById(userId);
+        logger.info("Trying to remove assignment message");
+        if(user.isPresent()){
+            user.get().removeAssignmentMessage(storeId);
+        }
+        else{
+            logger.error("User not found while removeAssignmentMessage");
+            throw new IllegalArgumentException("User not found");
+        }
+    }
 }
