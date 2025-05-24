@@ -34,7 +34,12 @@ import jakarta.servlet.http.HttpServletRequest;
 public class UserView extends VerticalLayout implements BeforeEnterObserver {
      private final String backendUrl = "http://localhost:8080";
     private final RestTemplate restTemplate;
+
+    // Declare card layouts as instance variables
+    private VerticalLayout ownedStoresCard;
+    private VerticalLayout managedStoresCard;
     private VerticalLayout pendingAssignmentsCard;
+    private Button openStoreButton; // Also declare button as instance variable
 
     private static final Set<String> OWNERSHIP_ROLES = Set.of(
         RoleName.STORE_FOUNDER.name(),
@@ -51,6 +56,27 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         setPadding(true);
         setSpacing(true);
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+        // Initialize cards and button here, in the constructor
+        // This ensures they are created only once when the view is first initialized
+        ownedStoresCard = createCardLayout("My Stores");
+        managedStoresCard = createCardLayout("Stores I Manage");
+        pendingAssignmentsCard = createCardLayout("Pending Assignments");
+        openStoreButton = new Button("Open a Store"); // Listener will be set in beforeEnter
+
+        // Add them to the view initially. Their content will be updated in beforeEnter.
+        add(openStoreButton, ownedStoresCard, managedStoresCard, pendingAssignmentsCard);
+    }
+
+    // Helper method to create a card layout with common styling
+    private VerticalLayout createCardLayout(String title) {
+        VerticalLayout card = new VerticalLayout();
+        card.setPadding(true);
+        card.setSpacing(true);
+        card.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
+        card.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        card.add(new H2(title));
+        return card;
     }
 
     @Override
@@ -73,11 +99,26 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         int userId = userDTO.getUserId();
-        String tokenValue = token;
+        String tokenValue = token; // Rename to avoid confusion with parameter
+
+        // Set the listener for the button here, or ensure it only happens once
+        // If it's always the same, you can set it in the constructor
+        // If userId or token change, then set it here, but ensure previous listeners are removed if re-added
+        openStoreButton.addClickListener(e -> openStoreDialog(userId, tokenValue));
+
+
+        // Clear existing content before adding new data
+        updateOwnedStores(userId, tokenValue);
+        updateManagedStores(userId, tokenValue);
+        refreshPendingAssignments(userId, tokenValue); // This already clears its content
+    }
+
+    private void updateOwnedStores(int userId, String token) {
+        ownedStoresCard.removeAll(); // Clear existing content (except the H2 title)
+        ownedStoresCard.add(new H2("My Stores")); // Re-add the title
 
         Map<Integer, String> userRoles = getUserRoles(token, userId);
         List<Component> ownedStores = new ArrayList<>();
-        List<Component> managedStores = new ArrayList<>();
 
         for (Map.Entry<Integer, String> entry : userRoles.entrySet()) {
             int storeId = entry.getKey();
@@ -88,56 +129,44 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                 String effectiveRole = (roleType != null) ? roleType : RoleName.UNASSIGNED.name();
                 if (OWNERSHIP_ROLES.contains(effectiveRole)) {
                     ownedStores.add(createStoreCard(store, effectiveRole));
-                } else if (MANAGEMENT_ROLES.contains(effectiveRole)) {
-                    managedStores.add(createStoreCard(store, effectiveRole));
-                } else {
-                    Notification.show("Unsupported role type '" + effectiveRole + "' for store ID: " + storeId + ". Treated as UNASSIGNED.", 3000, Notification.Position.MIDDLE);
                 }
-            } else {
-                Notification.show("Failed to load store with ID: " + storeId, 3000, Notification.Position.MIDDLE);
             }
         }
-
-        Button openStoreButton = new Button("Open a Store", e -> openStoreDialog(userId, token));
-        add(openStoreButton);
-
-        VerticalLayout ownedStoresCard = new VerticalLayout();
-        ownedStoresCard.setPadding(true);
-        ownedStoresCard.setSpacing(true);
-        ownedStoresCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
-        ownedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        ownedStoresCard.add(new H2("My Stores"));
 
         if (!ownedStores.isEmpty()) {
             ownedStores.forEach(ownedStoresCard::add);
         } else {
             ownedStoresCard.add(new Span("You do not own any stores."));
         }
+    }
 
-        VerticalLayout managedStoresCard = new VerticalLayout();
-        managedStoresCard.setPadding(true);
-        managedStoresCard.setSpacing(true);
-        managedStoresCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
-        managedStoresCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        managedStoresCard.add(new H2("Stores I Manage"));
+    private void updateManagedStores(int userId, String token) {
+        managedStoresCard.removeAll(); // Clear existing content (except the H2 title)
+        managedStoresCard.add(new H2("Stores I Manage")); // Re-add the title
+
+        Map<Integer, String> userRoles = getUserRoles(token, userId);
+        List<Component> managedStores = new ArrayList<>();
+
+        for (Map.Entry<Integer, String> entry : userRoles.entrySet()) {
+            int storeId = entry.getKey();
+            String roleType = entry.getValue();
+
+            StoreDTO store = getStoreDTO(storeId, token);
+            if (store != null) {
+                String effectiveRole = (roleType != null) ? roleType : RoleName.UNASSIGNED.name();
+                if (MANAGEMENT_ROLES.contains(effectiveRole)) {
+                    managedStores.add(createStoreCard(store, effectiveRole));
+                }
+            }
+        }
 
         if (!managedStores.isEmpty()) {
             managedStores.forEach(managedStoresCard::add);
         } else {
             managedStoresCard.add(new Span("You do not manage any stores."));
         }
-
-        pendingAssignmentsCard = new VerticalLayout();
-        pendingAssignmentsCard.setPadding(true);
-        pendingAssignmentsCard.setSpacing(true);
-        pendingAssignmentsCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
-        pendingAssignmentsCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        pendingAssignmentsCard.add(new H2("Pending Assignments"));
-
-        refreshPendingAssignments(userId, token);
-
-        add(ownedStoresCard, managedStoresCard, pendingAssignmentsCard);
     }
+
 
     private void acceptAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
         String url = String.format(backendUrl + "/api/store/acceptAssignment/%d/%d", storeId, userId);
@@ -153,20 +182,16 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                 new ParameterizedTypeReference<>() {}
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                Span successMessage = new Span("Assignment accepted successfully.");
-                successMessage.getStyle().set("color", "green");
-                assignmentCard.removeAll();
-                assignmentCard.add(successMessage);
+                Notification.show("Assignment accepted successfully.", 3000, Notification.Position.MIDDLE);
+                // Instead of reloading the page, update the specific sections
                 refreshPendingAssignments(userId, token);
+                updateManagedStores(userId, token); // The newly accepted store might be a managed store
+                updateOwnedStores(userId, token); // Or an owned store
             } else {
-                Span errorMessage = new Span("Failed to accept assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
-                errorMessage.getStyle().set("color", "red");
-                assignmentCard.add(errorMessage);
+                Notification.show("Failed to accept assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"), 3000, Notification.Position.MIDDLE);
             }
         } catch (Exception ex) {
-            Span errorMessage = new Span("Error accepting assignment: " + ex.getMessage());
-            errorMessage.getStyle().set("color", "red");
-            assignmentCard.add(errorMessage);
+            Notification.show("Error accepting assignment: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
         }
     }
 
@@ -184,26 +209,19 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                 new ParameterizedTypeReference<>() {}
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                Span successMessage = new Span("Assignment declined successfully.");
-                successMessage.getStyle().set("color", "green");
-                assignmentCard.removeAll();
-                assignmentCard.add(successMessage);
-                refreshPendingAssignments(userId, token);
+                Notification.show("Assignment declined successfully.", 3000, Notification.Position.MIDDLE);
+                refreshPendingAssignments(userId, token); // Only refresh pending assignments
             } else {
-                Span errorMessage = new Span("Failed to decline assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"));
-                errorMessage.getStyle().set("color", "red");
-                assignmentCard.add(errorMessage);
+                Notification.show("Failed to decline assignment: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"), 3000, Notification.Position.MIDDLE);
             }
         } catch (Exception ex) {
-            Span errorMessage = new Span("Error declining assignment: " + ex.getMessage());
-            errorMessage.getStyle().set("color", "red");
-            assignmentCard.add(errorMessage);
+            Notification.show("Error declining assignment: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
         }
     }
 
     private void refreshPendingAssignments(int userId, String token) {
         pendingAssignmentsCard.removeAll();
-        pendingAssignmentsCard.add(new H2("Pending Assignments"));
+        pendingAssignmentsCard.add(new H2("Pending Assignments")); // Re-add the title
 
         String assignmentsUrl = String.format(backendUrl + "/api/user/getAssignmentMessages/%d", userId);
         HttpHeaders headers = new HttpHeaders();
@@ -293,7 +311,8 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
                 Notification.show("Store created successfully!", 3000, Notification.Position.MIDDLE);
                 dialog.close();
-                getUI().ifPresent(ui -> ui.getPage().reload());
+                // Instead of reloading the page, update the relevant section directly
+                updateOwnedStores(userId, token); // The new store is an owned store
             } else {
                 Notification.show(response.getBody().getMessage(), 3000, Notification.Position.MIDDLE);
             }

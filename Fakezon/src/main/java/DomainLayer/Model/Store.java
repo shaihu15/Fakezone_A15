@@ -758,7 +758,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public void acceptAssignment(int userId) {
+    public boolean acceptAssignment(int userId) {
         rolesLock.lock();
         try {
             boolean ownership = pendingOwners.containsKey(userId);
@@ -769,10 +769,14 @@ public class Store implements IStore {
             if (!(ownership || managment)) {
                 throw new IllegalArgumentException("User " + userId + " has no pending assignments");
             }
-            if (ownership)
+            if (ownership){
                 acceptStoreOwner(pendingOwners.get(userId), userId);
-            else
+                return ownership;
+            }
+            else{
                 acceptStoreManager(pendingManagers.get(userId), userId);
+                return ownership;
+            }
 
         }
         catch(Exception e){

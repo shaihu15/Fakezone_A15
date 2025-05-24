@@ -124,8 +124,8 @@ public class SystemService implements ISystemService {
                 logger.error("System Service - Store is closed: " + storeId);
                 return new Response<>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
             }
-            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
-                logger.info("System Service - User is logged in or Guest: " + userId);
+            if (this.userService.isUserLoggedIn(userId)) {
+                logger.info("System Service - User is logged in: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
                 return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
@@ -612,7 +612,7 @@ public class SystemService implements ISystemService {
         try {
             logger.info("System service - user " + requesterId + " trying to add owner " + ownerId + " to store: "
                     + storeId);
-            userService.addRole(ownerId, storeId, new StoreOwner());
+           // userService.addRole(ownerId, storeId, new StoreOwner());
         } catch (Exception e) {
             logger.error("System service - failed to add StoreOwner role to user " + e.getMessage());
             return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false,
@@ -623,7 +623,7 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Store owner added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add owner to store " + e.getMessage());
-            userService.removeRole(ownerId, storeId); // reverting
+            //userService.removeRole(ownerId, storeId); // reverting
             return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
         }
@@ -802,7 +802,7 @@ public class SystemService implements ISystemService {
     public Response<List<CartItemInfoDTO>> viewCart(int userId) { //storeid -> <prodId -> bool>
         try {
             logger.info("System service - user " + userId + " trying to view cart");
-            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
+            if (this.userService.isUserLoggedIn(userId)) {
                 Map<Integer, Map<Integer, Integer>> cart = this.userService.viewCart(userId);
                 if (cart.isEmpty()) {
                     logger.error("System Service - Cart is empty: " + userId);
@@ -1111,10 +1111,19 @@ public class SystemService implements ISystemService {
     @Override
     public Response<String> acceptAssignment(int storeId, int userId) {
         try {
+            boolean isowner;
             logger.info("system service - user " + userId + " trying to accept assignment for store " + storeId);
-            storeService.acceptAssignment(storeId, userId);
-            userService.addRole(userId, storeId, new StoreManager());
+            isowner = storeService.acceptAssignment(storeId, userId);
+            if (isowner) {
+                userService.addRole(userId, storeId, new StoreOwner());
+                logger.info("system service - user " + userId + " is now an owner of store " + storeId);
+            }
+            else{
+                userService.addRole(userId, storeId, new StoreManager());
+                logger.info("system service - user " + userId + " is now a manager of store " + storeId);
+            }
             userService.removeAssignmentMessage(storeId, userId);
+            logger.info("system service - user " + userId + " assignment message removed for store " + storeId);
             return new Response<String>("success", "success", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("system service - acceptAssignment failed: " + e.getMessage());
@@ -1131,6 +1140,7 @@ public class SystemService implements ISystemService {
             logger.info("system service - user " + userId + " trying to decline assignment for store " + storeId);
             storeService.declineAssignment(storeId, userId);
             userService.removeAssignmentMessage(storeId, userId);
+            logger.info("system service - user " + userId + " assignment message removed for store " + storeId);
             return new Response<String>("success", "success", true, null, null);
         } catch (IllegalArgumentException e) {
             logger.error("system service - declineAssignment failed: " + e.getMessage());
@@ -1627,7 +1637,6 @@ public class SystemService implements ISystemService {
     @Override
     public Response<UserDTO> createUnsignedUser() {
         try {
-            logger.info("System Service - attempting createUnsignedUser");
             User unsignedUser = userService.createUnsignedUser(); 
             int userId = unsignedUser.getUserId();
             logger.info("System Service - created unsigned user with ID: " + unsignedUser.getUserId());

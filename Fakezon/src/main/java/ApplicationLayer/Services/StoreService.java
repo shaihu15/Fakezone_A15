@@ -582,15 +582,17 @@ public class StoreService implements IStoreService {
         }
 }
 
-    public void acceptAssignment(int storeId, int userId){
+    public boolean acceptAssignment(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
+        boolean isowner;
         if (store == null) {
             logger.error("acceptAssignment - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
         try{
-            store.acceptAssignment(userId);
+            isowner = store.acceptAssignment(userId);
             logger.info("User " + userId + " accepted assignment to store " + storeId);
+            return isowner;
         }
         catch(Exception e){
             logger.error("acceptAssignment failed for user " + userId + " store " + storeId + " error: " + e.getMessage());

@@ -119,7 +119,7 @@ public interface IStoreService {
 
   boolean canViewOrders(int storeId, int userId);
 
-  void acceptAssignment(int storeId, int userId);
+  boolean acceptAssignment(int storeId, int userId);
 
   void declineAssignment(int storeId, int userId);
 
