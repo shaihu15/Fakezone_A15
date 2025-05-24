@@ -371,7 +371,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAllMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -396,7 +396,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAssignmentMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, ErrorType.UNAUTHORIZED, null);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -421,7 +421,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAuctionEndedMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, ErrorType.UNAUTHORIZED, null);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
