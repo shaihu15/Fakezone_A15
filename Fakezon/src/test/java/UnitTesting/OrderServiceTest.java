@@ -138,4 +138,83 @@ public class OrderServiceTest {
         assertEquals("123 Main St", orderDTO.getAddress());
         assertEquals("CREDIT_CARD", orderDTO.getPaymentMethod().toString());
     }
+
+    @Test
+    void testGetOrderUserId_Success() {
+        IOrder mockOrder = mock(IOrder.class);
+        when(orderRepository.getOrder(1)).thenReturn(mockOrder);
+        when(mockOrder.getUserId()).thenReturn(42);
+
+        int userId = orderService.getOrderUserId(1);
+        assertEquals(42, userId);
+        verify(orderRepository, times(1)).getOrder(1);
+    }
+
+    @Test
+    void testGetOrderUserId_OrderNotFound() {
+        when(orderRepository.getOrder(1)).thenThrow(new IllegalArgumentException("Order not found"));
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> orderService.getOrderUserId(1));
+        assertEquals("Order not found", ex.getMessage());
+    }
+
+    @Test
+    void testGetOrderStoreId_Success() {
+        IOrder mockOrder = mock(IOrder.class);
+        when(orderRepository.getOrder(1)).thenReturn(mockOrder);
+        when(mockOrder.getStoreId()).thenReturn(99);
+
+        int storeId = orderService.getOrderStoreId(1);
+        assertEquals(99, storeId);
+        verify(orderRepository, times(1)).getOrder(1);
+    }
+
+    @Test
+    void testGetOrderStoreId_OrderNotFound() {
+        when(orderRepository.getOrder(1)).thenThrow(new IllegalArgumentException("Order not found"));
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> orderService.getOrderStoreId(1));
+        assertEquals("Order not found", ex.getMessage());
+    }
+
+    @Test
+    void testGetOrderProductIds_Success() {
+        IOrder mockOrder = mock(IOrder.class);
+        List<Integer> productIds = Arrays.asList(1, 2, 3);
+        when(orderRepository.getOrder(1)).thenReturn(mockOrder);
+        when(mockOrder.getProductIds()).thenReturn(productIds);
+
+        List<Integer> result = orderService.getOrderProductIds(1);
+        assertEquals(productIds, result);
+        verify(orderRepository, times(1)).getOrder(1);
+    }
+
+    @Test
+    void testGetOrderProductIds_OrderNotFound() {
+        when(orderRepository.getOrder(1)).thenThrow(new IllegalArgumentException("Order not found"));
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> orderService.getOrderProductIds(1));
+        assertEquals("Order not found", ex.getMessage());
+    }
+
+    @Test
+    void testAddOrderCart_Success() {
+        IOrder mockOrder = mock(IOrder.class);
+        doNothing().when(orderRepository).addOrder(mockOrder);
+        verify(orderRepository, times(1)).addOrder(mockOrder);
+    }
+
+@Test
+void testAddOrderCart_Exception() {
+    IOrder mockOrder = mock(IOrder.class);
+    doThrow(new RuntimeException("Add failed")).when(orderRepository).addOrder(mockOrder);
+
+    Exception ex = assertThrows(RuntimeException.class, () -> orderRepository.addOrder(mockOrder));
+    assertEquals("Add failed", ex.getMessage());
+}
+
+
+    @Test
+    void testClearAllData() {
+        orderService.clearAllData();
+        verify(orderRepository, times(1)).clearAllData();
+    }
+    
 }
