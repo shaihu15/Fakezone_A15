@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 
 import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.Response;
-
+import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
@@ -76,8 +78,8 @@ public class Immediate_Purchase_of_Shopping_Cart {
         productService = new ProductService(productRepository);
         authenticatorService = new AuthenticatorAdapter(userService);
         systemService = new SystemService(storeService, userService, productService,
-                orderService, deliveryService, authenticatorService,
-                paymentService, eventPublisher, notificationWebSocketHandler);
+        orderService, deliveryService, authenticatorService,
+        paymentService, eventPublisher, notificationWebSocketHandler);
         testHelper = new TestHelper(systemService);
         //paymentMethod = PaymentMethod.CREDIT_CARD;
     }
@@ -108,6 +110,9 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productIdInt, 1); 
         assertTrue(responseAddToBasket.isSuccess());
 
+          Collection<IOrder> orders = orderRepository.getAllOrders();
+        assertTrue(orders.size() == 0);
+
         //------------------------------------------------------------------------------------------------//
 
         Response<String> responsePurchaseCart = systemService.purchaseCart
@@ -118,7 +123,17 @@ public class Immediate_Purchase_of_Shopping_Cart {
         
         assertTrue(responsePurchaseCart.isSuccess());
         assertEquals("Cart purchased successfully", responsePurchaseCart.getMessage());
-        //add more asserts to check the order details, stock updates, etc.
+
+        Collection<IOrder> newOrders = orderRepository.getAllOrders();
+        assertTrue(newOrders.size() == 1);
+        int newOrderID = newOrders.iterator().next().getId();
+        orderRepository.deleteOrder(newOrderID);
+
+        Collection<IOrder> orders2 = orderRepository.getAllOrders();
+        assertTrue(orders2.size() == 0);
+
+
+
     }
 
     @Test
@@ -157,8 +172,12 @@ public class Immediate_Purchase_of_Shopping_Cart {
         
         assertFalse(responsePurchaseCart.isSuccess());
         assertEquals("Invalid country code", responsePurchaseCart.getMessage());
-        //add more asserts to check the order details, stock updates, etc.
-    }
+        
+        //There is no new order in order service
+        Collection<IOrder> orders = orderRepository.getAllOrders();
+        assertTrue(orders.size() == 0);
+        
+    }    
     
     @Test
     void testImmediatePurchase_invalUserId_Failure() {
@@ -196,8 +215,10 @@ public class Immediate_Purchase_of_Shopping_Cart {
         
         assertFalse(responsePurchaseCart.isSuccess());
         assertEquals("Error during purchase cart: User not found", responsePurchaseCart.getMessage());
-        //add more asserts to check the order details, stock updates, etc.
-    }
+
+        //There is no new order in order service
+        Collection<IOrder> orders = orderRepository.getAllOrders();
+        assertTrue(orders.size() == 0);    }
 
     @Test
     void testImmediatePurchase_Cartisempty_Failure() {
@@ -221,9 +242,6 @@ public class Immediate_Purchase_of_Shopping_Cart {
         assertNotNull(storePResponse.getData());
         //the product is added to the store
 
-        //Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productIdInt, 1); 
-        //assertTrue(responseAddToBasket.isSuccess());
-
         //------------------------------------------------------------------------------------------------//
 
         Response<String> responsePurchaseCart = systemService.purchaseCart
@@ -234,8 +252,10 @@ public class Immediate_Purchase_of_Shopping_Cart {
         
         assertFalse(responsePurchaseCart.isSuccess());
         assertEquals("Cart is empty", responsePurchaseCart.getMessage());
-        //add more asserts to check the order details, stock updates, etc.
-    }
+
+        //There is no new order in order service//There is no new order in order service
+        Collection<IOrder> orders = orderRepository.getAllOrders();
+        assertTrue(orders.size() == 0);}
 
     @Test
     void testImmediatePurchase_ProductsNotInStores_Failure() {
@@ -293,7 +313,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         
         assertFalse(responsePurchaseCart3.isSuccess());
         assertEquals("Product is not available: Test Product", responsePurchaseCart3.getMessage());
-        //add more asserts to check the order details, stock updates, etc.
+
     }
 
     @Test
@@ -332,6 +352,9 @@ public class Immediate_Purchase_of_Shopping_Cart {
 
         assertFalse(responsePurchaseCart.isSuccess());
         assertEquals("Payment failed", responsePurchaseCart.getMessage());
+        //There is no new order in order service
+        Collection<IOrder> orders = orderRepository.getAllOrders();
+        assertTrue(orders.size() == 0);
     }
 
     @Test
@@ -371,6 +394,10 @@ public class Immediate_Purchase_of_Shopping_Cart {
         // Assert: Purchase fails, no credit is charged
         assertFalse(responsePurchaseCart.isSuccess());
         assertEquals("Delivery failed", responsePurchaseCart.getMessage());
+
+        //There is no new order in order service
+        Collection<IOrder> orders = orderRepository.getAllOrders();
+        assertTrue(orders.size() == 0);
     }
 
 }
