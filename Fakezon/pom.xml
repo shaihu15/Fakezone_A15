@@ -167,6 +167,9 @@
                                 <exclude>com/fakezone/fakezone/FakezoneApplication.class</exclude>
                                 <exclude>com/fakezone/fakezone/SecurityConfig.class</exclude>
                                 <exclude>com/fakezone/fakezone/TempDataLoader.class</exclude>
+                                <exluce>ApplicationLayer.Services.AppConfig.class</exluce>
+                                <exluce>ApplicationLayer.Services.WebSocketConfig.class</exluce>
+
                             </excludes>
                         </configuration>
                     </execution>
