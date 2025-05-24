@@ -34,9 +34,7 @@ public class User {
     public boolean isRegistered() {
         return false;
     }
-    public HashMap<Integer, List<Integer>> getProductsPurchase() {
-        return productsPurchase;
-    }
+  
     public boolean isLoggedIn() {
         return isLoggedIn;
     }

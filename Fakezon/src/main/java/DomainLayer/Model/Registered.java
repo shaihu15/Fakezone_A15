@@ -186,5 +186,20 @@ public class Registered extends User {
         this.assignmentMessages.add(simpleEntry);
     }
 
-    
+    @Override
+    public void saveCartOrderAndDeleteIt() {
+        Map<Integer,Map<Integer,Integer>> products = cart.getAllProducts();
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
+            int storeId = entry.getKey();
+            Map<Integer, Integer> productQuantities = entry.getValue();
+            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
+                int productId = productEntry.getKey();
+                if (!productsPurchase.containsKey(storeId)) {
+                    productsPurchase.put(storeId, new ArrayList<>());
+                }
+                productsPurchase.get(storeId).add(productId);
+            }
+        }
+        this.cart.clear();
+    }
 }
