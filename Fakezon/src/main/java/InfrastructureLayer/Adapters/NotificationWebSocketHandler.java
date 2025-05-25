@@ -20,7 +20,7 @@ import java.util.Set;
 public class NotificationWebSocketHandler extends TextWebSocketHandler implements INotificationWebSocketHandler {
     // Need to set up and create events for the client to subscribe to those events can be created from string or enum
     // Map of event types to connected WebSocket sessions
-    private static final Map<String, Set<WebSocketSession>> eventSubscriptions = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, Set<WebSocketSession>> eventSubscriptions = Collections.synchronizedMap(new HashMap<>()); // (string) userId -> set(socket)
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     @Override
@@ -42,8 +42,8 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler implement
         logger.info("WebSocket connection closed: " + session.getId());
     }
 
-    public void broadcast(String event, String message) {
-        Set<WebSocketSession> sessions = eventSubscriptions.get(event);
+    public void broadcast(String userId, String message) {
+        Set<WebSocketSession> sessions = eventSubscriptions.get(userId);
         if (sessions != null) {
             synchronized (sessions) {
                 for (WebSocketSession session : sessions) {
