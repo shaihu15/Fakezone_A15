@@ -19,7 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
-import ApplicationLayer.DTO.StoreRolesDTO; // Corrected import based on your provided DTO
+import ApplicationLayer.DTO.StoreRolesDTO; 
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
 
@@ -389,23 +389,10 @@ public class StoreOwner_change_permissions {
 
     @Test
     void testRemoveStoreManagerPermissions_Failure_RemovingPermissionsFromSelf() {
-        // This test assumes an owner cannot explicitly manage their own "manager" permissions,
-        // as owners typically have full control by default and are not subject to manager permissions.
-        // If your system allows an owner to also be a manager and modify those specific manager permissions,
-        // this test might need adjustment.
-        // For simplicity, we assume attempting this operation on self (as owner acting on self as manager) fails.
 
-        // Arrange: Make OwnerUserId a manager of the store as well (if your system allows this setup)
-        // If your system doesn't allow an owner to also be a manager, then this test
-        // will likely fail at the 'addStoreManager' step or `systemService.getStoreRoles`
-        // won't list the owner as a manager.
         List<StoreManagerPermission> ownerAsManagerPerms = Arrays.asList(StoreManagerPermission.INVENTORY, StoreManagerPermission.VIEW_ROLES);
         systemService.addStoreManager(storeId, OwnerUserId, OwnerUserId, ownerAsManagerPerms);
-        // Assuming the above call to addStoreManager will fail or be a no-op for an existing owner,
-        // or that even if it succeeds, the owner's inherent rights aren't affected by manager roles.
-        // In a real scenario, this step might need specific handling or be impossible.
-        // For this test, we proceed assuming a failure is expected if an owner tries to remove manager perms from themselves.
-        
+
         List<StoreManagerPermission> permsToRemove = Arrays.asList(StoreManagerPermission.INVENTORY);
 
         // Act (OwnerUserId tries to remove permissions from itself assuming it's also a manager)
@@ -448,8 +435,8 @@ public class StoreOwner_change_permissions {
         // Shutdown the executor
         executor.shutdown();
 
-        assertTrue(result1.isSuccess());
-        assertFalse(result2.isSuccess());
+        // Assert that exactly one of the operations succeeded
+        assertTrue(result1.isSuccess() ^ result2.isSuccess());
 
         // Verify the manager now has the permission
         Response<StoreRolesDTO> finalRolesRes = systemService.getStoreRoles(storeId, OwnerUserId);
@@ -463,7 +450,7 @@ public class StoreOwner_change_permissions {
     }
 
     @Test
-    void testRemoveStoreManagerPermissions_Concurrency_BothSucceedIfPermissionExists() throws InterruptedException, ExecutionException {
+    void testRemoveStoreManagerPermissions_Concurrency_OnlyOneSucceedsIfPermissionExists() throws InterruptedException, ExecutionException {
         // Arrange
         // Add a permission that both owners will try to remove
         List<StoreManagerPermission> permsToRemoveConcurrently = Arrays.asList(StoreManagerPermission.REQUESTS_REPLY);
@@ -488,7 +475,7 @@ public class StoreOwner_change_permissions {
 
         executor.shutdown();
 
-        assertTrue(result1.isSuccess() || result2.isSuccess()); // At least one should indicate success for the removal
+        assertTrue(result1.isSuccess() ^ result2.isSuccess()); // At least one should indicate success for the removal
         
         // Verify the manager no longer has the permission
         Response<StoreRolesDTO> finalRolesRes = systemService.getStoreRoles(storeId, OwnerUserId);
