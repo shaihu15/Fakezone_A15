@@ -1061,7 +1061,7 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private OrderDTO createOrderDTO(IOrder order) {
+    public OrderDTO createOrderDTO(IOrder order) {
         List<ProductDTO> productDTOS = new ArrayList<>();
         for (int productId : order.getProductIds()) {
             ProductDTO productDTO = this.productService.viewProduct(productId);
