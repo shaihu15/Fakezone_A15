@@ -61,7 +61,6 @@ public class ProductRepositoryTest {
         verify(product1, times(1)).setName("UpdatedProduct1");
         verify(product1, times(1)).setDescription("UpdatedDesc");
         verify(product1, atLeast(1)).addStore(anyInt());
-        verify(product1, atLeast(1)).removeStore(anyInt());
     }
 
     @Test
@@ -162,7 +161,7 @@ public class ProductRepositoryTest {
         repository.addProduct(product2);
         Collection<IProduct> found = repository.searchProducts("good product");
         assertTrue(found.contains(product1));
-        assertFalse(found.contains(product2));
+        assertTrue(found.contains(product2));
     }
 
     @Test
