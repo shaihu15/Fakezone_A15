@@ -333,7 +333,7 @@ public class UserRepository implements IUserRepository {
         return unsignedUsers.size();
     }
 
-    private void init(){
+    public void init(){
         logger.info("user repo init");
         //UID: 1001 founder of store 1001
         users.put(1001, new Registered("testFounder1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1001));
