@@ -2,6 +2,7 @@ package UnitTesting;
 
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -313,5 +314,98 @@ public class RegisteredTest {
         assertEquals("storeMsg", all.get(1));
         assertEquals("assignMsg", all.get(2));
         assertEquals("auctionMsg", all.get(3));
+    }
+    @Test
+    void testSaveCartOrderAndDeleteIt_SingleStoreSingleProduct() {
+        // Arrange
+        int storeId = 1;
+        int productId = 101;
+        int quantity = 2;
+
+        // Add product to the user's actual cart using addToBasket
+        registeredUser.addToBasket(storeId, productId, quantity);
+
+        // Act
+        registeredUser.saveCartOrderAndDeleteIt();
+
+        // Assert
+        assertTrue(registeredUser.didPurchaseStore(storeId), "User should have purchased from this store after saving cart.");
+        assertTrue(registeredUser.didPurchaseProduct(storeId, productId), "User should have purchased this product after saving cart.");
+        // Verify cart is empty. Assuming Registered has a getCart() method that exposes the internal Cart.
+        assertTrue(registeredUser.getCart().getAllProducts().isEmpty(), "Cart should be empty after save and delete.");
+    }
+
+    @Test
+    void testSaveCartOrderAndDeleteIt_MultipleStoresMultipleProducts() {
+        // Arrange
+        int storeId1 = 1;
+        int productId1_1 = 101;
+        int productId1_2 = 102;
+        int quantity1_1 = 1;
+        int quantity1_2 = 3;
+
+        int storeId2 = 2;
+        int productId2_1 = 201;
+        int quantity2_1 = 5;
+
+        // Add products to the user's actual cart using addToBasket
+        registeredUser.addToBasket(storeId1, productId1_1, quantity1_1);
+        registeredUser.addToBasket(storeId1, productId1_2, quantity1_2);
+        registeredUser.addToBasket(storeId2, productId2_1, quantity2_1);
+
+        // Act
+        registeredUser.saveCartOrderAndDeleteIt();
+
+        // Assert
+        assertTrue(registeredUser.didPurchaseStore(storeId1), "User should have purchased from store 1.");
+        assertTrue(registeredUser.didPurchaseProduct(storeId1, productId1_1), "User should have purchased product 1.1.");
+        assertTrue(registeredUser.didPurchaseProduct(storeId1, productId1_2), "User should have purchased product 1.2.");
+
+        assertTrue(registeredUser.didPurchaseStore(storeId2), "User should have purchased from store 2.");
+        assertTrue(registeredUser.didPurchaseProduct(storeId2, productId2_1), "User should have purchased product 2.1.");
+
+        assertTrue(registeredUser.getCart().getAllProducts().isEmpty(), "Cart should be empty after save and delete.");
+    }
+
+    @Test
+    void testSaveCartOrderAndDeleteIt_EmptyCart() {
+        // Arrange - Cart is already empty by default in setUp
+        // No products added to cart
+
+        // Act
+        registeredUser.saveCartOrderAndDeleteIt();
+
+        // Assert
+        assertFalse(registeredUser.didPurchaseStore(1), "User should not have purchased store 1 if cart was empty.");
+        assertFalse(registeredUser.didPurchaseProduct(1, 101), "User should not have purchased product 101 if cart was empty.");
+        assertTrue(registeredUser.getCart().getAllProducts().isEmpty(), "Cart should still be empty if it started empty.");
+    }
+
+    @Test
+    void testSaveCartOrderAndDeleteIt_StoreAlreadyHasPurchases() {
+        // Arrange
+        int existingStoreId = 5;
+        int existingProductId = 505;
+        // Directly set a previous purchase to ensure it's not overwritten
+        registeredUser.setproductsPurchase(existingStoreId, new ArrayList<>(List.of(existingProductId)));
+
+        int newStoreId = 1;
+        int newProductId = 101;
+        int quantity = 1;
+
+        // Add new product to the user's actual cart using addToBasket
+        registeredUser.addToBasket(newStoreId, newProductId, quantity);
+
+        // Act
+        registeredUser.saveCartOrderAndDeleteIt();
+
+        // Assert
+        assertTrue(registeredUser.didPurchaseStore(existingStoreId), "Existing store purchase should remain.");
+        assertTrue(registeredUser.didPurchaseProduct(existingStoreId, existingProductId), "Existing product purchase should remain.");
+
+        assertTrue(registeredUser.didPurchaseStore(newStoreId), "New store purchase should be added.");
+        assertTrue(registeredUser.didPurchaseProduct(newStoreId, newProductId), "New product purchase should be added.");
+
+        assertTrue(registeredUser.getCart().getAllProducts().isEmpty(), "Cart should be empty after save and delete.");
     }
 }
