@@ -85,7 +85,7 @@ public class StoreService implements IStoreService {
     }
 
     // --- Store-related DTO Conversions ---
-    private StoreDTO toStoreDTO(Store store) {
+    public StoreDTO toStoreDTO(Store store) {
         int storeId = store.getId();
         Collection<StoreProductDTO> storeProductDTOs = store.getStoreProducts().values().stream()
                 .map(sp -> new StoreProductDTO(sp)) // using the constructor directly
@@ -139,19 +139,6 @@ public class StoreService implements IStoreService {
     }
 
     // --- Skeleton for remaining interface methods (still to be implemented) ---
-
-    @Override
-    public int updateStore(int storeId, int requesterId, String name) {
-        return 0;
-    }
-
-    @Override
-    public void deleteStore(int storeId, int requesterId) {
-    }
-
-    @Override
-    public void openStore(int storeId, int requesterId) {
-    }
 
     @Override
     public void closeStore(int storeId, int requesterId) {
@@ -234,16 +221,6 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public void removeStoreRating(int storeId, int userId) {
-    }
-
-    @Override
-    public double getStoreAverageRating(int storeId) {
-        return 0;
-    }
-
-
-    @Override
     public void addStoreProductRating(int storeId, int productId, int userId, double rating, String comment) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
@@ -252,31 +229,6 @@ public class StoreService implements IStoreService {
         }
         store.addStoreProductRating(userId, productId, rating, comment);
         logger.info("Store product rating added: " + productId + " by user: " + userId + " with rating: " + rating);
-    }
-
-    @Override
-    public void removeStoreProductRating(int storeId, int productId, int userId) {
-    }
-
-    @Override
-    public double getStoreProductAverageRating(int storeId, int productId) {
-        return 0;
-    }
-
-    @Override
-    public void addPurchasePolicy(int storeId, int requesterId, int policyId, String name, String description) {
-    }
-
-    @Override
-    public void removePurchasePolicy(int storeId, int requesterId, int policyId) {
-    }
-
-    @Override
-    public void addDiscountPolicy(int storeId, int requesterId, int policyId, String name, String description) {
-    }
-
-    @Override
-    public void removeDiscountPolicy(int storeId, int requesterId, int policyId) {
     }
 
     @Override
@@ -508,7 +460,7 @@ public class StoreService implements IStoreService {
         }
     }
 
-    private void isValidPurchaseActionForUserInStore(int storeId, int requesterId, int productId) {
+    public void isValidPurchaseActionForUserInStore(int storeId, int requesterId, int productId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
             logger.error("isValidPurchaseActionForUserInStore - Store not found: " + storeId);
@@ -692,7 +644,7 @@ public class StoreService implements IStoreService {
     }
 
 
-    private void init(){
+    public void init(){
         logger.info("store service init");
         storeRepository.addStore(new Store("store1001", 1001, publisher, 1001));
         Store uiStore = storeRepository.findById(1001);
@@ -749,7 +701,5 @@ public class StoreService implements IStoreService {
         }
         return store.getStoreProductAllRatings(productID);
     }
-
-
 
 }

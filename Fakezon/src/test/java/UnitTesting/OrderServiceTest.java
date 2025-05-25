@@ -1,16 +1,32 @@
 package UnitTesting;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.util.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Services.OrderService;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Model.Basket;
+import DomainLayer.Model.Order;
 import DomainLayer.Model.Store;
 
 public class OrderServiceTest {
@@ -209,4 +225,121 @@ void testAddOrderCart_Exception() {
         orderService.clearAllData();
         verify(orderRepository, times(1)).clearAllData();
     }
+    @Test
+    void testAddOrderCart_Success() {
+        // Arrange
+        StoreDTO storeDTO = mock(StoreDTO.class);
+        when(storeDTO.getStoreId()).thenReturn(1);
+        StoreProductDTO productDTO = mock(StoreProductDTO.class);
+        when(productDTO.getQuantity()).thenReturn(2);
+    
+        Map<StoreProductDTO, Boolean> products = new java.util.HashMap<>();
+        products.put(productDTO, true);
+    
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart = new java.util.HashMap<>();
+        cart.put(storeDTO, products);
+    
+        Map<Integer, Double> prices = new java.util.HashMap<>();
+        prices.put(1, 99.99);
+    
+        int userId = 42;
+        String address = "123 Main St";
+        PaymentMethod paymentMethod = PaymentMethod.CREDIT_CARD;
+    
+        // Act
+        orderService.addOrderCart(cart, prices, userId, address, paymentMethod);
+    
+        // Assert
+        verify(orderRepository, times(1)).addOrder(any(Order.class));
+    }
+    
+    @Test
+    void testAddOrderCart_MultipleStoresAndProducts() {
+        // Arrange
+        StoreDTO store1 = mock(StoreDTO.class);
+        StoreDTO store2 = mock(StoreDTO.class);
+        when(store1.getStoreId()).thenReturn(1);
+        when(store2.getStoreId()).thenReturn(2);
+    
+        StoreProductDTO product1 = mock(StoreProductDTO.class);
+        StoreProductDTO product2 = mock(StoreProductDTO.class);
+        StoreProductDTO product3 = mock(StoreProductDTO.class);
+        when(product1.getQuantity()).thenReturn(1);
+        when(product2.getQuantity()).thenReturn(2);
+        when(product3.getQuantity()).thenReturn(3);
+    
+        Map<StoreProductDTO, Boolean> products1 = new java.util.HashMap<>();
+        products1.put(product1, true);
+        products1.put(product2, false);
+    
+        Map<StoreProductDTO, Boolean> products2 = new java.util.HashMap<>();
+        products2.put(product3, true);
+    
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart = new java.util.HashMap<>();
+        cart.put(store1, products1);
+        cart.put(store2, products2);
+    
+        Map<Integer, Double> prices = new java.util.HashMap<>();
+        prices.put(1, 10.0);
+        prices.put(2, 20.0);
+    
+        int userId = 99;
+        String address = "456 Elm St";
+        PaymentMethod paymentMethod = PaymentMethod.CASH_ON_DELIVERY;
+    
+        // Act
+        orderService.addOrderCart(cart, prices, userId, address, paymentMethod);
+    
+        // Assert: Should call addOrder twice (once per store)
+        verify(orderRepository, times(2)).addOrder(any(Order.class));
+    }
+    
+    @Test
+    void testAddOrderCart_ThrowsIllegalArgumentException() {
+        // Arrange
+        StoreDTO storeDTO = mock(StoreDTO.class);
+        when(storeDTO.getStoreId()).thenReturn(1);
+        StoreProductDTO productDTO = mock(StoreProductDTO.class);
+        when(productDTO.getQuantity()).thenReturn(1);
+    
+        Map<StoreProductDTO, Boolean> products = new java.util.HashMap<>();
+        products.put(productDTO, true);
+    
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart = new java.util.HashMap<>();
+        cart.put(storeDTO, products);
+    
+        Map<Integer, Double> prices = new java.util.HashMap<>();
+        prices.put(1, 50.0);
+    
+        int userId = 7;
+        String address = "789 Oak St";
+        PaymentMethod paymentMethod = PaymentMethod.PAYPAL;
+    
+        doThrow(new IllegalArgumentException("Order error")).when(orderRepository).addOrder(any(Order.class));
+    
+        // Act & Assert
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            orderService.addOrderCart(cart, prices, userId, address, paymentMethod)
+        );
+        assertEquals("Order error", ex.getMessage());
+        verify(orderRepository, times(1)).addOrder(any(Order.class));
+    }
+    
+    @Test
+    void testAddOrderCart_EmptyCart_NoOrdersAdded() {
+        // Arrange
+        Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart = new java.util.HashMap<>();
+        Map<Integer, Double> prices = new java.util.HashMap<>();
+        int userId = 1;
+        String address = "Empty";
+        PaymentMethod paymentMethod = PaymentMethod.CREDIT_CARD;
+    
+        // Act
+        orderService.addOrderCart(cart, prices, userId, address, paymentMethod);
+    
+        // Assert: No orders should be added
+        verify(orderRepository, never()).addOrder(any(Order.class));
+    }
+    
+    
 }
