@@ -612,18 +612,10 @@ public class SystemService implements ISystemService {
         try {
             logger.info("System service - user " + requesterId + " trying to add owner " + ownerId + " to store: "
                     + storeId);
-           // userService.addRole(ownerId, storeId, new StoreOwner());
-        } catch (Exception e) {
-            logger.error("System service - failed to add StoreOwner role to user " + e.getMessage());
-            return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
-        }
-        try {
             storeService.addStoreOwner(storeId, requesterId, ownerId);
             return new Response<>(null, "Store owner added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add owner to store " + e.getMessage());
-            //userService.removeRole(ownerId, storeId); // reverting
             return new Response<>(null, "Error during adding store owner: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
         }
