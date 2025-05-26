@@ -591,18 +591,10 @@ public class SystemService implements ISystemService {
             List<StoreManagerPermission> perms) {
         try {
             logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: " + storeId);
-            //userService.addRole(managerId, storeId, new StoreManager());
-        } catch (Exception e) {
-            logger.error("System service - failed to add StoreManager role to user " + e.getMessage());
-            return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
-        }
-        try {
             storeService.addStoreManager(storeId, requesterId, managerId, perms);
             return new Response<>(null, "Store manager added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
-           // userService.removeRole(managerId, storeId); // reverting
             return new Response<>(null, "Error during adding store manager: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
@@ -1069,7 +1061,7 @@ public class SystemService implements ISystemService {
         }
     }
 
-    private OrderDTO createOrderDTO(IOrder order) {
+    public OrderDTO createOrderDTO(IOrder order) {
         List<ProductDTO> productDTOS = new ArrayList<>();
         for (int productId : order.getProductIds()) {
             ProductDTO productDTO = this.productService.viewProduct(productId);

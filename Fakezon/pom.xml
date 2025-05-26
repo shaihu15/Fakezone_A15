@@ -146,7 +146,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version> <!-- latest stable as of 2025 -->
+                <version>0.8.12</version> <!-- latest stable as of 2025 -->
                 <executions>
                     <!-- Attach JaCoCo as agent when running tests -->
                     <execution>

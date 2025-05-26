@@ -302,21 +302,19 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Map<Integer,Map<Integer,Integer>> viewCart(int userId) {
+    public Map<Integer, Map<Integer, Integer>> viewCart(int userId) {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
                 return user.get().viewCart();
             } catch (Exception e) {
-                // Handle exception if needed
                 System.out.println("Error during view cart: " + e.getMessage());
+                throw new IllegalArgumentException("Error during view cart: " + e.getMessage(), e); // Rethrow for testability
             }
         } else {
             throw new IllegalArgumentException("User not found");
         }
-        return null;
     }
-
     @Override
     public Cart getUserCart(int userId) {
         Optional<User> user = userRepository.findAllById(userId);

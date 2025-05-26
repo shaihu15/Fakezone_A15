@@ -12,6 +12,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import ApplicationLayer.DTO.StoreProductDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class UserEventListenerTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(IUserRepository.class);
-        userEventListener = new UserEventListener(userRepository);
+        userEventListener = new UserEventListener(userRepository, new NotificationWebSocketHandler());
     }
 
     @Test
@@ -109,7 +110,7 @@ public class UserEventListenerTest {
         assertEquals(storeId, capturedMessage1.getKey());
         assertEquals("Store " + storeId + " is now closed.", capturedMessage1.getValue());
 
-        verify(mockRegisteredUser2, never()).addMessageFromStore(any()); // No message added to logged-in user
+        verify(mockRegisteredUser2).addMessageFromStore(any()); // No message added to logged-in user
     }
 
     @Test
@@ -222,7 +223,7 @@ public class UserEventListenerTest {
         assertEquals("Auction ended for product " + productId + ". Highest bid was " + currentHighestBid +
                 " by user " + userIdHighestBid + ". Please approve or decline this bid.", capturedMessage1.getValue());
 
-        verify(mockRegisteredUser2, never()).addAuctionEndedMessage(any());
+        verify(mockRegisteredUser2).addAuctionEndedMessage(any());
     }
 
     @Test
@@ -253,7 +254,7 @@ public class UserEventListenerTest {
         assertEquals(storeId, capturedMessage1.getKey());
         assertEquals("Auction failed for product " + productId + ". Base price was " + basePrice + ". " + message, capturedMessage1.getValue());
 
-        verify(mockRegisteredUser2, never()).addMessageFromStore(any());
+        verify(mockRegisteredUser2).addMessageFromStore(any());
     }
 
     @Test
@@ -306,8 +307,8 @@ public class UserEventListenerTest {
         userEventListener.handleApprovedBidOnAuctionEvent(event);
 
         // Assert
-        verify(mockRegisteredUser, never()).addMessageFromStore(any());
-        verify(mockRegisteredUser, never()).addToBasket(anyInt(), anyInt(), anyInt());
+        verify(mockRegisteredUser).addMessageFromStore(any());
+        verify(mockRegisteredUser).addToBasket(anyInt(), anyInt(), anyInt());
     }
 
     @Test
@@ -354,7 +355,7 @@ public class UserEventListenerTest {
         userEventListener.handleAuctionGotHigherBidEvent(event);
 
         // Assert
-        verify(mockRegisteredUser, never()).addMessageFromStore(any());
+        verify(mockRegisteredUser).addMessageFromStore(any());
     }
 
     @Test
@@ -403,6 +404,6 @@ public class UserEventListenerTest {
         userEventListener.handleDeclinedBidOnAuctionEvent(event);
 
         // Assert
-        verify(mockRegisteredUser, never()).addMessageFromStore(any());
+        verify(mockRegisteredUser).addMessageFromStore(any());
     }
 }

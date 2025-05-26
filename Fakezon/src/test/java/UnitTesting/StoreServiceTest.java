@@ -1,8 +1,5 @@
 package UnitTesting;
 
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,24 +9,41 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
-import org.springframework.context.ApplicationEventPublisher;
+import org.mockito.Mock;
 
+import ApplicationLayer.Response;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+
+import org.springframework.context.ApplicationEventPublisher;
+import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDate;
+
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
+import DomainLayer.Model.Cart;
 import DomainLayer.Model.Store;
 import InfrastructureLayer.Repositories.StoreRepository;
-
+import ApplicationLayer.Enums.ErrorType;
+import static org.mockito.Mockito.*;
+import java.util.*;
+import java.util.stream.Collectors;
+import DomainLayer.Model.ProductRating;
 class StoreServiceTest {
 
     private IStoreRepository storeRepository;
     private StoreService storeService;
     private Store mockStore;
     private ApplicationEventPublisher publisher;
+
+    @Mock
+    private IStoreRepository mockStoreRepository;
 
     @BeforeEach
     void setUp() {
@@ -38,6 +52,8 @@ class StoreServiceTest {
                                                  // IStoreRepository
         storeService = new StoreService(storeRepository, publisher);
         mockStore = mock(Store.class);
+        mockStoreRepository = mock(IStoreRepository.class);
+        
     }
 
     @Test
@@ -342,31 +358,529 @@ class StoreServiceTest {
     }
 
     @Test
-    void testDecrementProductsInStores_StoreNotFound_ShouldThrow() {
+    void testGetAllStoreMessages_Success() {
+        int storeId = 1;
+        Store mockStore = mock(Store.class);
+        HashMap<Integer, String> messages = new HashMap<>();
+        messages.put(1, "Hello");
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.getAllStoreMessages()).thenReturn(messages);
+
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+
+        assertTrue(response.isSuccess());
+        assertEquals(messages, response.getData());
+        assertEquals("Messages retrieved successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    @Test
+    void testGetAllStoreMessages_EmptyMessages() {
+        int storeId = 2;
+        Store mockStore = mock(Store.class);
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.getAllStoreMessages()).thenReturn(new HashMap<>());
+
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("No messages found", response.getMessage());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+    @Test
+    void testGetAllStoreMessages_StoreThrowsException() {
+        int storeId = 3;
+        Store mockStore = mock(Store.class);
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.getAllStoreMessages()).thenThrow(new IllegalArgumentException("DB error"));
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+    
+        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during get messages: DB error"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+        @Test
+        void testGetAllStoreMessages_StoreNotFound() {
+            int storeId = 999;
+            when(mockStoreRepository.findById(storeId)).thenReturn(null);
+
+            StoreService service = new StoreService(mockStoreRepository, publisher);
+            Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+
+            assertFalse(response.isSuccess());
+            assertNull(response.getData());
+            assertEquals("Store not found", response.getMessage());
+            assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+        }
+    
+    @Test
+    void testCalcAmount_SingleStore_Success() {
         int userId = 1;
-        int storeId = 999;
+        int storeId = 10;
+        Cart cart = new Cart();
+        cart.addProduct(storeId, 101, 2); // storeId, productId, quantity
 
-        Map<Integer, Integer> products = Map.of(100, 1);
-        Map<Integer, Map<Integer, Integer>> cart = Map.of(storeId, products);
+        Store localMockStore = mock(Store.class);
+        when(mockStoreRepository.findById(storeId)).thenReturn(localMockStore);
+        when(localMockStore.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(50.0);
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            storeService.decrementProductsInStores(userId, cart);
-        });
+        StoreService service = new StoreService(mockStoreRepository, publisher); // <-- Use the mock!
+        LocalDate date = LocalDate.now();
+        Map<Integer, Double> result = service.calcAmount(userId, cart, date);
 
-        assertEquals("Store not found", exception.getMessage());
+        assertEquals(1, result.size());
+        assertEquals(50.0, result.get(storeId), 0.001);
+    }
+    @Test
+    void testCalcAmount_MultipleStores_Success() {
+        int userId = 1;
+        int storeId1 = 10, storeId2 = 20;
+        Cart cart = new Cart();
+        cart.addProduct(storeId1, 101, 2);
+        cart.addProduct(storeId2, 201, 1);
+    
+        Store mockStore1 = mock(Store.class);
+        Store mockStore2 = mock(Store.class);
+        when(mockStoreRepository.findById(storeId1)).thenReturn(mockStore1);
+        when(mockStoreRepository.findById(storeId2)).thenReturn(mockStore2);
+        when(mockStore1.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(30.0);
+        when(mockStore2.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(70.0);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher); // <-- Use the mock!
+        LocalDate date = LocalDate.now();
+        Map<Integer, Double> result = service.calcAmount(userId, cart, date);
+    
+        assertEquals(2, result.size());
+        assertEquals(30.0, result.get(storeId1), 0.001);
+        assertEquals(70.0, result.get(storeId2), 0.001);
     }
 
     @Test
-    void testReturnProductsToStores_StoreNotFound_ShouldThrow() {
-        int userId = 3;
-        int storeId = 404;
+    void testCalcAmount_StoreNotFound_ShouldThrow() {
+        int userId = 1;
+        int storeId = 999;
+        Cart cart = new Cart();
+        cart.addProduct(storeId, 101, 2);
 
-        Map<Integer, Map<Integer, Integer>> returnMap = Map.of(storeId, Map.of(101, 1));
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
 
+        LocalDate date = LocalDate.now();
         Exception ex = assertThrows(IllegalArgumentException.class, () -> {
-            storeService.returnProductsToStores(userId, returnMap);
+            storeService.calcAmount(userId, cart, date);
         });
-
         assertEquals("Store not found", ex.getMessage());
     }
+
+    @Test
+    void testCalcAmount_EmptyCart_ReturnsEmptyMap() {
+        int userId = 1;
+        Cart cart = new Cart();
+        LocalDate date = LocalDate.now();
+
+        Map<Integer, Double> result = storeService.calcAmount(userId, cart, date);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+        @Test
+        void testInit_Success() {
+            // If init() is public and has no parameters
+            assertDoesNotThrow(() -> storeService.init());
+        
+        // Optionally, verify side effects, e.g.:
+        // assertNotNull(storeService.getSomeInitializedField());
+        // assertTrue(storeService.isInitialized());
+    }
+    
+    @Test
+    void testInit_Idempotent() {
+        // If calling init() multiple times is allowed, test that it doesn't throw
+        storeService.init();
+        assertDoesNotThrow(() -> storeService.init());
+    }
+    
+
+    
+    @Test
+    void testViewStore_Success() {
+        int storeId = 1;
+        Store mockStore = mock(Store.class);
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+
+        StoreDTO expectedDTO = mock(StoreDTO.class);
+        StoreService spyService = spy(new StoreService(mockStoreRepository, publisher));
+        doReturn(expectedDTO).when(spyService).toStoreDTO(mockStore);
+
+        StoreDTO result = spyService.viewStore(storeId);
+
+        assertEquals(expectedDTO, result);
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(spyService, times(1)).toStoreDTO(mockStore);
+    }
+    
+    @Test
+    void testViewStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+    
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> storeService.viewStore(storeId));
+        assertEquals("Store not found", ex.getMessage());
+    }
+    
+    @Test
+    void testGetAllStores_EmptyList() {
+        when(mockStoreRepository.getAllStores()).thenReturn(Collections.emptyList());
+    
+        StoreService spyService = spy(storeService);
+        List<StoreDTO> result = spyService.getAllStores();
+    
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+    
+    @Test
+    void testGetAllStores_WithStores() {
+        Store store1 = mock(Store.class);
+        Store store2 = mock(Store.class);
+        List<Store> stores = Arrays.asList(store1, store2);
+
+        when(mockStoreRepository.getAllStores()).thenReturn(stores);
+
+        StoreService spyService = spy(new StoreService(mockStoreRepository, publisher));
+        StoreDTO dto1 = mock(StoreDTO.class);
+        StoreDTO dto2 = mock(StoreDTO.class);
+        doReturn(dto1).when(spyService).toStoreDTO(store1);
+        doReturn(dto2).when(spyService).toStoreDTO(store2);
+
+        List<StoreDTO> result = spyService.getAllStores();
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(dto1));
+        assertTrue(result.contains(dto2));
+        verify(mockStoreRepository, times(1)).getAllStores();
+        verify(spyService, times(1)).toStoreDTO(store1);
+        verify(spyService, times(1)).toStoreDTO(store2);
+    }
+    
+    @Test
+    void testSearchStores_Found() {
+        Store store1 = mock(Store.class);
+        Store store2 = mock(Store.class);
+        when(store1.getName()).thenReturn("SuperMart");
+        when(store2.getName()).thenReturn("MiniMart");
+        List<Store> stores = Arrays.asList(store1, store2);
+    
+        when(mockStoreRepository.getAllStores()).thenReturn(stores);
+    
+        StoreService spyService = spy(new StoreService(mockStoreRepository, publisher));
+        StoreDTO dto1 = mock(StoreDTO.class);
+        StoreDTO dto2 = mock(StoreDTO.class);
+        doReturn(dto1).when(spyService).toStoreDTO(store1);
+        doReturn(dto2).when(spyService).toStoreDTO(store2);
+    
+        List<StoreDTO> result = spyService.searchStores("Mart");
+    
+        assertEquals(2, result.size());
+        assertTrue(result.contains(dto1));
+        assertTrue(result.contains(dto2));
+    }
+    @Test
+    void testSearchStores_NotFound() {
+        Store store1 = mock(Store.class);
+        when(store1.getName()).thenReturn("SuperMart");
+        List<Store> stores = Arrays.asList(store1);
+
+        when(mockStoreRepository.getAllStores()).thenReturn(stores);
+
+        StoreService spyService = spy(new StoreService(mockStoreRepository, publisher));
+        StoreDTO dto1 = mock(StoreDTO.class);
+        doReturn(dto1).when(spyService).toStoreDTO(store1);
+
+        List<StoreDTO> result = spyService.searchStores("Electronics");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(mockStoreRepository, times(1)).getAllStores();
+    }
+    @Test
+    void testRemoveStoreOwner_StoreNotFound_ShouldThrow() {
+        int storeId = 999, requesterId = 1, ownerId = 2;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.removeStoreOwner(storeId, requesterId, ownerId));
+    }
+    
+    @Test
+    void testGetStoreRoles_StoreNotFound_ShouldThrow() {
+        int storeId = 999, userId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.getStoreRoles(storeId, userId));
+    }
+    
+    @Test
+    void testAddStoreManager_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1, managerId = 2;
+        List<StoreManagerPermission> perms = List.of();
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.addStoreManager(storeId, ownerId, managerId, perms));
+    }
+    
+    @Test
+    void testAddStoreManagerPermissions_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1, managerId = 2;
+        List<StoreManagerPermission> perms = List.of();
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.addStoreManagerPermissions(storeId, ownerId, managerId, perms));
+    }
+    
+    @Test
+    void testRemoveStoreManagerPermissions_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1, managerId = 2;
+        List<StoreManagerPermission> perms = List.of();
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.removeStoreManagerPermissions(storeId, ownerId, managerId, perms));
+    }
+    
+    @Test
+    void testRemoveStoreManager_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1, managerId = 2;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.removeStoreManager(storeId, ownerId, managerId));
+    }
+
+    
+    @Test
+    void testGetMessagesFromUsers_StoreNotFound_ShouldThrow() {
+        int userId = 1, storeId = 999;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.getMessagesFromUsers(userId, storeId));
+    }
+    
+    @Test
+    void testIsStoreOpen_StoreNotFound_ShouldThrow() {
+        int storeId = 999;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.isStoreOpen(storeId));
+    }
+    
+    @Test
+    void testGetMessagesFromStore_StoreNotFound_ShouldThrow() {
+        int userId = 1, storeId = 999;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.getMessagesFromStore(userId, storeId));
+    }
+    
+    @Test
+    void testGetProductFromStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999, productId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.getProductFromStore(storeId, productId));
+    }
+    
+    @Test
+    void testAddBidOnAuctionProductInStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999, userId = 1, productId = 1;
+        double bid = 100.0;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.addBidOnAuctionProductInStore(storeId, userId, productId, bid));
+    }
+    
+    @Test
+    void testDeclineAssignment_StoreNotFound_ShouldThrow() {
+        int storeId = 999, userId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.declineAssignment(storeId, userId));
+    }
+    @Test
+    void testCheckIfProductsInStores_StoreNotFound_ShouldThrow() {
+        int storeId = 999;
+        Map<Integer, Integer> products = Map.of(1, 2);
+        Map<Integer, Map<Integer, Integer>> cart = Map.of(storeId, products);
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        int userId = 1;
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> storeService.checkIfProductsInStores(userId, cart));
+        assertNotNull(ex);
+    }
+    
+    @Test
+    void testDecrementProductsInStores_StoreNotFound_ShouldThrow() {
+        int userId = 1, storeId = 999;
+        Map<Integer, Integer> products = Map.of(1, 2);
+        Map<Integer, Map<Integer, Integer>> cart = Map.of(storeId, products);
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.decrementProductsInStores(userId, cart));
+    }
+    
+    @Test
+    void testReturnProductsToStores_StoreNotFound_ShouldThrow() {
+        int userId = 1, storeId = 999;
+        Map<Integer, Map<Integer, Integer>> returnMap = Map.of(storeId, Map.of(1, 2));
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> storeService.returnProductsToStores(userId, returnMap));
+    }
+
+
+    @Test
+    void testAddProductToStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1;
+        int productId = 123;
+        String productName = "TestProduct";
+        double price = 10.0;
+        int quantity = 5;
+        PCategory category = PCategory.ELECTRONICS;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        assertThrows(IllegalArgumentException.class, () -> service.addProductToStore(storeId, ownerId, productId, productName, price, quantity, category));
+    }
+    
+    @Test
+    void testUpdateProductInStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1;
+        int productId = 123;
+        String productName = "TestProduct";
+        double price = 10.0;
+        int quantity = 5;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        assertThrows(IllegalArgumentException.class, () -> service.updateProductInStore(storeId, ownerId, productId, productName, price, quantity));
+    }
+    
+    @Test
+    void testRemoveProductFromStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1, productId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        assertThrows(IllegalArgumentException.class, () -> service.removeProductFromStore(storeId, ownerId, productId));
+    }
+    
+    @Test
+    void testIsValidPurchaseActionForUserInStore_StoreNotFound_ShouldThrow() {
+        int storeId = 999, userId = 1, productId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        assertThrows(IllegalArgumentException.class, () -> service.isValidPurchaseActionForUserInStore(storeId, userId,productId));
+    }
+    
+    @Test
+    void testSendResponseForAuctionByOwner_StoreNotFound_ShouldThrow() {
+        int storeId = 999, ownerId = 1, productId = 1, userId = 2;
+        boolean approved = true;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        assertThrows(IllegalArgumentException.class, () -> service.sendResponseForAuctionByOwner(storeId, ownerId, productId, approved));
+    }
+    
+    @Test
+    void testGetPendingOwners_StoreNotFound_ShouldThrow() {
+        int storeId = 999, requesterId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        assertThrows(IllegalArgumentException.class, () -> service.getPendingOwners(storeId, requesterId));
+    }
+    
+    @Test
+    void testGetPendingManagers_StoreNotFound_ShouldThrow() {
+        int storeId = 999, requesterId = 1;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        assertThrows(IllegalArgumentException.class, () -> service.getPendingManagers(storeId, requesterId));
+    }
+    @Test
+    void testCanViewOrders_Success() {
+        int storeId = 1, userId = 2;
+        Store mockStore = mock(Store.class);
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.canViewOrders(userId)).thenReturn(true);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        boolean result = service.canViewOrders(storeId, userId);
+    
+        assertTrue(result);
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(mockStore, times(1)).canViewOrders(userId);
+    }
+    
+    @Test
+    void testCanViewOrders_StoreNotFound_ShouldThrow() {
+        int storeId = 999, userId = 2;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> service.canViewOrders(storeId, userId));
+        assertEquals("Store not found", ex.getMessage());
+        verify(mockStoreRepository, times(1)).findById(storeId);
+    }
+    @Test
+    void testAddStoreProductRating_Success() {
+        int storeId = 1, productId = 2, userId = 3;
+        double rating = 4.5;
+        String comment = "Great product!";
+        Store mockStore = mock(Store.class);
+    
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        assertDoesNotThrow(() -> service.addStoreProductRating(storeId, productId, userId, rating, comment));
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(mockStore, times(1)).addStoreProductRating(userId, productId, rating, comment);
+    }
+    
+    @Test
+    void testAddStoreProductRating_StoreNotFound_ShouldThrow() {
+        int storeId = 999, productId = 2, userId = 3;
+        double rating = 4.5;
+        String comment = "Great product!";
+    
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        Exception ex = assertThrows(IllegalArgumentException.class, () ->
+            service.addStoreProductRating(storeId, productId, userId, rating, comment)
+        );
+        assertEquals("Store not found", ex.getMessage());
+        verify(mockStoreRepository, times(1)).findById(storeId);
+    }
+    @Test
+    void testClearAllData_CallsRepository() {
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        service.clearAllData();
+        verify(mockStoreRepository, times(1)).clearAllData();
+    }
+    @Test
+    void testGetStoreProductRatings_Success() {
+        int storeId = 1, productId = 2;
+        Store mockStore = mock(Store.class);
+        List<ProductRating> ratings = Arrays.asList(
+            mock(ProductRating.class), mock(ProductRating.class)
+        );
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.getStoreProductAllRatings(productId)).thenReturn(ratings);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        List<ProductRating> result = service.getStoreProductRatings(storeId, productId);
+    
+        assertEquals(ratings, result);
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(mockStore, times(1)).getStoreProductAllRatings(productId);
+    }
+    
+    @Test
+    void testGetStoreProductRatings_StoreNotFound_ShouldThrow() {
+        int storeId = 999, productId = 2;
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+    
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> service.getStoreProductRatings(storeId, productId));
+        assertEquals("Store not found", ex.getMessage());
+        verify(mockStoreRepository, times(1)).findById(storeId);
+    }
+
 }

@@ -34,6 +34,16 @@ public class TestHelper {
         return "user3@gmail.com";
     }
 
+    // Added for register_and_login4
+    public String validEmail4() {
+        return "user4@gmail.com";
+    }
+
+    // Added for register_and_login5
+    public String validEmail5() {
+        return "user5@gmail.com";
+    }
+
     public String validPassword() {
         return "StrongPass123";
     }
@@ -44,6 +54,16 @@ public class TestHelper {
 
     public String validPassword3() {
         return "StrongPass12345";
+    }
+
+    // Added for register_and_login4
+    public String validPassword4() {
+        return "StrongPass123456";
+    }
+
+    // Added for register_and_login5
+    public String validPassword5() {
+        return "StrongPass1234567";
     }
 
     public String invalidEmail() {
@@ -103,16 +123,16 @@ public class TestHelper {
     }
 
     public Response<UserDTO> register_and_login(){
-        String validEmail = validEmail();
-        String validPassword = validPassword();
+        String email = validEmail();
+        String password = validPassword();
         String validBirthDay = validBirthDate_Over18();
         String validCountry = validCountry();
-        Response<String> result = systemService.guestRegister(validEmail, validPassword, validBirthDay, validCountry );
+        Response<String> result = systemService.guestRegister(email, password, validBirthDay, validCountry );
 
         if(!result.isSuccess()){
             return null;
         }
-        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail, validPassword);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
             : new Response<>(null, loginResponse.getMessage(), false, null, null);
@@ -122,17 +142,17 @@ public class TestHelper {
         return loginResult;
     }
 
-        public Response<UserDTO> register_and_login2(){
-        String validEmail2 = validEmail2();
-        String validPassword2 = validPassword2();
+    public Response<UserDTO> register_and_login2(){
+        String email = validEmail2();
+        String password = validPassword2();
         String validBirthDay = validBirthDate_Over18();
         String validCountry = validCountry();
-        Response<String> result = systemService.guestRegister(validEmail2, validPassword2, validBirthDay, validCountry );
+        Response<String> result = systemService.guestRegister(email, password, validBirthDay, validCountry );
 
         if(!result.isSuccess()){
             return null;
         }
-        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail2, validPassword2);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
             : new Response<>(null, loginResponse.getMessage(), false, null, null);
@@ -142,17 +162,59 @@ public class TestHelper {
         return loginResult;
     }
 
-        public Response<UserDTO> register_and_login3(){
-        String validEmail = validEmail3();
-        String validPassword = validPassword3();
+    public Response<UserDTO> register_and_login3(){
+        String email = validEmail3();
+        String password = validPassword3();
         String validBirthDay = validBirthDate_Over18();
         String validCountry = validCountry();
-        Response<String> result = systemService.guestRegister(validEmail, validPassword, validBirthDay, validCountry );
+        Response<String> result = systemService.guestRegister(email, password, validBirthDay, validCountry );
 
         if(!result.isSuccess()){
             return null;
         }
-        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(validEmail, validPassword);
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
+        Response<UserDTO> loginResult = loginResponse.isSuccess() 
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+
+    // Added register_and_login4
+    public Response<UserDTO> register_and_login4(){
+        String email = validEmail4();
+        String password = validPassword4();
+        String validBirthDay = validBirthDate_Over18();
+        String validCountry = validCountry();
+        Response<String> result = systemService.guestRegister(email, password, validBirthDay, validCountry );
+
+        if(!result.isSuccess()){
+            return null;
+        }
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
+        Response<UserDTO> loginResult = loginResponse.isSuccess() 
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+
+    // Added register_and_login5
+    public Response<UserDTO> register_and_login5(){
+        String email = validEmail5();
+        String password = validPassword5();
+        String validBirthDay = validBirthDate_Over18();
+        String validCountry = validCountry();
+        Response<String> result = systemService.guestRegister(email, password, validBirthDay, validCountry );
+
+        if(!result.isSuccess()){
+            return null;
+        }
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
             : new Response<>(null, loginResponse.getMessage(), false, null, null);
@@ -189,7 +251,7 @@ public class TestHelper {
         }
     }
 
-        public Response<StoreProductDTO> addProductToStore2(int storeId, int userId) {
+    public Response<StoreProductDTO> addProductToStore2(int storeId, int userId) {
         String productName = "Test Product2";
         String productDescription = "Test Description2";
         String category = PCategory.BOOKS.toString();
@@ -203,15 +265,11 @@ public class TestHelper {
         }
     }
 
-       public Response<Integer> openStore(int userId){
+    public Response<Integer> openStore(int userId){
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
         if(!resultAddStore.isSuccess()){
             return null;
         }
         return resultAddStore;
     }
-
-
-
-
 }
