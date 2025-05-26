@@ -1,8 +1,6 @@
 package UnitTesting;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,13 +20,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import DomainLayer.Interfaces.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
+
+import DomainLayer.Interfaces.*;
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
@@ -1080,10 +1074,11 @@ class SystemServiceTest {
     @Test
     void testAcceptAssignment_Success() {
         int userId = 1, storeId = 2;
-        doNothing().when(storeService).acceptAssignment(userId, storeId);
-    
+        when(storeService.acceptAssignment(storeId, userId)).thenReturn(true);
+        when(userService.isUserLoggedIn(userId)).thenReturn(true);
+
         Response<String> response = systemService.acceptAssignment(userId, storeId);
-    
+
         assertTrue(response.isSuccess());
     }
     
