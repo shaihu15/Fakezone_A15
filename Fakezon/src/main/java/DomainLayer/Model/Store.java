@@ -1161,7 +1161,7 @@ public class Store implements IStore {
     public List<Integer> getPendingOwners(int requesterId){
         rolesLock.lock();
         try{
-            if(!isOwner(requesterId)){
+            if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))){
                 throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
             }
             List<Integer> pending = new ArrayList<>(pendingOwners.keySet());
@@ -1177,7 +1177,7 @@ public class Store implements IStore {
         rolesLock.lock();
 
         try{
-            if(!isOwner(requesterId)){
+            if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))){
                 throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
             }
             List<Integer> pending = new ArrayList<>(pendingManagers.keySet());

@@ -737,6 +737,68 @@ public class StoreTest {
         assertFalse(result.isEmpty());
     }
     
+    @Test
+    void testGetPendingOwners_PermissionChecks() {
+        int newOwner = 12345;
+        store.addStoreOwner(founderId, newOwner);
+        // Founder can view pending owners
+        assertTrue(store.getPendingOwners(founderId).contains(newOwner));
+
+        // Add a manager with VIEW_ROLES permission
+        int managerWithView = 11111;
+        store.addStoreManager(founderId, managerWithView, List.of(StoreManagerPermission.VIEW_ROLES));
+        store.acceptAssignment(managerWithView);
+        assertTrue(store.getPendingOwners(managerWithView).contains(newOwner));
+
+        // Add a manager without VIEW_ROLES permission
+        int managerNoView = 22222;
+        store.addStoreManager(founderId, managerNoView, List.of(StoreManagerPermission.INVENTORY));
+        store.acceptAssignment(managerNoView);
+        assertThrows(IllegalArgumentException.class, () -> store.getPendingOwners(managerNoView));
+
+        // Non-owner, non-manager should throw
+        int randomUser = 33333;
+        assertThrows(IllegalArgumentException.class, () -> store.getPendingOwners(randomUser));
+    }
+
+    @Test
+    void testGetPendingOwners_EmptyList() {
+        // No pending owners
+        List<Integer> pending = store.getPendingOwners(founderId);
+        assertTrue(pending.isEmpty());
+    }
+    
+    @Test
+    void testGetPendingManagers_PermissionChecks() {
+        int newManager = 54321;
+        store.addStoreManager(founderId, newManager, List.of(StoreManagerPermission.INVENTORY));
+        // Founder can view pending managers
+        assertTrue(store.getPendingManagers(founderId).contains(newManager));
+
+        // Add a manager with VIEW_ROLES permission
+        int managerWithView = 11111;
+        store.addStoreManager(founderId, managerWithView, List.of(StoreManagerPermission.VIEW_ROLES));
+        store.acceptAssignment(managerWithView);
+        assertTrue(store.getPendingManagers(managerWithView).contains(newManager));
+
+        // Add a manager without VIEW_ROLES permission
+        int managerNoView = 22222;
+        store.addStoreManager(founderId, managerNoView, List.of(StoreManagerPermission.INVENTORY));
+        store.acceptAssignment(managerNoView);
+        assertThrows(IllegalArgumentException.class, () -> store.getPendingManagers(managerNoView));
+
+        // Non-owner, non-manager should throw
+        int randomUser = 33333;
+        assertThrows(IllegalArgumentException.class, () -> store.getPendingManagers(randomUser));
+    }
+
+    @Test
+    void testGetPendingManagers_EmptyList() {
+        // No pending managers
+        List<Integer> pending = store.getPendingManagers(founderId);
+        assertTrue(pending.isEmpty());
+    }
+    
     
     
     

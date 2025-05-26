@@ -870,7 +870,7 @@ class StoreControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request.getData(), token);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());

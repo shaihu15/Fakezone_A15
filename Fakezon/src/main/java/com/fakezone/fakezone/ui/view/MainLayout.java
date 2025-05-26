@@ -174,11 +174,12 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         // USER VIEW BUTTON
         Button userViewButton = new Button("User area", click -> {
-            if (!isGuestToken() || session.getAttribute("userDTO") != null) {
+            if (!isGuestToken() && session.getAttribute("userDTO") != null) { // More precise check: not guest AND has userDTO
                 UI.getCurrent().navigate("user");
             } else {
                 Notification.show("Please log in to view this page.");
-                UI.getCurrent().navigate(""); // Optional, to reset to home
+                // Removed: UI.getCurrent().navigate("");
+                // By not navigating here, the user stays on the current URL
             }
         });
 

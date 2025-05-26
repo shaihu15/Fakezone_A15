@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,7 @@ import DomainLayer.Model.Registered;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import DomainLayer.Model.User;
+import DomainLayer.IRepository.IRegisteredRole;
 
 public class SystemServiceAdminTest {
 
@@ -471,6 +473,73 @@ public class SystemServiceAdminTest {
         assertFalse(response.isSuccess());
         assertEquals("Invalid user ID", response.getMessage());
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+
+    @Test
+    void testGetUserRoles_Success() {
+        int userId = 123;
+        // Arrange
+        when(mockUserService.isUserLoggedIn(userId)).thenReturn(true);
+        HashMap<Integer, IRegisteredRole> roles = new HashMap<>();
+        IRegisteredRole mockRole = mock(IRegisteredRole.class);
+        roles.put(1, mockRole);
+        when(mockUserService.getAllRoles(userId)).thenReturn(roles);
+
+        // Act
+        Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(userId);
+
+        // Assert
+        assertTrue(response.isSuccess());
+        assertEquals(roles, response.getData());
+        assertEquals("User roles retrieved successfully", response.getMessage());
+    }
+
+    @Test
+    void testGetUserRoles_UserNotLoggedIn() {
+        int userId = 123;
+        // Arrange
+        when(mockUserService.isUserLoggedIn(userId)).thenReturn(false);
+
+        // Act
+        Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(userId);
+
+        // Assert
+        assertFalse(response.isSuccess());
+        assertEquals("User is not logged in", response.getMessage());
+        assertEquals(ApplicationLayer.Enums.ErrorType.INVALID_INPUT, response.getErrorType());
+        verify(mockUserService, never()).getAllRoles(userId);
+    }
+
+    @Test
+    void testGetUserRoles_IllegalArgumentException() {
+        int userId = 123;
+        // Arrange
+        when(mockUserService.isUserLoggedIn(userId)).thenReturn(true);
+        when(mockUserService.getAllRoles(userId)).thenThrow(new IllegalArgumentException("Bad input"));
+
+        // Act
+        Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(userId);
+
+        // Assert
+        assertFalse(response.isSuccess());
+        assertEquals("Bad input", response.getMessage());
+        assertEquals(ApplicationLayer.Enums.ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+
+    @Test
+    void testGetUserRoles_GenericException() {
+        int userId = 123;
+        // Arrange
+        when(mockUserService.isUserLoggedIn(userId)).thenReturn(true);
+        when(mockUserService.getAllRoles(userId)).thenThrow(new RuntimeException("Something failed"));
+
+        // Act
+        Response<HashMap<Integer, IRegisteredRole>> response = systemService.getUserRoles(userId);
+
+        // Assert
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("Error getting user roles: Something failed"));
+        assertEquals(ApplicationLayer.Enums.ErrorType.INTERNAL_ERROR, response.getErrorType());
     }
 
 
