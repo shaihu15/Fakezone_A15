@@ -128,7 +128,7 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User is logged in  or Guest: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
-                return new Response<>(null, "User is not logged in  or Guest", false, ErrorType.INVALID_INPUT, null);
+                return new Response<>(null, "User is not logged in or Guest", false, ErrorType.INVALID_INPUT, null);
             }
             product = this.storeService.getProductFromStore(productId, storeId);
         } catch (Exception e) {

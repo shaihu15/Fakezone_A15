@@ -547,7 +547,7 @@ class SystemServiceTest {
         Response<Void> response = systemService.addToBasket(userId, productId, storeId, quantity);
 
         assertFalse(response.isSuccess());
-        assertEquals("User is not logged in", response.getMessage());
+        assertEquals("User is not logged in or Guest", response.getMessage());
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
     }
 
