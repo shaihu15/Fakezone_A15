@@ -1008,7 +1008,7 @@ class StoreControllerTest {
                 eq(storeId), eq(requesterId), eq(managerId), eq(permissions.stream().map(StoreManagerPermission::valueOf).toList())))
             .thenReturn(new Response<>(null, "Permissions removed successfully", true, null, null));
     
-        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, permissions, token);
     
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -1026,7 +1026,7 @@ class StoreControllerTest {
     
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
     
-        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, permissions, token);
     
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1049,7 +1049,7 @@ class StoreControllerTest {
                 eq(storeId), eq(requesterId), eq(managerId), eq(permissions.stream().map(StoreManagerPermission::valueOf).toList())))
             .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
     
-        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, permissions, token);
     
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1073,7 +1073,7 @@ class StoreControllerTest {
                 eq(storeId), eq(requesterId), eq(managerId), eq(permissions.stream().map(StoreManagerPermission::valueOf).toList())))
             .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
     
-        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, permissions, token);
     
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1097,7 +1097,7 @@ class StoreControllerTest {
                 eq(storeId), eq(requesterId), eq(managerId), eq(permissions.stream().map(StoreManagerPermission::valueOf).toList())))
             .thenThrow(new RuntimeException("Unexpected error"));
     
-        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, request, token);
+        ResponseEntity<Response<Void>> response = storeController.removeStoreManagerPermissions(storeId, managerId, permissions, token);
     
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -2356,4 +2356,4 @@ class StoreControllerTest {
         assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
         verify(systemService, times(1)).getPendingOwners(storeId, requesterId);
     }    
-}         
+}       

@@ -23,19 +23,24 @@ import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
+// import ApplicationLayer.Request; // No longer needed for @RequestParam endpoints
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.DefaultResponseErrorHandler;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpSession;
@@ -47,6 +52,13 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     private final String backendUrl = "http://localhost:8080";
     private final RestTemplate restTemplate;
     private final Span loading = new Span("Loading store...");
+
+    // Store these at the class level after initial fetch
+    private int currentStoreId;
+    private UserDTO currentUserDTO;
+    private String currentToken;
+    private Set<StoreManagerPermission> effectivePermissions = new HashSet<>();
+    private VerticalLayout rolesDisplaySection; // New section for roles details
 
     public StoreView() {
         restTemplate = new RestTemplate();
@@ -77,6 +89,9 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
             return;
         }
 
+        this.currentUserDTO = userDTO;
+        this.currentToken = token;
+
         QueryParameters queryParameters = event.getLocation().getQueryParameters();
         Map<String, List<String>> parameters = queryParameters.getParameters();
         List<String> storeIdParam = parameters.getOrDefault("storeId", List.of());
@@ -98,28 +113,122 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
             return;
         }
 
-        StoreDTO store = getStoreDTO(storeId, token);
+        this.currentStoreId = storeId; // Store storeId
+
+        StoreDTO store = getStoreDTO(currentStoreId, currentToken);
         remove(loading);
         if (store == null) {
-            add(createErrorCard("Failed to load store with ID: " + storeId));
+            add(createErrorCard("Failed to load store with ID: " + currentStoreId));
             return;
         }
+
+        // --- Fetch permissions immediately ---
+        fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
 
         // Show store info in a centered card
         VerticalLayout storeInfoCard = createStoreInfoCard(store);
 
-        // Add navigation and action buttons
-        Button[] manageButton = new Button[1];
-        manageButton[0] = new Button("Manage Store", e -> {
-            manageButton[0].setEnabled(false); // Disable during fetch
-            fetchAndShowStoreRoles(storeId, userDTO.getUserId(), token);
-            manageButton[0].setEnabled(true);
-        });
-        manageButton[0].getStyle().set("background-color", "#2E7D32").set("color", "white");
+        // Action Buttons (visible if permission exists)
+        HorizontalLayout actionButtonsLayout = new HorizontalLayout();
+        actionButtonsLayout.setSpacing(true);
+        actionButtonsLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        actionButtonsLayout.setAlignItems(Alignment.CENTER);
+        actionButtonsLayout.getStyle().set("margin-top", "10px");
+
+        // Add Product button
+        if (effectivePermissions.contains(StoreManagerPermission.INVENTORY)) {
+            Button addProductButton = new Button("Add Product", VaadinIcon.PLUS.create());
+            addProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            addProductButton.addClickListener(e -> showAddProductDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
+            actionButtonsLayout.add(addProductButton);
+        }
+
+        // Add Manager button
+        if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) { // Assuming VIEW_ROLES for adding roles
+            Button addManagerButton = new Button("Add Manager", VaadinIcon.PLUS.create());
+            addManagerButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            addManagerButton.addClickListener(e -> showAddManagerDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
+            actionButtonsLayout.add(addManagerButton);
+        }
+
+        // Add Owner button
+        if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) { // Assuming VIEW_ROLES for adding roles
+            Button addOwnerButton = new Button("Add Owner", VaadinIcon.PLUS.create());
+            addOwnerButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            addOwnerButton.addClickListener(e -> showAddOwnerDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
+            actionButtonsLayout.add(addOwnerButton);
+        }
+
+
+        // "View/Manage Roles" button
+        Button viewManageRolesButton = new Button("View/Manage Roles", e -> showStoreManagementSection());
+        viewManageRolesButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
+        actionButtonsLayout.add(viewManageRolesButton);
+
+
         RouterLink backLink = new RouterLink("Back to User Area", UserView.class);
         backLink.getStyle().set("margin", "10px").set("color", "#1976D2");
-        add(backLink, storeInfoCard, manageButton[0]);
+
+        // Initialize rolesDisplaySection, initially empty
+        rolesDisplaySection = new VerticalLayout();
+        rolesDisplaySection.setPadding(false);
+        rolesDisplaySection.setSpacing(true);
+        rolesDisplaySection.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+
+
+        add(backLink, storeInfoCard, actionButtonsLayout, rolesDisplaySection);
+    }
+
+    private void fetchUserPermissionsForStore(int storeId, int userId, String token) {
+        String rolesUrl = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", storeId, userId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<StoreRolesDTO>> rolesResponse =
+                restTemplate.exchange(
+                    rolesUrl,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+                );
+
+            if (rolesResponse.getStatusCode().is2xxSuccessful() && rolesResponse.getBody().isSuccess()) {
+                StoreRolesDTO roles = rolesResponse.getBody().getData();
+                effectivePermissions.clear(); // Clear previous permissions
+
+                if (roles != null) {
+                    // Determine effective permissions for the current user (userId)
+                    if (roles.getFounderId() == userId) {
+                        effectivePermissions.addAll(Set.of(StoreManagerPermission.values())); // Founder has all permissions
+                    } else if (roles.getStoreOwners() != null && roles.getStoreOwners().contains(userId)) {
+                        effectivePermissions.addAll(Set.of(StoreManagerPermission.values())); // Owners have all permissions
+                    } else if (roles.getStoreManagers() != null && roles.getStoreManagers().containsKey(userId)) {
+                        List<StoreManagerPermission> managerPermissions = roles.getStoreManagers().get(userId);
+                        if (managerPermissions != null) {
+                            effectivePermissions.addAll(managerPermissions);
+                        }
+                    }
+                }
+            } else {
+                // If backend returns an error or success=false, we still try to proceed
+                // but effectivePermissions will remain empty or as is.
+                Notification.show("Could not fully fetch your permissions for the store: " +
+                                  (rolesResponse.getBody() != null ? rolesResponse.getBody().getMessage() : "Unknown error"),
+                                  3000, Notification.Position.MIDDLE);
+            }
+        } catch (HttpClientErrorException.Forbidden ex) {
+            // Specifically handle 403 Forbidden for getStoreRoles if backend throws it
+            // This means the user is not even a manager/owner/founder of the store, or backend is very strict
+            effectivePermissions.clear(); // Ensure no permissions if forbidden
+            Notification.show("Access to store roles denied. You may not be associated with this store.", 3000, Notification.Position.MIDDLE);
         }
+        catch (Exception ex) {
+            // General error, effectivePermissions will remain empty
+            Notification.show("Error fetching user permissions: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
+    }
 
     private VerticalLayout createStoreInfoCard(StoreDTO store) {
         VerticalLayout storeInfoCard = new VerticalLayout();
@@ -131,11 +240,11 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         title.getStyle().set("color", "#2E7D32");
         storeInfoCard.add(title);
         String storeDetailsLine = String.format(
-            "Name: %s  |  ID: %d  |  Open: %s  |  Average Rating: %.1f",
-            store.getName(),
-            store.getStoreId(),
-            store.isOpen() ? "Yes" : "No",
-            store.getRatings().values().stream().mapToDouble(d -> d).average().orElse(0.0)
+                "Name: %s | ID: %d | Open: %s | Average Rating: %.1f",
+                store.getName(),
+                store.getStoreId(),
+                store.isOpen() ? "Yes" : "No",
+                store.getRatings().values().stream().mapToDouble(d -> d).average().orElse(0.0)
         );
         Span details = new Span(storeDetailsLine);
         details.getStyle().set("font-size", "1.1em");
@@ -155,34 +264,17 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         return errorCard;
     }
 
-    private void fetchAndShowStoreRoles(int storeId, int userId, String token) {
-        removeAll();
-        add(loading);
+    private void showStoreManagementSection() {
+        rolesDisplaySection.removeAll(); // Clear previous content
 
-        // Rebuild store info and buttons
-        StoreDTO store = getStoreDTO(storeId, token);
-        VerticalLayout storeInfoCard = store != null ? createStoreInfoCard(store) : createErrorCard("Failed to load store details for ID: " + storeId);
-
-        Button manageButton = new Button("Manage Store");
-        manageButton.addClickListener(e -> {
-            manageButton.setEnabled(false);
-            fetchAndShowStoreRoles(storeId, userId, token);
-            manageButton.setEnabled(true);
-        });
-        manageButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
-
-        RouterLink backLink = new RouterLink("Back to user Area", UserView.class);
-        backLink.getStyle().set("margin", "10px").set("color", "#1976D2");
-
-        String rolesUrl = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", storeId, userId);
-        String pendingManagersUrl = String.format(backendUrl + "/api/store/getPendingManagers/%d/%d", storeId, userId);
-        String pendingOwnersUrl = String.format(backendUrl + "/api/store/getPendingOwners/%d/%d", storeId, userId);
+        // Fetch full roles data (this is where the backend fix for getStoreRoles is critical)
+        String rolesUrl = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", currentStoreId, currentUserDTO.getUserId());
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
+        headers.set("Authorization", currentToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
+        StoreRolesDTO roles = null;
         try {
-            // Fetch confirmed roles
             ResponseEntity<Response<StoreRolesDTO>> rolesResponse =
                 restTemplate.exchange(
                     rolesUrl,
@@ -191,79 +283,100 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
                     new ParameterizedTypeReference<>() {}
                 );
 
-            // Fetch pending managers
-            ResponseEntity<Response<List<Integer>>> pendingManagersResponse =
-                restTemplate.exchange(
-                    pendingManagersUrl,
-                    HttpMethod.GET,
-                    entity,
-                    new ParameterizedTypeReference<>() {}
-                );
-
-            // Fetch pending owners
-            ResponseEntity<Response<List<Integer>>> pendingOwnersResponse =
-                restTemplate.exchange(
-                    pendingOwnersUrl,
-                    HttpMethod.GET,
-                    entity,
-                    new ParameterizedTypeReference<>() {}
-                );
-
-            remove(loading);
-
             if (rolesResponse.getStatusCode().is2xxSuccessful() && rolesResponse.getBody().isSuccess()) {
-                StoreRolesDTO roles = rolesResponse.getBody().getData();
-                List<Integer> pendingManagers = null;
+                roles = rolesResponse.getBody().getData();
+            } else {
+                // If backend returns an error or success=false for getStoreRoles,
+                // we still proceed but roles will be null, and specific sections will be hidden.
+                Notification.show("Failed to fetch full store roles for display: " +
+                                  (rolesResponse.getBody() != null ? rolesResponse.getBody().getMessage() : "Unknown error"),
+                                  3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error fetching full store roles for display: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+            // roles will remain null, leading to conditional display
+        }
+
+
+        // These will be empty if effectivePermissions doesn't contain VIEW_ROLES
+        List<Integer> pendingManagers = new ArrayList<>();
+        List<Integer> pendingOwners = new ArrayList<>();
+        Component pendingRolesMessage = null;
+
+        boolean canViewPendingRoles = effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES);
+
+        if (canViewPendingRoles) {
+            // Only attempt to fetch pending if user has VIEW_ROLES
+            String pendingManagersUrl = String.format(backendUrl + "/api/store/getPendingManagers/%d/%d", currentStoreId, currentUserDTO.getUserId());
+            String pendingOwnersUrl = String.format(backendUrl + "/api/store/getPendingOwners/%d/%d", currentStoreId, currentUserDTO.getUserId());
+
+            try {
+                ResponseEntity<Response<List<Integer>>> pendingManagersResponse =
+                    restTemplate.exchange(
+                        pendingManagersUrl,
+                        HttpMethod.GET,
+                        entity,
+                        new ParameterizedTypeReference<>() {}
+                    );
                 if (pendingManagersResponse.getStatusCode().is2xxSuccessful() && pendingManagersResponse.getBody().isSuccess()) {
                     pendingManagers = pendingManagersResponse.getBody().getData();
                 } else {
-                    Span pendingError = new Span("Failed to fetch pending managers: " + (pendingManagersResponse.getBody() != null ? pendingManagersResponse.getBody().getMessage() : "Unknown error"));
-                    pendingError.getStyle().set("color", "red");
-                    add(createErrorCard(pendingError.getText()));
-                    Notification.show(pendingError.getText(), 3000, Notification.Position.MIDDLE);
-                    pendingManagers = new ArrayList<>();
+                    Notification.show("Failed to fetch pending managers: " + (pendingManagersResponse.getBody() != null ? pendingManagersResponse.getBody().getMessage() : "Unknown error"),
+                            3000, Notification.Position.MIDDLE);
                 }
+            } catch (Exception e) {
+                Notification.show("Error fetching pending managers: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
+            }
 
-                List<Integer> pendingOwners = null;
+            try {
+                ResponseEntity<Response<List<Integer>>> pendingOwnersResponse =
+                    restTemplate.exchange(
+                        pendingOwnersUrl,
+                        HttpMethod.GET,
+                        entity,
+                        new ParameterizedTypeReference<>() {}
+                    );
                 if (pendingOwnersResponse.getStatusCode().is2xxSuccessful() && pendingOwnersResponse.getBody().isSuccess()) {
                     pendingOwners = pendingOwnersResponse.getBody().getData();
                 } else {
-                    Span pendingError = new Span("Failed to fetch pending owners: " + (pendingOwnersResponse.getBody() != null ? pendingOwnersResponse.getBody().getMessage() : "Unknown error"));
-                    pendingError.getStyle().set("color", "red");
-                    add(createErrorCard(pendingError.getText()));
-                    Notification.show(pendingError.getText(), 3000, Notification.Position.MIDDLE);
-                    pendingOwners = new ArrayList<>();
+                    Notification.show("Failed to fetch pending owners: " + (pendingOwnersResponse.getBody() != null ? pendingOwnersResponse.getBody().getMessage() : "Unknown error"),
+                            3000, Notification.Position.MIDDLE);
                 }
-
-                // Create roles card
-                VerticalLayout rolesCard = createRolesCard(roles, pendingManagers, pendingOwners, storeId, userId, token);
-
-                add(backLink, storeInfoCard, manageButton, rolesCard);
-            } else {
-                add(backLink, storeInfoCard, manageButton, createErrorCard("Failed to fetch store roles: " + (rolesResponse.getBody() != null ? rolesResponse.getBody().getMessage() : "Unknown error")));
-                Notification.show("Failed to fetch store roles.", 3000, Notification.Position.MIDDLE);
+            } catch (Exception e) {
+                Notification.show("Error fetching pending owners: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
             }
-        } catch (Exception ex) {
-            remove(loading);
-            add(backLink, storeInfoCard, manageButton, createErrorCard("Error while fetching roles: " + ex.getMessage()));
-            Notification.show("Error fetching roles: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        } else {
+            // Set a message to display in place of pending roles if user has no permission
+            Span message = new Span("You do not have permission to view pending roles or manage existing roles.");
+            message.getStyle().set("color", "#757575").set("font-style", "italic");
+            pendingRolesMessage = message;
         }
+
+        // Create roles card, passing effective permissions and pending roles message
+        VerticalLayout rolesCard = createRolesCard(roles, pendingManagers, pendingOwners, currentStoreId, currentUserDTO.getUserId(), currentToken, effectivePermissions, pendingRolesMessage);
+        rolesDisplaySection.add(rolesCard);
     }
 
-    private VerticalLayout createRolesCard(StoreRolesDTO roles, List<Integer> pendingManagers, List<Integer> pendingOwners, int storeId, int userId, String token) {
+    private VerticalLayout createRolesCard(StoreRolesDTO roles, List<Integer> pendingManagers, List<Integer> pendingOwners, int storeId, int userId, String token, Set<StoreManagerPermission> effectivePermissions, Component pendingRolesMessage) {
         VerticalLayout rolesCard = new VerticalLayout();
         rolesCard.setPadding(true);
         rolesCard.setSpacing(true);
         rolesCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px").set("background-color", "#F5F5F5");
         rolesCard.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+        rolesCard.getStyle().set("margin-top", "20px"); // Add some top margin
 
-        H2 rolesTitle = new H2("Store Roles");
+        H2 rolesTitle = new H2("Store Roles Details");
         rolesTitle.getStyle().set("color", "#D81B60");
         rolesCard.add(rolesTitle);
 
+        if (roles == null) {
+            rolesCard.add(new Span("Could not load roles information."));
+            return rolesCard;
+        }
+
         HorizontalLayout rolesLayout = new HorizontalLayout();
         rolesLayout.setSpacing(true);
-        rolesLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
+        rolesLayout.setDefaultVerticalComponentAlignment(Alignment.START);
 
         // Founder
         VerticalLayout founderColumn = new VerticalLayout();
@@ -275,8 +388,29 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         VerticalLayout ownersColumn = new VerticalLayout();
         ownersColumn.setSpacing(false);
         ownersColumn.add(new Span("Owners:"));
-        String ownersList = roles.getStoreOwners() != null ? String.join(", ", roles.getStoreOwners().stream().map(String::valueOf).toList()) : "None";
-        ownersColumn.add(new Span(ownersList));
+        Collection<Integer> owners = roles.getStoreOwners();
+        if (owners != null && !owners.isEmpty()) {
+            for (Integer ownerId : owners) {
+                HorizontalLayout ownerEntry = new HorizontalLayout();
+                ownerEntry.setAlignItems(Alignment.CENTER);
+                ownerEntry.add(new Span("ID: " + ownerId));
+
+                // Conditionally add "Remove Owner" button based on VIEW_ROLES
+                if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) {
+                    Button removeOwnerButton = new Button("Remove", VaadinIcon.MINUS.create());
+                    removeOwnerButton.addThemeName("small error");
+                    removeOwnerButton.getStyle().set("margin-left", "10px");
+                    int finalOwnerId = ownerId;
+                    removeOwnerButton.addClickListener(e -> {
+                        showRemoveOwnerConfirmationDialog(storeId, userId, finalOwnerId, token);
+                    });
+                    ownerEntry.add(removeOwnerButton);
+                }
+                ownersColumn.add(ownerEntry);
+            }
+        } else {
+            ownersColumn.add(new Span("None"));
+        }
         rolesLayout.add(ownersColumn);
 
         // Managers
@@ -285,20 +419,48 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         managersColumn.add(new Span("Managers:"));
         Map<Integer, List<StoreManagerPermission>> managers = roles.getStoreManagers();
         if (managers != null && !managers.isEmpty()) {
-            managers.forEach((managerId, permissions) -> {
-                String formattedPermissions = permissions != null ? String.join(", ", permissions.stream().map(Enum::name).toList()) : "None";
-                managersColumn.add(new Span("ID: " + managerId + " → " + formattedPermissions));
+            managers.forEach((managerId, managerPermissions) -> {
+                String formattedPermissions = managerPermissions != null ? String.join(", ", managerPermissions.stream().map(Enum::name).toList()) : "None";
+                HorizontalLayout managerEntry = new HorizontalLayout();
+                managerEntry.setAlignItems(Alignment.CENTER);
+                managerEntry.add(new Span("ID: " + managerId + " → " + formattedPermissions));
+
+                // Conditionally add "Manage Permissions" button based on VIEW_ROLES
+                if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) {
+                    Button managePermissionsButton = new Button("Manage Permissions", VaadinIcon.EDIT.create());
+                    managePermissionsButton.addThemeName("small");
+                    managePermissionsButton.getStyle().set("margin-left", "10px");
+                    managePermissionsButton.addClickListener(e -> {
+                        showManageManagerPermissionsDialog(storeId, userId, managerId, managerPermissions, token);
+                    });
+                    managerEntry.add(managePermissionsButton);
+                }
+
+                // Conditionally add "Remove Manager" button based on VIEW_ROLES
+                if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) {
+                    Button removeManagerButton = new Button("Remove", VaadinIcon.MINUS.create());
+                    removeManagerButton.addThemeName("small error");
+                    removeManagerButton.getStyle().set("margin-left", "10px");
+                    int finalManagerId = managerId;
+                    removeManagerButton.addClickListener(e -> {
+                        showRemoveManagerConfirmationDialog(storeId, userId, finalManagerId, token);
+                    });
+                    managerEntry.add(removeManagerButton);
+                }
+                managersColumn.add(managerEntry);
             });
         } else {
             managersColumn.add(new Span("None"));
         }
         rolesLayout.add(managersColumn);
 
-        // Pending Managers
+        // Pending Managers (Conditional Display)
         VerticalLayout pendingManagersColumn = new VerticalLayout();
         pendingManagersColumn.setSpacing(false);
         pendingManagersColumn.add(new Span("Pending Managers:"));
-        if (pendingManagers != null && !pendingManagers.isEmpty()) {
+        if (pendingRolesMessage != null) { // Check if the general permission message exists
+            pendingManagersColumn.add(pendingRolesMessage);
+        } else if (pendingManagers != null && !pendingManagers.isEmpty()) {
             pendingManagers.forEach(managerId -> {
                 pendingManagersColumn.add(new Span("ID: " + managerId + " (awaiting approval)"));
             });
@@ -307,33 +469,306 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         }
         rolesLayout.add(pendingManagersColumn);
 
-        // Pending Owners
+        // Pending Owners (Conditional Display)
         VerticalLayout pendingOwnersColumn = new VerticalLayout();
         pendingOwnersColumn.setSpacing(false);
         pendingOwnersColumn.add(new Span("Pending Owners:"));
-        if (pendingOwners != null && !pendingOwners.isEmpty()) {
+        if (pendingRolesMessage != null) { // Check if the general permission message exists
+            pendingOwnersColumn.add(pendingRolesMessage);
+        } else if (pendingOwners != null && !pendingOwners.isEmpty()) {
             pendingOwners.forEach(ownerId -> {
                 pendingOwnersColumn.add(new Span("ID: " + ownerId + " (awaiting approval)"));
             });
-        } else {
+            } else {
             pendingOwnersColumn.add(new Span("None"));
         }
         rolesLayout.add(pendingOwnersColumn);
 
-        // Action buttons
-        HorizontalLayout actions = new HorizontalLayout();
-        actions.setSpacing(true);
-        actions.setAlignItems(Alignment.CENTER);
-        Button addManagerButton = new Button("Add Manager", e -> showAddManagerDialog(storeId, userId, token));
-        addManagerButton.getStyle().set("background-color", "#1976D2").set("color", "white");
-        Button addOwnerButton = new Button("Add Owner", e -> showAddOwnerDialog(storeId, userId, token));
-        addOwnerButton.getStyle().set("background-color", "#1976D2").set("color", "white");
-        Button addProductButton = new Button("Add Product", e -> showAddProductDialog(storeId, userId, token));
-        addProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
-        actions.add(addManagerButton, addOwnerButton, addProductButton);
-
-        rolesCard.add(rolesLayout, actions);
+        rolesCard.add(rolesLayout); // Action buttons are now separate
         return rolesCard;
+    }
+
+    // --- NEW METHOD FOR REMOVING STORE OWNER ---
+    private void showRemoveOwnerConfirmationDialog(int storeId, int requesterId, int ownerId, String token) {
+        Dialog dialog = new Dialog();
+        dialog.setCloseOnEsc(true);
+        dialog.setCloseOnOutsideClick(true);
+        dialog.setWidth("350px");
+
+        H2 title = new H2("Confirm Removal");
+        title.getStyle().set("color", "#D32F2F"); // Red for warning
+
+        Span message = new Span("Are you sure you want to remove owner ID " + ownerId + "? This action cannot be undone.");
+        message.getStyle().set("text-align", "center");
+
+        Button confirmButton = new Button("Confirm Remove", e -> {
+            callRemoveStoreOwnerApi(storeId, requesterId, ownerId, token, dialog);
+        });
+        confirmButton.getStyle().set("background-color", "#D32F2F").set("color", "white"); // Red button
+
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        cancelButton.getStyle().set("background-color", "#616161").set("color", "white"); // Gray color
+
+        HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
+        buttons.setSpacing(true);
+        buttons.setJustifyContentMode(JustifyContentMode.CENTER); // Center buttons
+
+        VerticalLayout layout = new VerticalLayout(title, message, buttons);
+        layout.setAlignItems(Alignment.CENTER);
+        dialog.add(layout);
+        dialog.open();
+    }
+
+    private void callRemoveStoreOwnerApi(int storeId, int requesterId, int ownerId, String token, Dialog dialogToClose) {
+        String url = String.format(backendUrl + "/api/store/removeStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Notification.show("Owner ID " + ownerId + " removed successfully.", 3000, Notification.Position.MIDDLE);
+                dialogToClose.close();
+                // Refresh both initial buttons and roles display
+                fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
+                showStoreManagementSection();
+            } else {
+                Notification.show("Failed to remove owner: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                        3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error removing owner: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
+    }
+
+    // --- NEW METHOD FOR REMOVING STORE MANAGER ---
+    private void showRemoveManagerConfirmationDialog(int storeId, int requesterId, int managerId, String token) {
+        Dialog dialog = new Dialog();
+        dialog.setCloseOnEsc(true);
+        dialog.setCloseOnOutsideClick(true);
+        dialog.setWidth("350px");
+
+        H2 title = new H2("Confirm Removal");
+        title.getStyle().set("color", "#D32F2F"); // Red for warning
+
+        Span message = new Span("Are you sure you want to remove manager ID " + managerId + "? This will revoke all their permissions.");
+        message.getStyle().set("text-align", "center");
+
+        Button confirmButton = new Button("Confirm Remove", e -> {
+            callRemoveStoreManagerApi(storeId, requesterId, managerId, token, dialog);
+        });
+        confirmButton.getStyle().set("background-color", "#D32F2F").set("color", "white"); // Red button
+
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        cancelButton.getStyle().set("background-color", "#616161").set("color", "white"); // Gray color
+
+        HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
+        buttons.setSpacing(true);
+        buttons.setJustifyContentMode(JustifyContentMode.CENTER);
+
+        VerticalLayout layout = new VerticalLayout(title, message, buttons);
+        layout.setAlignItems(Alignment.CENTER);
+        dialog.add(layout);
+        dialog.open();
+    }
+
+    private void callRemoveStoreManagerApi(int storeId, int requesterId, int managerId, String token, Dialog dialogToClose) {
+        String url = String.format(backendUrl + "/api/store/removeStoreManager/%d/%d/%d", storeId, requesterId, managerId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Notification.show("Manager ID " + managerId + " removed successfully.", 3000, Notification.Position.MIDDLE);
+                dialogToClose.close();
+                // Refresh both initial buttons and roles display
+                fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
+                showStoreManagementSection();
+            } else {
+                Notification.show("Failed to remove manager: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                        3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error removing manager: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
+    }
+
+    // --- Permissions Management Dialog and API Calls ---
+
+    private void showManageManagerPermissionsDialog(int storeId, int userId, int managerId, List<StoreManagerPermission> currentPermissions, String token) {
+        Dialog dialog = new Dialog();
+        dialog.setCloseOnEsc(true);
+        dialog.setCloseOnOutsideClick(true);
+        dialog.setWidth("500px");
+
+        H2 title = new H2("Manage Permissions for Manager ID: " + managerId);
+        title.getStyle().set("color", "#008CBA");
+
+        Span currentPermissionsSpan = new Span("Current Permissions: " + (currentPermissions != null && !currentPermissions.isEmpty() ? String.join(", ", currentPermissions.stream().map(Enum::name).toList()) : "None"));
+        currentPermissionsSpan.getStyle().set("font-style", "italic");
+
+        // CheckboxGroup for adding permissions
+        CheckboxGroup<StoreManagerPermission> addPermissionsGroup = new CheckboxGroup<>("Add Permissions");
+        Set<StoreManagerPermission> allPermissions = new HashSet<>(Set.of(StoreManagerPermission.values()));
+        if (currentPermissions != null) {
+            allPermissions.removeAll(currentPermissions); // Only show permissions that can be added
+        }
+        addPermissionsGroup.setItems(allPermissions);
+        addPermissionsGroup.getStyle().set("display", "flex").set("flex-direction", "column");
+
+        // CheckboxGroup for removing permissions
+        CheckboxGroup<StoreManagerPermission> removePermissionsGroup = new CheckboxGroup<>("Remove Permissions");
+        removePermissionsGroup.setItems(currentPermissions != null ? currentPermissions : new ArrayList<>()); // Only show current permissions to remove
+        removePermissionsGroup.getStyle().set("display", "flex").set("flex-direction", "column");
+
+        Span errorMessage = new Span();
+        errorMessage.getStyle().set("color", "red").set("display", "none");
+
+        Button saveButton = new Button("Save Changes", e -> {
+            Set<StoreManagerPermission> permissionsToAdd = addPermissionsGroup.getSelectedItems();
+            Set<StoreManagerPermission> permissionsToRemove = removePermissionsGroup.getSelectedItems();
+
+            boolean changesMade = false;
+            // Handle adding permissions
+            if (!permissionsToAdd.isEmpty()) {
+                callAddStoreManagerPermissionsApi(storeId, managerId, new ArrayList<>(permissionsToAdd), token, dialog);
+                changesMade = true;
+            }
+
+            // Handle removing permissions
+            if (!permissionsToRemove.isEmpty()) {
+                callRemoveStoreManagerPermissionsApi(storeId, managerId, new ArrayList<>(permissionsToRemove), token, dialog);
+                changesMade = true;
+            }
+
+            if (!changesMade) {
+                Notification.show("No changes to save.", 3000, Notification.Position.MIDDLE);
+                dialog.close();
+            }
+            // If changes were made, the API calls will refresh the roles and close the dialog
+        });
+        saveButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
+
+        Button cancelButton = new Button("Cancel", e -> dialog.close());
+        cancelButton.getStyle().set("background-color", "#616161").set("color", "white");
+
+        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+        buttons.setSpacing(true);
+        buttons.setJustifyContentMode(JustifyContentMode.CENTER);
+
+        VerticalLayout layout = new VerticalLayout(title, currentPermissionsSpan, addPermissionsGroup, removePermissionsGroup, errorMessage, buttons);
+        layout.setAlignItems(Alignment.CENTER);
+        dialog.add(layout);
+        dialog.open();
+    }
+
+    private void callAddStoreManagerPermissionsApi(int storeId, int managerId, List<StoreManagerPermission> permissionsToAdd, String token, Dialog dialogToClose) {
+        if (permissionsToAdd.isEmpty()) {
+            Notification.show("No permissions selected to add.", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        String baseUrl = String.format(
+                backendUrl + "/api/store/addStoreManagerPermissions/%d/%d",
+                storeId, managerId
+        );
+        StringBuilder queryParams = new StringBuilder();
+        queryParams.append("?");
+        for (int i = 0; i < permissionsToAdd.size(); i++) {
+            if (i > 0) {
+                queryParams.append("&");
+            }
+            queryParams.append("permissions=")
+                    .append(URLEncoder.encode(permissionsToAdd.get(i).name(), StandardCharsets.UTF_8));
+        }
+        String url = baseUrl + queryParams.toString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Notification.show("Permissions added successfully.", 3000, Notification.Position.MIDDLE);
+                dialogToClose.close();
+                // Refresh both initial buttons and roles display
+                fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
+                showStoreManagementSection();
+            } else {
+                Notification.show("Failed to add permissions: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                                3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error adding permissions: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
+    }
+
+    private void callRemoveStoreManagerPermissionsApi(int storeId, int managerId, List<StoreManagerPermission> permissionsToRemove, String token, Dialog dialogToClose) {
+        if (permissionsToRemove == null || permissionsToRemove.isEmpty()) {
+            Notification.show("No permissions selected to remove.", 3000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        StringBuilder urlBuilder = new StringBuilder(String.format(
+                backendUrl + "/api/store/removeStoreManagerPermissions/%d/%d",
+                storeId, managerId
+        ));
+        urlBuilder.append("?");
+        for (int i = 0; i < permissionsToRemove.size(); i++) {
+            if (i > 0) {
+                urlBuilder.append("&");
+            }
+            urlBuilder.append("permissions=").append(URLEncoder.encode(permissionsToRemove.get(i).name(), StandardCharsets.UTF_8));
+        }
+        String url = urlBuilder.toString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Notification.show("Permissions removed successfully.", 3000, Notification.Position.MIDDLE);
+                dialogToClose.close();
+                // Refresh both initial buttons and roles display
+                fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
+                showStoreManagementSection();
+
+            } else {
+                Notification.show("Failed to remove permissions: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                        3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error removing permissions: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
     }
 
     private void showAddManagerDialog(int storeId, int requesterId, String token) {
@@ -341,6 +776,9 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         dialog.setCloseOnEsc(true);
         dialog.setCloseOnOutsideClick(true);
         dialog.setWidth("400px");
+
+        H2 title = new H2("Add New Manager");
+        title.getStyle().set("color", "#2E7D32");
 
         IntegerField managerIdField = new IntegerField("Manager ID");
         managerIdField.setRequiredIndicatorVisible(true);
@@ -354,13 +792,14 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         Button confirmButton = new Button("Add", e -> {
             Integer managerId = managerIdField.getValue();
-            List<StoreManagerPermission> permissions = new ArrayList<>(permissionsGroup.getSelectedItems());
+            Set<StoreManagerPermission> permissions = permissionsGroup.getSelectedItems();
             if (managerId == null || managerId <= 0 || permissions.isEmpty()) {
                 errorMessage.setText("Please enter a valid Manager ID and select at least one permission.");
                 errorMessage.getStyle().set("display", "block");
                 return;
             }
-            addStoreManager(storeId, requesterId, managerId, permissions, token);
+            // Pass requesterId to addStoreManager
+            addStoreManager(storeId, requesterId, managerId, new ArrayList<>(permissions), token);
             dialog.close();
         });
         confirmButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
@@ -370,9 +809,54 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
         buttons.setSpacing(true);
+        buttons.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        dialog.add(managerIdField, permissionsGroup, errorMessage, buttons);
+        VerticalLayout layout = new VerticalLayout(title, managerIdField, permissionsGroup, errorMessage, buttons);
+        layout.setAlignItems(Alignment.CENTER);
+        dialog.add(layout);
         dialog.open();
+    }
+
+    private void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> permissions, String token) {
+        // Construct the URL to include requesterId
+        String baseUrl = String.format(
+                backendUrl + "/api/store/addStoreManager/%d/%d/%d",
+                storeId, requesterId, managerId
+        );
+        StringBuilder queryParams = new StringBuilder();
+        queryParams.append("?");
+        for (int i = 0; i < permissions.size(); i++) {
+            if (i > 0) {
+                queryParams.append("&");
+            }
+            queryParams.append("permissions=")
+                    .append(URLEncoder.encode(permissions.get(i).name(), StandardCharsets.UTF_8));
+        }
+        String url = baseUrl + queryParams.toString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Notification.show("Manager added successfully.", 3000, Notification.Position.MIDDLE);
+                // Refresh both initial buttons and roles display
+                fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
+                showStoreManagementSection();
+            } else {
+                Notification.show("Failed to add manager: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                                3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error adding manager: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
     }
 
     private void showAddOwnerDialog(int storeId, int requesterId, String token) {
@@ -380,6 +864,9 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         dialog.setCloseOnEsc(true);
         dialog.setCloseOnOutsideClick(true);
         dialog.setWidth("400px");
+
+        H2 title = new H2("Add New Owner");
+        title.getStyle().set("color", "#2E7D32");
 
         IntegerField ownerIdField = new IntegerField("Owner ID");
         ownerIdField.setRequiredIndicatorVisible(true);
@@ -404,9 +891,39 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
         buttons.setSpacing(true);
+        buttons.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        dialog.add(ownerIdField, errorMessage, buttons);
+        VerticalLayout layout = new VerticalLayout(title, ownerIdField, errorMessage, buttons);
+        layout.setAlignItems(Alignment.CENTER);
+        dialog.add(layout);
         dialog.open();
+    }
+
+    private void addStoreOwner(int storeId, int requesterId, int ownerId, String token) {
+        String url = String.format(backendUrl + "/api/store/addStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Response<Void>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<>() {}
+            );
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
+                Notification.show("Owner added successfully.", 3000, Notification.Position.MIDDLE);
+                // Refresh both initial buttons and roles display
+                fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
+                showStoreManagementSection();
+            } else {
+                Notification.show("Failed to add owner: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                                3000, Notification.Position.MIDDLE);
+            }
+        } catch (Exception ex) {
+            Notification.show("Error adding owner: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        }
     }
 
     private void showAddProductDialog(int storeId, int requesterId, String token) {
@@ -414,6 +931,9 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         dialog.setCloseOnEsc(true);
         dialog.setCloseOnOutsideClick(true);
         dialog.setWidth("400px");
+
+        H2 title = new H2("Add New Product");
+        title.getStyle().set("color", "#2E7D32");
 
         TextField productNameField = new TextField("Product Name");
         productNameField.setRequiredIndicatorVisible(true);
@@ -458,73 +978,12 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
         buttons.setSpacing(true);
+        buttons.setJustifyContentMode(JustifyContentMode.CENTER);
 
-        dialog.add(productNameField, descriptionField, basePriceField, quantityField, categoryField, errorMessage, buttons);
+        VerticalLayout layout = new VerticalLayout(title, productNameField, descriptionField, basePriceField, quantityField, categoryField, errorMessage, buttons);
+        layout.setAlignItems(Alignment.CENTER);
+        dialog.add(layout);
         dialog.open();
-    }
-
-    private void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> permissions, String token) {
-        String baseUrl = String.format(
-            backendUrl + "/api/store/addStoreManager/%d/%d/%d",
-            storeId, requesterId, managerId
-        );
-        StringBuilder queryParams = new StringBuilder();
-        queryParams.append("?");
-        for (int i = 0; i < permissions.size(); i++) {
-            if (i > 0) {
-                queryParams.append("&");
-            }
-            queryParams.append("permissions=")
-                    .append(URLEncoder.encode(permissions.get(i).name(), StandardCharsets.UTF_8));
-        }
-        String url = baseUrl + queryParams.toString();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<Response<Void>> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<>() {}
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                Notification.show("Manager added successfully.", 3000, Notification.Position.MIDDLE);
-                fetchAndShowStoreRoles(storeId, requesterId, token);
-            } else {
-                Notification.show("Failed to add manager: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
-                                    3000, Notification.Position.MIDDLE);
-            }
-        } catch (Exception ex) {
-            Notification.show("Error adding manager: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
-        }
-    }
-
-    private void addStoreOwner(int storeId, int requesterId, int ownerId, String token) {
-        String url = String.format(backendUrl + "/api/store/addStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<Response<Void>> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                new ParameterizedTypeReference<>() {}
-            );
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                Notification.show("Owner added successfully.", 3000, Notification.Position.MIDDLE);
-                fetchAndShowStoreRoles(storeId, requesterId, token);
-            } else {
-                Notification.show("Failed to add owner: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
-                                    3000, Notification.Position.MIDDLE);
-            }
-        } catch (Exception ex) {
-            Notification.show("Error adding owner: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
-        }
     }
 
     private void addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category, String token) {
@@ -550,26 +1009,12 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
             );
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
                 Notification.show("Product added successfully.", 3000, Notification.Position.MIDDLE);
-                fetchAndShowStoreRoles(storeId, requesterId, token);
             } else {
                 Notification.show("Failed to add product: " + (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
-                                    3000, Notification.Position.MIDDLE);
+                                3000, Notification.Position.MIDDLE);
             }
         } catch (Exception ex) {
             Notification.show("Error adding product: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
-        }
-    }
-
-    private boolean isGuestToken(HttpSession session) {
-        String token = (String) session.getAttribute("token");
-        RestTemplate restTemplate = new RestTemplate();
-        String url = backendUrl + "/api/user/isGuestToken";
-        try {
-            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
-            Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
-            return response.isSuccess() && response.getData();
-        } catch (Exception e) {
-            return true;
         }
     }
 
@@ -590,22 +1035,36 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
                 );
 
             System.out.println("getStoreDTO for storeId=" + storeId + ": Status=" + response.getStatusCode() +
-                                ", Success=" + (response.getBody() != null ? response.getBody().isSuccess() : "null") +
-                                ", Message=" + (response.getBody() != null ? response.getBody().getMessage() : "null"));
+                               ", Success=" + (response.getBody() != null ? response.getBody().isSuccess() : "null") +
+                               ", Message=" + (response.getBody() != null ? response.getBody().getMessage() : "null"));
+
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
                 return response.getBody().getData();
             } else {
                 Notification.show("Failed to load store with ID: " + storeId + ". Reason: " +
-                                    (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
-                                    3000, Notification.Position.MIDDLE);
+                                  (response.getBody() != null ? response.getBody().getMessage() : "Unknown error"),
+                                  3000, Notification.Position.MIDDLE);
                 return null;
             }
         } catch (Exception e) {
             System.err.println("getStoreDTO exception for storeId=" + storeId + ": " + e.getMessage());
             Notification.show("Error fetching store with ID: " + storeId + ": " + e.getMessage(),
-                                3000, Notification.Position.MIDDLE);
+                               3000, Notification.Position.MIDDLE);
             return null;
+        }
+    }
+    
+    private boolean isGuestToken(HttpSession session) {
+        String token = (String) session.getAttribute("token");
+        RestTemplate restTemplate = new RestTemplate();
+        String url = backendUrl + "/api/user/isGuestToken";
+        try {
+            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
+            Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
+            return response.isSuccess() && response.getData();
+        } catch (Exception e) {
+            return true;
         }
     }
 }

@@ -186,7 +186,8 @@ public class MainLayout extends AppLayout implements RouterLayout {
                 UI.getCurrent().navigate("user");
             } else {
                 Notification.show("Please log in to view this page.");
-                UI.getCurrent().navigate(""); // Optional, to reset to home
+                // Removed: UI.getCurrent().navigate("");
+                // By not navigating here, the user stays on the current URL
             }
         });
 

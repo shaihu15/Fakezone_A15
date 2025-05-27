@@ -758,7 +758,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public void acceptAssignment(int userId) {
+    public boolean acceptAssignment(int userId) {
         rolesLock.lock();
         try {
             boolean ownership = pendingOwners.containsKey(userId);
@@ -769,10 +769,14 @@ public class Store implements IStore {
             if (!(ownership || managment)) {
                 throw new IllegalArgumentException("User " + userId + " has no pending assignments");
             }
-            if (ownership)
+            if (ownership){
                 acceptStoreOwner(pendingOwners.get(userId), userId);
-            else
+                return ownership;
+            }
+            else{
                 acceptStoreManager(pendingManagers.get(userId), userId);
+                return ownership;
+            }
 
         }
         catch(Exception e){
@@ -1157,7 +1161,7 @@ public class Store implements IStore {
     public List<Integer> getPendingOwners(int requesterId){
         rolesLock.lock();
         try{
-            if(!isOwner(requesterId)){
+            if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))){
                 throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
             }
             List<Integer> pending = new ArrayList<>(pendingOwners.keySet());
@@ -1173,7 +1177,7 @@ public class Store implements IStore {
         rolesLock.lock();
 
         try{
-            if(!isOwner(requesterId)){
+            if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))){
                 throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
             }
             List<Integer> pending = new ArrayList<>(pendingManagers.keySet());
