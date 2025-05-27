@@ -102,7 +102,7 @@ public class HomeView extends Main {
                 IntegerField qtyField = new IntegerField("Quantity:");
                 qtyField.setStepButtonsVisible(true);
                 qtyField.setMin(1);
-                qtyField.setMax(p.getQuantity());        // optional: cap at available stock
+                qtyField.setMax(Math.min(1,p.getQuantity()));        // optional: cap at available stock
                 qtyField.setValue(1);
                 qtyField.setWidth("100px");
 
@@ -125,7 +125,12 @@ public class HomeView extends Main {
                 controls.setSpacing(true);
                 controls.setPadding(false);
                 fullCard.add(controls);
-                
+                if(p.getQuantity() == 0){
+                    fullCard.getStyle()
+                        .set("opacity", "0.6")
+                        .set("background", "#f8f8f8")
+                        .set("pointer-events", "none");
+                }
                 cardsRow.add(fullCard);
             }
         }

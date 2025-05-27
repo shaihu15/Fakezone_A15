@@ -5,6 +5,8 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,6 +45,7 @@ import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
+import ApplicationLayer.Services.StoreService;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
@@ -53,6 +58,7 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
@@ -60,6 +66,7 @@ import DomainLayer.Model.User;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import InfrastructureLayer.Repositories.StoreRepository;
 
 
 class SystemServiceTest {
@@ -1116,4 +1123,89 @@ class SystemServiceTest {
         assertFalse(response.isSuccess());
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
     }
+
+ @Test
+    void testIsStoreOwner_SuccessTrue() {
+        int storeId = 5, userId = 42;
+        when(storeService.isStoreOwner(storeId, userId)).thenReturn(true);
+
+        Response<Boolean> resp = systemService.isStoreOwner(storeId, userId);
+
+        assertTrue(resp.isSuccess());
+        assertNull(resp.getErrorType());
+        assertTrue(resp.getData());
+        verify(storeService, times(1)).isStoreOwner(storeId, userId);
+    }
+
+    @Test
+    void testIsStoreOwner_SuccessFalse() {
+        int storeId = 5, userId = 99;
+        when(storeService.isStoreOwner(storeId, userId)).thenReturn(false);
+
+        Response<Boolean> resp = systemService.isStoreOwner(storeId, userId);
+
+        assertTrue(resp.isSuccess());
+        assertNull(resp.getErrorType());
+        assertFalse(resp.getData());
+        verify(storeService, times(1)).isStoreOwner(storeId, userId);
+    }
+
+    @Test
+    void testIsStoreOwner_Exception() {
+        int storeId = 7, userId = 8;
+        when(storeService.isStoreOwner(storeId, userId))
+            .thenThrow(new RuntimeException("boom"));
+
+        Response<Boolean> resp = systemService.isStoreOwner(storeId, userId);
+
+        assertFalse(resp.isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, resp.getErrorType());
+        assertTrue(resp.getMessage().contains("boom"));
+        assertNull(resp.getData());
+        verify(storeService, times(1)).isStoreOwner(storeId, userId);
+    }
+
+    @Test
+    void testIsStoreManager_SuccessWithPerms() {
+        int storeId = 10, userId = 20;
+        List<StoreManagerPermission> perms = List.of(StoreManagerPermission.VIEW_PURCHASES);
+        when(storeService.isStoreManager(storeId, userId)).thenReturn(perms);
+
+        Response<List<StoreManagerPermission>> resp = systemService.isStoreManager(storeId, userId);
+
+        assertTrue(resp.isSuccess());
+        assertNull(resp.getErrorType());
+        assertEquals(perms, resp.getData());
+        verify(storeService, times(1)).isStoreManager(storeId, userId);
+    }
+
+    @Test
+    void testIsStoreManager_SuccessNotManager() {
+        int storeId = 10, userId = 21;
+        when(storeService.isStoreManager(storeId, userId)).thenReturn(null);
+
+        Response<List<StoreManagerPermission>> resp = systemService.isStoreManager(storeId, userId);
+
+        assertTrue(resp.isSuccess());
+        assertNull(resp.getErrorType());
+        assertNull(resp.getData());
+        verify(storeService, times(1)).isStoreManager(storeId, userId);
+    }
+
+    @Test
+    void testIsStoreManager_Exception() {
+        int storeId = 11, userId = 22;
+        when(storeService.isStoreManager(storeId, userId))
+            .thenThrow(new IllegalStateException("oops"));
+
+        Response<List<StoreManagerPermission>> resp = systemService.isStoreManager(storeId, userId);
+
+        assertFalse(resp.isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, resp.getErrorType());
+        assertTrue(resp.getMessage().contains("oops"));
+        assertNull(resp.getData());
+        verify(storeService, times(1)).isStoreManager(storeId, userId);
+    }
+    
 }
+    

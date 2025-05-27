@@ -121,4 +121,6 @@ public interface IStore {
 
     List<ProductRating> getStoreProductAllRatings(int productId);
 
+    List<StoreManagerPermission> isManagerAndGetPerms(int userId);
+
 }

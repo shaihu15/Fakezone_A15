@@ -185,4 +185,8 @@ public interface ISystemService {
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
 
     Response<Void> removeFromBasket(int userId, int productId, int storeId);
+
+    Response<Boolean> isStoreOwner(int storeId, int userId);
+
+    Response<List<StoreManagerPermission>> isStoreManager(int storeId, int userId);
 }

@@ -786,7 +786,7 @@ public class SystemService implements ISystemService {
     public Response<List<CartItemInfoDTO>> viewCart(int userId) { //storeid -> <prodId -> bool>
         try {
             logger.info("System service - user " + userId + " trying to view cart");
-            if (this.userService.isUserLoggedIn(userId)) {
+            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
                 Map<Integer, Map<Integer, Integer>> cart = this.userService.viewCart(userId);
                 if (cart.isEmpty()) {
                     logger.error("System Service - Cart is empty: " + userId);
@@ -1882,6 +1882,30 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during getting user roles: " + e.getMessage());
             return new Response<>(null, "Error getting user roles: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Boolean> isStoreOwner(int storeId, int userId){
+        try{
+            logger.info("checking if user " + userId + " is owner in store "+ storeId);
+            return new Response<Boolean>(storeService.isStoreOwner(storeId, userId), null, true, null, null);
+        }
+        catch (Exception e){
+            logger.info("isStoreOwner failed");
+            return new Response<Boolean>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override // returns null if not manager
+    public Response<List<StoreManagerPermission>> isStoreManager(int storeId, int userId){
+        try{
+            logger.info("checking if user " + userId + " is owner in store "+ storeId);
+            return new Response<List<StoreManagerPermission>>(storeService.isStoreManager(storeId, userId), null, true, null, null);
+        }
+        catch (Exception e){
+            logger.info("isStoreManager failed");
+            return new Response<List<StoreManagerPermission>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 }
