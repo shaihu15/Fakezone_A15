@@ -296,5 +296,105 @@ public class ProductServiceTest {
         assertNotNull(products, "Products list should not be null");
         assertEquals(2, products.size(), "Products list size should match");
     }
+    @Test
+    void testSearchProductsByName_Success() {
+        IProduct mockProduct = mock(IProduct.class);
+        when(mockProduct.getName()).thenReturn("Product1");
+        when(mockProduct.getDescription()).thenReturn("Description1");
+        when(mockProduct.getId()).thenReturn(1);
+        when(mockProduct.getCategory()).thenReturn(PCategory.ELECTRONICS);
+        when(mockProduct.getStoresIds()).thenReturn(new java.util.ArrayList<>());
+    
+        when(productRepository.searchProductsByName("Product1")).thenReturn(List.of(mockProduct));
+    
+        List<ProductDTO> result = productService.searchProductsByName("Product1");
+    
+        assertEquals(1, result.size());
+        assertEquals("Product1", result.get(0).getName());
+        assertEquals("Description1", result.get(0).getDescription());
+        assertEquals(1, result.get(0).getId());
+        assertEquals(PCategory.ELECTRONICS, result.get(0).getCategory());
+    }
+    
+    @Test
+    void testSearchProductsByName_Exception() {
+        when(productRepository.searchProductsByName("fail")).thenThrow(new RuntimeException("Search failed"));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> productService.searchProductsByName("fail"));
+        assertEquals("Search failed", ex.getMessage());
+    }
+    
+    @Test
+    void testAddProduct_Success() {
+        // Product constructor will be called, so just verify repository interaction
+        int id = productService.addProduct("Product1", "Description1", PCategory.ELECTRONICS);
+        verify(productRepository, times(1)).addProduct(any(IProduct.class));
+        // id is from the Product constructor, so we can't assert its value here
+    }
+    
+    @Test
+    void testAddProduct_Exception() {
+        doThrow(new RuntimeException("Add failed")).when(productRepository).addProduct(any(IProduct.class));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> productService.addProduct("fail", "fail", PCategory.ELECTRONICS));
+        assertEquals("Add failed", ex.getMessage());
+    }
+    
+    @Test
+    void testUpdateProduct_Success() {
+        IProduct mockProduct = mock(IProduct.class);
+        when(productRepository.getProductById(1)).thenReturn(mockProduct);
+    
+        productService.updateProduct(1, "Updated", "UpdatedDesc", Set.of(1));
+        verify(productRepository, times(1)).updateProduct(1, "Updated", "UpdatedDesc", Set.of(1));
+    }
+    
+    @Test
+    void testUpdateProduct_ProductNotFound() {
+        when(productRepository.getProductById(1)).thenReturn(null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1, "n", "d", Set.of()));
+        assertEquals("Product not found", ex.getMessage());
+    }
+    
+    @Test
+    void testUpdateProduct_UpdateThrows() {
+        IProduct mockProduct = mock(IProduct.class);
+        when(productRepository.getProductById(1)).thenReturn(mockProduct);
+        doThrow(new IllegalArgumentException("Update failed")).when(productRepository).updateProduct(eq(1), anyString(), anyString(), anySet());
+    
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1, "n", "d", Set.of()));
+        assertEquals("Update failed", ex.getMessage());
+    }
+    
+    @Test
+    void testClearAllData() {
+        productService.clearAllData();
+        verify(productRepository, times(1)).clearAllData();
+    }
+    
+    @Test
+    void testGetAllProducts_Success() {
+        IProduct mockProduct = mock(IProduct.class);
+        when(mockProduct.getName()).thenReturn("Product1");
+        when(mockProduct.getDescription()).thenReturn("Description1");
+        when(mockProduct.getId()).thenReturn(1);
+        when(mockProduct.getCategory()).thenReturn(PCategory.ELECTRONICS);
+        when(mockProduct.getStoresIds()).thenReturn(new java.util.ArrayList<>());
+    
+        when(productRepository.getAllProducts()).thenReturn(List.of(mockProduct));
+    
+        List<ProductDTO> result = productService.getAllProducts();
+    
+        assertEquals(1, result.size());
+        assertEquals("Product1", result.get(0).getName());
+        assertEquals("Description1", result.get(0).getDescription());
+        assertEquals(1, result.get(0).getId());
+        assertEquals(PCategory.ELECTRONICS, result.get(0).getCategory());
+    }
+    
+    @Test
+    void testGetAllProducts_Exception() {
+        when(productRepository.getAllProducts()).thenThrow(new RuntimeException("Get all failed"));
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> productService.getAllProducts());
+        assertEquals("Get all failed", ex.getMessage());
+    }
 
 }

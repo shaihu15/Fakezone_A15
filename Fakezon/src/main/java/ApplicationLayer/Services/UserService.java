@@ -68,10 +68,10 @@ public class UserService implements IUserService {
 
     @Override
     public void clearUserCart(int userId){
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<User> optionalUser = userRepository.findAllById(userId);
         if (optionalUser.isPresent()) {
-            Registered user = optionalUser.get();
-            user.clearCart();
+            User user = optionalUser.get();
+            user.saveCartOrderAndDeleteIt();
             logger.info("User "+userId+" clear cart");
         } else {
             logger.warn("Clear cart failed: User with id {} not found", userId);
@@ -117,10 +117,6 @@ public class UserService implements IUserService {
             } else {
                 logger.error("Login failed: Incorrect password for user with email {}", email);
                 throw new IllegalArgumentException("Incorrect password");
-            }
-            if(user.isLoggedIn()) {
-                logger.error("User already logged in: " + email);
-                throw new IllegalArgumentException("User already logged in");
             }
             user.login();
             return user.toDTO();
@@ -306,21 +302,19 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Map<Integer,Map<Integer,Integer>> viewCart(int userId) {
+    public Map<Integer, Map<Integer, Integer>> viewCart(int userId) {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
                 return user.get().viewCart();
             } catch (Exception e) {
-                // Handle exception if needed
                 System.out.println("Error during view cart: " + e.getMessage());
+                throw new IllegalArgumentException("Error during view cart: " + e.getMessage(), e); // Rethrow for testability
             }
         } else {
             throw new IllegalArgumentException("User not found");
         }
-        return null;
     }
-
     @Override
     public Cart getUserCart(int userId) {
         Optional<User> user = userRepository.findAllById(userId);
@@ -342,7 +336,7 @@ public class UserService implements IUserService {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
-                user.get().saveCartOrder();
+                user.get().saveCartOrderAndDeleteIt();
                 logger.info("Order saved for user: " + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -371,7 +365,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAllMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -396,7 +390,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAssignmentMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, ErrorType.UNAUTHORIZED, null);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -421,7 +415,7 @@ public class UserService implements IUserService {
                 HashMap<Integer, String> messages = Registered.get().getAuctionEndedMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
-                    return new Response<>(null, "No messages found", false, ErrorType.UNAUTHORIZED, null);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
                 logger.info("Messages retrieved for user: " + userID);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
@@ -813,7 +807,36 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public void removeFromBasket(int userId, int storeId, int productId){
+        Optional<User> user = userRepository.findAllById(userId);
+        if (user.isPresent()) {
+            try {
+                user.get().removeFromBasket(storeId, productId);
+                logger.info("Cart for user: " + userId + " removed product " + productId + " from store " + storeId);
+            } catch (Exception e) {
+                logger.error("Error during set cart: " + e.getMessage());
+                throw e;
+            }
+        } else {
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+
+    @Override
     public void clearAllData() {
         userRepository.clearAllData();
+    }
+
+    @Override
+    public void removeAssignmentMessage(int storeId, int userId){
+        Optional<Registered> user = userRepository.findById(userId);
+        logger.info("Trying to remove assignment message");
+        if(user.isPresent()){
+            user.get().removeAssignmentMessage(storeId);
+        }
+        else{
+            logger.error("User not found while removeAssignmentMessage");
+            throw new IllegalArgumentException("User not found");
+        }
     }
 }

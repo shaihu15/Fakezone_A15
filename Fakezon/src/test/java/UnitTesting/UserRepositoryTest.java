@@ -321,5 +321,62 @@ public class UserRepositoryTest {
         assertFalse(result, "Expected removal to fail for non-existent user");
     }
 
+    @Test
+    void testInitAndClearAllData() {
+        userRepository.clearAllData();
+        assertEquals(0, userRepository.getAllUnsignedUsers().size());
+        // After clear, adding unsigned user works
+        User guest = new User(10);
+        userRepository.addUnsignedUser(guest);
+        assertEquals(1, userRepository.getAllUnsignedUsers().size());
+        userRepository.init(); // Should not throw
+    }
 
+    @Test
+    void testAddUnsignedUserAndFindUnsignedUserById() {
+        User guest = new User(-2);
+        userRepository.addUnsignedUser(guest);
+        assertTrue(userRepository.findUnsignedUserById(-2).isPresent());
+        assertEquals(guest, userRepository.findUnsignedUserById(-2).get());
+    }
+
+    @Test
+    void testFindUnsignedUserById_NotFound() {
+        assertFalse(userRepository.findUnsignedUserById(-999).isPresent());
+    }
+
+    @Test
+    void testIsUnsignedUser_TrueAndFalse() {
+        User guest = new User(-3);
+        userRepository.addUnsignedUser(guest);
+        assertTrue(userRepository.isUnsignedUser(-3));
+        assertFalse(userRepository.isUnsignedUser(-999));
+    }
+
+    @Test
+    void testGetAllUnsignedUsers() {
+        userRepository.clearAllData();
+        User guest1 = new User(-1);
+        User guest2 = new User(-2);
+        userRepository.addUnsignedUser(guest1);
+        userRepository.addUnsignedUser(guest2);
+        assertEquals(2, userRepository.getAllUnsignedUsers().size());
+        assertTrue(userRepository.getAllUnsignedUsers().contains(guest1));
+        assertTrue(userRepository.getAllUnsignedUsers().contains(guest2));
+    }
+
+    @Test
+    void testGetUnsignedUserCount() {
+        userRepository.clearAllData();
+        assertEquals(0, userRepository.getUnsignedUserCount());
+        userRepository.addUnsignedUser(new User(-1));
+        userRepository.addUnsignedUser(new User(-2));
+        assertEquals(2, userRepository.getUnsignedUserCount());
+    }
+
+    @Test
+    void testUsersWithRolesInStoreId() {
+        // By default, no users with roles in a store
+        assertEquals(0, userRepository.UsersWithRolesInStoreId(123).size());
+    }
 }

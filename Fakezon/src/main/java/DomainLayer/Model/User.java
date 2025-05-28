@@ -12,8 +12,7 @@ import ApplicationLayer.DTO.UserDTO;
 public class User {
     protected boolean isLoggedIn;
     protected int userId;
-    protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
-    protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
+
     protected Cart cart;
     protected static final AtomicInteger idCounter = new AtomicInteger(0);
 
@@ -21,8 +20,6 @@ public class User {
         this.userId = idCounter.incrementAndGet(); // auto-increment userID
         this.cart = new Cart();
         this.isLoggedIn = false;
-        this.orders = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
     }
 
     /**
@@ -32,16 +29,12 @@ public class User {
         this.userId = userId;
         this.cart = new Cart();
         this.isLoggedIn = false;
-        this.orders = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
     }
     
     public boolean isRegistered() {
         return false;
     }
-    public HashMap<Integer, List<Integer>> getProductsPurchase() {
-        return productsPurchase;
-    }
+  
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
@@ -72,19 +65,10 @@ public class User {
 
     }
 
-    public void saveCartOrder() {
-        Map<Integer,Map<Integer,Integer>> products = cart.getAllProducts();
-        for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
-            int storeId = entry.getKey();
-            Map<Integer, Integer> productQuantities = entry.getValue();
-            for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
-                int productId = productEntry.getKey();
-                if (!productsPurchase.containsKey(storeId)) {
-                    productsPurchase.put(storeId, new ArrayList<>());
-                }
-                productsPurchase.get(storeId).add(productId);
-            }
-        }
+    public void saveCartOrderAndDeleteIt() {
+        //user cant save orders if not logged in
+        this.cart.clear();
+        return;
     }
 
     public int getUserId() {
@@ -94,6 +78,7 @@ public class User {
     public UserDTO toDTO() {
         return new UserDTO(userId, null, -1);
     }
+
     public void setUserId(int userId) { ///this one is only for testing purposes, will 
         this.userId = userId;
     }
@@ -105,9 +90,13 @@ public class User {
             for (Map.Entry<Integer, Integer> productEntry : productQuantities.entrySet()) {
                 int productId = productEntry.getKey();
                 int quantity = productEntry.getValue();
-                cart.addProduct(storeId, productId, quantity);
+                cart.setProduct(storeId, productId, quantity);
             }
         }
+    }
+
+    public void removeFromBasket(int storeId, int productId){
+        cart.removeItem(storeId, productId);
     }
 
 }

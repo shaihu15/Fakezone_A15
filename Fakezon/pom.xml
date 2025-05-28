@@ -146,7 +146,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version> <!-- latest stable as of 2025 -->
+                <version>0.8.12</version> <!-- latest stable as of 2025 -->
                 <executions>
                     <!-- Attach JaCoCo as agent when running tests -->
                     <execution>
@@ -164,6 +164,12 @@
                         <configuration>
                             <excludes>
                                 <exclude>com/fakezone/fakezone/ui/view/**</exclude>
+                                <exclude>com/fakezone/fakezone/FakezoneApplication.class</exclude>
+                                <exclude>com/fakezone/fakezone/SecurityConfig.class</exclude>
+                                <exclude>com/fakezone/fakezone/TempDataLoader.class</exclude>
+                                <exclude>ApplicationLayer.Services.AppConfig.class</exclude>
+                                <exclude>ApplicationLayer.Services.WebSocketConfig.class</exclude>
+
                             </excludes>
                         </configuration>
                     </execution>

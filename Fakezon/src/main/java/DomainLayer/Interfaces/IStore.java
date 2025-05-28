@@ -93,7 +93,7 @@ public interface IStore {
 
     boolean canViewOrders(int userId);
   
-    void acceptAssignment(int userId);
+    boolean acceptAssignment(int userId);
 
     void declineAssignment(int userId);
 

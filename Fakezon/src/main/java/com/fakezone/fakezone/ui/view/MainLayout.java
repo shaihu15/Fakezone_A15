@@ -24,8 +24,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -48,21 +50,28 @@ import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.component.ClientCallable;
+
 
 public class MainLayout extends AppLayout implements RouterLayout {
     RestTemplate restTemplate;
+    private final String webUrl;
     private final String apiUrl;
-    public MainLayout(@Value("${api.url}") String apiUrl) {
+    private Button notificationsButton = null;
+    public MainLayout(@Value("${api.url}") String apiUrl, @Value("${website.url}") String webUrl) {
         this.apiUrl = apiUrl;
+        this.webUrl = webUrl;
         restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         initSession();
@@ -87,16 +96,29 @@ public class MainLayout extends AppLayout implements RouterLayout {
                     cookie.setPath("/");
                     cookie.setMaxAge(60 * 60 * 5); // 5 hours
                     response.addCookie(cookie);
+                    token = tokenResponse.getData();
                 }
                 else{
                     Notification.show(apiResponse.getBody().getMessage());
+                }
+                url = apiUrl + "user/createUnsignedUser";
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", token);
+                HttpEntity<Void> entity = new HttpEntity<>(headers);
+                ResponseEntity<Response<UserDTO>> apiCreateGuestResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    new ParameterizedTypeReference<Response<UserDTO>>() {});
+                Response<UserDTO> guestRes = apiCreateGuestResponse.getBody();
+                if(guestRes.isSuccess()){
+                    session.setAttribute("userDTO", guestRes.getData());
                 }
             }
             catch(Exception e){
                 Notification.show(e.getMessage());
             }
 
-            
         }
     }
 
@@ -133,12 +155,13 @@ public class MainLayout extends AppLayout implements RouterLayout {
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         Button loginRegisterLogoutButton = null;
-        Button notificationsButton = null;
         if(isGuestToken()){
             loginRegisterLogoutButton = new Button("Login/Register");
             loginRegisterLogoutButton.addClickListener(event -> loginRegisterClick());
         }
         else{
+            UserDTO user = (UserDTO) session.getAttribute("userDTO");
+            initWebSocket(user.getUserId());
             loginRegisterLogoutButton = new Button("Logout");
             loginRegisterLogoutButton.addClickListener(event -> logoutClick());
         
@@ -151,17 +174,20 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
         // CART
         Icon cartIcon = VaadinIcon.CART.create();
-        cartIcon.setSize("30px");// TO DO: ADD ANCHOR TO NAVIGATE TO CART
+        cartIcon.setSize("30px");
         Button cartButton = new Button(cartIcon);
         cartButton.addClickListener(event -> showCart());
 
         // USER VIEW BUTTON
         Button userViewButton = new Button("User area", click -> {
-            if (!isGuestToken() || session.getAttribute("userDTO") != null) {
+            if (!isGuestToken() && session.getAttribute("userDTO") != null) {
+                notificationsButton.setText(""); // resets unread notifs - because they are in user area
+                session.removeAttribute("unreadNotifs");
                 UI.getCurrent().navigate("user");
             } else {
                 Notification.show("Please log in to view this page.");
-                UI.getCurrent().navigate(""); // Optional, to reset to home
+                // Removed: UI.getCurrent().navigate("");
+                // By not navigating here, the user stays on the current URL
             }
         });
 
@@ -304,23 +330,6 @@ public class MainLayout extends AppLayout implements RouterLayout {
 
     }
 
-    private void testDialog(){
-        Dialog testDialog = new Dialog();
-        testDialog.setHeaderTitle("NOT IMPLEMENTED YET");
-        testDialog.open();
-    }
-
-    // private void performSearch(String searchText){
-    //     //TO DO - RN JUST FOR TEST
-    //     if (searchText != null && !searchText.isEmpty()) {
-    //         // Perform the search operation with searchTerm
-    //         Notification.show("Searching for: " + searchText);  // Replace with your actual search logic
-    //     } else {
-    //         Notification.show("Please enter a search term.");
-    //     }
-       
-    // }
-
     private void performSearch(String searchText, String type) {
             if (searchText == null || searchText.trim().isEmpty()) {
                 Notification.show("Please enter a search term.");
@@ -350,12 +359,24 @@ public class MainLayout extends AppLayout implements RouterLayout {
             );
         }
     private void showNotifications(){
-        testDialog();
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        session.removeAttribute("unreadNotifs");
+        notificationsButton.setText("");
+        UI.getCurrent().navigate("user"); // all messages will be under user area
     }
 
 
     private void showCart(){
-        testDialog();
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        if(user != null){
+            UI.getCurrent().navigate(webUrl+"cart/" + user.getUserId());
+        }
+        else{ // should not happen!
+            Notification.show("Error fetching user", 3000, Notification.Position.BOTTOM_CENTER).addThemeVariants(NotificationVariant.LUMO_ERROR); 
+        }
     }
 
     private void loginRegisterClick(){
@@ -436,7 +457,32 @@ public class MainLayout extends AppLayout implements RouterLayout {
         else{
             Notification.show(response.getMessage());
         }
-        
+    }
+
+    private void initWebSocket(int userId) {
+        // $0 → the DOM element, $1 → the WS URL, $2 → the userId
+        getElement().executeJs(
+        "const el        = $0;\n" +
+        "const socket    = new WebSocket($1);\n" +
+        "socket.onopen   = () => socket.send(String($2));\n" +
+        "socket.onmessage = msgEvent =>\n" +
+        "    el.$server.onServerNotification(msgEvent.data);\n",
+        getElement(),                                                        // $0
+        "ws://" + VaadinRequest.getCurrent().getHeader("Host") + "/notifications",  // $1
+        userId                                                               // $2
+        );
+    }
+
+    @ClientCallable
+    public void onServerNotification(String payloadJson){
+        int unreadNotifs;
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String numOfUnread = (String) session.getAttribute("unreadNotifs");
+        unreadNotifs = numOfUnread == null ? 0 : Integer.parseInt(numOfUnread);
+        unreadNotifs++;
+        notificationsButton.setText(String.valueOf(unreadNotifs));
+        Notification.show("New Message Arrived!\n" + payloadJson, 5000, Notification.Position.TOP_CENTER).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
     }
 
 

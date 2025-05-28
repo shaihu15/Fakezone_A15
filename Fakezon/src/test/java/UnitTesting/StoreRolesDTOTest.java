@@ -2,13 +2,14 @@ package UnitTesting;
 
 import ApplicationLayer.DTO.StoreRolesDTO;
 import DomainLayer.Enums.StoreManagerPermission;
-
+import DomainLayer.Model.Store;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class StoreRolesDTOTest {
 
@@ -71,5 +72,36 @@ public class StoreRolesDTOTest {
     @Test
     void getFounderId_ShouldReturnCorrectFounderId() {
         assertEquals(2001, storeRolesDTO.getFounderId(), "Founder ID should match");
+    }
+
+    @Test
+    void testDefaultConstructor() {
+        StoreRolesDTO dto = new StoreRolesDTO();
+        assertEquals(0, dto.getStoreId());
+        assertNull(dto.getStoreName());
+        assertEquals(0, dto.getFounderId());
+        assertNull(dto.getStoreOwners());
+        assertNull(dto.getStoreManagers());
+    }
+
+    @Test
+    void testStoreConstructor() {
+        Store mockStore = mock(Store.class);
+        when(mockStore.getId()).thenReturn(555);
+        when(mockStore.getName()).thenReturn("Mock Store");
+        when(mockStore.getStoreFounderID()).thenReturn(777);
+        List<Integer> owners = Arrays.asList(10, 20);
+        HashMap<Integer, List<StoreManagerPermission>> managers = new HashMap<>();
+        managers.put(30, Arrays.asList(StoreManagerPermission.DISCOUNT_POLICY));
+        when(mockStore.getStoreOwners(123)).thenReturn(owners);
+        when(mockStore.getStoreManagers(123)).thenReturn(managers);
+
+        StoreRolesDTO dto = new StoreRolesDTO(mockStore, 123);
+
+        assertEquals(555, dto.getStoreId());
+        assertEquals("Mock Store", dto.getStoreName());
+        assertEquals(777, dto.getFounderId());
+        assertEquals(owners, dto.getStoreOwners());
+        assertEquals(managers, dto.getStoreManagers());
     }
 }

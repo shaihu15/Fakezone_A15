@@ -423,12 +423,12 @@ public class StoreController {
     }
 
     @DeleteMapping("/removeStoreManagerPermissions/{storeId}/{managerId}")
-    public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariable("storeId") int storeId,
+public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariable("storeId") int storeId,
                                                                  @PathVariable("managerId") int managerId,
-                                                                 @RequestBody Request<List<String>> request,
+                                                                 @RequestParam("permissions") List<String> permissions,
                                                                  @RequestHeader("Authorization") String token) {
         try {
-            List<String> permissions = request.getData();
+            //List<String> permissions = request.getData();
             logger.info("Received request to remove permissions {} from manager {} in store {} with token {}", permissions, managerId, storeId, token);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);

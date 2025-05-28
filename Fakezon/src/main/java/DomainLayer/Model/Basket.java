@@ -17,11 +17,7 @@ public class Basket {
     }
 
     public void addProduct(int productId, int quantity) {
-        if (productQuantities.containsKey(productId)) {
-            productQuantities.put(productId, productQuantities.get(productId) + quantity);
-        } else {
-            productQuantities.put(productId, quantity);
-        }
+        productQuantities.put(productId, quantity);
     }
 
     public int getStoreID() {
@@ -34,5 +30,12 @@ public class Basket {
 
     public boolean containsProduct(int productId) {
         return productQuantities.containsKey(productId);
+    }
+      public void setProduct(int productId, int quantity){
+        productQuantities.put(productId, quantity);
+    }
+
+    public void removeItem(int productId){
+        productQuantities.remove(productId);
     }
 }

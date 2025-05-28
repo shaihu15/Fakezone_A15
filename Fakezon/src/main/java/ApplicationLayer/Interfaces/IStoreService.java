@@ -31,17 +31,11 @@ public interface IStoreService {
 
   int addStore(int userId, String storeName);
 
-  int updateStore(int storeId, int requesterId, String name);
-
-  void deleteStore(int storeId, int requesterId);
-
   StoreDTO viewStore(int storeId);
 
   List<StoreDTO> searchStores(String keyword);
 
   List<StoreDTO> getAllStores();
-
-  void openStore(int storeId, int requesterId);
 
   void closeStore(int storeId, int requesterId);
 
@@ -59,10 +53,6 @@ public interface IStoreService {
 
   // --- Ratings ---
   void addStoreRating(int storeId, int userId, double rating, String comment);
-
-  void removeStoreRating(int storeId, int userId);
-
-  double getStoreAverageRating(int storeId);
 
   void addStoreProductRating(int storeId, int productId, int userId, double rating, String comment);
 
@@ -140,7 +130,7 @@ public interface IStoreService {
 
   boolean canViewOrders(int storeId, int userId);
 
-  void acceptAssignment(int storeId, int userId);
+  boolean acceptAssignment(int storeId, int userId);
 
   void declineAssignment(int storeId, int userId);
 

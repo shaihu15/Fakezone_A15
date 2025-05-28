@@ -30,6 +30,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 
@@ -40,7 +41,7 @@ public class ApplicationLayerTest {
     @BeforeEach
     void setUp() {
         userRepository = mock(IUserRepository.class);
-        listener = new UserEventListener(userRepository);
+        listener = new UserEventListener(userRepository, new NotificationWebSocketHandler());
     }
 
 
@@ -103,7 +104,7 @@ public class ApplicationLayerTest {
         listener.handleClosingStore(event);
 
         verify(user1, times(1)).addMessageFromStore(any());
-        verify(user2, never()).addMessageFromStore(any());
+        verify(user2).addMessageFromStore(any());
     }
 
     @Test
@@ -131,7 +132,7 @@ public class ApplicationLayerTest {
 
         listener.handleResponseFromStore(event);
 
-        verify(user, never()).addMessageFromStore(any());
+        verify(user).addMessageFromStore(any());
     }
 
     @Test
@@ -150,7 +151,7 @@ public class ApplicationLayerTest {
         listener.handleAuctionEndedToOwnersEvent(event);
 
         verify(user1, times(1)).addAuctionEndedMessage(any());
-        verify(user2, never()).addAuctionEndedMessage(any());
+        verify(user2).addAuctionEndedMessage(any());
     }
 
     @Test
@@ -194,11 +195,13 @@ public class ApplicationLayerTest {
         when(event.getUserIDHighestBid()).thenReturn(1);
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(true);
-
+        StoreProductDTO prodMock = mock(StoreProductDTO.class);
+        when(prodMock.getProductId()).thenReturn(3);
+        when(event.getStoreProductDTO()).thenReturn(prodMock);
         listener.handleApprovedBidOnAuctionEvent(event);
 
-        verify(user, never()).addMessageFromStore(any());
-        verify(user, never()).addToBasket(anyInt(), anyInt(), anyInt());
+        verify(user).addMessageFromStore(any());
+        verify(user).addToBasket(anyInt(), anyInt(), anyInt());
     }
 
     @Test
@@ -227,7 +230,7 @@ public class ApplicationLayerTest {
 
         listener.handleAuctionGotHigherBidEvent(event);
 
-        verify(user, never()).addMessageFromStore(any());
+        verify(user).addMessageFromStore(any());
     }
 
     @Test
@@ -255,6 +258,6 @@ public class ApplicationLayerTest {
 
         listener.handleDeclinedBidOnAuctionEvent(event);
 
-        verify(user, never()).addMessageFromStore(any());
+        verify(user).addMessageFromStore(any());
     }
 }

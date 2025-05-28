@@ -893,7 +893,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public void acceptAssignment(int userId) {
+    public boolean acceptAssignment(int userId) {
         rolesLock.lock();
         try {
             boolean ownership = pendingOwners.containsKey(userId);
@@ -904,10 +904,14 @@ public class Store implements IStore {
             if (!(ownership || managment)) {
                 throw new IllegalArgumentException("User " + userId + " has no pending assignments");
             }
-            if (ownership)
+            if (ownership){
                 acceptStoreOwner(pendingOwners.get(userId), userId);
-            else
+                return ownership;
+            }
+            else{
                 acceptStoreManager(pendingManagers.get(userId), userId);
+                return ownership;
+            }
 
         }
         catch(Exception e){
@@ -1254,6 +1258,31 @@ public class Store implements IStore {
             {
                 // Add the base price of the product
                 amount += product.getBasePrice() * quantity;
+            } else {
+                boolean isDiscountApplicable = true;
+                DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
+                if (discountPolicy == null) {
+                    isDiscountApplicable = false;
+                }
+                if (discountPolicy != null) {
+                    DiscountPolicy policy = this.discountPolicies.get(productId);
+                    List<DiscountCondition> conditions = policy.getConditions();
+                    for (DiscountCondition condition : conditions) {
+                        boolean con = products.entrySet().stream()
+                                .anyMatch(e -> e.getKey().getSproductID() == condition.getTriggerProductId() &&
+                                        e.getValue() < condition.getTriggerQuantity());
+                        if (con) {
+                            isDiscountApplicable = false;
+                            break;
+                        }
+                    }
+                }
+                if (isDiscountApplicable && discountPolicy != null) {
+                    discountPolicy.calculateNewPrice(product.getBasePrice(), quantity);
+                    amount += discountPolicy.calculateNewPrice(product.getBasePrice(), quantity);
+                } else {
+                    amount += product.getBasePrice() * quantity;
+                }
             }
         }
         
@@ -1278,7 +1307,7 @@ public class Store implements IStore {
     public List<Integer> getPendingOwners(int requesterId){
         rolesLock.lock();
         try{
-            if(!isOwner(requesterId)){
+            if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))){
                 throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
             }
             List<Integer> pending = new ArrayList<>(pendingOwners.keySet());
@@ -1294,7 +1323,7 @@ public class Store implements IStore {
         rolesLock.lock();
 
         try{
-            if(!isOwner(requesterId)){
+            if(!isOwner(requesterId) && !(isManager(requesterId) && storeManagers.get(requesterId).contains(StoreManagerPermission.VIEW_ROLES))){
                 throw new IllegalArgumentException("User " + requesterId + " has insufficient permissions to view roles");
             }
             List<Integer> pending = new ArrayList<>(pendingManagers.keySet());
@@ -1316,7 +1345,7 @@ public class Store implements IStore {
                 if (storeProducts.containsKey(productId)) {
                     StoreProduct storeProduct = storeProducts.get(productId);
                     int newQuantity = Math.min(quantity, storeProduct.getQuantity());
-                    if (storeProduct.getQuantity() == newQuantity) {
+                    if (quantity == newQuantity) {
                         productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
                     } else {
                         productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), false);
@@ -1376,8 +1405,8 @@ public class Store implements IStore {
                     storeProduct.decrementProductQuantity(newQuantity);
                 }
                 else{
-                    storeProduct.decrementProductQuantity(newQuantity);
-                    products.put(new StoreProductDTO(storeProduct, quantity),false);
+                    //storeProduct.decrementProductQuantity(newQuantity);
+                    products.put(new StoreProductDTO(storeProduct, newQuantity),false);
 
                 }
             }
