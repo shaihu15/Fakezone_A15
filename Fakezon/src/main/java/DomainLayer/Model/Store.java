@@ -457,7 +457,7 @@ public class Store implements IStore {
             rolesLock.unlock();
         }
     }
-    
+
     @Override
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd) {
         rolesLock.lock();
@@ -1266,11 +1266,14 @@ public class Store implements IStore {
                     amount += auctionProduct.getCurrentHighestBid();
                 }
             } else {
-                double totalDiscount = discountPolicies.values().stream()
-                .mapToDouble(d -> d.apply(cart)).sum();
+                amount += product.getBasePrice() * quantity;
+            }
         }
-}
-    return amount;
+        double totalDiscount = discountPolicies.values().stream()
+        .mapToDouble(d -> d.apply(cart)).sum();
+    
+        amount -= totalDiscount;
+        return amount;
 }
 
 

@@ -427,7 +427,7 @@ class StoreServiceTest {
 
         Store localMockStore = mock(Store.class);
         when(mockStoreRepository.findById(storeId)).thenReturn(localMockStore);
-        when(localMockStore.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(50.0);
+        when(localMockStore.calcAmount(eq(userId), anyMap(), any(LocalDate.class), any(Cart.class))).thenReturn(50.0);
 
         StoreService service = new StoreService(mockStoreRepository, publisher); // <-- Use the mock!
         LocalDate date = LocalDate.now();
@@ -448,8 +448,8 @@ class StoreServiceTest {
         Store mockStore2 = mock(Store.class);
         when(mockStoreRepository.findById(storeId1)).thenReturn(mockStore1);
         when(mockStoreRepository.findById(storeId2)).thenReturn(mockStore2);
-        when(mockStore1.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(30.0);
-        when(mockStore2.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(70.0);
+        when(mockStore1.calcAmount(eq(userId), anyMap(), any(LocalDate.class), any(Cart.class))).thenReturn(30.0);
+        when(mockStore2.calcAmount(eq(userId), anyMap(), any(LocalDate.class), any(Cart.class))).thenReturn(70.0);
     
         StoreService service = new StoreService(mockStoreRepository, publisher); // <-- Use the mock!
         LocalDate date = LocalDate.now();

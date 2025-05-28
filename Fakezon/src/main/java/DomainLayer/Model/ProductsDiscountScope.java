@@ -9,7 +9,7 @@ public class ProductsDiscountScope implements IDiscountScope {
     private List<Integer> productIds;
     private int storeId;
     private Map<Integer, StoreProduct> storeProducts;
-
+    
     public ProductsDiscountScope(List<Integer> productIds, int storeId, Map<Integer, StoreProduct> storeProducts) {
         this.productIds = productIds;
         this.storeId = storeId;
@@ -30,10 +30,19 @@ public class ProductsDiscountScope implements IDiscountScope {
         Map<Integer,Map<Integer,Integer>> allProducts = cart.getAllProducts();
         double eligibleAmount = 0;
         for (Map.Entry<Integer, Map<Integer, Integer>> entry : allProducts.entrySet()) {
+            int currentStoreId = entry.getKey();
             Map<Integer, Integer> products = entry.getValue();
-            if (productIds.contains(entry.getKey()) && entry.getKey() == storeId) {
+            
+            // Check if this is the correct store
+            if (currentStoreId == storeId) {
                 for (Map.Entry<Integer, Integer> product : products.entrySet()) {
-                    eligibleAmount += product.getValue() * storeProducts.get(product.getKey()).getBasePrice();
+                    int productId = product.getKey();
+                    int quantity = product.getValue();
+                    
+                    // Check if this product is in the eligible products list
+                    if (productIds.contains(productId)) {
+                        eligibleAmount += quantity * storeProducts.get(productId).getBasePrice();
+                    }
                 }
             }
         }
