@@ -67,7 +67,7 @@ public class purchase_auction_product {
 
         // Convert regular product to auction product with 1 minute duration
         Response<Void> addAuctionProdRes = systemService.addAuctionProductToStore(storeId, storeOwnerId,
-                regularProductId, initialBasePrice, 3); // 1 minute duration
+                regularProductId, initialBasePrice, 1); // 1 minute duration
         assertTrue(addAuctionProdRes.isSuccess(), "Failed to add auction product");
 
         auctionProductId = regularProductId; // The product is now an auction product
@@ -96,7 +96,7 @@ public class purchase_auction_product {
         assertTrue(bid2Response.isSuccess(), "Buyer2's higher bid should succeed");
 
         // Wait for the auction to end (1 minute + buffer)
-        //TimeUnit.MINUTES.sleep(1);
+        TimeUnit.MINUTES.sleep(1);
         TimeUnit.SECONDS.sleep(5); // Small buffer
         
         // Check ended auction message for store owner
@@ -167,7 +167,7 @@ public class purchase_auction_product {
         assertTrue(bid2Response.isSuccess(), "Buyer2's higher bid should succeed");
 
         // Wait for the auction to end (1 minute + buffer)
-        //TimeUnit.MINUTES.sleep(1);
+        TimeUnit.MINUTES.sleep(1);
         TimeUnit.SECONDS.sleep(5); // Small buffer
 
         // Store owner accepts the winning bid
@@ -191,6 +191,5 @@ public class purchase_auction_product {
                 "Buyer2 should receive a message indicating their bid was not approved by the store");
 
 }
-
 
 }

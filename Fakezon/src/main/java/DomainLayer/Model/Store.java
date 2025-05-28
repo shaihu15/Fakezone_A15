@@ -490,7 +490,7 @@ public class Store implements IStore {
                 scheduler.schedule(() -> {
                     handleAuctionEnd(productID);
                     // auctionProducts.remove(productID);
-                }, MinutesToEnd, TimeUnit.SECONDS);
+                }, MinutesToEnd, TimeUnit.MINUTES);
                 //TO DO: add event to notify users about the auction start
 
             } else {
