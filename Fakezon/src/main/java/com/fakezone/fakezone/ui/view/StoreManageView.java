@@ -141,16 +141,21 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         actionButtonsLayout.setAlignItems(Alignment.CENTER);
         actionButtonsLayout.getStyle().set("margin-top", "10px");
 
-        // Add Product button
+        // INVENTORY buttons
         if (effectivePermissions.contains(StoreManagerPermission.INVENTORY)) {
+            //ADD PRODUCT
             Button addProductButton = new Button("Add Product", VaadinIcon.PLUS.create());
             addProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
             addProductButton.addClickListener(e -> showAddProductDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
             actionButtonsLayout.add(addProductButton);
+            //ADD AUCTION PRODUCT
             Button addAuctionProductButton = new Button("Add Auction Product", VaadinIcon.PLUS.create());
             addAuctionProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
             addAuctionProductButton.addClickListener(e -> showAddAuctionProductDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
             actionButtonsLayout.add(addAuctionProductButton);
+            //REMOVE PRODUCT
+
+            //REMOVE AUCTION PRODUCT
         }
 
         // Add Manager & Add Owner button
