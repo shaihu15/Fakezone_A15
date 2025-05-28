@@ -74,7 +74,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public int getOrderUserId(int orderId) {
+    public int getOrderOrderId(int orderId) {
         try {
             IOrder order = orderRepository.getOrder(orderId);
             return order.getUserId();
@@ -133,7 +133,7 @@ public class OrderService implements IOrderService {
                     orderedProducts.add(new OrderedProduct(storeProduct, quantity));
                 }
                 double price = prices.get(store.getStoreId());
-                Order order = new Order(idCounter.incrementAndGet(), store.getStoreId(), userId, OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
+                Order order = new Order(idCounter.incrementAndGet(), userId, store.getStoreId(), OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
                 orderRepository.addOrder(order);
             }
 
@@ -146,5 +146,10 @@ public class OrderService implements IOrderService {
     @Override
     public void clearAllData() {
         orderRepository.clearAllData();
+    }
+
+    @Override
+    public List<IOrder> getOrdersByUserId(int userId) {
+        return new ArrayList<>(orderRepository.getOrdersByUserId(userId));
     }
 }

@@ -313,4 +313,75 @@ class OrderControllerTest {
         verify(systemService, times(0)).viewOrder(orderId, userId);
     }
 
+
+    @Test
+    void getOrdersByUserId_Success() {
+        int userId = 1;
+        String token = "valid-token";
+        int authenticatedUserId = 42;
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment"));
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(authenticatorAdapter.getUserId(token)).thenReturn(authenticatedUserId);
+        when(systemService.getOrdersByUserId(userId)).thenReturn(new Response<>(orders, "Orders found", true, null, null));
+
+        ResponseEntity<Response<List<OrderDTO>>> response = orderController.getOrdersByUserId(userId, token);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(orders, response.getBody().getData());
+        verify(systemService, times(1)).getOrdersByUserId(userId);
+    }
+
+    @Test
+    void getOrdersByUserId_Failure() {
+        int userId = 1;
+        String token = "valid-token";
+        int authenticatedUserId = 42;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(authenticatorAdapter.getUserId(token)).thenReturn(authenticatedUserId);
+        when(systemService.getOrdersByUserId(userId)).thenReturn(new Response<>(null, "No orders found", false, ErrorType.BAD_REQUEST, null));
+
+        ResponseEntity<Response<List<OrderDTO>>> response = orderController.getOrdersByUserId(userId, token);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("No orders found", response.getBody().getMessage());
+        verify(systemService, times(1)).getOrdersByUserId(userId);
+    }
+
+    @Test
+    void getOrdersByUserId_InvalidToken() {
+        int userId = 1;
+        String token = "invalid-token";
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<List<OrderDTO>>> response = orderController.getOrdersByUserId(userId, token);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getOrdersByUserId(anyInt());
+    }
+
+    @Test
+    void getOrdersByUserId_Exception() {
+        int userId = 1;
+        String token = "valid-token";
+        int authenticatedUserId = 42;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(authenticatorAdapter.getUserId(token)).thenReturn(authenticatedUserId);
+        when(systemService.getOrdersByUserId(userId)).thenThrow(new RuntimeException("Unexpected error"));
+
+        ResponseEntity<Response<List<OrderDTO>>> response = orderController.getOrdersByUserId(userId, token);
+
+        assertEquals(500, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("An error occurred while getting orders by user ID", response.getBody().getMessage());
+        verify(systemService, times(1)).getOrdersByUserId(userId);
+    }
+
 }

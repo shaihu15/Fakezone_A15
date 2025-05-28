@@ -45,8 +45,6 @@ public interface IUserService {
 
     boolean didPurchaseProduct(int userID, int storeID, int productID); // check if the user purchased from the product
 
-    Response<List<OrderDTO>> getOrdersByUser(int userID); // get all the orders of the user
-
     void sendMessageToStore(int userID, int storeID, String message); // send message to store
 
     void addToBasket(int userId, int storeId, int productId, int quantity); // add a product to the user's basket

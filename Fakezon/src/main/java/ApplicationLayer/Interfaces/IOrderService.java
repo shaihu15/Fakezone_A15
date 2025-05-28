@@ -20,8 +20,9 @@ public interface IOrderService {
     void deleteOrder(int orderId);
     IOrder viewOrder(int orderId);
     List<IOrder> searchOrders(String keyword);
-    int getOrderUserId(int orderId);
+    int getOrderOrderId(int orderId);
     int getOrderStoreId(int orderId);
+    List<IOrder> getOrdersByUserId(int userId);
     List<Integer> getOrderProductIds(int orderId);
     List<IOrder> getOrdersByStoreId(int storeId);
     void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod);
