@@ -495,7 +495,11 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
 
     
         card.add(new H5(ap.getCategory().toString()));
-        card.add(new H5("Rating: " + ap.getAverageRating()));
+        StoreProductDTO ratedProd = allProducts.stream().filter(sp -> sp.getProductId() == ap.getProductId()).toList().get(0);
+        if(ratedProd != null){
+            double rating = ratedProd.getAverageRating();
+            card.add(new H5("Rating: " + rating));
+        }
 
         Span price = new Span("Price: $" + String.format("%.2f", ap.getCurrentHighestBid()));
         price.getStyle().set("font-weight", "bold");
