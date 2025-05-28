@@ -1,11 +1,8 @@
 package DomainLayer.Model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import ApplicationLayer.DTO.StoreProductDTO;
 
 public class Basket {
     private int storeId;// maby just soreID?
@@ -39,4 +36,9 @@ public class Basket {
     public void removeItem(int productId){
         productQuantities.remove(productId);
     }
+
+    public boolean containsProduct(int productId) {
+        return productQuantities.containsKey(productId);
+    }
+
 }

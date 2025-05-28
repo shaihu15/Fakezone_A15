@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import DomainLayer.Interfaces.*;
@@ -1915,4 +1916,271 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
+
+
+    // Discount Policy System Service Methods
+
+    @Override
+    public Response<Void> addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productIDs == null || productIDs.isEmpty()) {
+                logger.error("System Service - Product IDs list is null or empty");
+                return new Response<>(null, "Product IDs list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addSimpleDiscountWithProductsScope(storeId, requesterId, productIDs, percentage);
+            logger.info("System Service - Simple discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "Simple discount with products scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding simple discount with products scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding simple discount with products scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addSimpleDiscountWithStoreScope(int storeId, int requesterId, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addSimpleDiscountWithStoreScope(storeId, requesterId, percentage);
+            logger.info("System Service - Simple discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "Simple discount with store scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding simple discount with store scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding simple discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addConditionDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productIDs == null || productIDs.isEmpty()) {
+                logger.error("System Service - Product IDs list is null or empty");
+                return new Response<>(null, "Product IDs list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addConditionDiscountWithProductsScope(storeId, requesterId, productIDs, conditions, percentage);
+            logger.info("System Service - Condition discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "Condition discount with products scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding condition discount with products scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding condition discount with products scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addConditionDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addConditionDiscountWithStoreScope(storeId, requesterId, conditions, percentage);
+            logger.info("System Service - Condition discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "Condition discount with store scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding condition discount with store scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding condition discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addAndDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productIDs == null || productIDs.isEmpty()) {
+                logger.error("System Service - Product IDs list is null or empty");
+                return new Response<>(null, "Product IDs list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addAndDiscountWithProductsScope(storeId, requesterId, productIDs, conditions, percentage);
+            logger.info("System Service - AND discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "AND discount with products scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding AND discount with products scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding AND discount with products scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addAndDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addAndDiscountWithStoreScope(storeId, requesterId, conditions, percentage);
+            logger.info("System Service - AND discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "AND discount with store scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding AND discount with store scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding AND discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addOrDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productIDs == null || productIDs.isEmpty()) {
+                logger.error("System Service - Product IDs list is null or empty");
+                return new Response<>(null, "Product IDs list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addOrDiscountWithProductsScope(storeId, requesterId, productIDs, conditions, percentage);
+            logger.info("System Service - OR discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "OR discount with products scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding OR discount with products scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding OR discount with products scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addOrDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addOrDiscountWithStoreScope(storeId, requesterId, conditions, percentage);
+            logger.info("System Service - OR discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "OR discount with store scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding OR discount with store scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding OR discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addXorDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (productIDs == null || productIDs.isEmpty()) {
+                logger.error("System Service - Product IDs list is null or empty");
+                return new Response<>(null, "Product IDs list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addXorDiscountWithProductsScope(storeId, requesterId, productIDs, conditions, percentage);
+            logger.info("System Service - XOR discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "XOR discount with products scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding XOR discount with products scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding XOR discount with products scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> addXorDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
+        try {
+            if (!userService.isUserLoggedIn(requesterId)) {
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (percentage < 0 || percentage > 100) {
+                logger.error("System Service - Invalid percentage: " + percentage);
+                return new Response<>(null, "Percentage must be between 0 and 100", false, ErrorType.INVALID_INPUT, null);
+            }
+            if (conditions == null || conditions.isEmpty()) {
+                logger.error("System Service - Conditions list is null or empty");
+                return new Response<>(null, "Conditions list cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
+
+            storeService.addXorDiscountWithStoreScope(storeId, requesterId, conditions, percentage);
+            logger.info("System Service - XOR discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            return new Response<>(null, "XOR discount with store scope added successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during adding XOR discount with store scope: " + e.getMessage());
+            return new Response<>(null, "Error during adding XOR discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+
 }
