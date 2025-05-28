@@ -688,6 +688,7 @@ public class SystemService implements ISystemService {
             for (ProductDTO prod : products) {
                 if (prod.getName().equals(productName)) {
                     product = prod;
+                    description = prod.getDescription();
                     break;
                 }
             }
