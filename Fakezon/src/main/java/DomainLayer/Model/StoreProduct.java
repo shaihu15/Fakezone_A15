@@ -34,6 +34,7 @@ public class StoreProduct {
         this.name = storeProduct.name;
         this.basePrice = storeProduct.basePrice;
         this.quantity = storeProduct.quantity;
+        this.category = storeProduct.getCategory();
     }
 
     public int getSproductID() {

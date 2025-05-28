@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -1907,6 +1909,22 @@ public class SystemService implements ISystemService {
         catch (Exception e){
             logger.info("isStoreManager failed");
             return new Response<List<StoreManagerPermission>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<List<AuctionProductDTO>> getAuctionProductsFromStore(int storeId, int userId){
+        try{
+            logger.info("User " + userId + " Trying to fetch auction products from store " + storeId);
+            if(userService.isUnsignedUser(userId)){
+                return new Response<List<AuctionProductDTO>>(null, "User is not logged in",false, ErrorType.UNAUTHORIZED, null);
+            }
+            List<AuctionProductDTO> prods = storeService.getAuctionProductsFromStore(storeId);
+            logger.info("success getAuctionProductsFromStore");
+            return new Response<List<AuctionProductDTO>>(prods, null, true, null, null);
+        }
+        catch(Exception e){
+            return new Response<List<AuctionProductDTO>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 }

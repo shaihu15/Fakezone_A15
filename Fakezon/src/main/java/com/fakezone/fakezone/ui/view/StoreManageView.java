@@ -1119,7 +1119,23 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void createAuction(int storeId, int userId, int productId, String token, double price, int minutes){
-        
+        String url = apiUrl + "store/addAuctionProductToStore/" + storeId + "/" + userId + "/" + productId + "?basePrice=" + price + "&MinutesToEnd=" + minutes;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            entity,
+            new ParameterizedTypeReference<Response<Void>>() {}
+        );
+        Response<Void> response = apiResp.getBody();
+        if(response.isSuccess()){
+            Notification.show("Auction Created Succefully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
     }
 
 

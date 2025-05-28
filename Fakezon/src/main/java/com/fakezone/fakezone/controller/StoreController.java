@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -752,8 +753,33 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
-            logger.error("Error in declineAssignment: {}", e.getMessage());
+            logger.error("Error in isStoreManager: {}", e.getMessage());
             Response<List<StoreManagerPermission>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getAuctionProductsFromStore/{storeId}/{userId}")
+    public ResponseEntity<Response<List<AuctionProductDTO>>> getAuctionProductsFromStore(@PathVariable("storeId") int storeId,
+                                                       @PathVariable("userId") int userId,
+                                                       @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to getAuctionProductsFromStore for store {} by user {} with token {}", storeId, userId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<AuctionProductDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<AuctionProductDTO>> response = systemService.getAuctionProductsFromStore(storeId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getAuctionProductsFromStore: {}", e.getMessage());
+            Response<List<AuctionProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

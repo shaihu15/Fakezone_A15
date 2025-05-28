@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
@@ -189,4 +190,6 @@ public interface ISystemService {
     Response<Boolean> isStoreOwner(int storeId, int userId);
 
     Response<List<StoreManagerPermission>> isStoreManager(int storeId, int userId);
+
+    Response<List<AuctionProductDTO>> getAuctionProductsFromStore(int storeId, int userId);
 }

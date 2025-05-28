@@ -19,6 +19,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
@@ -41,6 +42,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
 import ApplicationLayer.Response;
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -58,6 +60,7 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
     private TextField searchField;
     private FlexLayout productsLayout;
     private List<StoreProductDTO> allProducts;
+    private List<AuctionProductDTO> auctionProducts;
     private Dialog filterDialog;
     private NumberField minPriceField;
     private NumberField maxPriceField;
@@ -67,6 +70,7 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
     private Double dialogMinPrice, dialogMaxPrice, dialogMinRating;
     private String dialogCategory;
     private HorizontalLayout topLayout = new HorizontalLayout();
+    private final boolean isGuest;
     
     public StorePageView(@Value("${api.url}") String apiUrl, @Value("${website.url}") String websiteUrl){
         this.apiUrl = apiUrl;
@@ -76,6 +80,8 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
         topLayout.setWidthFull(); // Make topLayout take the full available width
         topLayout.setAlignItems(Alignment.BASELINE); // Align items vertically on their baseline
         topLayout.setSpacing(true); // Add some space between direct children of topLayout
+        this.isGuest = isGuestToken();
+        this.auctionProducts = new ArrayList<>();
     }
 
     @Override
@@ -94,6 +100,9 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
 
         if (storeDto != null) {
             allProducts = new ArrayList<>(storeDto.getStoreProducts());
+            if(!isGuest){
+                auctionProducts = getAuctionProducts();
+            }
             initFilterDialog();
             buildView();
         }
@@ -104,7 +113,7 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
         topLayout.add(new H1(storeDto.getName()));
         topLayout.add(new H2(String.valueOf(storeDto.getAverageRating())+ "★"));
         if(storeDto.isOpen()){
-            if(!isGuestToken()){
+            if(!isGuest){
                 Button addStoreRating = new Button("Rate Store");
                 addStoreRating.addClickListener(e -> ratingDialog());
                 topLayout.add(addStoreRating);
@@ -114,8 +123,8 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
                 }
             }
             // 1) SET UP SEARCH FIELD
-            searchField = new TextField("Search");
-            searchField.setPlaceholder("by name or category...");
+            searchField = new TextField();
+            searchField.setPlaceholder("Search Store");
             searchField.setValueChangeMode(ValueChangeMode.LAZY);
             searchField.addValueChangeListener(e -> {
                 currentSearch = e.getValue().trim().toLowerCase();
@@ -317,7 +326,7 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
      private void refreshDisplay() {
         productsLayout.removeAll();
 
-        List<StoreProductDTO> filtered = allProducts.stream()
+        List<StoreProductDTO> filteredProducts = allProducts.stream()
             // 1) search filter
             .filter(sp -> sp.getName().toLowerCase().contains(currentSearch)
                        || sp.getCategory().toString().toLowerCase().contains(currentSearch))
@@ -328,10 +337,21 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
             .filter(sp -> dialogCategory  == null || sp.getCategory().toString().equals(dialogCategory))
             .collect(Collectors.toList());
 
-        if (filtered.isEmpty()) {
+        filteredProducts.forEach(sp -> productsLayout.add(buildProductCard(sp)));
+        
+        List<AuctionProductDTO> filteredAuctions = new ArrayList<>();
+        if (!isGuest && auctionProducts != null && !auctionProducts.isEmpty()) {
+            filteredAuctions = auctionProducts.stream()
+            .filter(ap -> ap.getName().toLowerCase().contains(currentSearch))
+            .filter(ap -> dialogMinPrice  == null || ap.getCurrentHighestBid() >= dialogMinPrice)
+            .filter(ap -> dialogMaxPrice  == null || ap.getCurrentHighestBid() <= dialogMaxPrice)
+            .filter(ap -> dialogMinRating == null || ap.getAverageRating()    >= dialogMinRating)
+            .filter(ap -> dialogCategory  == null || ap.getCategory().toString().equals(dialogCategory))
+            .collect(Collectors.toList());
+        }
+        filteredAuctions.forEach(ap   -> productsLayout.add(buildAuctionProductCard(ap)));
+        if (filteredProducts.isEmpty() && filteredAuctions.isEmpty()) {
             productsLayout.add(new Span("No products match your criteria."));
-        } else {
-            filtered.forEach(sp -> productsLayout.add(buildProductCard(sp)));
         }
     }
 
@@ -434,6 +454,63 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
             Notification.show(response.getMessage());
             return false;
         }
+    }
+
+    private List<AuctionProductDTO> getAuctionProducts(){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String token = (String) session.getAttribute("token");
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        String url = apiUrl + "store/getAuctionProductsFromStore/" + storeId + "/" + user.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<List<AuctionProductDTO>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<List<AuctionProductDTO>>>() {});
+        Response<List<AuctionProductDTO>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
+        }
+        else{
+            Notification.show(response.getMessage());
+            return null;
+        }
+    }
+
+    private VerticalLayout buildAuctionProductCard(AuctionProductDTO ap) {
+        VerticalLayout card = new VerticalLayout();
+        card.getStyle()
+            .set("flex", "0 0 30%")       // three cards per row; adjust 30% → 25% for four, etc.
+            .set("box-sizing", "border-box")
+            .set("margin", "0.5em");      // gutters
+        H4 name = new H4(ap.getName());
+        name.getStyle()
+            .set("font-size", "var(--lumo-font-size-xl)")
+            .set("font-weight", "600")
+            .set("text-decoration", "none");
+        card.add(name);
+
+    
+        card.add(new H5(ap.getCategory().toString()));
+        card.add(new H5("Rating: " + ap.getAverageRating()));
+
+        Span price = new Span("Price: $" + String.format("%.2f", ap.getCurrentHighestBid()));
+        price.getStyle().set("font-weight", "bold");
+        card.add(price);
+
+        Button bidButton = new Button("Place Bid");
+        bidButton.addClickListener(e -> addBidDialog());
+        card.add(bidButton);
+        return card;
+    }
+    
+    private void addBidDialog(){
+        Dialog dialog = new Dialog();
+        dialog.add(new H1("NOT IMPLEMENTED YET"));
+        dialog.open();
     }
 
 }
