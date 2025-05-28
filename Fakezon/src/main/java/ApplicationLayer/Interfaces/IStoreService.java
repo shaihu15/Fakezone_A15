@@ -132,5 +132,8 @@ public interface IStoreService {
   void addXorDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage);
   
   
+  boolean isStoreOwner(int storeId, int userId);
+
+  List<StoreManagerPermission> isStoreManager(int storeId, int userId); // returns null if not manager
 
 }

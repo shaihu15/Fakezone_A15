@@ -198,6 +198,10 @@ public interface ISystemService {
 
     Response<Void> removeFromBasket(int userId, int productId, int storeId);
 
+    Response<Boolean> isStoreOwner(int storeId, int userId);
+
+    Response<List<StoreManagerPermission>> isStoreManager(int storeId, int userId);
+
     Response<List<OrderDTO>> getOrdersByUserId(int userId);
 
     // Discount Policy Methods

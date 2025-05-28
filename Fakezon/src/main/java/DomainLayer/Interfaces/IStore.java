@@ -142,4 +142,6 @@ public interface IStore {
     public void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
     
+    List<StoreManagerPermission> isManagerAndGetPerms(int userId);
+
 }

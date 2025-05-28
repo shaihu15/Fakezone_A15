@@ -1432,4 +1432,24 @@ public class Store implements IStore {
         }
     }
 
+    @Override
+    public List<StoreManagerPermission> isManagerAndGetPerms(int userId){
+        rolesLock.lock();
+        try{
+            if(storeManagers.containsKey(userId)){
+                return new ArrayList<StoreManagerPermission>(storeManagers.get(userId));
+            }
+            else{
+                return null;
+            }
+        }
+        catch(Exception e){
+            throw e;
+        }
+        finally{
+            rolesLock.unlock();
+        }
+
+    }
+
 }

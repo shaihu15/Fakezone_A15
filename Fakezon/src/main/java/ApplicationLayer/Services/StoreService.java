@@ -879,4 +879,24 @@ public class StoreService implements IStoreService {
             }
         }
     
+    @Override
+    public boolean isStoreOwner(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("isStoreOwner - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.isOwner(userId);
+    }
+
+    @Override // returns null if not manager
+    public List<StoreManagerPermission> isStoreManager(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("isStoreOwner - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.isManagerAndGetPerms(userId);
+    }
+
 }
