@@ -6,9 +6,10 @@ public interface IOrderRepository {
         void addOrder(IOrder Order);
         void deleteOrder(int orderId);
         IOrder getOrder(int orderId);
-            void clearAllData();
+        void clearAllData();
 
         
         Collection<IOrder> getAllOrders();
+        Collection<IOrder> getOrdersByUserId(int userId);
 
 }

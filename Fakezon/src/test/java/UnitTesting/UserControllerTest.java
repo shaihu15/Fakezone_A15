@@ -140,33 +140,6 @@ class UserControllerTest {
     }
 
     @Test
-    void testGetOrdersByUser_Success() {
-        int userId = 1;
-        String token = "validToken";
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "123 Main St", "Credit Card"));        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getOrdersByUser(userId)).thenReturn(new Response<>(orders, "Orders retrieved successfully", true, null, null));
-
-        ResponseEntity<Response<List<OrderDTO>>> response = userController.getOrdersByUser(token, userId);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("Orders retrieved successfully", response.getBody().getMessage());
-        verify(systemService, times(1)).getOrdersByUser(userId);
-    }
-
-    @Test
-    void testGetOrdersByUser_InvalidToken() {
-        int userId = 1;
-        String token = "invalidToken";
-        when(authenticatorAdapter.isValid(token)).thenReturn(false);
-
-        ResponseEntity<Response<List<OrderDTO>>> response = userController.getOrdersByUser(token, userId);
-
-        assertEquals(401, response.getStatusCodeValue());
-        assertEquals("Invalid token", response.getBody().getMessage());
-        verify(systemService, never()).getOrdersByUser(anyInt());
-    }
-
-    @Test
     void testLogin_Success() {
         String email = "test@example.com";
         String password = "password";
@@ -731,22 +704,6 @@ class UserControllerTest {
         assertFalse(response.getBody().isSuccess());
         assertEquals("Registration failed", response.getBody().getMessage());
         verify(systemService, times(1)).guestRegister(anyString(), anyString(), anyString(), anyString());
-    }
-    
-    @Test
-    void testGetOrdersByUser_Failure() {
-        int userId = 1;
-        String token = "validToken";
-        when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getOrdersByUser(userId))
-                .thenReturn(new Response<>(null, "Failed to retrieve orders", false, ErrorType.INVALID_INPUT, null));
-    
-        ResponseEntity<Response<List<OrderDTO>>> response = userController.getOrdersByUser(token, userId);
-    
-        assertEquals(400, response.getStatusCodeValue());
-        assertFalse(response.getBody().isSuccess());
-        assertEquals("Failed to retrieve orders", response.getBody().getMessage());
-        verify(systemService, times(1)).getOrdersByUser(userId);
     }
     
     @Test

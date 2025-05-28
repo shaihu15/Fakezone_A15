@@ -107,11 +107,6 @@ public class RegisteredTest {
     }
 
     @Test
-    void givenNoOrder_whenGetOrders_returnEmpty() {
-        assertNotNull(registeredUser.getOrders(), "Orders should not be null");
-    }
-
-    @Test
     void givenLogedoutUser_isLoggedIn_returnFalse() {
         registeredUser.login();
         assertTrue(registeredUser.isLoggedIn(), "User should be logged in initially");
@@ -146,29 +141,8 @@ public class RegisteredTest {
                 "Message should be received successfully");
     }
 
-    @Test
-    void givenOrderInOrders_whenGetOrders_returnTrue() {
-        int orderID = 1;
-        OrderDTO order = mock(OrderDTO.class);
-        when(order.getOrderId()).thenReturn(orderID);
-        registeredUser.saveOrder(order);
-        assertEquals(order.getOrderId(), registeredUser.getOrders().get(orderID).getOrderId(),
-                "Order should be retrieved successfully");
-    }
-    @Test
-    void givenNoOrderInOrders_whenGetOrders_returnTrue() {
-        assertEquals(0, registeredUser.getOrders().size(),
-                "Orders should be empty initially");
-    }
-    @Test
-    void givenValidOrder_whenSaveOrder_returnTrue() {
-        OrderDTO order = mock(OrderDTO.class);
-        int orderID = 1;
-        when(order.getOrderId()).thenReturn(orderID);
-        registeredUser.saveOrder(order);
-        assertEquals(order, registeredUser.getOrders().get(orderID),
-                "Order should be saved successfully");
-    }
+
+    
     @Test
     public void testSendMessageToStore_Sucssses() {
         registeredUser.sendMessageToStore(1, "Hello Store!");
@@ -194,14 +168,6 @@ public class RegisteredTest {
         assertThrows(IllegalArgumentException.class, () -> {
             registeredUser.removeRole(999);
         });
-    }
-
-    @Test
-    public void testSaveOrderAndGetOrders() {
-        OrderDTO order = mock(OrderDTO.class);
-        when(order.getOrderId()).thenReturn(123);
-        registeredUser.saveOrder(order);
-        assertEquals(order, registeredUser.getOrders().get(123));
     }
 
     @Test

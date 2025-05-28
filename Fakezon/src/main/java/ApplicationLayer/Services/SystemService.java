@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import DomainLayer.Interfaces.*;
 import org.slf4j.Logger;
@@ -263,23 +264,6 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during opening store: " + e.getMessage());
             return new Response<>(null, "Error during opening store: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
-        }
-    }
-
-    @Override
-    public Response<List<OrderDTO>> getOrdersByUser(int userId) {
-        try {
-            if (!this.userService.isUserLoggedIn(userId)) {
-                logger.error("System Service - User is not logged in: " + userId);
-                return new Response<List<OrderDTO>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT,
-                        null);
-            }
-            logger.info("System Service - User orders retrieved: " + userId);
-            return this.userService.getOrdersByUser(userId);
-        } catch (Exception e) {
-            logger.error("System Service - Error during retrieving user orders: " + e.getMessage());
-            return new Response<List<OrderDTO>>(null, "Error during retrieving user orders: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
@@ -629,10 +613,16 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
+            if (this.userService.isUserLoggedIn(requesterId)) {
+                logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
                     + productID + " in store: " + storeId);
-            this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
-            return new Response<>(null, "Bid added successfully", true, null, null);
+                this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
+                return new Response<>(null, "Bid added successfully", true, null, null);
+            }
+            else{
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
         } catch (Exception e) {
             logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
             return new Response<>(null, "Error during adding bid to auction product in store: " + e.getMessage(), false,
@@ -648,8 +638,8 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User closed store: " + storeId + " by user: " + userId);
                 return new Response<String>("Store closed successfully", "Store closed successfully", true, null, null);
             } else {
-                logger.error("System Service - User is not logged in: " + userId);
-                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                    logger.error("System Service - User is not logged in: " + userId);
+                    return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during closing store: " + e.getMessage());
@@ -1906,6 +1896,23 @@ public class SystemService implements ISystemService {
         catch (Exception e){
             logger.info("isStoreManager failed");
             return new Response<List<StoreManagerPermission>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<List<OrderDTO>> getOrdersByUserId(int userId) {
+        try {
+            if (!userService.isUserLoggedIn(userId)) {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            List<IOrder> orders = orderService.getOrdersByUserId(userId);
+            List<OrderDTO> orderDTOs = orders.stream().map(iorder -> createOrderDTO(iorder)).collect(Collectors.toList());
+            return new Response<>(orderDTOs, "Orders retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all orders by user ID: " + e.getMessage());
+            return new Response<>(null, "Error during getting all orders by user ID: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 }

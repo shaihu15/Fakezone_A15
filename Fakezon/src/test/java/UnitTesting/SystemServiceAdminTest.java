@@ -398,7 +398,7 @@ public class SystemServiceAdminTest {
      @Test
     void testCreateUnsignedUser_Success() {
         // Arrange
-        User mockUser = new User(-1);
+        User mockUser = mock(User.class);
         when(mockUserService.createUnsignedUser()).thenReturn(mockUser);
 
         // Act
@@ -410,7 +410,7 @@ public class SystemServiceAdminTest {
         verify(mockUserService, times(1)).createUnsignedUser();
     }
 
-        @Test
+    @Test
     void testCreateUnsignedUser_IllegalArgumentException() {
         // Arrange
         when(mockUserService.createUnsignedUser()).thenThrow(new IllegalArgumentException("User already exists"));

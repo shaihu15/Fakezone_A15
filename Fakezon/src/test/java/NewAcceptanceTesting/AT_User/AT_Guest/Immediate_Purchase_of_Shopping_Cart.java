@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Callable;
 
 import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -399,5 +403,89 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Collection<IOrder> orders = orderRepository.getAllOrders();
         assertTrue(orders.size() == 0);
     }
+
+    @Test
+void testImmediatePurchase_Parallel_LastProduct() throws Exception {
+
+    Response<UserDTO> storeOwnerResponse = testHelper.register_and_login();
+    assertTrue(storeOwnerResponse.isSuccess());
+    int storeOwnerId = storeOwnerResponse.getData().getUserId();
+    // storeOwner is registered and logged in
+
+    Response<Integer> storeResult = systemService.addStore(storeOwnerId, "Store1");
+    assertTrue(storeResult.isSuccess());
+    int storeId = storeResult.getData(); 
+    //the store is open
+
+    Response<StoreProductDTO> productResponse = testHelper.addProductToStore(storeId, storeOwnerId); //only one product is added
+    assertTrue(productResponse.isSuccess());
+    int productId = productResponse.getData().getProductId();
+    //the product is added to the store
+
+    // Register two customers
+    Response<UserDTO> user1 = testHelper.register_and_login2();
+    Response<UserDTO> user2 = testHelper.register_and_login3();
+    assertTrue(user1.isSuccess());
+    assertTrue(user2.isSuccess());
+    int user1Id = user1.getData().getUserId();
+    int user2Id = user2.getData().getUserId();
+
+    // Both users add the same product to their basket
+    assertTrue(systemService.addToBasket(user1Id, storeId, productId, 1).isSuccess());
+    assertTrue(systemService.addToBasket(user2Id, storeId, productId, 1).isSuccess());
+
+    /*Using ExecutorService is the standard and safe way to manage threads in Java for parallel tasks,
+    instead of creating Thread objects directly and managing them manually. */
+    
+    // Prepare concurrent purchase tasks
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+
+    /*Callable is a functional interface that allows you to define a task that can be executed in a separate thread, 
+        and it can also return a value (in this case, Response<Void>) and throw exceptions (which is important for error checking).
+        Each task represents a call to a systemService function with different parameters (for example, with different users). */
+
+    Callable<Response<String>> task1 = () -> systemService.purchaseCart(
+        user1Id, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
+        "deliveryMethod", "1234567890123456", "cardHolder", "12/25", "123",
+        "123 Main St, City, Country", "Recipient", "Package details"
+    );
+
+    Callable<Response<String>> task2 = () -> systemService.purchaseCart(
+        user2Id, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
+        "deliveryMethod", "1234567890123456", "cardHolder", "12/25", "123",
+        "123 Main St, City, Country", "Recipient", "Package details"
+    );
+
+    /*The submit() method of the ExecutorService submits the task for execution on an available thread in the pool. It returns a Future object.
+    A Future object represents the result of an asynchronous task (that is, a task that runs in the background). 
+    It allows you to check whether the task has completed, cancel it, and most importantly, receive its result as soon as it completes. */
+
+    Future<Response<String>> future1 = executor.submit(task1);
+    Future<Response<String>> future2 = executor.submit(task2);
+
+    Response<String> result1 = future1.get(); // waits for first purchase
+    Response<String> result2 = future2.get(); // waits for second purchase
+
+    executor.shutdown();
+
+    // Assert only one success
+    boolean oneSuccess = result1.isSuccess() ^ result2.isSuccess(); // XOR: exactly one is true
+    assertTrue(oneSuccess, "Only one user should be able to purchase the last product.");
+
+    // Validate the error message from the failure
+    String expectedFailureMessage = "Product is not available: Test Product";
+    if (!result1.isSuccess()) {
+        assertEquals(expectedFailureMessage, result1.getMessage());
+    } else {
+        assertEquals(expectedFailureMessage, result2.getMessage());
+    }
+
+    // Clean up: remove created order if any
+    Collection<IOrder> orders = orderRepository.getAllOrders();
+    assertEquals(1, orders.size(), "There should be only one successful order.");
+    int orderId = orders.iterator().next().getId();
+    orderRepository.deleteOrder(orderId);
+}
+
 
 }
