@@ -343,7 +343,8 @@ public class Store implements IStore {
                 scheduler.schedule(() -> {
                     handleAuctionEnd(productID);
                     // auctionProducts.remove(productID);
-                }, MinutesToEnd, TimeUnit.MINUTES);
+                }, MinutesToEnd, TimeUnit.SECONDS);
+                //TO DO: add event to notify users about the auction start
 
             } else {
                 throw new IllegalArgumentException(
@@ -455,7 +456,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID()
                         + " is out of stock in store ID: " + storeID);
             }
-            auctionProduct.setQuantity(auctionProduct.getQuantity() - 1);
+            //auctionProduct.setQuantity(auctionProduct.getQuantity() - 1);
             this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(),
                     auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(),
                     auctionProduct.toDTO(storeID)));
