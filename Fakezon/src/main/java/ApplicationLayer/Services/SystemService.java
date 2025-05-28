@@ -629,10 +629,16 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
         try {
-            logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
+            if (this.userService.isUserLoggedIn(requesterId)) {
+                logger.info("System service - user " + requesterId + " trying to add bid " + bid + " to auction product "
                     + productID + " in store: " + storeId);
-            this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
-            return new Response<>(null, "Bid added successfully", true, null, null);
+                this.storeService.addBidOnAuctionProductInStore(storeId, requesterId, productID, bid);
+                return new Response<>(null, "Bid added successfully", true, null, null);
+            }
+            else{
+                logger.error("System Service - User is not logged in: " + requesterId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
         } catch (Exception e) {
             logger.error("System Service - Error during adding bid to auction product in store: " + e.getMessage());
             return new Response<>(null, "Error during adding bid to auction product in store: " + e.getMessage(), false,
@@ -648,8 +654,8 @@ public class SystemService implements ISystemService {
                 logger.info("System Service - User closed store: " + storeId + " by user: " + userId);
                 return new Response<String>("Store closed successfully", "Store closed successfully", true, null, null);
             } else {
-                logger.error("System Service - User is not logged in: " + userId);
-                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+                    logger.error("System Service - User is not logged in: " + userId);
+                    return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during closing store: " + e.getMessage());
