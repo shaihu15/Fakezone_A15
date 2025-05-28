@@ -235,27 +235,6 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getOrdersByUser/{userId}")
-    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByUser(@RequestHeader("Authorization") String token,
-                                                             @PathVariable int userId) {
-        try {
-            logger.info("Received request to get orders for user: {}", userId);
-            if (!authenticatorAdapter.isValid(token)) {
-                Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
-                return ResponseEntity.status(401).body(response);
-            }
-            Response<List<OrderDTO>> response = systemService.getOrdersByUser(userId);
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (Exception e) {
-            logger.error("Error in getOrdersByUser: {}", e.getMessage());
-            Response<List<OrderDTO>> response = new Response<>(null, "An error occurred while retrieving orders", false, ErrorType.INTERNAL_ERROR, null);
-            return ResponseEntity.status(500).body(response);
-        }
-    }
-
     @PostMapping("/login")
     public ResponseEntity<Response<UserDTO>> login(@RequestBody Request<LoginRequest> request){
         try {

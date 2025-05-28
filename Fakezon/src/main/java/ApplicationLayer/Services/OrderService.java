@@ -74,7 +74,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public int getOrderUserId(int orderId) {
+    public int getOrderOrderId(int orderId) {
         try {
             IOrder order = orderRepository.getOrder(orderId);
             return order.getUserId();
@@ -146,5 +146,10 @@ public class OrderService implements IOrderService {
     @Override
     public void clearAllData() {
         orderRepository.clearAllData();
+    }
+
+    @Override
+    public List<IOrder> getOrdersByUserId(int userId) {
+        return new ArrayList<>(orderRepository.getOrdersByUserId(userId));
     }
 }

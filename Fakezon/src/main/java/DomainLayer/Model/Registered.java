@@ -16,7 +16,6 @@ import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 
 public class Registered extends User {
-    protected HashMap<Integer, OrderDTO> orders; // orderId -> Order
     protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
@@ -38,7 +37,6 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
-        this.orders = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -56,7 +54,6 @@ public class Registered extends User {
         messagesFromStore = new LinkedList<>();
         assignmentMessages = new LinkedList<>();
         auctionEndedMessages = new LinkedList<>();
-        this.orders = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -144,13 +141,6 @@ public class Registered extends User {
 
     public HashMap<Integer, IRegisteredRole> getAllRoles() {
         return roles; // system admin (storeID = -1)or store owner
-    }
-
-    public HashMap<Integer, OrderDTO> getOrders() {
-        return orders; // userID -> Order
-    }
-    public void saveOrder(OrderDTO order) {
-        orders.put(order.getOrderId(), order);
     }
 
     public boolean isLoggedIn() {

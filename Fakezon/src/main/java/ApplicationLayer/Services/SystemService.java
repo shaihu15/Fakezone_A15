@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import DomainLayer.Interfaces.*;
 import org.slf4j.Logger;
@@ -263,23 +264,6 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during opening store: " + e.getMessage());
             return new Response<>(null, "Error during opening store: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
-        }
-    }
-
-    @Override
-    public Response<List<OrderDTO>> getOrdersByUser(int userId) {
-        try {
-            if (!this.userService.isUserLoggedIn(userId)) {
-                logger.error("System Service - User is not logged in: " + userId);
-                return new Response<List<OrderDTO>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT,
-                        null);
-            }
-            logger.info("System Service - User orders retrieved: " + userId);
-            return this.userService.getOrdersByUser(userId);
-        } catch (Exception e) {
-            logger.error("System Service - Error during retrieving user orders: " + e.getMessage());
-            return new Response<List<OrderDTO>>(null, "Error during retrieving user orders: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
@@ -1882,6 +1866,23 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during getting user roles: " + e.getMessage());
             return new Response<>(null, "Error getting user roles: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<List<OrderDTO>> getOrdersByUserId(int userId) {
+        try {
+            if (!userService.isUserLoggedIn(userId)) {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+            List<IOrder> orders = orderService.getOrdersByUserId(userId);
+            List<OrderDTO> orderDTOs = orders.stream().map(iorder -> createOrderDTO(iorder)).collect(Collectors.toList());
+            return new Response<>(orderDTOs, "Orders retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all orders by user ID: " + e.getMessage());
+            return new Response<>(null, "Error during getting all orders by user ID: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
         }
     }
 }

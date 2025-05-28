@@ -353,54 +353,6 @@ public class UserServiceTest {
     }
     
     @Test
-    void testGetOrdersByUser_Success() {
-        int userId = 1;
-        Registered mockUser = mock(Registered.class);
-        OrderDTO order1 = mock(OrderDTO.class);
-        OrderDTO order2 = mock(OrderDTO.class);
-        HashMap<Integer, OrderDTO> ordersMap = new HashMap<>();
-        ordersMap.put(1, order1);
-        ordersMap.put(2, order2);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(mockUser.getOrders()).thenReturn(ordersMap);
-    
-        Response<List<OrderDTO>> response = userService.getOrdersByUser(userId);
-    
-        assertTrue(response.isSuccess());
-        assertEquals(List.of(order1, order2), response.getData());
-        assertEquals("Orders retrieved successfully", response.getMessage());
-        assertNull(response.getErrorType());
-    }
-    
-    @Test
-    void testGetOrdersByUser_Exception() {
-        int userId = 2;
-        Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(mockUser.getOrders()).thenThrow(new RuntimeException("DB error"));
-    
-        Response<List<OrderDTO>> response = userService.getOrdersByUser(userId);
-    
-        assertFalse(response.isSuccess());
-        assertNull(response.getData());
-        assertTrue(response.getMessage().contains("Error during get orders: DB error"));
-        assertEquals(ApplicationLayer.Enums.ErrorType.INTERNAL_ERROR, response.getErrorType());
-    }
-    
-    @Test
-    void testGetOrdersByUser_UserNotFound() {
-        int userId = 999;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-    
-        Response<List<OrderDTO>> response = userService.getOrdersByUser(userId);
-    
-        assertFalse(response.isSuccess());
-        assertNull(response.getData());
-        assertEquals("User not found", response.getMessage());
-        assertEquals(ApplicationLayer.Enums.ErrorType.INVALID_INPUT, response.getErrorType());
-    }
-    
-    @Test
     void testGetAllRoles_Success() {
         int userId = 1;
         Registered mockUser = mock(Registered.class);

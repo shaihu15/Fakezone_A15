@@ -228,24 +228,6 @@ public class UserService implements IUserService {
         return false;
     }
 
-    @Override
-    public Response<List<OrderDTO>> getOrdersByUser(int userID) {
-        Optional<Registered> user = userRepository.findById(userID);
-        if (user.isPresent()) {
-            try {
-                List<OrderDTO> orders = user.get().getOrders().values().stream().toList();
-                return new Response<>(orders, "Orders retrieved successfully", true, null, null);
-            } catch (Exception e) {
-                // Handle exception if needed
-                System.out.println("Error during get orders: " + e.getMessage());
-                logger.error("Error during get orders: " + e.getMessage());
-                return new Response<>(null, "Error during get orders: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-            }
-        } else {
-            logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
-        }
-    }
 
     @Override
     public boolean isUserLoggedIn(int userID) {

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jsoup.select.CombiningEvaluator.Or;
+
 import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
@@ -41,8 +43,6 @@ public interface ISystemService {
     Response<Void> ratingStore(int storeId, int userId, double rating, String comment);
 
     Response<Void> ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment);
-
-    Response<List<OrderDTO>> getOrdersByUser(int userId); // userID -> OrderDTO
 
     Response<Void> sendMessageToStore(int userId, int storeId, String message); // send message to store
 
@@ -185,4 +185,6 @@ public interface ISystemService {
     Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId);
 
     Response<Void> removeFromBasket(int userId, int productId, int storeId);
+
+    Response<List<OrderDTO>> getOrdersByUserId(int userId);
 }
