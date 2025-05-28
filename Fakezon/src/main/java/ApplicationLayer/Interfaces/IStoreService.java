@@ -113,4 +113,8 @@ public interface IStoreService {
 
   void clearAllData();
 
+  boolean isStoreOwner(int storeId, int userId);
+
+  List<StoreManagerPermission> isStoreManager(int storeId, int userId); // returns null if not manager
+
 }

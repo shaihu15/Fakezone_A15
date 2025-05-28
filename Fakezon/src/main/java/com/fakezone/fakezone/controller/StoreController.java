@@ -708,7 +708,55 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
         }
     }
 
+    @GetMapping("/isStoreOwner/{storeId}/{userId}")
+    public ResponseEntity<Response<Boolean>> isStoreOwner(@PathVariable("storeId") int storeId,
+                                                       @PathVariable("userId") int userId,
+                                                       @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to isStoreOwner for store {} by user {} with token {}", storeId, userId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Boolean> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Boolean> response = systemService.isStoreOwner(storeId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in declineAssignment: {}", e.getMessage());
+            Response<Boolean> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
+    @GetMapping("/isStoreManager/{storeId}/{userId}")
+    public ResponseEntity<Response<List<StoreManagerPermission>>> isStoreManager(@PathVariable("storeId") int storeId,
+                                                       @PathVariable("userId") int userId,
+                                                       @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to isStoreManager for store {} by user {} with token {}", storeId, userId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<StoreManagerPermission>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<StoreManagerPermission>> response = systemService.isStoreManager(storeId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in declineAssignment: {}", e.getMessage());
+            Response<List<StoreManagerPermission>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
 
 }

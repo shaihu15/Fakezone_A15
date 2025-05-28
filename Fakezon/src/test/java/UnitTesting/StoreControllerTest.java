@@ -2355,5 +2355,111 @@ class StoreControllerTest {
         assertFalse(response.getBody().isSuccess());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
         verify(systemService, times(1)).getPendingOwners(storeId, requesterId);
-    }    
+    }
+    
+    @Test
+void testIsStoreOwner_Success() {
+    int storeId = 1;
+    int userId = 2;
+    String token = "valid-token";
+
+    when(authenticatorAdapter.isValid(token)).thenReturn(true);
+    when(systemService.isStoreOwner(storeId, userId))
+            .thenReturn(new Response<>(true, "User is store owner", true, null, null));
+
+    ResponseEntity<Response<Boolean>> response = storeController.isStoreOwner(storeId, userId, token);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertTrue(response.getBody().isSuccess());
+    assertTrue(response.getBody().getData());
+    verify(systemService, times(1)).isStoreOwner(storeId, userId);
+}
+
+@Test
+void testIsStoreOwner_InvalidToken() {
+    int storeId = 1;
+    int userId = 2;
+    String token = "invalid-token";
+
+    when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+    ResponseEntity<Response<Boolean>> response = storeController.isStoreOwner(storeId, userId, token);
+
+    assertEquals(401, response.getStatusCodeValue());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+    verify(systemService, never()).isStoreOwner(anyInt(), anyInt());
+}
+
+@Test
+void testIsStoreOwner_InternalServerError() {
+    int storeId = 1;
+    int userId = 2;
+    String token = "valid-token";
+
+    when(authenticatorAdapter.isValid(token)).thenReturn(true);
+    when(systemService.isStoreOwner(storeId, userId))
+            .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
+
+    ResponseEntity<Response<Boolean>> response = storeController.isStoreOwner(storeId, userId, token);
+
+    assertEquals(500, response.getStatusCodeValue());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+    verify(systemService, times(1)).isStoreOwner(storeId, userId);
+}
+
+@Test
+void testIsStoreManager_Success() {
+    int storeId = 1;
+    int userId = 2;
+    String token = "valid-token";
+    List<StoreManagerPermission> permissions = List.of(StoreManagerPermission.DISCOUNT_POLICY);
+
+    when(authenticatorAdapter.isValid(token)).thenReturn(true);
+    when(systemService.isStoreManager(storeId, userId))
+            .thenReturn(new Response<>(permissions, "User is store manager", true, null, null));
+
+    ResponseEntity<Response<List<StoreManagerPermission>>> response = storeController.isStoreManager(storeId, userId, token);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(permissions, response.getBody().getData());
+    verify(systemService, times(1)).isStoreManager(storeId, userId);
+}
+
+@Test
+void testIsStoreManager_InvalidToken() {
+    int storeId = 1;
+    int userId = 2;
+    String token = "invalid-token";
+
+    when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+    ResponseEntity<Response<List<StoreManagerPermission>>> response = storeController.isStoreManager(storeId, userId, token);
+
+    assertEquals(401, response.getStatusCodeValue());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals(ErrorType.UNAUTHORIZED, response.getBody().getErrorType());
+    verify(systemService, never()).isStoreManager(anyInt(), anyInt());
+}
+
+@Test
+void testIsStoreManager_InternalServerError() {
+    int storeId = 1;
+    int userId = 2;
+    String token = "valid-token";
+
+    when(authenticatorAdapter.isValid(token)).thenReturn(true);
+    when(systemService.isStoreManager(storeId, userId))
+            .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
+
+    ResponseEntity<Response<List<StoreManagerPermission>>> response = storeController.isStoreManager(storeId, userId, token);
+
+    assertEquals(500, response.getStatusCodeValue());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals(ErrorType.INTERNAL_ERROR, response.getBody().getErrorType());
+    verify(systemService, times(1)).isStoreManager(storeId, userId);
+}
+
 }       

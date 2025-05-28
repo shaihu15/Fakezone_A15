@@ -1,5 +1,6 @@
 package com.fakezone.fakezone.ui.view;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -16,6 +17,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
@@ -27,6 +29,7 @@ import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -39,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -46,23 +50,25 @@ import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 
-@Route(value = "store", layout = MainLayout.class)
-public class StoreView extends VerticalLayout implements BeforeEnterObserver{
+@Route(value = "store/:storeId/manage", layout = MainLayout.class)
+public class StoreManageView extends VerticalLayout implements BeforeEnterObserver{
 
-    private final String backendUrl = "http://localhost:8080";
+    private final String backendUrl;
     private final RestTemplate restTemplate;
     private final Span loading = new Span("Loading store...");
-
+    private final String webUrl;
     // Store these at the class level after initial fetch
     private int currentStoreId;
     private UserDTO currentUserDTO;
     private String currentToken;
     private Set<StoreManagerPermission> effectivePermissions = new HashSet<>();
     private VerticalLayout rolesDisplaySection; // New section for roles details
-
-    public StoreView() {
+    private int storeId;
+    public StoreManageView(@Value("${api.url}") String backendUrl, @Value("${website.url}") String websiteUrl) {
+        this.webUrl = websiteUrl;
+        this.backendUrl = backendUrl;
         restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         setPadding(true);
         setSpacing(true);
         setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -82,8 +88,8 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         System.out.println("StoreView: token=" + (token != null ? "present" : "null") + ", userId=" + (userDTO != null ? userDTO.getUserId() : "null"));
 
-        if (token == null || userDTO == null || isGuestToken(session)) {
-            event.rerouteTo("login");
+        if (token == null || userDTO == null) {
+            event.rerouteTo(""); // route to home (shouldn't happen)
             Notification.show("Please log in to view this page.", 3000, Notification.Position.MIDDLE);
             remove(loading);
             return;
@@ -91,26 +97,13 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         this.currentUserDTO = userDTO;
         this.currentToken = token;
-
-        QueryParameters queryParameters = event.getLocation().getQueryParameters();
-        Map<String, List<String>> parameters = queryParameters.getParameters();
-        List<String> storeIdParam = parameters.getOrDefault("storeId", List.of());
-
-        if (storeIdParam.isEmpty()) {
-            remove(loading);
-            add(createErrorCard("No store ID provided."));
-            Notification.show("No store ID provided.", 3000, Notification.Position.MIDDLE);
-            return;
+        RouteParameters params = event.getRouteParameters();
+        Optional<String> optStoreId = params.get("storeId");
+        if(optStoreId.isPresent()){
+            this.storeId = Integer.parseInt(optStoreId.get());
         }
-
-        int storeId;
-        try {
-            storeId = Integer.parseInt(storeIdParam.get(0));
-        } catch (NumberFormatException e) {
-            remove(loading);
-            add(createErrorCard("Invalid store ID."));
-            Notification.show("Invalid store ID.", 3000, Notification.Position.MIDDLE);
-            return;
+        else{
+            event.rerouteTo(""); // go to home if no storeId
         }
 
         this.currentStoreId = storeId; // Store storeId
@@ -166,7 +159,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         actionButtonsLayout.add(viewManageRolesButton);
 
 
-        RouterLink backLink = new RouterLink("Back to User Area", UserView.class);
+        RouterLink backLink = new RouterLink("Back to Store", StorePageView.class, new RouteParameters("storeId", String.valueOf(this.storeId)));        
         backLink.getStyle().set("margin", "10px").set("color", "#1976D2");
 
         // Initialize rolesDisplaySection, initially empty
@@ -180,7 +173,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     }
 
     private void fetchUserPermissionsForStore(int storeId, int userId, String token) {
-        String rolesUrl = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", storeId, userId);
+        String rolesUrl = String.format(backendUrl + "store/getStoreRoles/%d/%d", storeId, userId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -268,7 +261,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         rolesDisplaySection.removeAll(); // Clear previous content
 
         // Fetch full roles data (this is where the backend fix for getStoreRoles is critical)
-        String rolesUrl = String.format(backendUrl + "/api/store/getStoreRoles/%d/%d", currentStoreId, currentUserDTO.getUserId());
+        String rolesUrl = String.format(backendUrl + "store/getStoreRoles/%d/%d", currentStoreId, currentUserDTO.getUserId());
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", currentToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -307,8 +300,8 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
         if (canViewPendingRoles) {
             // Only attempt to fetch pending if user has VIEW_ROLES
-            String pendingManagersUrl = String.format(backendUrl + "/api/store/getPendingManagers/%d/%d", currentStoreId, currentUserDTO.getUserId());
-            String pendingOwnersUrl = String.format(backendUrl + "/api/store/getPendingOwners/%d/%d", currentStoreId, currentUserDTO.getUserId());
+            String pendingManagersUrl = String.format(backendUrl + "store/getPendingManagers/%d/%d", currentStoreId, currentUserDTO.getUserId());
+            String pendingOwnersUrl = String.format(backendUrl + "store/getPendingOwners/%d/%d", currentStoreId, currentUserDTO.getUserId());
 
             try {
                 ResponseEntity<Response<List<Integer>>> pendingManagersResponse =
@@ -520,7 +513,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     }
 
     private void callRemoveStoreOwnerApi(int storeId, int requesterId, int ownerId, String token, Dialog dialogToClose) {
-        String url = String.format(backendUrl + "/api/store/removeStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
+        String url = String.format(backendUrl + "store/removeStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
@@ -580,7 +573,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     }
 
     private void callRemoveStoreManagerApi(int storeId, int requesterId, int managerId, String token, Dialog dialogToClose) {
-        String url = String.format(backendUrl + "/api/store/removeStoreManager/%d/%d/%d", storeId, requesterId, managerId);
+        String url = String.format(backendUrl + "store/removeStoreManager/%d/%d/%d", storeId, requesterId, managerId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
@@ -684,7 +677,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         }
 
         String baseUrl = String.format(
-                backendUrl + "/api/store/addStoreManagerPermissions/%d/%d",
+                backendUrl + "store/addStoreManagerPermissions/%d/%d",
                 storeId, managerId
         );
         StringBuilder queryParams = new StringBuilder();
@@ -731,7 +724,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         }
 
         StringBuilder urlBuilder = new StringBuilder(String.format(
-                backendUrl + "/api/store/removeStoreManagerPermissions/%d/%d",
+                backendUrl + "store/removeStoreManagerPermissions/%d/%d",
                 storeId, managerId
         ));
         urlBuilder.append("?");
@@ -820,7 +813,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     private void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> permissions, String token) {
         // Construct the URL to include requesterId
         String baseUrl = String.format(
-                backendUrl + "/api/store/addStoreManager/%d/%d/%d",
+                backendUrl + "store/addStoreManager/%d/%d/%d",
                 storeId, requesterId, managerId
         );
         StringBuilder queryParams = new StringBuilder();
@@ -900,7 +893,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     }
 
     private void addStoreOwner(int storeId, int requesterId, int ownerId, String token) {
-        String url = String.format(backendUrl + "/api/store/addStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
+        String url = String.format(backendUrl + "store/addStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -988,7 +981,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
 
     private void addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category, String token) {
         String url = String.format(
-            backendUrl + "/api/store/addProductToStore/%d/%d?productName=%s&description=%s&basePrice=%f&quantity=%d&category=%s",
+            backendUrl + "store/addProductToStore/%d/%d?productName=%s&description=%s&basePrice=%f&quantity=%d&category=%s",
             storeId, requesterId,
             URLEncoder.encode(productName, StandardCharsets.UTF_8),
             URLEncoder.encode(description, StandardCharsets.UTF_8),
@@ -1023,7 +1016,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = String.format(backendUrl + "/api/store/viewStore/%d", storeId);
+        String url = String.format(backendUrl + "store/viewStore/%d", storeId);
 
         try {
             ResponseEntity<Response<StoreDTO>> response =
@@ -1058,7 +1051,7 @@ public class StoreView extends VerticalLayout implements BeforeEnterObserver{
     private boolean isGuestToken(HttpSession session) {
         String token = (String) session.getAttribute("token");
         RestTemplate restTemplate = new RestTemplate();
-        String url = backendUrl + "/api/user/isGuestToken";
+        String url = backendUrl + "user/isGuestToken";
         try {
             ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
             Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
