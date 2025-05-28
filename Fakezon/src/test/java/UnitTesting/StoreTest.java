@@ -1,27 +1,33 @@
 package UnitTesting;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.locks.Condition;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.AuctionProduct;
-import DomainLayer.Model.DiscountPolicy;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
@@ -520,15 +526,6 @@ public class StoreTest {
             });
         
         }
-        @Test
-    void testCalcAmount_SimpleCase() {
-        int userId = 1;
-        int productId = 123;
-        store.addStoreProduct(founderId, productId, "Test", 10.0, 5, PCategory.ELECTRONICS);
-        Map<Integer, Integer> toBuy = Map.of(productId, 2);
-        double amount = store.calcAmount(userId, toBuy, LocalDate.now().minusYears(20));
-        assertEquals(20.0, amount);
-    }
 
     @Test
     void testStoreCtorWithId() {
@@ -562,14 +559,6 @@ public class StoreTest {
         when(policy.getPolicyID()).thenReturn(1);
         store.addPurchasePolicy(founderId, policy);
         assertTrue(store.getPurchasePolicies().containsKey(1));
-    }
-
-    @Test
-    void testAddDiscountPolicy() {
-        DiscountPolicy policy = mock(DiscountPolicy.class);
-        when(policy.getPolicyID()).thenReturn(2);
-        store.addDiscountPolicy(founderId, policy);
-        assertTrue(store.getDiscountPolicies().containsKey(2));
     }
 
     @Test
@@ -799,8 +788,47 @@ public class StoreTest {
         assertTrue(pending.isEmpty());
     }
     
-    
-    
-    
+    @Test
+    void testIsManagerAndGetPerms_ManagerExists_ReturnsCopy() throws Exception {
+        // 1) Inject directly into the private storeManagers map via reflection
+        Field managersField = Store.class.getDeclaredField("storeManagers");
+        managersField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        Map<Integer, List<StoreManagerPermission>> managers =
+            (Map<Integer, List<StoreManagerPermission>>) managersField.get(store);
+
+        // Prepare and put a list for managerId
+        List<StoreManagerPermission> originalPerms =
+            new ArrayList<>(List.of(StoreManagerPermission.VIEW_PURCHASES, StoreManagerPermission.VIEW_ROLES));
+        managers.put(managerId, originalPerms);
+
+        // 2) Call the method under test
+        List<StoreManagerPermission> returned = store.isManagerAndGetPerms(managerId);
+
+        // 3) Verify we got back an equal list, but not the same instance
+        assertNotNull(returned, "Should not return null when manager exists");
+        assertEquals(originalPerms, returned, "Permissions should match what was stored");
+        assertNotSame(originalPerms, returned, "Should return a defensive copy, not the same list");
+
+        // 4) Mutating the returned list must NOT affect the internal map
+        returned.clear();
+        @SuppressWarnings("unchecked")
+        List<StoreManagerPermission> stillStored = managers.get(managerId);
+        assertFalse(stillStored.isEmpty(), "Clearing the returned list must not clear the internal one");
+    }
+
+    /**
+     * When the user is not in the map, we should get back null.
+     */
+    @Test
+    void testIsManagerAndGetPerms_NotAManager_ReturnsNull() {
+        // ensure no entry for nonExistingManager
+        int nonManager = 999;
+        assertNull(store.isManagerAndGetPerms(nonManager), "Should return null if userId not a manager");
+    }
     
 }
+    
+    
+    
+

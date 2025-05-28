@@ -298,4 +298,12 @@ public class TestHelper {
         }
         return resultAddStore;
     }
+
+      public Response<Integer> openStore2(int userId){
+        Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store2");
+        if(!resultAddStore.isSuccess()){
+            return null;
+        }
+        return resultAddStore;
+    }
 }

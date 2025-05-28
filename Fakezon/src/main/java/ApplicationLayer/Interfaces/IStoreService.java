@@ -2,13 +2,12 @@ package ApplicationLayer.Interfaces;
 
 import java.util.AbstractMap.SimpleEntry;
 
-import org.springframework.security.access.method.P;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.function.Predicate;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.AuctionProductDTO;
@@ -19,7 +18,6 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.ProductRating;
-import DomainLayer.Model.User;
 import java.time.LocalDate;
 
 public interface IStoreService {
@@ -112,5 +110,30 @@ public interface IStoreService {
   Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
 
   void clearAllData();
+
+  void addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage);
+
+  void addSimpleDiscountWithStoreScope(int storeId, int requesterId, double percentage);
+
+  void addConditionDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+
+  void addConditionDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage);
+
+  void addAndDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+
+  void addAndDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage);
+
+  void addOrDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+
+  void addOrDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage);
+
+  void addXorDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+
+  void addXorDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage);
+  
+  
+  boolean isStoreOwner(int storeId, int userId);
+
+  List<StoreManagerPermission> isStoreManager(int storeId, int userId); // returns null if not manager
 
 }

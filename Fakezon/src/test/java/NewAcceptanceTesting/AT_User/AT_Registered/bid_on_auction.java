@@ -4,6 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fakezone.fakezone.FakezoneApplication;
+import java.util.concurrent.TimeUnit;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -239,9 +246,18 @@ public class bid_on_auction {
                 user2Bid);
         assertTrue(response2.isSuccess(), "Expected user2's higher bid to succeed");
         assertEquals("Bid added successfully", response2.getMessage());
+        
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Sleep was interrupted");
+        }
 
         Response<HashMap<Integer, String>> messagesResponse = systemService.getAllMessages(buyer1Id);
         assertTrue(messagesResponse.isSuccess(), "Expected messages retrieval to succeed");
+        assertTrue(messagesResponse.getData() != null && !messagesResponse.getData().isEmpty(),
+                "Expected messages for user1 to be non-empty");
         HashMap<Integer, String> messages = messagesResponse.getData();
         assertFalse(messages.isEmpty());
         assertTrue(messages.containsKey(storeId), "Expected messages for storeId: " + storeId);
@@ -249,5 +265,48 @@ public class bid_on_auction {
                 
         // Check if user1 received the outbid message
         assertTrue(outbidMessage.contains("rejected due to a higher bid"), "Expected outbid message to mention rejection due to a higher bid");
+    }
+
+    @Test
+    void testAddBid_Concurrency_SameBidAmount() throws InterruptedException, ExecutionException {
+        // Arrange
+        double concurrentBidAmount = initialBasePrice + 50.0; // A high bid amount for both
+        
+        // Create a thread pool for concurrent execution
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        // Define tasks for each buyer to place the same bid
+        Callable<Response<Void>> buyer1Task = () -> systemService.addBidOnAuctionProductInStore(storeId, buyer1Id, auctionProductId, concurrentBidAmount);
+        Callable<Response<Void>> buyer2Task = () -> systemService.addBidOnAuctionProductInStore(storeId, buyer2Id, auctionProductId, concurrentBidAmount);
+
+        // Submit tasks
+        Future<Response<Void>> future1 = executor.submit(buyer1Task);
+        Future<Response<Void>> future2 = executor.submit(buyer2Task);
+
+        // Get results
+        Response<Void> result1 = future1.get();
+        Response<Void> result2 = future2.get();
+
+        // Shutdown the executor
+        executor.shutdown();
+
+        // Assert that exactly one of the bids succeeded
+        // The expectation is that due to concurrency, one bid will be processed first,
+        // making the second identical bid fail (as it's not higher than the now-current highest).
+        assertTrue(result1.isSuccess() ^ result2.isSuccess(), "Exactly one of the concurrent bids should succeed.");
+
+        // Identify which buyer succeeded
+        int winningBuyerId = result1.isSuccess() ? buyer1Id : buyer2Id;
+        int losingBuyerId = result1.isSuccess() ? buyer2Id : buyer1Id;
+
+        // Verify the losing bid's error type and message
+        Response<Void> losingResponse = result1.isSuccess() ? result2 : result1;
+        assertFalse(losingResponse.isSuccess());
+        // The error type might be INTERNAL_ERROR or INVALID_INPUT depending on the exact
+        // implementation of how the system handles bids not being strictly higher.
+        // Based on testAddBid_Failure_EqualBidToCurrentHighest, it's INTERNAL_ERROR.
+        assertEquals(ErrorType.INTERNAL_ERROR, losingResponse.getErrorType());
+        assertTrue(losingResponse.getMessage().contains("Error during adding bid to auction product in store"),
+                   "Expected error message for the losing concurrent bid.");
     }
 }

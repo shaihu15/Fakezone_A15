@@ -1,6 +1,7 @@
 package InfrastructureLayer.Repositories;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -58,5 +59,16 @@ public class OrderRepository implements IOrderRepository {
     @Override
     public void clearAllData() {
         orders.clear();
+    }
+
+    @Override
+    public Collection<IOrder> getOrdersByUserId(int userId) {
+        List<IOrder> userOrders = new ArrayList<>();
+        for (IOrder order : orders.values()) {
+            if (order.getUserId() == userId) {
+                userOrders.add(order);
+            }
+        }
+        return userOrders;
     }
 }

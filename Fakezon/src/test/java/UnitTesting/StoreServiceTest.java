@@ -427,7 +427,7 @@ class StoreServiceTest {
 
         Store localMockStore = mock(Store.class);
         when(mockStoreRepository.findById(storeId)).thenReturn(localMockStore);
-        when(localMockStore.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(50.0);
+        when(localMockStore.calcAmount(eq(userId), anyMap(), any(LocalDate.class), any(Cart.class))).thenReturn(50.0);
 
         StoreService service = new StoreService(mockStoreRepository, publisher); // <-- Use the mock!
         LocalDate date = LocalDate.now();
@@ -448,8 +448,8 @@ class StoreServiceTest {
         Store mockStore2 = mock(Store.class);
         when(mockStoreRepository.findById(storeId1)).thenReturn(mockStore1);
         when(mockStoreRepository.findById(storeId2)).thenReturn(mockStore2);
-        when(mockStore1.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(30.0);
-        when(mockStore2.calcAmount(eq(userId), anyMap(), any(LocalDate.class))).thenReturn(70.0);
+        when(mockStore1.calcAmount(eq(userId), anyMap(), any(LocalDate.class), any(Cart.class))).thenReturn(30.0);
+        when(mockStore2.calcAmount(eq(userId), anyMap(), any(LocalDate.class), any(Cart.class))).thenReturn(70.0);
     
         StoreService service = new StoreService(mockStoreRepository, publisher); // <-- Use the mock!
         LocalDate date = LocalDate.now();
@@ -879,6 +879,98 @@ class StoreServiceTest {
     
         StoreService service = new StoreService(mockStoreRepository, publisher);
         Exception ex = assertThrows(IllegalArgumentException.class, () -> service.getStoreProductRatings(storeId, productId));
+        assertEquals("Store not found", ex.getMessage());
+        verify(mockStoreRepository, times(1)).findById(storeId);
+    }
+
+     @Test
+    void testIsStoreOwner_Success() {
+        int storeId = 42;
+        int userId = 7;
+
+        // Arrange: mock repository returns a store, and store.isOwner(...) returns true
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.isOwner(userId)).thenReturn(true);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        // Act & Assert
+        assertTrue(service.isStoreOwner(storeId, userId));
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(mockStore, times(1)).isOwner(userId);
+    }
+
+    @Test
+    void testIsStoreOwner_StoreNotFound_ShouldThrow() {
+        int storeId = 99;
+        int userId = 7;
+
+        // Arrange: repository returns null
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        // Act & Assert
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> service.isStoreOwner(storeId, userId)
+        );
+        assertEquals("Store not found", ex.getMessage());
+        verify(mockStoreRepository, times(1)).findById(storeId);
+    }
+    
+    @Test
+    void testIsStoreManager_Success_ReturnsPermissions() {
+        int storeId = 100;
+        int userId = 8;
+        List<StoreManagerPermission> perms = List.of(StoreManagerPermission.VIEW_PURCHASES);
+
+        // Arrange: repository returns a store, and store.isManagerAndGetPerms(...) returns our perms
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.isManagerAndGetPerms(userId)).thenReturn(perms);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        // Act
+        List<StoreManagerPermission> result = service.isStoreManager(storeId, userId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(perms, result);
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(mockStore, times(1)).isManagerAndGetPerms(userId);
+    }
+
+    @Test
+    void testIsStoreManager_NotManager_ReturnsNull() {
+        int storeId = 100;
+        int userId = 9;
+
+        // Arrange: repository returns a store, but store.isManagerAndGetPerms(...) returns null
+        when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
+        when(mockStore.isManagerAndGetPerms(userId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        // Act
+        List<StoreManagerPermission> result = service.isStoreManager(storeId, userId);
+
+        // Assert
+        assertNull(result);
+        verify(mockStoreRepository, times(1)).findById(storeId);
+        verify(mockStore, times(1)).isManagerAndGetPerms(userId);
+    }
+
+    @Test
+    void testIsStoreManager_StoreNotFound_ShouldThrow() {
+        int storeId = 1234;
+        int userId = 9;
+
+        // Arrange: repository returns null
+        when(mockStoreRepository.findById(storeId)).thenReturn(null);
+        StoreService service = new StoreService(mockStoreRepository, publisher);
+
+        // Act & Assert
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> service.isStoreManager(storeId, userId)
+        );
         assertEquals("Store not found", ex.getMessage());
         verify(mockStoreRepository, times(1)).findById(storeId);
     }

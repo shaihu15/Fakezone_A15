@@ -20,6 +20,7 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
@@ -418,8 +419,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                 .set("transform", "scale(1)")
                 .set("box-shadow", "none"));
 
-        RouterLink link = new RouterLink(store.getName(), StoreView.class);
-        link.setQueryParameters(QueryParameters.simple(Collections.singletonMap("storeId", String.valueOf(store.getStoreId()))));
+        RouterLink link = new RouterLink(store.getName(), StoreManageView.class, new RouteParameters("storeId", String.valueOf(store.getStoreId())));        
         link.getStyle().set("font-size", "1.5em").set("font-weight", "bold").set("text-align", "center");
 
         HorizontalLayout infoLayout = new HorizontalLayout();

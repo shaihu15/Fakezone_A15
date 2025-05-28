@@ -31,7 +31,7 @@ public class UserEventListener {
         this.wsHandler = wsHandler;
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleAssignmentEvent(AssignmentEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserId());
@@ -46,7 +46,7 @@ public class UserEventListener {
         }
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleClosingStore(ClosingStoreEvent event) {
         // As requested, fetching all users with roles in the store
@@ -59,7 +59,7 @@ public class UserEventListener {
             }
         }
     }
-    //@Async
+    @Async
     @EventListener
     public void handleResponseFromStore(ResponseFromStoreEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserId());
@@ -71,7 +71,7 @@ public class UserEventListener {
         });
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleAuctionEndedToOwnersEvent(AuctionEndedToOwnersEvent event) {
         // As requested, fetching all users with roles in the store
@@ -86,7 +86,7 @@ public class UserEventListener {
         }
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleAuctionFailedToOwnersEvent(AuctionFailedToOwnersEvent event) {
         // As requested, fetching all users with roles in the store
@@ -100,7 +100,7 @@ public class UserEventListener {
         }
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder
@@ -114,7 +114,7 @@ public class UserEventListener {
         });
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDPrevHighestBid()); // Event targets the previously highest bidder
@@ -127,7 +127,7 @@ public class UserEventListener {
         });
     }
 
-    //@Async
+    @Async
     @EventListener
     public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder whose bid was declined
