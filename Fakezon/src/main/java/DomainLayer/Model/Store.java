@@ -1258,34 +1258,8 @@ public class Store implements IStore {
             {
                 // Add the base price of the product
                 amount += product.getBasePrice() * quantity;
-            } else {
-                boolean isDiscountApplicable = true;
-                DiscountPolicy discountPolicy = this.discountPolicies.get(productId);
-                if (discountPolicy == null) {
-                    isDiscountApplicable = false;
-                }
-                if (discountPolicy != null) {
-                    DiscountPolicy policy = this.discountPolicies.get(productId);
-                    List<DiscountCondition> conditions = policy.getConditions();
-                    for (DiscountCondition condition : conditions) {
-                        boolean con = products.entrySet().stream()
-                                .anyMatch(e -> e.getKey().getSproductID() == condition.getTriggerProductId() &&
-                                        e.getValue() < condition.getTriggerQuantity());
-                        if (con) {
-                            isDiscountApplicable = false;
-                            break;
-                        }
-                    }
-                }
-                if (isDiscountApplicable && discountPolicy != null) {
-                    discountPolicy.calculateNewPrice(product.getBasePrice(), quantity);
-                    amount += discountPolicy.calculateNewPrice(product.getBasePrice(), quantity);
-                } else {
-                    amount += product.getBasePrice() * quantity;
-                }
             }
         }
-        
         // Apply discounts once at the end for all non-auction products
         double totalDiscount = discountPolicies.values().stream()
             .mapToDouble(d -> d.apply(cart)).sum();

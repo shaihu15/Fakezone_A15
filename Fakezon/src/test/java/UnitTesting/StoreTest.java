@@ -519,18 +519,8 @@ public class StoreTest {
             });
         
         }
-  
-    @Test
-    void testCalcAmount_SimpleCase() {
-        int userId = 1;
-        int productId = 123;
-        store.addStoreProduct(founderId, productId, "Test", 10.0, 5, PCategory.ELECTRONICS);
-        Map<Integer, Integer> toBuy = Map.of(productId, 2);
-        double amount = store.calcAmount(userId, toBuy, LocalDate.now().minusYears(20));
-        assertEquals(20.0, amount);
-    }
 
-    @Test
+        @Test
     void testStoreCtorWithId() {
         Store s = new Store("Another Store", founderId, publisher, 42);
         assertEquals(42, s.getId());

@@ -66,9 +66,6 @@ public interface IStoreService {
   void removePurchasePolicy(int storeId, int requesterId, int policyId);
 
   // --- Discount Policies ---
-  void addDiscountPolicy(int storeId, int requesterId, int policyId, String name, String description);
-
-  void removeDiscountPolicy(int storeId, int requesterId, int policyId);
 
   // --- Specific Discount Policy Methods ---
   void addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage);
