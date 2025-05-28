@@ -489,9 +489,7 @@ public class Store implements IStore {
                 auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, MinutesToEnd));
                 scheduler.schedule(() -> {
                     handleAuctionEnd(productID);
-                    // auctionProducts.remove(productID);
                 }, MinutesToEnd, TimeUnit.MINUTES);
-                //TO DO: add event to notify users about the auction start
 
             } else {
                 throw new IllegalArgumentException(
