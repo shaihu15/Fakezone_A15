@@ -489,7 +489,6 @@ public class Store implements IStore {
                 auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, MinutesToEnd));
                 scheduler.schedule(() -> {
                     handleAuctionEnd(productID);
-                    // auctionProducts.remove(productID);
                 }, MinutesToEnd, TimeUnit.MINUTES);
 
             } else {
@@ -550,23 +549,29 @@ public class Store implements IStore {
     }
 
     private void handleAuctionEnd(int productID) {
-        if (auctionProducts.containsKey(productID)) {
-            AuctionProduct auctionProduct = auctionProducts.get(productID);
-            if (auctionProduct.getMinutesToEnd() <= 0) {
-                if (auctionProduct.getUserIDHighestBid() != -1) {
-                    auctionProduct.setOwnersToApprove(storeOwners);
-                    this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID,
-                            auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
-                } else {
-                    this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
-                            auctionProduct.getBasePrice(), "Auction failed, no bids were placed"));
-                }
+        productsLock.lock();
+        try{
+
+            if (auctionProducts.containsKey(productID)) {
+                AuctionProduct auctionProduct = auctionProducts.get(productID);
+                    if (auctionProduct.getUserIDHighestBid() != -1) {
+                        this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID,
+                                auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+                    } else {
+                        this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
+                                auctionProduct.getBasePrice(), "Auction failed, no bids were placed"));
+                    }
+                
             } else {
-                throw new IllegalArgumentException("Auction for product with ID: " + productID + " has not ended yet.");
+                throw new IllegalArgumentException(
+                        "Product with ID: " + productID + " is not an auction product in store ID: " + storeID);
             }
-        } else {
-            throw new IllegalArgumentException(
-                    "Product with ID: " + productID + " is not an auction product in store ID: " + storeID);
+        }
+        catch(Exception e){
+            throw e;
+        }
+        finally{
+            productsLock.unlock();
         }
     }
 
@@ -602,7 +607,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID()
                         + " is out of stock in store ID: " + storeID);
             }
-            auctionProduct.setQuantity(auctionProduct.getQuantity() - 1);
+            //auctionProduct.setQuantity(auctionProduct.getQuantity() - 1);
             this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(),
                     auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(),
                     auctionProduct.toDTO(storeID)));

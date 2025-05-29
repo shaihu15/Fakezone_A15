@@ -142,6 +142,19 @@ public class TestHelper {
         return loginResult;
     }
 
+    public Response<UserDTO> login1(){
+        String email = validEmail();
+        String password = validPassword();
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
+        Response<UserDTO> loginResult = loginResponse.isSuccess() 
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+    // Added register_and_login2
     public Response<UserDTO> register_and_login2(){
         String email = validEmail2();
         String password = validPassword2();
@@ -152,6 +165,19 @@ public class TestHelper {
         if(!result.isSuccess()){
             return null;
         }
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
+        Response<UserDTO> loginResult = loginResponse.isSuccess() 
+            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
+            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+        if(!loginResult.isSuccess()){
+            return null;
+        }
+        return loginResult;
+    }
+
+    public Response<UserDTO> login2(){
+        String email = validEmail2();
+        String password = validPassword2();
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
