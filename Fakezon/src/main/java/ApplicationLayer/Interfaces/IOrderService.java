@@ -1,20 +1,13 @@
 package ApplicationLayer.Interfaces;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import ApplicationLayer.DTO.BasketDTO;
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.IOrder;
-import DomainLayer.Interfaces.IProduct;
-import DomainLayer.Model.Basket;
-import DomainLayer.Model.Cart;
-import DomainLayer.Model.Order;
+
 
 public interface IOrderService {
     void deleteOrder(int orderId);

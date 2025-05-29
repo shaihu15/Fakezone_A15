@@ -4,12 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
-import DomainLayer.Model.Product;
 
 import java.util.Set;
-import java.util.Locale.Category;
 
-import org.springframework.security.access.method.P;
 
 
 public class ProductDTO {

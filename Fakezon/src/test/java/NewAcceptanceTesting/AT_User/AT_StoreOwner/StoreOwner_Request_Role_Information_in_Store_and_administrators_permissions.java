@@ -5,80 +5,40 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
-
-import ApplicationLayer.Response;
-import ApplicationLayer.DTO.ProductDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.StoreRolesDTO;
-import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.PCategory;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
-import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
+import ApplicationLayer.Response;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.Services.SystemService;
+import DomainLayer.Enums.StoreManagerPermission;
+
+
+
+@SpringBootTest(classes = FakezoneApplication.class)
 
 public class StoreOwner_Request_Role_Information_in_Store_and_administrators_permissions {
-        
+
+    @Autowired
     private SystemService systemService;
-    private IStoreRepository storeRepository;
-    private IUserRepository userRepository;
-    private IProductRepository productRepository;
-    private IOrderRepository orderRepository;
-    private IDelivery   deliveryService;
-    private IAuthenticator authenticatorService;
-    private IPayment paymentService;
-    private ApplicationEventPublisher eventPublisher;
-    private IStoreService storeService;
-    private IProductService productService;
-    private IUserService userService;
-    private IOrderService orderService;
-    private INotificationWebSocketHandler notificationWebSocketHandler;
     private TestHelper testHelper;
 
     int storeId;
     int storeOwnerId;
+    int newManagerID;
 
     @BeforeEach
     void setUp() {
-        storeRepository = new StoreRepository();
-        userRepository = new UserRepository();
-        productRepository = new ProductRepository();
-        orderRepository = new OrderRepository();
-        paymentService = new PaymentAdapter();
-        deliveryService = new DeliveryAdapter();
-        notificationWebSocketHandler = new NotificationWebSocketHandler();
-
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        orderService = new OrderService(orderRepository);
-        productService = new ProductService(productRepository);
-        authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
+        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         // Initialize the system with a store owner and a product
@@ -93,17 +53,36 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         storeId = storeResult.getData(); 
         // StoreOwner is the owner of Store1
 
+        Response<UserDTO> newManagerResult = testHelper.register_and_login2();
+        newManagerID = newManagerResult.getData().getUserId();
+        int newManagerID = newManagerResult.getData().getUserId();
+
+        List<StoreManagerPermission> perms = new ArrayList<>();
+        perms.add(StoreManagerPermission.INVENTORY);
+        perms.add(StoreManagerPermission.PURCHASE_POLICY);
+        perms.add(StoreManagerPermission.DISCOUNT_POLICY);
+        Response<Void>  addManagerResult = systemService.addStoreManager(storeId, storeOwnerId, newManagerID, perms);
+        assertEquals("Store manager added successfully", addManagerResult.getMessage());
+        assertTrue(addManagerResult.isSuccess());
     }
 
     @Test
     void testRequestRoleInformation_Success() {
         Response<StoreRolesDTO> result = systemService.getStoreRoles(storeId, storeOwnerId);
+        assertEquals("Store roles retrieved successfully", result.getMessage());
         assertTrue(result.isSuccess());
-        assertNotNull(result.getData());
         
         StoreRolesDTO storeRoles = result.getData();
-        boolean foundOwner = storeRoles.getStoreOwners().stream().anyMatch(ownerId -> ownerId == storeOwnerId);
-        assertTrue(foundOwner, "Store owner should be present in the user roles list");
+        assertNotNull(storeRoles);
+        assertEquals(storeId, storeRoles.getStoreId());
+
+        assertFalse(storeRoles.getStoreManagers().isEmpty());
+
+        //assertTrue(storeRoles.getStoreManagers().containsKey(newManagerID));
+        
+        assertTrue(storeRoles.getStoreOwners().stream().anyMatch(ownerId -> ownerId == storeOwnerId));
+
+
    
         //add a manager to the store and test if the manager is present in the user roles list
     }

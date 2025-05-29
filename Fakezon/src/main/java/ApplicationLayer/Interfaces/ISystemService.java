@@ -28,7 +28,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
-import DomainLayer.Model.User;
+
 
 public interface ISystemService {
 
@@ -206,6 +206,8 @@ public interface ISystemService {
     Response<List<AuctionProductDTO>> getAuctionProductsFromStore(int storeId, int userId);
 
     Response<List<OrderDTO>> getOrdersByUserId(int userId);
+
+    boolean isStoreOpen(int storeId);
 
     // Discount Policy Methods
     Response<Void> addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs,

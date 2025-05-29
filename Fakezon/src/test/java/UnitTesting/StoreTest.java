@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
-
+import java.util.function.Predicate;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,7 +31,9 @@ import DomainLayer.Model.AuctionProduct;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import DomainLayer.Model.AndDiscount;
 
+import DomainLayer.Model.Cart;
 public class StoreTest {
     private Store store;
     private int founderId = 10;
@@ -825,6 +827,69 @@ public class StoreTest {
         // ensure no entry for nonExistingManager
         int nonManager = 999;
         assertNull(store.isManagerAndGetPerms(nonManager), "Should return null if userId not a manager");
+    }
+
+    @Test
+    void testAddAndDiscountWithProductsScope_AsManagerWithoutDiscountPolicy_NoEffect() {
+        int managerNoPerm = 54321;
+        store.addStoreManager(founderId, managerNoPerm, List.of(StoreManagerPermission.INVENTORY));
+        store.acceptAssignment(managerNoPerm);
+    
+        List<Integer> productIDs = List.of(productId);
+        List<Predicate<Cart>> conditions = List.of(c -> true);
+        double percentage = 20.0;
+    
+        int before = store.getPurchasePolicies().size();
+        store.addAndDiscountWithProductsScope(managerNoPerm, productIDs, conditions, percentage);
+        int after = store.getPurchasePolicies().size();
+    
+        assertEquals(before, after, "Should not add discount if manager lacks DISCOUNT_POLICY");
+    }
+    
+    @Test
+    void testAddAndDiscountWithProductsScope_NotOwnerOrManager_NoEffect() {
+        int randomUser = 99999;
+    
+        List<Integer> productIDs = List.of(productId);
+        List<Predicate<Cart>> conditions = List.of(c -> true);
+        double percentage = 25.0;
+    
+        int before = store.getPurchasePolicies().size();
+        store.addAndDiscountWithProductsScope(randomUser, productIDs, conditions, percentage);
+        int after = store.getPurchasePolicies().size();
+    
+        assertEquals(before, after, "Should not add discount if not owner or manager");
+    }
+
+    
+    @Test
+    void testAddAndDiscountWithStoreScope_AsManagerWithoutDiscountPolicy_NoEffect() {
+        int managerNoPerm = 54321;
+        store.addStoreManager(founderId, managerNoPerm, List.of(StoreManagerPermission.INVENTORY));
+        store.acceptAssignment(managerNoPerm);
+    
+        List<Predicate<Cart>> conditions = List.of(c -> true);
+        double percentage = 20.0;
+    
+        int before = store.getPurchasePolicies().size();
+        store.addAndDiscountWithStoreScope(managerNoPerm, conditions, percentage);
+        int after = store.getPurchasePolicies().size();
+    
+        assertEquals(before, after, "Should not add discount if manager lacks DISCOUNT_POLICY");
+    }
+    
+    @Test
+    void testAddAndDiscountWithStoreScope_NotOwnerOrManager_NoEffect() {
+        int randomUser = 99999;
+    
+        List<Predicate<Cart>> conditions = List.of(c -> true);
+        double percentage = 25.0;
+    
+        int before = store.getPurchasePolicies().size();
+        store.addAndDiscountWithStoreScope(randomUser, conditions, percentage);
+        int after = store.getPurchasePolicies().size();
+    
+        assertEquals(before, after, "Should not add discount if not owner or manager");
     }
     
 }
