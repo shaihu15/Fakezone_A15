@@ -1250,6 +1250,366 @@ class SystemServiceTest {
         assertNull(resp.getData());
         verify(storeService, times(1)).isStoreManager(storeId, userId);
     }
+    @Test
+    void testGetDeliveryService() {
+        IDelivery deliveryMock = mock(IDelivery.class);
+        systemService = new SystemService(storeService, userService, productService, orderService, deliveryMock, null, null, publisher, notificationWebSocketHandler);
     
+        IDelivery result = ((SystemService)systemService).getDeliveryService();
+    
+        assertEquals(deliveryMock, result);
+    }
+    
+    @Test
+    void testGetAuthenticatorService() {
+        IAuthenticator authMock = mock(IAuthenticator.class);
+        systemService = new SystemService(storeService, userService, productService, orderService, null, authMock, null, publisher, notificationWebSocketHandler);
+    
+        IAuthenticator result = ((SystemService)systemService).getAuthenticatorService();
+    
+        assertEquals(authMock, result);
+    }
+    
+    @Test
+    void testGetPaymentService() {
+        IPayment paymentMock = mock(IPayment.class);
+        systemService = new SystemService(storeService, userService, productService, orderService, null, null, paymentMock, publisher, notificationWebSocketHandler);
+    
+        IPayment result = ((SystemService)systemService).getPaymentService();
+    
+        assertEquals(paymentMock, result);
+    }
+    @Test
+    void testUserAccessStore_Success() {
+        int storeId = 1;
+        StoreDTO storeDTO = mock(StoreDTO.class);
+        when(storeService.viewStore(storeId)).thenReturn(storeDTO);
+        when(storeDTO.isOpen()).thenReturn(true);
+    
+        Response<StoreDTO> response = systemService.userAccessStore(storeId);
+    
+        assertTrue(response.isSuccess());
+        assertEquals(storeDTO, response.getData());
+        assertEquals("Store retrieved successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    
+    @Test
+    void testUserAccessStore_StoreClosed() {
+        int storeId = 1;
+        StoreDTO storeDTO = mock(StoreDTO.class);
+        when(storeService.viewStore(storeId)).thenReturn(storeDTO);
+        when(storeDTO.isOpen()).thenReturn(false);
+    
+        Response<StoreDTO> response = systemService.userAccessStore(storeId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Store is closed", response.getMessage());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+    
+    @Test
+    void testUserAccessStore_Exception() {
+        int storeId = 1;
+        when(storeService.viewStore(storeId)).thenThrow(new RuntimeException("fail"));
+    
+        Response<StoreDTO> response = systemService.userAccessStore(storeId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during user access store: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+    @Test
+    void testGetProductFromStore_Success() {
+        int productId = 1, storeId = 2;
+        StoreDTO storeDTO = mock(StoreDTO.class);
+        StoreProductDTO productDTO = mock(StoreProductDTO.class);
+    
+        when(storeService.isStoreOpen(storeId)).thenReturn(true);
+        when(storeService.viewStore(storeId)).thenReturn(storeDTO);
+        when(storeDTO.getStoreProductById(productId)).thenReturn(productDTO);
+    
+        Response<StoreProductDTO> response = systemService.getProductFromStore(productId, storeId);
+    
+        assertTrue(response.isSuccess());
+        assertEquals(productDTO, response.getData());
+        assertEquals("Product retrieved successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+
+    @Test
+    void testGetProduct_Success() {
+        int productId = 1;
+        ProductDTO productDTO = mock(ProductDTO.class);
+        when(productService.viewProduct(productId)).thenReturn(productDTO);
+    
+        Response<ProductDTO> response = systemService.getProduct(productId);
+    
+        assertTrue(response.isSuccess());
+        assertEquals(productDTO, response.getData());
+        assertEquals("Product retrieved successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    
+    @Test
+    void testGetProduct_InvalidInput() {
+        int productId = 1;
+        when(productService.viewProduct(productId)).thenThrow(new IllegalArgumentException("bad id"));
+    
+        Response<ProductDTO> response = systemService.getProduct(productId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Invalid input", response.getMessage());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+    
+    @Test
+    void testGetProduct_NullPointer() {
+        int productId = 1;
+        when(productService.viewProduct(productId)).thenThrow(new NullPointerException("null!"));
+    
+        Response<ProductDTO> response = systemService.getProduct(productId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Unexpected null value", response.getMessage());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+    
+    @Test
+    void testGetProduct_GeneralException() {
+        int productId = 1;
+        when(productService.viewProduct(productId)).thenThrow(new RuntimeException("fail"));
+    
+        Response<ProductDTO> response = systemService.getProduct(productId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("An unexpected error occurred", response.getMessage());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+    @Test
+    void testUpdateProduct_Success() {
+        int productId = 1;
+        String productName = "TestProduct";
+        String productDescription = "TestDesc";
+        Set<Integer> storesIds = Set.of(1, 2);
+    
+        // No exception thrown means success
+        doNothing().when(productService).updateProduct(productId, productName, productDescription, storesIds);
+    
+        Response<Boolean> response = systemService.updateProduct(productId, productName, productDescription, storesIds);
+    
+        assertTrue(response.isSuccess());
+        assertTrue(response.getData());
+        assertEquals("Product updated successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    
+    @Test
+    void testUpdateProduct_Exception() {
+        int productId = 1;
+        String productName = "TestProduct";
+        String productDescription = "TestDesc";
+        Set<Integer> storesIds = Set.of(1, 2);
+    
+        doThrow(new RuntimeException("fail")).when(productService).updateProduct(productId, productName, productDescription, storesIds);
+    
+        Response<Boolean> response = systemService.updateProduct(productId, productName, productDescription, storesIds);
+    
+        assertFalse(response.isSuccess());
+        assertFalse(response.getData());
+        assertEquals("Error during updating product", response.getMessage());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+    @Test
+    void testDeleteProduct_Success() {
+        int productId = 1;
+    
+        // No exception thrown means success
+        doNothing().when(productService).deleteProduct(productId);
+    
+        Response<Boolean> response = systemService.deleteProduct(productId);
+    
+        assertTrue(response.isSuccess());
+        assertTrue(response.getData());
+        assertEquals("Product deleted successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    
+    @Test
+    void testDeleteProduct_Exception() {
+        int productId = 1;
+    
+        doThrow(new RuntimeException("fail")).when(productService).deleteProduct(productId);
+    
+        Response<Boolean> response = systemService.deleteProduct(productId);
+    
+        assertFalse(response.isSuccess());
+        assertFalse(response.getData());
+        assertEquals("Error during deleting product", response.getMessage());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+    @Test
+    void testGetStoreRoles_Success() {
+        int storeId = 1, userId = 2;
+        StoreRolesDTO storeRolesDTO = mock(StoreRolesDTO.class);
+        when(userService.isUserLoggedIn(userId)).thenReturn(true);
+        when(storeService.getStoreRoles(storeId, userId)).thenReturn(storeRolesDTO);
+    
+        Response<StoreRolesDTO> response = systemService.getStoreRoles(storeId, userId);
+    
+        assertTrue(response.isSuccess());
+        assertEquals(storeRolesDTO, response.getData());
+        assertEquals("Store roles retrieved successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    
+    @Test
+    void testGetStoreRoles_UserNotLoggedIn() {
+        int storeId = 1, userId = 2;
+        when(userService.isUserLoggedIn(userId)).thenReturn(false);
+    
+        Response<StoreRolesDTO> response = systemService.getStoreRoles(storeId, userId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("User is not logged in", response.getMessage());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+    
+    @Test
+    void testGetStoreRoles_Exception() {
+        int storeId = 1, userId = 2;
+        when(userService.isUserLoggedIn(userId)).thenThrow(new RuntimeException("fail"));
+    
+        Response<StoreRolesDTO> response = systemService.getStoreRoles(storeId, userId);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during getting store roles: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    } 
+    @Test
+    void testAddStoreManagerPermissions_Success() {
+        int storeId = 1, managerId = 2, requesterId = 3;
+        List<StoreManagerPermission> perms = List.of(StoreManagerPermission.VIEW_PURCHASES);
+    
+        // No exception thrown means success
+        doNothing().when(storeService).addStoreManagerPermissions(storeId, requesterId, managerId, perms);
+    
+        Response<Void> response = systemService.addStoreManagerPermissions(storeId, managerId, requesterId, perms);
+    
+        assertTrue(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Permissions added successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+    
+    @Test
+    void testAddStoreManagerPermissions_Exception() {
+        int storeId = 1, managerId = 2, requesterId = 3;
+        List<StoreManagerPermission> perms = List.of(StoreManagerPermission.VIEW_PURCHASES);
+    
+        doThrow(new RuntimeException("fail")).when(storeService).addStoreManagerPermissions(storeId, requesterId, managerId, perms);
+    
+        Response<Void> response = systemService.addStoreManagerPermissions(storeId, managerId, requesterId, perms);
+    
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during adding store manager permissions: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+    @Test
+    void testAddStoreManager_Success() {
+        int storeId = 1, requesterId = 2, managerId = 3;
+        List<StoreManagerPermission> perms = List.of(StoreManagerPermission.VIEW_PURCHASES);
+
+        when(userService.isUserLoggedIn(requesterId)).thenReturn(true);
+        when(userService.isUnsignedUser(managerId)).thenReturn(false);
+        doNothing().when(storeService).addStoreManager(storeId, requesterId, managerId, perms);
+        doNothing().when(userService).addRole(eq(managerId), eq(storeId), any(StoreManager.class));
+
+        Response<Void> response = systemService.addStoreManager(storeId, requesterId, managerId, perms);
+
+        assertTrue(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Store manager added successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+
+    @Test
+    void testAddStoreManager_Exception() {
+        int storeId = 1, requesterId = 2, managerId = 3;
+        List<StoreManagerPermission> perms = List.of(StoreManagerPermission.VIEW_PURCHASES);
+
+        when(userService.isUserLoggedIn(requesterId)).thenReturn(true);
+        when(userService.isUnsignedUser(managerId)).thenReturn(false);
+        doThrow(new RuntimeException("fail")).when(storeService).addStoreManager(storeId, requesterId, managerId, perms);
+
+        Response<Void> response = systemService.addStoreManager(storeId, requesterId, managerId, perms);
+
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during adding store manager: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    } 
+    @Test
+    void testAddStoreOwner_Success() {
+        int storeId = 1, requesterId = 2, ownerId = 3;
+        doNothing().when(storeService).addStoreOwner(storeId, requesterId, ownerId);
+
+        Response<Void> response = systemService.addStoreOwner(storeId, requesterId, ownerId);
+
+        assertTrue(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Store owner added successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+
+    @Test
+    void testAddStoreOwner_Exception() {
+        int storeId = 1, requesterId = 2, ownerId = 3;
+        doThrow(new RuntimeException("fail")).when(storeService).addStoreOwner(storeId, requesterId, ownerId);
+
+        Response<Void> response = systemService.addStoreOwner(storeId, requesterId, ownerId);
+
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during adding store owner: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+
+    @Test
+    void testAddAuctionProductToStore_Success() {
+        int storeId = 1, requesterId = 2, productID = 3, minutesToEnd = 60;
+        double basePrice = 100.0;
+        doNothing().when(storeService).addAuctionProductToStore(storeId, requesterId, productID, basePrice, minutesToEnd);
+
+        Response<Void> response = systemService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, minutesToEnd);
+
+        assertTrue(response.isSuccess());
+        assertNull(response.getData());
+        assertEquals("Auction product added successfully", response.getMessage());
+        assertNull(response.getErrorType());
+    }
+
+    @Test
+    void testAddAuctionProductToStore_Exception() {
+        int storeId = 1, requesterId = 2, productID = 3, minutesToEnd = 60;
+        double basePrice = 100.0;
+        doThrow(new RuntimeException("fail")).when(storeService).addAuctionProductToStore(storeId, requesterId, productID, basePrice, minutesToEnd);
+
+        Response<Void> response = systemService.addAuctionProductToStore(storeId, requesterId, productID, basePrice, minutesToEnd);
+
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during adding auction product to store: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+      
 }
     
