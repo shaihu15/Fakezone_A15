@@ -2,6 +2,7 @@ package ApplicationLayer.DTO;
 
 import java.util.Collection;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
@@ -28,7 +29,7 @@ public class OrderDTO {
 
     @JsonProperty("paymentMethod")
     private final String paymentMethod;
-
+    @JsonCreator
     public OrderDTO(int orderId, int userId, int storeId, Collection<ProductDTO> products, String orderState, String address, String paymentMethod) {
         this.orderId = orderId;
         this.userId = userId;

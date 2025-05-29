@@ -13,7 +13,7 @@ public class CartItemInfoDTOTest {
     @Test
     public void testAllArgsConstructorAndGetters() {
         CartItemInfoDTO dto = new CartItemInfoDTO(
-                1, 2, "Store A", "Product B", 3, true, 19.99);
+                1, 2, "Store A", "Product B", 3, true, 19.99, false);
 
         assertEquals(1, dto.getStoreId());
         assertEquals(2, dto.getProductId());

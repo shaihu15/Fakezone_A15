@@ -104,5 +104,12 @@ public class StoreProduct {
         return new ArrayList<>(this.Pratings.values());
     }
 
+    public synchronized void setBasePrice(double basePrice) {
+        if(basePrice <= 0) {
+            throw new IllegalArgumentException("basePrice cannot be negative");
+        }
+        this.basePrice = basePrice;
+    }
+
 }
 

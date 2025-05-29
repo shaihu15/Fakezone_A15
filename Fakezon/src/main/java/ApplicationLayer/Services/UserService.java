@@ -11,6 +11,7 @@ import ApplicationLayer.Enums.ErrorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.IUserService;
@@ -820,4 +821,30 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("User not found");
         }
     }
+
+    @Override
+    public Response<HashMap<Integer, String>> getMessagesFromStore(int userID) {
+        Optional<Registered> Registered = userRepository.findById(userID);
+        if (Registered.isPresent()) {
+
+            try {
+                HashMap<Integer, String> messages = Registered.get().getMessagesFromStore();
+                if (messages.isEmpty()) {
+                    logger.info("No messages found for user: " + userID);
+                    return new Response<>(null, "No messages found", true, null, null);
+                }
+                logger.info("Messages retrieved for user: " + userID);
+                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
+            } catch (Exception e) {
+                // Handle exception if needed
+                System.out.println("Error during get messages: " + e.getMessage());
+                logger.error("Error during get messages: " + e.getMessage());
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            }
+        } else {
+            logger.error("User not found: " + userID);
+            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
+        }
+    }
+
 }

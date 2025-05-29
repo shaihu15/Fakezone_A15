@@ -456,8 +456,8 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Bid not valid");
             }
         } catch (IllegalArgumentException e) {
-            logger.error("addBidOnAuctionProductInStore - Product not found: " + productID);
-            throw new IllegalArgumentException("Product not found");
+            logger.error("addBidOnAuctionProductInStore  " + productID + e.getMessage());
+            throw new IllegalArgumentException(e.getMessage());
         }
     }
 
@@ -625,18 +625,18 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId){
+    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
         if (store != null) {
             try{
-                HashMap<Integer, String> messages = store.getAllStoreMessages();
+                HashMap<Integer, String> messages = store.getAllStoreMessages(userId);
                 if (messages.isEmpty()) {
                     logger.info("No messages found for store: " + storeId);
                     return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
                 }
                 logger.info("Messages retrieved for store: " + storeId);
                 return new Response<>(messages, "Messages retrieved successfully", true, null, null);
-            } catch (IllegalArgumentException e) {
+            } catch (Exception e) {
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: "+ e.getMessage());
                 return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);

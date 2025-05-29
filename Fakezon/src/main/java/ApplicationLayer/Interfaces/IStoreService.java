@@ -107,7 +107,7 @@ public interface IStoreService {
 
   List<ProductRating> getStoreProductRatings(int storeId, int productID);
 
-  Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
+  Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
 
   void clearAllData();
 

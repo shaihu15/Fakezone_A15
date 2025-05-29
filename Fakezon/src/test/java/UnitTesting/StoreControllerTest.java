@@ -719,8 +719,8 @@ class StoreControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.sendMessageToUser(managerId, storeId, userId, message))
                 .thenReturn(new Response<>(null, "Bad request", false, ErrorType.BAD_REQUEST, null));
-    
-        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+        Request<String> req = new Request<String>(token, message);
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, req, token);
     
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1827,8 +1827,8 @@ class StoreControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.sendMessageToUser(managerId, storeId, userId, message))
                 .thenReturn(new Response<>(null, "Message sent successfully", true, null, null));
-    
-        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+        Request<String> req = new Request<String>(token, message);
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, req, token);
     
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -1844,8 +1844,8 @@ class StoreControllerTest {
         String token = "invalid-token";
     
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
-    
-        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+        Request<String> req = new Request<String>(token, message);
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, req, token);
     
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1864,8 +1864,8 @@ class StoreControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.sendMessageToUser(managerId, storeId, userId, message))
                 .thenReturn(new Response<>(null, "Message cannot be empty", false, ErrorType.BAD_REQUEST, null));
-    
-        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+        Request<String> req = new Request<String>(token, message);
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, req, token);
     
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1884,8 +1884,8 @@ class StoreControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.sendMessageToUser(managerId, storeId, userId, message))
                 .thenReturn(new Response<>(null, "Internal error", false, ErrorType.INTERNAL_ERROR, null));
-    
-        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+        Request<String> req = new Request<String>(token, message);
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, req, token);
     
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -1904,8 +1904,8 @@ class StoreControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.sendMessageToUser(managerId, storeId, userId, message))
                 .thenThrow(new RuntimeException("Unexpected error"));
-    
-        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, message, token);
+        Request<String> req = new Request<String>(token, message);
+        ResponseEntity<Response<Void>> response = storeController.sendMessageToUser(managerId, storeId, userId, req, token);
     
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());

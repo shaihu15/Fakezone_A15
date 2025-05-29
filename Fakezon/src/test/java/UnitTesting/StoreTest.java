@@ -535,12 +535,12 @@ public class StoreTest {
     }
 
     @Test
-    void testEditStoreProduct() {
+    void testEditStoreProduct() { 
         int productId = 200;
         store.addStoreProduct(founderId, productId, "Old", 10.0, 5, PCategory.ELECTRONICS);
-        store.editStoreProduct(founderId, productId, "New", 20.0, 10);
+        store.editStoreProduct(founderId, productId, "Old", 20.0, 10);
         StoreProduct prod = store.getStoreProduct(productId);
-        assertEquals("New", prod.getName());
+        assertEquals("Old", prod.getName()); // NAME IS IMMUTABLE
         assertEquals(20.0, prod.getBasePrice());
         assertEquals(10, prod.getQuantity());
     }
@@ -574,7 +574,7 @@ public class StoreTest {
     void testGetAllStoreMessages() {
         int userId = 1;
         store.receivingMessage(userId, "msg");
-        Map<Integer, String> messages = store.getAllStoreMessages();
+        Map<Integer, String> messages = store.getAllStoreMessages(founderId);
         assertEquals("msg", messages.get(userId));
     }
 

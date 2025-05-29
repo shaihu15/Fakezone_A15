@@ -41,6 +41,7 @@ import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
+import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -121,6 +122,7 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
                 if(hasPerms()){
                     topLayout.add(createManageButton());
                 }
+                topLayout.add(createMsgButton());
             }
             // 1) SET UP SEARCH FIELD
             searchField = new TextField();
@@ -506,15 +508,97 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
         card.add(price);
 
         Button bidButton = new Button("Place Bid");
-        bidButton.addClickListener(e -> addBidDialog());
+        bidButton.addClickListener(e -> addBidDialog(ap.getProductId()));
+        bidButton.setEnabled(!ap.isDone()); // enabled only if the bid is not done
         card.add(bidButton);
         return card;
     }
     
-    private void addBidDialog(){
+    private void addBidDialog(int productId){
         Dialog dialog = new Dialog();
-        dialog.add(new H1("NOT IMPLEMENTED YET"));
+        NumberField amount = new NumberField("Bid Amount");
+        Button bidButton = new Button("Place Bid", e -> {
+                                        if(amount.getValue() != null && !amount.isEmpty()){
+                                            placeBid(productId, amount.getValue());
+                                            dialog.close();
+                                        }}
+                                    );
+        
+        dialog.add(amount);
+        dialog.add(bidButton);
         dialog.open();
+    }
+
+    private void placeBid(int prodId, Double amount){
+        HttpServletRequest request = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = request.getSession(false);
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        String token = (String) session.getAttribute("token");
+        String url = apiUrl + "store/addBidOnAuctionProductInStore/" + storeId +"/" + user.getUserId() + "/" + prodId + "?bid=" + amount;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Bid Placed");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+
+    }
+
+    private Button createMsgButton(){
+        HttpServletRequest request = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = request.getSession(false);
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        String token = (String) session.getAttribute("token");
+        int userId = user.getUserId();
+        Button msgButton = new Button(new Icon(VaadinIcon.ENVELOPE));
+        msgButton.getStyle().set("font-size", "24px")
+            .set("color", "#0077cc")
+            .set("background-color", "transparent")
+            .set("border", "none");
+        msgButton.addClickListener(e -> msgDialog(userId, storeId, token));
+        return msgButton;
+    }
+
+    private void msgDialog(int userId, int storeId, String token){
+        Dialog dialog = new Dialog();
+        TextField textField = new TextField("Message");
+        Button send = new Button("Send");
+        send.addClickListener(e -> {if(!textField.isEmpty())
+                                     sendMsg(userId, storeId, textField.getValue(), token);
+                                     dialog.close();
+                                    });
+        dialog.add(textField);
+        dialog.add(send);
+        dialog.open();
+    }
+
+    private void sendMsg(int userId, int storeId, String msg, String token){
+        String url = apiUrl + "user/sendMessageToStore/" + userId + "/" + storeId;
+        Request<String> req = new Request<>(token, msg);
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Request<String>> entity = new HttpEntity<>(req, header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Message Sent Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
     }
 
 }

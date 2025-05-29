@@ -1,11 +1,20 @@
 package com.fakezone.fakezone.ui.view;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -21,24 +30,27 @@ import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
+import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -154,10 +166,17 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             addAuctionProductButton.addClickListener(e -> showAddAuctionProductDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
             actionButtonsLayout.add(addAuctionProductButton);
             //REMOVE PRODUCT
+            Button removeProductButton = new Button("Remove Product", VaadinIcon.MINUS.create());
+            removeProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            removeProductButton.addClickListener(e -> removeProductDialog());
+            actionButtonsLayout.add(removeProductButton);
+            //EDIT PRODUCT
+            Button editProductButton = new Button("Edit Product", VaadinIcon.PENCIL.create());
+            editProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            editProductButton.addClickListener(e -> editProductDialog());
+            actionButtonsLayout.add(editProductButton);
 
-            //REMOVE AUCTION PRODUCT
         }
-
         // Add Manager & Add Owner button
         if (isOwner) { 
             Button addManagerButton = new Button("Add Manager", VaadinIcon.PLUS.create());
@@ -176,6 +195,19 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             Button viewManageRolesButton = new Button("View Roles", e -> showStoreManagementSection());
             viewManageRolesButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
             actionButtonsLayout.add(viewManageRolesButton);
+        }
+
+        if(effectivePermissions.contains(StoreManagerPermission.REQUESTS_REPLY)){
+            Button viewMsgs = new Button("View Messages", e -> showMsgs());
+            viewMsgs.getStyle().set("background-color", "#2E7D32").set("color", "white");
+            actionButtonsLayout.add(viewMsgs);
+        }
+
+        if(effectivePermissions.contains(StoreManagerPermission.VIEW_PURCHASES)){
+            Button viewPurchasesButton = new Button ("View Purchases");
+            viewPurchasesButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
+            viewPurchasesButton.addClickListener(e -> viewPurchases());
+            actionButtonsLayout.add(viewPurchasesButton);
         }
 
 
@@ -1118,8 +1150,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             dialog.close();
         });
         save.getStyle().set("margin-top", "1em");
-
-        dialog.add(new HorizontalLayout(save, new Button("Cancel", e -> dialog.close())));
+        dialog.add(save);
         dialog.open();
     }
 
@@ -1143,5 +1174,314 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         }
     }
 
+    private void showMsgs(){
+        Dialog dialog = new Dialog();
+        HashMap<Integer, String> msgs = getMsgs();
+        if(msgs.isEmpty()){
+            dialog.add("No Messages");
+        }
+        else{
+            for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
+                Integer user = entry.getKey();
+                String messageText = entry.getValue();
+
+                // ─── Build a “message card” ─────────────────────────────
+                // Container for one message
+                VerticalLayout messageCard = new VerticalLayout();
+                messageCard.getStyle()
+                        .set("border", "1px solid #ccc")
+                        .set("border-radius", "4px")
+                        .set("padding", "0.5em")
+                        .set("margin-bottom", "0.5em")
+                        .set("width", "100%");
+
+                // user id
+                H4 userTitle = new H4(String.valueOf(user));
+                userTitle.getStyle().set("margin", "0");
+
+                // The message body
+                Span body = new Span(messageText);
+                body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
+
+                // Reply button stub
+                Button replyBtn = new Button("Reply");
+                replyBtn.addClickListener(evt -> {
+                    dialog.close();
+                    replyDialog(currentUserDTO.getUserId(), storeId, user);
+                });
+
+                // Assemble card
+                messageCard.add(userTitle, body, replyBtn);
+
+                // Add to the main container
+                dialog.add(messageCard);
+            }
+        }
+        dialog.open();
+    }
+
+    private void replyDialog(int managerId, int storeId, int userId){
+        Dialog dialog = new Dialog();
+        TextField textField = new TextField("Message");
+        Button send = new Button("Send");
+        send.addClickListener(e -> {if(!textField.isEmpty())
+                                     sendMsg(managerId, storeId, userId, textField.getValue());
+                                     dialog.close();
+                                    });
+        dialog.add(textField);
+        dialog.add(send);
+        dialog.open();
+    }
+
+    private void sendMsg(int managerId, int storeId, int userId, String msg){
+        String url = apiUrl + "store/sendMessageToUser/" + managerId + "/" + storeId +"/" + userId;
+        Request<String> req = new Request<>(currentToken, msg);
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Request<String>> entity = new HttpEntity<>(req, header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Message Sent Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private HashMap<Integer, String> getMsgs(){
+        String url = apiUrl + "store/getAllStoreMessages/" +storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
+        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
+        }
+        else{
+            Notification.show(response.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    private void viewPurchases(){
+        Dialog dialog = new Dialog();
+        dialog.setWidth("800px");
+        dialog.setHeight("600px");
+
+        VerticalLayout content = new VerticalLayout();
+        content.setPadding(true);
+        content.setSpacing(true);
+
+        List<OrderDTO> orders = getPurchases();
+        if (orders == null || orders.isEmpty()) {
+            content.add(new H1("No Orders"));
+        } else {
+            Accordion accordion = new Accordion();
+            for (OrderDTO order : orders) {
+                // Panel title
+                String title = String.format("Order #%d - %s", order.getOrderId(), order.getOrderState());
+                // Details layout inside panel
+                VerticalLayout detailsLayout = new VerticalLayout();
+                detailsLayout.setPadding(false);
+                detailsLayout.setSpacing(true);
+
+                // Order metadata
+                detailsLayout.add(new H3("Order Details"));
+                Div meta = new Div();
+                meta.getStyle().set("display", "grid");
+                meta.getStyle().set("grid-template-columns", "1fr 1fr");
+                meta.getStyle().set("gap", "10px");
+                meta.add(new Div(new H3("Address: "), new Div(order.getAddress())));
+                meta.add(new Div(new H3("Payment: "), new Div(order.getPaymentMethod())));
+                meta.add(new Div(new H3("Store ID: "), new Div(String.valueOf(order.getStoreId()))));
+                meta.add(new Div(new H3("User ID: "), new Div(String.valueOf(order.getUserId()))));
+                detailsLayout.add(meta);
+
+                // Products grid
+                detailsLayout.add(new H3("Products"));
+                Grid<ProductDTO> grid = new Grid<>(ProductDTO.class, false);
+                grid.addColumn(ProductDTO::getName).setHeader("Name");
+                grid.setItems(order.getProducts());
+                grid.setHeight("200px");               // or use setSizeFull() only
+                detailsLayout.add(grid);
+                AccordionPanel panel = accordion.add(title, detailsLayout);
+                panel.setHeight("300px");
+            }
+            content.add(accordion);
+        }
+
+        dialog.add(content);
+        dialog.open();
+    }
+
+    
+    private List<OrderDTO> getPurchases(){
+        String url = apiUrl + "store/getAllStoreOrders/" +storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<List<OrderDTO>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<List<OrderDTO>>>() {});
+        Response<List<OrderDTO>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
+        }
+        else{
+            Notification.show(response.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+
+    private void removeProductDialog(){
+        StoreDTO store = getStoreDTO(storeId, currentToken);
+        Collection<StoreProductDTO> prods = store.getStoreProducts();
+
+        // 1) Create the dialog
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+
+        // 2) Create a ComboBox of StoreProductDTO
+        ComboBox<StoreProductDTO> productCombo = new ComboBox<>("Select product");
+        productCombo.setItems(prods);                        // set your DTOs
+        productCombo.setItemLabelGenerator(StoreProductDTO::getName); 
+        productCombo.setPlaceholder("— choose one —");
+        productCombo.setWidthFull();
+
+        // 3) Add it to the dialog
+        dialog.add(productCombo);
+        
+        Button removeButton = new Button("Remove");
+        removeButton.addClickListener(e -> {
+            if(productCombo.getValue() != null){
+                dialog.close();
+                confirmRemoveDialog(productCombo.getValue());
+            }
+        });
+        dialog.add(removeButton);
+        dialog.open();
+    }
+
+    private void confirmRemoveDialog(StoreProductDTO product){
+        Dialog dialog = new Dialog();
+        dialog.add(new H3("This can not be undone and will also remove all auction listings\n of the product if there are any"));
+        Button confirm = new Button("Confirm Removal");
+        confirm.addClickListener(e -> {removeProduct(product); dialog.close();});
+        dialog.add(confirm);
+        dialog.open();
+    }
+
+    private void removeProduct(StoreProductDTO product){
+        String url = apiUrl + "store/removeProductFromStore/" + currentStoreId + "/" + currentUserDTO.getUserId() + "/" + product.getProductId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.DELETE, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Removed Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+
+    }
+
+    private void editProductDialog() {
+        StoreDTO store = getStoreDTO(storeId, currentToken);
+        Collection<StoreProductDTO> prods = store.getStoreProducts();
+
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+
+        ComboBox<StoreProductDTO> productCombo = new ComboBox<>("Select product");
+        productCombo.setItems(prods);
+        productCombo.setItemLabelGenerator(StoreProductDTO::getName);
+        productCombo.setPlaceholder("— choose one —");
+        productCombo.setWidthFull();
+
+        // Fields for details
+        Label nameLabel = new Label();
+        Label categoryLabel = new Label();
+        Label ratingLabel = new Label();
+
+        NumberField basePriceField = new NumberField("Base Price");
+        IntegerField quantityField = new IntegerField("Quantity");
+        
+        basePriceField.setWidthFull();
+        quantityField.setWidthFull();
+
+        // Layout to hold the fields
+        FormLayout formLayout = new FormLayout();
+        formLayout.setVisible(false); // Initially hidden
+
+        formLayout.addFormItem(nameLabel, "Name");
+        formLayout.addFormItem(categoryLabel, "Category");
+        formLayout.addFormItem(ratingLabel, "Average Rating");
+        formLayout.add(basePriceField, quantityField);
+        Button confirmButton = new Button("Update");
+        confirmButton.addClickListener(e -> {
+            StoreProductDTO selected = productCombo.getValue();
+            if(selected != null && basePriceField.getValue() != null && quantityField.getValue() != null
+                && basePriceField.getValue() > 0 && quantityField.getValue() > 0){
+                    dialog.close();
+                    editProduct(selected, basePriceField.getValue(), quantityField.getValue());
+            }
+        });
+        formLayout.add(confirmButton);
+
+        productCombo.addValueChangeListener(event -> {
+            StoreProductDTO selected = event.getValue();
+            if (selected != null) {
+                nameLabel.setText(selected.getName());
+                categoryLabel.setText(selected.getCategory().toString());
+                ratingLabel.setText(String.valueOf(selected.getAverageRating()));
+                basePriceField.setValue(selected.getBasePrice());
+                quantityField.setValue(selected.getQuantity());
+                formLayout.setVisible(true);
+            } else {
+                formLayout.setVisible(false);
+            }
+        });
+
+        dialog.add(productCombo, formLayout);
+        dialog.open();
+    }
+
+    private void editProduct(StoreProductDTO product, Double basePrice, Integer quantity){
+        String url = apiUrl + "store/updateProductInStore/" + currentStoreId + "/" + currentUserDTO.getUserId() +"/" + product.getProductId() + "?basePrice=" + basePrice + "&quantity=" + quantity;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Product Edited Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
 
 }

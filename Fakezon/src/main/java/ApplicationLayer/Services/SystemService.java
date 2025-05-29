@@ -781,7 +781,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<CartItemInfoDTO>> viewCart(int userId) { //storeid -> <prodId -> bool>
+    public Response<List<CartItemInfoDTO>> viewCart(int userId) { 
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
@@ -808,10 +808,10 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId) {
+    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId) {
         try{
             if (this.storeService.isStoreOpen(storeId)) {
-                return this.storeService.getAllStoreMessages(storeId);
+                return this.storeService.getAllStoreMessages(storeId, userId);
             } else {
                 logger.error("System Service - Store is closed: " + storeId);
                 return new Response<HashMap<Integer, String>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
@@ -884,7 +884,7 @@ public class SystemService implements ISystemService {
         double totalPrice = 0;
         Cart cart = null;
         boolean returnProductInCaseOfError = false;//so the return will happen only ones
-
+        
         Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCartDTO = null;
         try {
             logger.info("System service - user " + userId + " trying to purchase cart");
@@ -1763,7 +1763,7 @@ public class SystemService implements ISystemService {
         List<CartItemInfoDTO> items = new ArrayList<>();
         for (StoreDTO store : cart.keySet()) {
             for (StoreProductDTO product : cart.get(store).keySet()) {
-                items.add(new CartItemInfoDTO(store.getStoreId(), product.getProductId(), store.getName(), product.getName(), product.getQuantity(), cart.get(store).get(product), product.getBasePrice()));
+                items.add(new CartItemInfoDTO(store.getStoreId(), product.getProductId(), store.getName(), product.getName(), product.getQuantity(), cart.get(store).get(product), product.getBasePrice(), false));
             }
         }
         return items;
@@ -2202,6 +2202,23 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during adding XOR discount with store scope: " + e.getMessage());
             return new Response<>(null, "Error during adding XOR discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<HashMap<Integer, String>> getMessagesFromStore(int userID) {
+        try {
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getMessagesFromStore(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                        ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+                    false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 

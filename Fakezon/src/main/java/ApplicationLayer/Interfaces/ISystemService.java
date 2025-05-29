@@ -100,7 +100,7 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
-    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
+    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
 
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
 
@@ -236,5 +236,7 @@ public interface ISystemService {
 
     Response<Void> addXorDiscountWithStoreScope(int storeId, int requesterId, int cartId,
             List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<HashMap<Integer, String>> getMessagesFromStore(int userID);
 
 }

@@ -689,5 +689,26 @@ public class UserController {
         
     }
 
+    @GetMapping("/getMessagesFromStore/{userId}")
+    public ResponseEntity<Response<HashMap<Integer, String>>> getMessagesFromStore(@RequestHeader("Authorization") String token,
+                                                                             @PathVariable int userId) {
+        try {
+            logger.info("Received request to get messages from stores for user: {}", userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<HashMap<Integer, String>> response = systemService.getMessagesFromStore(userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getMessagesFromStore: {}", e.getMessage());
+            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving  messages from stores ", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 
 }

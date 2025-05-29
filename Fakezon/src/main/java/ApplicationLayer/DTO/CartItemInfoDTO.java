@@ -11,7 +11,7 @@ public class CartItemInfoDTO {
     private int quantityInCart;
     private boolean inStock;
     private double unitPrice; // Optional: Price per unit at the time of adding to cart or current price
-
+    private boolean isAuction;
     // No-arg constructor (needed by Jackson)
     public CartItemInfoDTO() {
     }
@@ -25,7 +25,8 @@ public class CartItemInfoDTO {
             @JsonProperty("productName") String productName,
             @JsonProperty("quantityInCart") int quantityInCart,
             @JsonProperty("inStock") boolean inStock,
-            @JsonProperty("unitPrice") double unitPrice) {
+            @JsonProperty("unitPrice") double unitPrice,
+            @JsonProperty("isAuction") boolean isAuction) {
         this.storeId = storeId;
         this.productId = productId;
         this.storeName = storeName;
@@ -33,6 +34,7 @@ public class CartItemInfoDTO {
         this.quantityInCart = quantityInCart;
         this.inStock = inStock;
         this.unitPrice = unitPrice;
+        this.isAuction = isAuction;
     }
 
     // Getters (and setters if fields aren't final and you need them)
@@ -90,5 +92,13 @@ public class CartItemInfoDTO {
 
     public void setUnitPrice(double unitPrice) {
         this.unitPrice = unitPrice;
+    }
+
+    public boolean isAuction(){
+        return this.isAuction;
+    }
+
+    public void setIsAuction(boolean isAuction){
+        this.isAuction = isAuction;
     }
 }

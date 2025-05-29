@@ -26,22 +26,27 @@ public class SystemServiceRemoveFromBasketTest {
     private final int PRODUCT_ID = 200;
     private final int STORE_ID = 300;
 
-    @Test
-    public void whenUserNotLoggedIn_returnsInvalidInput() {
+    
+    @Test //changed the test because guest can remove too
+    public void whenGuestAndRemoveSucceeds_returnsSuccess() {
         // arrange
-        when(userService.isUserLoggedIn(USER_ID)).thenReturn(false);
+        when(userService.isUnsignedUser(USER_ID)).thenReturn(true);
+        // removeFromBasket returns void and no exception => success
 
         // act
         Response<Void> resp = systemService.removeFromBasket(USER_ID, PRODUCT_ID, STORE_ID);
 
         // assert
-        assertFalse(resp.isSuccess());
+        assertTrue(resp.isSuccess());
         assertNull(resp.getData());
-        assertEquals("User is not logged in", resp.getMessage());
-        assertEquals(ErrorType.INVALID_INPUT, resp.getErrorType());
-        verify(userService).isUserLoggedIn(USER_ID);
+        assertEquals("Product removed from basket successfully", resp.getMessage());
+        assertNull(resp.getErrorType());
+        InOrder inOrder = inOrder(userService);
+        inOrder.verify(userService).isUserLoggedIn(USER_ID);
+        inOrder.verify(userService).removeFromBasket(USER_ID, STORE_ID, PRODUCT_ID);
         verifyNoMoreInteractions(userService);
     }
+
 
     @Test
     public void whenIsUserLoggedInThrows_returnsInternalError() {
@@ -60,7 +65,6 @@ public class SystemServiceRemoveFromBasketTest {
         verify(userService).isUserLoggedIn(USER_ID);
         verifyNoMoreInteractions(userService);
     }
-
     @Test
     public void whenRemoveFromBasketThrows_returnsInternalError() {
         // arrange

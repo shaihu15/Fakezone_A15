@@ -1,67 +1,56 @@
 package com.fakezone.fakezone.ui.view;
 
 
-import com.vaadin.flow.router.RouterLayout;
-import com.vaadin.flow.server.VaadinRequest;
-import com.vaadin.flow.server.VaadinResponse;
-
-import ApplicationLayer.Request;
-import ApplicationLayer.Response;
-import ApplicationLayer.RequestDataTypes.LoginRequest;
-import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
-import ApplicationLayer.DTO.UserDTO;
-import InfrastructureLayer.Security.TokenService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.validation.constraints.Email;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.router.QueryParameters;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.component.ClientCallable;
+import com.vaadin.flow.router.QueryParameters;
+import com.vaadin.flow.router.RouterLayout;
+import com.vaadin.flow.server.VaadinRequest;
+import com.vaadin.flow.server.VaadinResponse;
+
+import ApplicationLayer.Request;
+import ApplicationLayer.Response;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.RequestDataTypes.LoginRequest;
+import ApplicationLayer.RequestDataTypes.RegisterUserRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 
 public class MainLayout extends AppLayout implements RouterLayout {
@@ -133,6 +122,8 @@ public class MainLayout extends AppLayout implements RouterLayout {
         Div spacer = new Div();
         spacer.setWidth("20%");
 
+        
+
          // SEARCH BAR
         HorizontalLayout searchLayout = new HorizontalLayout();
         TextField searchField = new TextField();
@@ -150,6 +141,13 @@ public class MainLayout extends AppLayout implements RouterLayout {
         searchButton.addClickListener(event -> performSearch(searchField.getValue(),searchType.getValue())); // Search button
         searchField.addKeyDownListener(Key.ENTER, event -> performSearch(searchField.getValue(),searchType.getValue())); // Enter key
         searchLayout.setFlexGrow(0.4, searchField);
+
+
+        // HEADER LAYOUT
+        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout);
+        if(notificationsButton != null){
+            header.add(notificationsButton);
+        }
 
         // LOGIN/REGISTER BUTTON
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
@@ -170,6 +168,20 @@ public class MainLayout extends AppLayout implements RouterLayout {
             notificationsIcon.setSize("30px");
             notificationsButton = new Button(notificationsIcon);
             notificationsButton.addClickListener(event -> showNotifications());
+            // USER VIEW BUTTON
+            Button userViewButton = new Button("User area", click -> {
+                        if (!isGuestToken() && session.getAttribute("userDTO") != null) {
+                            notificationsButton.setText(""); // resets unread notifs - because they are in user area
+                            session.removeAttribute("unreadNotifs");
+                            UI.getCurrent().navigate("user");
+                        } else {
+                            Notification.show("Please log in to view this page.");
+                            // Removed: UI.getCurrent().navigate("");
+                            // By not navigating here, the user stays on the current URL
+                        }
+                    });
+            header.add(notificationsButton);
+            header.add(userViewButton);
         }
 
         // CART
@@ -178,25 +190,8 @@ public class MainLayout extends AppLayout implements RouterLayout {
         Button cartButton = new Button(cartIcon);
         cartButton.addClickListener(event -> showCart());
 
-        // USER VIEW BUTTON
-        Button userViewButton = new Button("User area", click -> {
-            if (!isGuestToken() && session.getAttribute("userDTO") != null) {
-                notificationsButton.setText(""); // resets unread notifs - because they are in user area
-                session.removeAttribute("unreadNotifs");
-                UI.getCurrent().navigate("user");
-            } else {
-                Notification.show("Please log in to view this page.");
-                // Removed: UI.getCurrent().navigate("");
-                // By not navigating here, the user stays on the current URL
-            }
-        });
+        
 
-        // HEADER LAYOUT
-        HorizontalLayout header = new HorizontalLayout(logoAnchor, spacer, searchLayout);
-        if(notificationsButton != null){
-            header.add(notificationsButton);
-        }
-        header.add(userViewButton);
         header.add(loginRegisterLogoutButton, cartButton);
         header.setWidth("100%");
         header.setDefaultVerticalComponentAlignment(Alignment.CENTER);
@@ -424,7 +419,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
             HttpMethod.POST,
             new HttpEntity<>(req),
             new ParameterizedTypeReference<Response<UserDTO>>() {}
-        );            
+        );
         Response<UserDTO> response = apiResponse.getBody();
         if(response.isSuccess()){
             session.setAttribute("token", response.getToken());

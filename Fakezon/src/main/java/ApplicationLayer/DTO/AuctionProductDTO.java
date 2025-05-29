@@ -1,6 +1,7 @@
 package ApplicationLayer.DTO;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Model.AuctionProduct;
@@ -23,6 +24,9 @@ public class AuctionProductDTO {
     @JsonProperty("category")
     private final PCategory category;
 
+    @JsonProperty("isDone")
+    private boolean isDone;
+
     @JsonCreator
     public AuctionProductDTO(
         @JsonProperty("productId") int productId,
@@ -30,7 +34,8 @@ public class AuctionProductDTO {
         @JsonProperty("basePrice") double basePrice,
         @JsonProperty("currentHighestBid") double currentHighestBid,
         @JsonProperty("averageRating") double averageRating,
-        @JsonProperty("category") PCategory category
+        @JsonProperty("category") PCategory category,
+        @JsonProperty("isDone") boolean isDone
     ) {
         this.productId = productId;
         this.name = name;
@@ -38,6 +43,7 @@ public class AuctionProductDTO {
         this.currentHighestBid = currentHighestBid;
         this.averageRating = averageRating;
         this.category = category;
+        this.isDone = isDone;
     }
 
     public AuctionProductDTO(AuctionProduct auctionProduct) {
@@ -47,6 +53,8 @@ public class AuctionProductDTO {
         this.currentHighestBid = auctionProduct.getCurrentHighestBid();
         this.averageRating = auctionProduct.getAverageRating(); // Assuming getAverageRating() returns a double
         this.category = auctionProduct.getCategory();
+        this.isDone = auctionProduct.isDone();
+
     }
 
     public int getProductId() {
@@ -70,5 +78,9 @@ public class AuctionProductDTO {
 
     public PCategory getCategory(){
         return this.category;
+    }
+
+    public boolean isDone(){
+        return this.isDone;
     }
 }

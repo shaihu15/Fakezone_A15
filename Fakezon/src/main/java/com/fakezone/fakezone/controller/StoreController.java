@@ -1,6 +1,7 @@
 package com.fakezone.fakezone.controller;
 
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -484,10 +485,11 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
     public ResponseEntity<Response<Void>> sendMessageToUser(@PathVariable("managerId") int managerId,
                                                      @PathVariable("storeId") int storeId,
                                                      @PathVariable("userId") int userId,
-                                                     @RequestParam("message") String message,
+                                                     @RequestBody Request<String> request,
                                                      @RequestHeader("Authorization") String token) {
         try {
             logger.info("Received request to send message to user {} from manager {} in store {} with token {}", userId, managerId, storeId, token);
+            String message = request.getData();
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
@@ -728,7 +730,7 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
-            logger.error("Error in declineAssignment: {}", e.getMessage());
+            logger.error("Error in isStoreOwner: {}", e.getMessage());
             Response<Boolean> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
@@ -780,6 +782,28 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
         } catch (Exception e) {
             logger.error("Error in getAuctionProductsFromStore: {}", e.getMessage());
             Response<List<AuctionProductDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getAllStoreMessages/{storeId}/{userId}")
+    public ResponseEntity<Response<HashMap<Integer, String>>> getAllStoreMessages(@RequestHeader("Authorization") String token,
+                                                                      @PathVariable("storeId") int storeId,
+                                                                        @PathVariable("userId") int userId) {
+        try {
+            logger.info("Received request to get all messages for Store: {} by user {}", storeId, userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<HashMap<Integer, String>> response = systemService.getAllStoreMessages(storeId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getAllStoreMessages: {}", e.getMessage());
+            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving messages", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
