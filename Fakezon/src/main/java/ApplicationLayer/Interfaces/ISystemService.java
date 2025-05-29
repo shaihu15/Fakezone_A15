@@ -204,6 +204,8 @@ public interface ISystemService {
 
     Response<List<OrderDTO>> getOrdersByUserId(int userId);
 
+    boolean isStoreOpen(int storeId);
+
     // Discount Policy Methods
     Response<Void> addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs,
             double percentage);

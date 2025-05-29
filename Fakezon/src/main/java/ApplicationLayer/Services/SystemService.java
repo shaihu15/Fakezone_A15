@@ -1930,6 +1930,11 @@ public class SystemService implements ISystemService {
         }
     }
 
+    @Override
+    public boolean isStoreOpen(int storeId) {
+        return storeService.isStoreOpen(storeId);
+    }
+
 
     // Discount Policy System Service Methods
 
