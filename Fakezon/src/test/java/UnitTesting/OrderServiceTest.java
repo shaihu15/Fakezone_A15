@@ -156,20 +156,20 @@ public class OrderServiceTest {
     }
 
     @Test
-    void testGetOrderUserId_Success() {
+    void testgetOrderOrderId_Success() {
         IOrder mockOrder = mock(IOrder.class);
         when(orderRepository.getOrder(1)).thenReturn(mockOrder);
         when(mockOrder.getUserId()).thenReturn(42);
 
-        int userId = orderService.getOrderUserId(1);
+        int userId = orderService.getOrderOrderId(1);
         assertEquals(42, userId);
         verify(orderRepository, times(1)).getOrder(1);
     }
 
     @Test
-    void testGetOrderUserId_OrderNotFound() {
+    void testgetOrderOrderId_OrderNotFound() {
         when(orderRepository.getOrder(1)).thenThrow(new IllegalArgumentException("Order not found"));
-        Exception ex = assertThrows(IllegalArgumentException.class, () -> orderService.getOrderUserId(1));
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> orderService.getOrderOrderId(1));
         assertEquals("Order not found", ex.getMessage());
     }
 
@@ -341,5 +341,29 @@ void testAddOrderCart_Exception() {
         verify(orderRepository, never()).addOrder(any(Order.class));
     }
     
-    
+        @Test
+    void testGetOrdersByUserId_ReturnsMatchingOrders() {
+        IOrder mockOrder1 = mock(IOrder.class);
+        IOrder mockOrder2 = mock(IOrder.class);
+        when(mockOrder1.getId()).thenReturn(1);
+        when(mockOrder1.getUserId()).thenReturn(42);
+        when(mockOrder2.getId()).thenReturn(2);
+        when(mockOrder2.getUserId()).thenReturn(42);
+
+        List<IOrder> mockOrders = Arrays.asList(mockOrder1, mockOrder2);
+        when(orderRepository.getOrdersByUserId(42)).thenReturn(mockOrders);
+        List<IOrder> result = orderService.getOrdersByUserId(42);
+        assertEquals(2, result.size());
+        assertEquals(1, result.get(0).getId());
+        assertEquals(2, result.get(1).getId());
+        verify(orderRepository, times(1)).getOrdersByUserId(42);
+    }
+
+    @Test
+    void testGetOrdersByUserId_NoOrdersFound() {
+        when(orderRepository.getOrdersByUserId(99)).thenReturn(Collections.emptyList());
+        List<IOrder> result = orderService.getOrdersByUserId(99);
+        assertTrue(result.isEmpty());
+        verify(orderRepository, times(1)).getOrdersByUserId(99);
+    }
 }

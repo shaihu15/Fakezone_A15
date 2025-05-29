@@ -103,17 +103,17 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/getOrdersByUserId/{storeId}")
-    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByStoreId(@PathVariable("storeId") int storeId, @RequestHeader("Authorization") String token){
+    @GetMapping("/getOrdersByOrderId/{orderId}")
+    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByOrderId(@PathVariable("orderId") int orderId, @RequestHeader("Authorization") String token){
         try{
 
-            logger.info("Received request to get orders for store ID: {} with token: {}", storeId, token);
+            logger.info("Received request to get orders for store ID: {} with token: {}", orderId, token);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
             int userId = authenticatorAdapter.getUserId(token);
-            Response<List<OrderDTO>> response = systemService.getOrdersByStoreId(storeId, userId);
+            Response<List<OrderDTO>> response = systemService.getOrdersByStoreId(orderId, userId);
             if(response.isSuccess()){
                 return ResponseEntity.ok(response);
             } else {
@@ -125,4 +125,52 @@ public class OrderController {
             return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while getting orders by store ID", false, ErrorType.INTERNAL_ERROR, null));
         }
     }
+
+    @GetMapping("/getOrdersByStoreId/{storeId}")
+    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByStoreId(@PathVariable("storeId") int storeId, @RequestHeader("Authorization") String token){
+        try{
+
+            logger.info("Received request to get orders for store ID: {} with token: {}", storeId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            int authenticatedUserId = authenticatorAdapter.getUserId(token);
+            Response<List<OrderDTO>> response = systemService.getOrdersByStoreId(storeId, authenticatedUserId);
+            if(response.isSuccess()){
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(400).body(response);
+            }
+        }
+        catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while getting orders by store ID", false, ErrorType.INTERNAL_ERROR, null));
+        }
+    }
+
+    @GetMapping("/getOrdersByUserId/{userId}")
+    public ResponseEntity<Response<List<OrderDTO>>> getOrdersByUserId(@PathVariable("userId") int userId, @RequestHeader("Authorization") String token){
+        try{
+
+            logger.info("Received request to get orders for user ID: {} with token: {}", userId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<OrderDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            int authenticatedUserId = authenticatorAdapter.getUserId(token);
+            Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
+            if(response.isSuccess()){
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(400).body(response);
+            }
+        }
+        catch (Exception e){
+            logger.error("Error in OrderController: {}", e.getMessage());
+            return ResponseEntity.status(500).body(new Response<>(null, "An error occurred while getting orders by user ID", false, ErrorType.INTERNAL_ERROR, null));
+        }
+    }
+
+    
 }

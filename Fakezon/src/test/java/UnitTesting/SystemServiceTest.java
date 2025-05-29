@@ -1124,6 +1124,50 @@ class SystemServiceTest {
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
     }
 
+
+    @Test
+    void testgetOrdersByUserId_Success() {
+        int userId = 1;
+        IOrder order = mock(IOrder.class);
+        List<IOrder> orders = List.of(order);
+        OrderDTO orderDTO = mock(OrderDTO.class);
+
+        when(userService.isUserLoggedIn(userId)).thenReturn(true);
+        when(orderService.getOrdersByUserId(userId)).thenReturn(orders);
+
+        SystemService spyService = spy((SystemService) systemService);
+        doReturn(orderDTO).when(spyService).createOrderDTO(order);
+
+        Response<List<OrderDTO>> response = spyService.getOrdersByUserId(userId);
+
+        assertTrue(response.isSuccess());
+        assertEquals(1, response.getData().size());
+        assertEquals("Orders retrieved successfully", response.getMessage());
+    }
+
+    @Test
+    void testgetOrdersByUserId_UserNotLoggedIn() {
+        int userId = 1;
+        when(userService.isUserLoggedIn(userId)).thenReturn(false);
+
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
+
+        assertFalse(response.isSuccess());
+        assertEquals("User is not logged in", response.getMessage());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    }
+
+    @Test
+    void testgetOrdersByUserId_Exception() {
+        int userId = 1;
+        when(userService.isUserLoggedIn(userId)).thenThrow(new RuntimeException("fail"));
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
+        assertFalse(response.isSuccess());
+        assertTrue(response.getMessage().contains("Error during getting all orders by user ID: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
+
+
  @Test
     void testIsStoreOwner_SuccessTrue() {
         int storeId = 5, userId = 42;

@@ -66,4 +66,14 @@ public class Cart {
             baskets.get(storeId).removeItem(productId);
         }
     }
+
+    public boolean containsProduct(int productId) {
+        for (Basket basket : baskets.values()) {
+            if (basket.containsProduct(productId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

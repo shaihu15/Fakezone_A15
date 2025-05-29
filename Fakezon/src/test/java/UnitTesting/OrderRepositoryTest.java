@@ -31,6 +31,8 @@ public class OrderRepositoryTest {
     private IOrder order1;
     private IOrder order2;
     private int storeId;
+    private int user1Id = 101; // Example user ID for testing
+    private int user2Id = 102; // Example user ID for testing
 
     @BeforeEach
     void setUp() {
@@ -50,8 +52,8 @@ public class OrderRepositoryTest {
         List<OrderedProduct> orderedProducts2 = products2.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
         double totalPrice1 = products1.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
         double totalPrice2 = products2.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
-        order1 = new Order(1,storeId, 101, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1);
-        order2 = new Order(2, storeId,102, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2);
+        order1 = new Order(1,user1Id, storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1);
+        order2 = new Order(2, user2Id,storeId, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2);
     }
     @Test
     void givenValidOrder_WhenAddOrder_ThenOrderIsAdded() {
@@ -100,4 +102,20 @@ public class OrderRepositoryTest {
         });
         assertEquals("Order with ID 1 does not exist.", exception.getMessage());
     }
+
+    @Test
+    void givenNonExistingOrders_WhenGetOrderByUser_ThenReturnsOrders() {
+        repository.addOrder(order1);
+        repository.addOrder(order2);
+        Collection<IOrder> userOrders = repository.getOrdersByUserId(user1Id);
+        assertEquals(1, userOrders.size());
+        assertTrue(userOrders.contains(order1));
+    }
+
+    @Test
+    void givenNoOrders_WhenGetOrderByUser_ThenReturnsEmptyList() {
+        Collection<IOrder> userOrders = repository.getOrdersByUserId(user1Id);
+        assertTrue(userOrders.isEmpty());
+    }
+
 }

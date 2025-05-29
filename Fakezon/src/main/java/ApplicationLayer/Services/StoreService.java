@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -501,7 +502,7 @@ public class StoreService implements IStoreService {
                 logger.error("calcAmount - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
             }
-            double storeAmount = store.calcAmount(userId, basket, dob);
+            double storeAmount = store.calcAmount(userId, basket, dob, cart);
             prices.put(storeId, storeAmount);
             }
         return prices;
@@ -704,6 +705,180 @@ public class StoreService implements IStoreService {
         return store.getStoreProductAllRatings(productID);
     }
 
+
+        // Discount Policy Methods
+
+        @Override
+        public void addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add simple discount with products scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addSimpleDiscountWithProductsScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addSimpleDiscountWithProductsScope(requesterId, productIDs, percentage);
+                logger.info("Simple discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add simple discount with products scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addSimpleDiscountWithStoreScope(int storeId, int requesterId, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add simple discount with store scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addSimpleDiscountWithStoreScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addSimpleDiscountWithStoreScope(requesterId, percentage);
+                logger.info("Simple discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add simple discount with store scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addConditionDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage)
+        {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add condition discount with products scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addConditionDiscountWithProductsScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addConditionDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                logger.info("Condition discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add condition discount with products scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addConditionDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add condition discount with store scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addConditionDiscountWithStoreScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addConditionDiscountWithStoreScope(requesterId, conditions, percentage);
+                logger.info("Condition discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add condition discount with store scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addAndDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add AND discount with products scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addAndDiscountWithProductsScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addAndDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                logger.info("AND discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add AND discount with products scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addAndDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add AND discount with store scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addAndDiscountWithStoreScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addAndDiscountWithStoreScope(requesterId, conditions, percentage);
+                logger.info("AND discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add AND discount with store scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addOrDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add OR discount with products scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addOrDiscountWithProductsScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addOrDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                logger.info("OR discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add OR discount with products scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addOrDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add OR discount with store scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addOrDiscountWithStoreScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addOrDiscountWithStoreScope(requesterId, conditions, percentage);
+                logger.info("OR discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add OR discount with store scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addXorDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add XOR discount with products scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addXorDiscountWithProductsScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addXorDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                logger.info("XOR discount with products scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add XOR discount with products scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
+        @Override
+        public void addXorDiscountWithStoreScope(int storeId, int requesterId, List<Predicate<Cart>> conditions, double percentage) {
+            try {
+                logger.info("Store Service - User " + requesterId + " trying to add XOR discount with store scope to store " + storeId);
+                Store store = storeRepository.findById(storeId);
+                if (store == null) {
+                    logger.error("Store Service - addXorDiscountWithStoreScope - Store not found: " + storeId);
+                    throw new IllegalArgumentException("Store not found");
+                }
+                store.addXorDiscountWithStoreScope(requesterId, conditions, percentage);
+                logger.info("XOR discount with store scope added to store: " + storeId + " by user: " + requesterId);
+            } catch (Exception e) {
+                logger.error("StoreService - failed to add XOR discount with store scope: " + e.getMessage());
+                throw e;
+            }
+        }
+    
     @Override
     public boolean isStoreOwner(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
