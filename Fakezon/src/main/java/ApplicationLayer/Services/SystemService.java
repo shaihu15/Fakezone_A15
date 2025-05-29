@@ -578,9 +578,18 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> addStoreManager(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
+        if(!userService.isUserLoggedIn(requesterId)) {
+            logger.error("System service - user " + requesterId + " is not logged in, cannot add as manager");
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+        }
+        if(userService.isUnsignedUser(managerId)) {
+            logger.error("System service - user " + managerId + " is not registered, cannot add as manager");
+            return new Response<>(null, "User is not registered", false, ErrorType.INVALID_INPUT, null);
+        }
         try {
             logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: " + storeId);
             storeService.addStoreManager(storeId, requesterId, managerId, perms);
+            userService.addRole(managerId, storeId, new StoreManager());
             return new Response<>(null, "Store manager added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
