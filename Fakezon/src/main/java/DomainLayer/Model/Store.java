@@ -866,6 +866,7 @@ public class Store implements IStore {
             }
             pendingManagersPerms.put(appointee, new ArrayList<>(perms));
             pendingManagers.put(appointee, appointor);
+            storeManagers.put(appointee, perms);
             this.publisher.publishEvent(new AssignmentEvent(storeID, appointee, RoleName.STORE_MANAGER));
         }
         catch(Exception e){

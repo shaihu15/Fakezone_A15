@@ -76,15 +76,9 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         assertNotNull(storeRoles);
         assertEquals(storeId, storeRoles.getStoreId());
 
-        assertFalse(storeRoles.getStoreManagers().isEmpty());
+        assertTrue(storeRoles.getStoreOwners().contains(storeOwnerId));
+        assertTrue(storeRoles.getStoreManagers().containsKey(newManagerID));
 
-        //assertTrue(storeRoles.getStoreManagers().containsKey(newManagerID));
-        
-        assertTrue(storeRoles.getStoreOwners().stream().anyMatch(ownerId -> ownerId == storeOwnerId));
-
-
-   
-        //add a manager to the store and test if the manager is present in the user roles list
     }
 
     @Test
@@ -104,7 +98,7 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
     @Test
     void testRequestRoleInformation_UserNotStoreOwner_Failure() {
         // Create a new user and try to get store roles
-        Response<UserDTO> newUserResult = testHelper.register_and_login2();
+        Response<UserDTO> newUserResult = testHelper.register_and_login3();
         assertTrue(newUserResult.isSuccess());
         int newUserId = newUserResult.getData().getUserId();
 
@@ -112,9 +106,10 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         assertFalse(result.isSuccess());
         assertEquals("Error during getting store roles: User with id: " + newUserId + " has insufficient permissions for store ID: " + storeId, result.getMessage());
     }
-
+ 
     @Test
     void testRequestRoleInformation_Request_administrators_permissions_Success() {
+        
         //no function for that yet
         
     }
