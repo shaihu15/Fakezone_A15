@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.jsoup.select.CombiningEvaluator.Or;
-
-import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -27,7 +24,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
-import DomainLayer.Model.User;
+
 
 public interface ISystemService {
 
