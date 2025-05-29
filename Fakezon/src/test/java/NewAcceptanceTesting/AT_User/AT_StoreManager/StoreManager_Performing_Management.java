@@ -86,24 +86,48 @@ public class StoreManager_Performing_Management {
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
         assertTrue(assignmentMessagesRes.getData().containsKey(storeId), "Expected manager to have pending assignment for the store");
 
+          // Manager accepts the assignment
+        Response<String> acceptRes = systemService.acceptAssignment(storeId, managerUserId);
+        assertTrue(acceptRes.isSuccess(), "Expected manager to successfully accept assignment");
+
     }
 
 
-/* 
+
     @Test
     void testOwnerCanViewRoles() {
         Response<StoreRolesDTO> res = systemService.getStoreRoles(storeId, managerUserId);
         assertTrue(res.isSuccess());
-        //assertNotNull(res.getData());
     }
 
     @Test
     void testManagerCangetAllStoreOrders() {
+        Response<StoreProductDTO> storePResponse = testHelper.addProductToStore(storeId, ownerUserId); //only one product is added
+        assertNotNull(storePResponse.getData());
+        int productIdInt = storePResponse.getData().getProductId();
+        //the product is added to the store
+
+        Response<UserDTO> resultRegister2 = testHelper.register_and_login3();
+        assertTrue(resultRegister2.isSuccess(), "Failed to register and login another user");
+        int registeredId = resultRegister2.getData().getUserId();
+        // resaigter1 is registered and logged in
+
+        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, productIdInt, storeId, 1); 
+        assertTrue(responseAddToBasket.isSuccess());
+
+        Response<String> responsePurchaseCart = systemService.purchaseCart
+                    (registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
+                    "deliveryMethod","1234567890123456","cardHolder", 
+                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                     "Package details");
+        
+        assertTrue(responsePurchaseCart.isSuccess());
+        assertEquals("Cart purchased successfully", responsePurchaseCart.getMessage());
+        
         Response<List<OrderDTO>> purchaseHistoryRes = systemService.getAllStoreOrders(storeId, managerUserId);
-        assertEquals("purchaseHistoryRes", purchaseHistoryRes.getMessage());
         assertTrue(purchaseHistoryRes.isSuccess());
     }
-*/
+
 
 
 }
