@@ -792,8 +792,8 @@ public class SystemService implements ISystemService {
             if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
                 Map<Integer, Map<Integer, Integer>> cart = this.userService.viewCart(userId);
                 if (cart.isEmpty()) {
-                    logger.error("System Service - Cart is empty: " + userId);
-                    return new Response<>(null, "Cart is empty", false, ErrorType.INVALID_INPUT, null);
+                    logger.info("System Service - Cart is empty: " + userId);
+                    return new Response<>(new ArrayList<>(), "Cart is empty", true, null, null);
                 }
                 Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart = storeService.checkIfProductsInStores(userId,
                         cart);
@@ -1845,7 +1845,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> removeFromBasket(int userId, int productId, int storeId) {
         try {
-            if (this.userService.isUserLoggedIn(userId)) {
+            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
                 logger.info("System Service - User is logged in: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);

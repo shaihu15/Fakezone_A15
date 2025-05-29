@@ -95,6 +95,10 @@ public class StoreProductView extends VerticalLayout implements AfterNavigationO
             cartIcon.setSize("30px");
             Button cartButton = new Button(cartIcon);
             cartButton.addClickListener(e -> addToCart(prodDto.getStoreId() ,prodDto.getProductId(), qtyField.getValue()));
+            if(prodDto.getQuantity() == 0){
+                qtyField.setEnabled(false);
+                cartButton.setEnabled(false);
+            }
             HorizontalLayout controls = new HorizontalLayout(qtyField, cartButton);
             controls.setAlignItems(Alignment.END);   
             controls.setSpacing(true);
