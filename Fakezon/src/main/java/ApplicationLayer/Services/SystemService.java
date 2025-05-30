@@ -591,7 +591,6 @@ public class SystemService implements ISystemService {
         try {
             logger.info("System service - user " + requesterId + " trying to add manager " + managerId + " to store: " + storeId);
             storeService.addStoreManager(storeId, requesterId, managerId, perms);
-            userService.addRole(managerId, storeId, new StoreManager());
             return new Response<>(null, "Store manager added successfully", true, null, null);
         } catch (Exception e) {
             logger.error("System service - failed to add manager to store " + e.getMessage());
