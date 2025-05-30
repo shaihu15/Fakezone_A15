@@ -1233,9 +1233,9 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         Dialog dialog = new Dialog();
         TextField textField = new TextField("Message");
         Button send = new Button("Send");
-        send.addClickListener(e -> {if(!textField.isEmpty())
+        send.addClickListener(e -> {if(!textField.isEmpty() && !textField.getValue().trim().isEmpty()){
                                      sendMsg(managerId, storeId, userId, textField.getValue());
-                                     dialog.close();
+                                     dialog.close();}
                                     });
         dialog.add(textField);
         dialog.add(send);

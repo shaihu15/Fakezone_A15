@@ -516,9 +516,9 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         Dialog dialog = new Dialog();
         TextField textField = new TextField("Message");
         Button send = new Button("Send");
-        send.addClickListener(e -> {if(!textField.isEmpty())
+        send.addClickListener(e -> {if(!textField.isEmpty() && !textField.getValue().trim().isEmpty()){
                                      sendMsg(userId, storeId, textField.getValue(), token);
-                                     dialog.close();
+                                     dialog.close();}
                                     });
         dialog.add(textField);
         dialog.add(send);
