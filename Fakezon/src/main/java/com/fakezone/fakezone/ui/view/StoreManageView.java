@@ -189,6 +189,15 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             actionButtonsLayout.add(addOwnerButton);
         }
 
+        // Manage Discounts button
+        if (effectivePermissions.contains(StoreManagerPermission.DISCOUNT_POLICY)) {
+            Button manageDiscountsButton = new Button("Manage Discounts", VaadinIcon.DOLLAR.create());
+            manageDiscountsButton.getStyle().set("background-color", "#FF9800").set("color", "white");
+            manageDiscountsButton.addClickListener(e -> 
+                getUI().ifPresent(ui -> ui.navigate(DiscountView.class, 
+                    new RouteParameters("storeId", String.valueOf(currentStoreId)))));
+            actionButtonsLayout.add(manageDiscountsButton);
+        }
 
         // "View/Manage Roles" button
         if(effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)){
