@@ -305,6 +305,10 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> sendMessageToUser(int managerId, int storeId, int userToAnswer, String message) {
         try {
+            if (message == null || message.trim().isEmpty()) {
+            logger.error("System Service - Message is empty");
+            return new Response<>(null, "Message cannot be empty", false, ErrorType.INVALID_INPUT, null);
+            }
             if (this.userService.isUserLoggedIn(managerId)) {
                 if (this.storeService.isStoreOpen(storeId)) {
                     this.storeService.sendMessageToUser(managerId, storeId, userToAnswer, message);
