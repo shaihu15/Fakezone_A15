@@ -1,4 +1,5 @@
 package ApplicationLayer.DTO;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ApplicationLayer.Enums.PCategory;
@@ -29,7 +30,7 @@ public class ProductDTO {
     public ProductDTO() {
     // Default constructor
     }
-
+    @JsonCreator
     public ProductDTO(String name, String description, int id,PCategory category, Set<Integer> storeIds) {
         this.name = name;
         this.description = description;

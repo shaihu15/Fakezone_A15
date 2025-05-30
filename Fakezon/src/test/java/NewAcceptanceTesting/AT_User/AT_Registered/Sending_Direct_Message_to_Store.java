@@ -68,6 +68,7 @@ public class Sending_Direct_Message_to_Store {
     int registeredId;
     int storeId;
     int productId;
+    int storeOwnerId;
 
     @BeforeEach
     void setUp() {
@@ -88,7 +89,7 @@ public class Sending_Direct_Message_to_Store {
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> storeOwner = testHelper.register_and_login();
-        int storeOwnerId = storeOwner.getData().getUserId();
+        this.storeOwnerId = storeOwner.getData().getUserId();
 
         String storeName = "Test Store";
         Response<Integer> resultAddStore = systemService.addStore(storeOwnerId, storeName);
@@ -127,7 +128,7 @@ public class Sending_Direct_Message_to_Store {
         assertEquals("Message sent successfully", response.getMessage());
 
         // Verify that the message was sent
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("Messages retrieved successfully", messagesResponse.getMessage());
         assertTrue(messagesResponse.isSuccess());
         HashMap<Integer, String> messages = messagesResponse.getData();
@@ -141,7 +142,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Message cannot be empty", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -152,7 +153,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Message cannot be empty", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -165,7 +166,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Error during sending message to store: Store not found", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -178,7 +179,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Error during sending message to store: User not found", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -193,7 +194,7 @@ public class Sending_Direct_Message_to_Store {
         assertEquals("Message sent successfully", response.getMessage());
 
                 // Verify that the message was sent
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("Messages retrieved successfully", messagesResponse.getMessage());
         assertTrue(messagesResponse.isSuccess());
         HashMap<Integer, String> messages = messagesResponse.getData();

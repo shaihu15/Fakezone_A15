@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -692,6 +694,7 @@ public class SystemService implements ISystemService {
             for (ProductDTO prod : products) {
                 if (prod.getName().equals(productName)) {
                     product = prod;
+                    description = prod.getDescription();
                     break;
                 }
             }
@@ -787,14 +790,14 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<CartItemInfoDTO>> viewCart(int userId) { //storeid -> <prodId -> bool>
+    public Response<List<CartItemInfoDTO>> viewCart(int userId) { 
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
                 Map<Integer, Map<Integer, Integer>> cart = this.userService.viewCart(userId);
                 if (cart.isEmpty()) {
-                    logger.error("System Service - Cart is empty: " + userId);
-                    return new Response<>(null, "Cart is empty", false, ErrorType.INVALID_INPUT, null);
+                    logger.info("System Service - Cart is empty: " + userId);
+                    return new Response<>(new ArrayList<>(), "Cart is empty", true, null, null);
                 }
                 Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart = storeService.checkIfProductsInStores(userId,
                         cart);
@@ -814,10 +817,10 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId) {
+    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId) {
         try{
             if (this.storeService.isStoreOpen(storeId)) {
-                return this.storeService.getAllStoreMessages(storeId);
+                return this.storeService.getAllStoreMessages(storeId, userId);
             } else {
                 logger.error("System Service - Store is closed: " + storeId);
                 return new Response<HashMap<Integer, String>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
@@ -890,7 +893,7 @@ public class SystemService implements ISystemService {
         double totalPrice = 0;
         Cart cart = null;
         boolean returnProductInCaseOfError = false;//so the return will happen only ones
-
+        
         Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCartDTO = null;
         try {
             logger.info("System service - user " + userId + " trying to purchase cart");
@@ -1769,7 +1772,7 @@ public class SystemService implements ISystemService {
         List<CartItemInfoDTO> items = new ArrayList<>();
         for (StoreDTO store : cart.keySet()) {
             for (StoreProductDTO product : cart.get(store).keySet()) {
-                items.add(new CartItemInfoDTO(store.getStoreId(), product.getProductId(), store.getName(), product.getName(), product.getQuantity(), cart.get(store).get(product), product.getBasePrice()));
+                items.add(new CartItemInfoDTO(store.getStoreId(), product.getProductId(), store.getName(), product.getName(), product.getQuantity(), cart.get(store).get(product), product.getBasePrice(), false));
             }
         }
         return items;
@@ -1846,7 +1849,7 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> removeFromBasket(int userId, int productId, int storeId) {
         try {
-            if (this.userService.isUserLoggedIn(userId)) {
+            if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
                 logger.info("System Service - User is logged in: " + userId);
             } else {
                 logger.error("System Service - User is not logged in: " + userId);
@@ -1910,6 +1913,22 @@ public class SystemService implements ISystemService {
         catch (Exception e){
             logger.info("isStoreManager failed");
             return new Response<List<StoreManagerPermission>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<List<AuctionProductDTO>> getAuctionProductsFromStore(int storeId, int userId){
+        try{
+            logger.info("User " + userId + " Trying to fetch auction products from store " + storeId);
+            if(userService.isUnsignedUser(userId)){
+                return new Response<List<AuctionProductDTO>>(null, "User is not logged in",false, ErrorType.UNAUTHORIZED, null);
+            }
+            List<AuctionProductDTO> prods = storeService.getAuctionProductsFromStore(storeId);
+            logger.info("success getAuctionProductsFromStore");
+            return new Response<List<AuctionProductDTO>>(prods, null, true, null, null);
+        }
+        catch(Exception e){
+            return new Response<List<AuctionProductDTO>>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
@@ -2197,6 +2216,23 @@ public class SystemService implements ISystemService {
         } catch (Exception e) {
             logger.error("System Service - Error during adding XOR discount with store scope: " + e.getMessage());
             return new Response<>(null, "Error during adding XOR discount with store scope: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<HashMap<Integer, String>> getMessagesFromStore(int userID) {
+        try {
+            if (this.userService.isUserLoggedIn(userID)) {
+                return this.userService.getMessagesFromStore(userID);
+            } else {
+                logger.error("System Service - User is not logged in: " + userID);
+                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                        ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all messages: " + e.getMessage());
+            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+                    false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 

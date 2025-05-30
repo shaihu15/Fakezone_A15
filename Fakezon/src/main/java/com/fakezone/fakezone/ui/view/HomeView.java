@@ -101,10 +101,11 @@ public class HomeView extends Main {
                 // ─── Quantity selector ─────────────────────────────
                 IntegerField qtyField = new IntegerField("Quantity:");
                 qtyField.setStepButtonsVisible(true);
-                qtyField.setMin(1);
-                qtyField.setMax(Math.min(1,p.getQuantity()));        // optional: cap at available stock
+                qtyField.setMin(0);
+                qtyField.setMax(p.getQuantity());        // optional: cap at available stock
                 qtyField.setValue(1);
                 qtyField.setWidth("100px");
+                qtyField.setEnabled(true);
 
                 VerticalLayout fullCard = new VerticalLayout();
                 fullCard.setWidth("200px");
@@ -128,8 +129,9 @@ public class HomeView extends Main {
                 if(p.getQuantity() == 0){
                     fullCard.getStyle()
                         .set("opacity", "0.6")
-                        .set("background", "#f8f8f8")
-                        .set("pointer-events", "none");
+                        .set("background", "#f8f8f8");
+                    qtyField.setEnabled(false);
+                    cartButton.setEnabled(false);
                 }
                 cardsRow.add(fullCard);
             }

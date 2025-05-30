@@ -31,9 +31,7 @@ class StoreProductTest {
         assertEquals(original.getName(), copy.getName());
         assertEquals(original.getBasePrice(), copy.getBasePrice());
         assertEquals(original.getQuantity(), copy.getQuantity());
-        // Note: category is not copied in the copy constructor in your code
-        // So this will be null
-        assertNull(copy.getCategory());
+        assertEquals(original.getCategory() ,copy.getCategory());
     }
 
     @Test

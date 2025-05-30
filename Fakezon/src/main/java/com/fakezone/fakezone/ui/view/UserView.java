@@ -1,16 +1,18 @@
 package com.fakezone.fakezone.ui.view;
 
+
 import java.util.*;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -18,7 +20,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
@@ -26,6 +27,7 @@ import com.vaadin.flow.server.VaadinRequest;
 
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.RoleName;
 import jakarta.servlet.http.HttpSession;
@@ -33,13 +35,16 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @Route(value = "user", layout = MainLayout.class)
 public class UserView extends VerticalLayout implements BeforeEnterObserver {
-     private final String backendUrl = "http://localhost:8080";
+    private final String backendUrl;
+    private final String websiteUrl;
     private final RestTemplate restTemplate;
 
     // Declare card layouts as instance variables
     private VerticalLayout ownedStoresCard;
     private VerticalLayout managedStoresCard;
     private VerticalLayout pendingAssignmentsCard;
+    private VerticalLayout messagesFromStoreCard;
+    private VerticalLayout auctionMessagesCard;
     private Button openStoreButton; // Also declare button as instance variable
 
     private static final Set<String> OWNERSHIP_ROLES = Set.of(
@@ -50,9 +55,11 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         RoleName.STORE_MANAGER.name()
     );
 
-    public UserView() {
+    public UserView(@Value("${api.url}") String apiUrl, @Value("${website.url}") String webUrl) {
+        this.backendUrl = apiUrl;
+        this.websiteUrl = webUrl;
         restTemplate = new RestTemplate();
-        restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
 
         setPadding(true);
         setSpacing(true);
@@ -63,10 +70,12 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         ownedStoresCard = createCardLayout("My Stores");
         managedStoresCard = createCardLayout("Stores I Manage");
         pendingAssignmentsCard = createCardLayout("Pending Assignments");
+        messagesFromStoreCard = createCardLayout("Messages From Stores");
+        auctionMessagesCard = createCardLayout("Auction Messages");
         openStoreButton = new Button("Open a Store"); // Listener will be set in beforeEnter
 
         // Add them to the view initially. Their content will be updated in beforeEnter.
-        add(openStoreButton, ownedStoresCard, managedStoresCard, pendingAssignmentsCard);
+        add(openStoreButton, ownedStoresCard, managedStoresCard, pendingAssignmentsCard, messagesFromStoreCard, auctionMessagesCard);
     }
 
     // Helper method to create a card layout with common styling
@@ -88,13 +97,13 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         UserDTO userDTO = session != null ? (UserDTO) session.getAttribute("userDTO") : null;
 
         if (token == null || userDTO == null) {
-            event.rerouteTo("login");
+            event.rerouteTo("");
             Notification.show("Please log in to view this page.", 3000, Notification.Position.MIDDLE);
             return;
         }
 
         if (isGuestToken(session)) {
-            event.rerouteTo("login");
+            event.rerouteTo("");
             Notification.show("Please log in as a registered user to view this page.", 3000, Notification.Position.MIDDLE);
             return;
         }
@@ -112,6 +121,8 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         updateOwnedStores(userId, tokenValue);
         updateManagedStores(userId, tokenValue);
         refreshPendingAssignments(userId, tokenValue); // This already clears its content
+        updateMsgFromStores(userId, tokenValue);
+        updateAuctionMsgs(userId, tokenValue);
     }
 
     private void updateOwnedStores(int userId, String token) {
@@ -170,7 +181,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
 
 
     private void acceptAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
-        String url = String.format(backendUrl + "/api/store/acceptAssignment/%d/%d", storeId, userId);
+        String url = String.format(backendUrl + "store/acceptAssignment/%d/%d", storeId, userId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -197,7 +208,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void declineAssignment(int storeId, int userId, String token, VerticalLayout assignmentCard) {
-        String url = String.format(backendUrl + "/api/store/declineAssignment/%d/%d", storeId, userId);
+        String url = String.format(backendUrl + "store/declineAssignment/%d/%d", storeId, userId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -224,7 +235,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         pendingAssignmentsCard.removeAll();
         pendingAssignmentsCard.add(new H2("Pending Assignments")); // Re-add the title
 
-        String assignmentsUrl = String.format(backendUrl + "/api/user/getAssignmentMessages/%d", userId);
+        String assignmentsUrl = String.format(backendUrl + "user/getAssignmentMessages/%d", userId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -296,7 +307,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void addStore(int userId, String storeName, String token, Dialog dialog) {
-        String url = backendUrl + "/api/store/addStore/" + userId + "/" + storeName;
+        String url = backendUrl + "store/addStore/" + userId + "/" + storeName;
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -325,7 +336,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
     private boolean isGuestToken(HttpSession session) {
         String token = (String) session.getAttribute("token");
         RestTemplate restTemplate = new RestTemplate();
-        String url = backendUrl + "/api/user/isGuestToken";
+        String url = backendUrl + "user/isGuestToken";
         try {
             ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
             Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
@@ -341,7 +352,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = String.format(backendUrl + "/api/user/userRoles/%d", userId);
+        String url = String.format(backendUrl + "user/userRoles/%d", userId);
 
         try {
             ResponseEntity<Response<Map<Integer, Map<String, String>>>> response =
@@ -380,7 +391,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = String.format(backendUrl + "/api/store/viewStore/%d", storeId);
+        String url = String.format(backendUrl + "store/viewStore/%d", storeId);
 
         try {
             ResponseEntity<Response<StoreDTO>> response =
@@ -436,4 +447,196 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         layout.add(link, infoLayout);
         return layout;
     }
+
+    private void updateMsgFromStores(int userId, String token){
+        messagesFromStoreCard.removeAll();
+        messagesFromStoreCard.add(new H2("Messages From Stores"));
+        String url = backendUrl + "user/getMessagesFromStore/" + userId;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
+        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            if(response.getData() == null || response.getData().isEmpty()){
+                messagesFromStoreCard.add(new Span("No Messages from Stores"));
+            }
+            else{
+                HashMap<Integer, String> msgs  = response.getData();
+                for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
+                    Integer storeId = entry.getKey();
+                    String messageText = entry.getValue();
+
+                    // Fetch store info
+                    StoreDTO store = getStoreDTO(storeId, token);
+                    String storeName = store.getName();
+
+                    // ─── Build a “message card” ─────────────────────────────
+                    // Container for one message
+                    VerticalLayout messageCard = new VerticalLayout();
+                    messageCard.getStyle()
+                            .set("border", "1px solid #ccc")
+                            .set("border-radius", "4px")
+                            .set("padding", "0.5em")
+                            .set("margin-bottom", "0.5em")
+                            .set("width", "100%");
+
+                    // Store name (bold)
+                    H4 nameHeader = new H4(storeName);
+                    nameHeader.getStyle().set("margin", "0");
+
+                    // The message body
+                    Span body = new Span(messageText);
+                    body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
+
+                    // Reply button stub
+                    Button replyBtn = new Button("Reply");
+                    replyBtn.addClickListener(evt -> {
+                        replyDialog(userId, storeId, token);
+                    });
+
+                    // Assemble card
+                    messageCard.add(nameHeader, body, replyBtn);
+
+                    // Add to the main container
+                    messagesFromStoreCard.add(messageCard);
+                }
+            }
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void replyDialog(int userId, int storeId, String token){
+        Dialog dialog = new Dialog();
+        TextField textField = new TextField("Message");
+        Button send = new Button("Send");
+        send.addClickListener(e -> {if(!textField.isEmpty())
+                                     sendMsg(userId, storeId, textField.getValue(), token);
+                                     dialog.close();
+                                    });
+        dialog.add(textField);
+        dialog.add(send);
+        dialog.open();
+    }
+
+    private void sendMsg(int userId, int storeId, String msg, String token){
+        String url = backendUrl + "user/sendMessageToStore/" + userId + "/" + storeId;
+        Request<String> req = new Request<>(token, msg);
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Request<String>> entity = new HttpEntity<>(req, header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Message Sent Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void updateAuctionMsgs(int userId, String token){
+        auctionMessagesCard.removeAll();
+        auctionMessagesCard.add(new H2("Auction Messages"));
+        String url = backendUrl + "user/getAuctionEndedMessages/" + userId;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
+        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            if(response.getData() == null || response.getData().isEmpty()){
+                auctionMessagesCard.add(new Span("No Auction Messages"));
+            }
+            else{
+                HashMap<Integer, String> msgs  = response.getData();
+                for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
+                    Integer storeId = entry.getKey();
+                    String messageText = entry.getValue();
+
+                    // Fetch store info
+                    StoreDTO store = getStoreDTO(storeId, token);
+                    String storeName = store.getName();
+
+                    // ─── Build a “message card” ─────────────────────────────
+                    // Container for one message
+                    VerticalLayout messageCard = new VerticalLayout();
+                    messageCard.getStyle()
+                            .set("border", "1px solid #ccc")
+                            .set("border-radius", "4px")
+                            .set("padding", "0.5em")
+                            .set("margin-bottom", "0.5em")
+                            .set("width", "100%");
+
+                    // Store name (bold)
+                    H4 nameHeader = new H4(storeName);
+                    nameHeader.getStyle().set("margin", "0");
+
+                    // The message body
+                    Span body = new Span(messageText);
+                    body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
+                    // WHEN MSGS ARE FIXED SHOULD REMOVE THIS STRING SPLICING VVVVVVVVV
+                    String prefix  = "product ";
+                    String suffix  = ". Highest bid";
+                    int start = messageText.indexOf(prefix) + prefix.length();
+                    int end   = messageText.indexOf(suffix, start);
+                    String productIdString = messageText.substring(start, end);
+                    int productId = Integer.parseInt(productIdString);
+                    // Reply button stub
+                    Button accButton = new Button("Accept Bid");
+                    accButton.addClickListener(evt -> {
+                        sendResponseForAuction(storeId, userId, productId, token, true);
+                    });
+
+                    Button decButton = new Button("Decline Bid");
+                    decButton.addClickListener(evt -> {
+                        sendResponseForAuction(userId, storeId, productId, token, false);
+                    });
+
+                    // Assemble card
+                    messageCard.add(nameHeader, body, accButton, decButton);
+
+                    // Add to the main container
+                    auctionMessagesCard.add(messageCard);
+                }
+            }
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void sendResponseForAuction(int storeId, int userId, int productId, String token, boolean answer){
+        String url = backendUrl + "store/sendResponseForAuctionByOwner/" + storeId + "/" + userId + "/" + productId + "?accept=" + answer;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Message Sent Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }   
+    }
+
 }

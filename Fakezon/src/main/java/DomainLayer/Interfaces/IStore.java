@@ -111,7 +111,7 @@ public interface IStore {
     
     double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob, Cart cart);
 
-    HashMap<Integer, String> getAllStoreMessages();
+    HashMap<Integer, String> getAllStoreMessages(int userId);
 
     Map<StoreProductDTO, Boolean> checkIfProductsInStore(int userID, Map<Integer,Integer> products);
 

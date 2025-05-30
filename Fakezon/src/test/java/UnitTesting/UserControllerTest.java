@@ -98,7 +98,7 @@ class UserControllerTest {
         StoreDTO storeDTO = mock(StoreDTO.class);
 
         Map<StoreDTO, Map<StoreProductDTO, Boolean>> cartMap = Map.of(storeDTO, storeProductMap);
-        List<CartItemInfoDTO> cartList = new ArrayList<>(List.of(new CartItemInfoDTO(storeId, productId, "test", "Product", quantity, true, 10.0)));
+        List<CartItemInfoDTO> cartList = new ArrayList<>(List.of(new CartItemInfoDTO(storeId, productId, "test", "Product", quantity, true, 10.0, false)));
 
         when(systemService.viewCart(userId)).thenReturn(new Response<>(cartList, "Cart retrieved successfully", true, null, null));
 

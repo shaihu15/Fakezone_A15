@@ -165,7 +165,11 @@ public class Store implements IStore {
 
         try{
             if (auctionProducts.containsKey(productID)) {
-                int prevId = auctionProducts.get(productID).addBid(requesterId, bidAmount);
+                AuctionProduct ap = auctionProducts.get(productID);
+                if(ap.isDone()){
+                    throw new IllegalArgumentException("Auction is Done");
+                }
+                int prevId = ap.addBid(requesterId, bidAmount);
                 if(prevId == requesterId) return false;
                 if(prevId != -1) handleRecivedHigherBid(prevId, productID);
                 return true;
@@ -237,8 +241,8 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
             StoreProduct storeProduct = storeProducts.get(productID);
-            storeProducts.put(productID, new StoreProduct(productID,storeID, name, basePrice, quantity, storeProduct.getCategory())); //overrides old product
-
+            storeProduct.setQuantity(quantity);
+            storeProduct.setBasePrice(basePrice);
         }
         catch(Exception e){
             throw e;
@@ -559,8 +563,9 @@ public class Store implements IStore {
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                     } else {
                         this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
-                                auctionProduct.getBasePrice(), "Auction failed, no bids were placed"));
+                                auctionProduct.getCurrentHighestBid(), "Auction failed, no bids were placed"));
                     }
+                    auctionProduct.setIsDone(true);
                 
             } else {
                 throw new IllegalArgumentException(
@@ -603,7 +608,7 @@ public class Store implements IStore {
                 this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
                         auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                 this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(),
-                        auctionProduct.getBasePrice(), "Auction failed, out of stock"));
+                        auctionProduct.getCurrentHighestBid(), "Auction failed, out of stock"));
                 throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID()
                         + " is out of stock in store ID: " + storeID);
             }
@@ -618,7 +623,7 @@ public class Store implements IStore {
         this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
         this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(),
-                auctionProduct.getBasePrice(), "Auction failed, declined by owners"));
+                auctionProduct.getCurrentHighestBid(), "Auction failed, declined by owners"));
 
         auctionProducts.remove(auctionProduct.getProductID());
 
@@ -836,12 +841,24 @@ public class Store implements IStore {
 
     @Override
     public boolean isOwner(int userId) {
-        return storeOwners.contains(userId);
+        rolesLock.lock();
+        try{
+            return storeOwners.contains(userId);
+        }
+        finally{
+            rolesLock.unlock();
+        }
     }
 
     @Override
     public boolean isManager(int userId) {
-        return storeManagers.containsKey(userId);
+        rolesLock.lock();
+        try{
+            return storeManagers.containsKey(userId);
+        }
+        finally{
+            rolesLock.unlock();
+        }
     }
  @Override
     public void addStoreManager(int appointor, int appointee, List<StoreManagerPermission> perms) {
@@ -1267,9 +1284,14 @@ public class Store implements IStore {
             }
             if (auctionProducts.containsKey(productId)) {
                 AuctionProduct auctionProduct = auctionProducts.get(productId);
-                if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isApprovedByAllOwners()) {
+                if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone() && auctionProduct.isApprovedByAllOwners()) {
                     amount += auctionProduct.getCurrentHighestBid();
+                    amount += auctionProduct.getBasePrice() * (quantity - 1); 
                 }
+                else{
+                    amount += auctionProduct.getBasePrice() * quantity;
+                }
+                
             } else {
                 amount += product.getBasePrice() * quantity;
             }
@@ -1279,7 +1301,7 @@ public class Store implements IStore {
     
         amount -= totalDiscount;
         return amount;
-}
+    }
 
 
     @Override
@@ -1348,16 +1370,25 @@ public class Store implements IStore {
     }
 
     @Override
-    public HashMap<Integer, String> getAllStoreMessages(){
+    public HashMap<Integer, String> getAllStoreMessages(int userId){
+        rolesLock.lock();
         try{
-            HashMap<Integer, String> messages = new HashMap<>();
-            for (SimpleEntry<Integer, String> message : messagesFromUsers) {
-                messages.put(message.getKey(), message.getValue());
+            if(isOwner(userId) || (isManager(userId) && storeManagers.get(userId).contains(StoreManagerPermission.REQUESTS_REPLY))){
+                HashMap<Integer, String> messages = new HashMap<>();
+                for (SimpleEntry<Integer, String> message : messagesFromUsers) {
+                    messages.put(message.getKey(), message.getValue());
+                }
+                return messages ;
             }
-            return messages ;
+            else{
+                throw new IllegalArgumentException("Insufficient Permissions");
+            }
         }
         catch(Exception e){
             throw e;
+        }
+        finally{
+            rolesLock.unlock();
         }
 
     }

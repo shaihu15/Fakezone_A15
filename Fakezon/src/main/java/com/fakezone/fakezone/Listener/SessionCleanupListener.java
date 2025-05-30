@@ -71,6 +71,7 @@ public class SessionCleanupListener implements HttpSessionListener {
     }
 
     private boolean isGuestToken(String token){
+        restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         String url = apiUrl + "user/isGuestToken";
         ResponseEntity<Response<Boolean>> apiResponse = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(token), new ParameterizedTypeReference<Response<Boolean>>() {});
         

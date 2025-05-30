@@ -364,10 +364,10 @@ class StoreServiceTest {
         HashMap<Integer, String> messages = new HashMap<>();
         messages.put(1, "Hello");
         when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
-        when(mockStore.getAllStoreMessages()).thenReturn(messages);
+        when(mockStore.getAllStoreMessages(1)).thenReturn(messages);
 
         StoreService service = new StoreService(mockStoreRepository, publisher);
-        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
 
         assertTrue(response.isSuccess());
         assertEquals(messages, response.getData());
@@ -379,10 +379,10 @@ class StoreServiceTest {
         int storeId = 2;
         Store mockStore = mock(Store.class);
         when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
-        when(mockStore.getAllStoreMessages()).thenReturn(new HashMap<>());
+        when(mockStore.getAllStoreMessages(1)).thenReturn(new HashMap<>());
 
         StoreService service = new StoreService(mockStoreRepository, publisher);
-        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
 
         assertFalse(response.isSuccess());
         assertNull(response.getData());
@@ -394,10 +394,10 @@ class StoreServiceTest {
         int storeId = 3;
         Store mockStore = mock(Store.class);
         when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
-        when(mockStore.getAllStoreMessages()).thenThrow(new IllegalArgumentException("DB error"));
+        when(mockStore.getAllStoreMessages(1)).thenThrow(new IllegalArgumentException("DB error"));
         StoreService service = new StoreService(mockStoreRepository, publisher);
     
-        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
     
         assertFalse(response.isSuccess());
         assertNull(response.getData());
@@ -410,7 +410,7 @@ class StoreServiceTest {
             when(mockStoreRepository.findById(storeId)).thenReturn(null);
 
             StoreService service = new StoreService(mockStoreRepository, publisher);
-            Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId);
+            Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
 
             assertFalse(response.isSuccess());
             assertNull(response.getData());

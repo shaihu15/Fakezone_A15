@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 
@@ -98,5 +99,8 @@ public class User {
     public void removeFromBasket(int storeId, int productId){
         cart.removeItem(storeId, productId);
     }
+
+
+
 
 }

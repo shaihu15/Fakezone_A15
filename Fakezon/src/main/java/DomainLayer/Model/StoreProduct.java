@@ -34,6 +34,7 @@ public class StoreProduct {
         this.name = storeProduct.name;
         this.basePrice = storeProduct.basePrice;
         this.quantity = storeProduct.quantity;
+        this.category = storeProduct.getCategory();
     }
 
     public int getSproductID() {
@@ -101,6 +102,13 @@ public class StoreProduct {
 
     public synchronized List<ProductRating> getAllRatings(){
         return new ArrayList<>(this.Pratings.values());
+    }
+
+    public synchronized void setBasePrice(double basePrice) {
+        if(basePrice <= 0) {
+            throw new IllegalArgumentException("basePrice cannot be negative");
+        }
+        this.basePrice = basePrice;
     }
 
 }

@@ -8,6 +8,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import org.jsoup.select.CombiningEvaluator.Or;
+
+import ApplicationLayer.DTO.AuctionProductDTO;
+import ApplicationLayer.DTO.BasketDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -96,7 +100,7 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
-    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId);
+    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
 
     Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
 
@@ -199,6 +203,8 @@ public interface ISystemService {
 
     Response<List<StoreManagerPermission>> isStoreManager(int storeId, int userId);
 
+    Response<List<AuctionProductDTO>> getAuctionProductsFromStore(int storeId, int userId);
+
     Response<List<OrderDTO>> getOrdersByUserId(int userId);
 
     boolean isStoreOpen(int storeId);
@@ -232,5 +238,7 @@ public interface ISystemService {
 
     Response<Void> addXorDiscountWithStoreScope(int storeId, int requesterId, int cartId,
             List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
+
+    Response<HashMap<Integer, String>> getMessagesFromStore(int userID);
 
 }

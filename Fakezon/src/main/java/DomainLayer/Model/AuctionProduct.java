@@ -13,6 +13,7 @@ public class AuctionProduct extends StoreProduct {
     private int productID;
     private int userIDHighestBid;
     private Map<Integer, Boolean> bidApprovedByOwners = new HashMap<>(); // userID -> approved
+    private boolean isDone;
 
     public AuctionProduct(StoreProduct storeProduct, double basePrice, int MinutesToEnd) {
         super(storeProduct);
@@ -21,6 +22,7 @@ public class AuctionProduct extends StoreProduct {
         this.productID = storeProduct.getSproductID();
         this.userIDHighestBid = -1;// -1 means no bids yet
         this.bidApprovedByOwners = new HashMap<>();
+        this.isDone = false;
     }
 
     public double getCurrentHighestBid() {
@@ -77,6 +79,14 @@ public class AuctionProduct extends StoreProduct {
             throw new IllegalArgumentException("Added minutes must be greater than 0");
         }
         MinutesToEnd += minutes;
+    }
+
+    public boolean isDone(){
+        return isDone;
+    }
+
+    public void setIsDone(boolean isDone){
+        this.isDone = isDone;
     }
 
     

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -112,5 +113,7 @@ public interface IUserService {
     void clearAllData();
 
     void removeAssignmentMessage(int storeId, int userId);
+
+    Response<HashMap<Integer, String>> getMessagesFromStore(int userID);
 
 }

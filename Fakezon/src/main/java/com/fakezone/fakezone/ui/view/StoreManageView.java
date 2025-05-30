@@ -1,51 +1,61 @@
 package com.fakezone.fakezone.ui.view;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
+import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
-// import ApplicationLayer.Request; // No longer needed for @RequestParam endpoints
+import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.web.client.DefaultResponseErrorHandler;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,7 +63,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @Route(value = "store/:storeId/manage", layout = MainLayout.class)
 public class StoreManageView extends VerticalLayout implements BeforeEnterObserver{
 
-    private final String backendUrl;
+    private final String apiUrl;
     private final RestTemplate restTemplate;
     private final Span loading = new Span("Loading store...");
     private final String webUrl;
@@ -64,9 +74,11 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     private Set<StoreManagerPermission> effectivePermissions = new HashSet<>();
     private VerticalLayout rolesDisplaySection; // New section for roles details
     private int storeId;
-    public StoreManageView(@Value("${api.url}") String backendUrl, @Value("${website.url}") String websiteUrl) {
+    private boolean isOwner;
+    private boolean isManager;
+    public StoreManageView(@Value("${api.url}") String apiUrl, @Value("${website.url}") String websiteUrl) {
         this.webUrl = websiteUrl;
-        this.backendUrl = backendUrl;
+        this.apiUrl = apiUrl;
         restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new EmptyResponseErrorHandler());
         setPadding(true);
@@ -78,15 +90,35 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        RouteParameters params = event.getRouteParameters();
+        Optional<String> optStoreId = params.get("storeId");
+        if(optStoreId.isPresent()){
+            this.storeId = Integer.parseInt(optStoreId.get());
+        }
+        else{
+            event.rerouteTo(""); // go to home if no storeId
+        }
+        this.isOwner = isOwner();
+        if(isOwner){
+            this.isManager = true;
+        }
+        else{
+            this.isManager = isManager();
+        }
+        if(!isManager && !isOwner){
+            event.rerouteTo("");
+            UI.getCurrent().navigate("");
+        }
         removeAll();
         add(loading);
+        
 
         HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
         HttpSession session = httpRequest.getSession(false);
         String token = session != null ? (String) session.getAttribute("token") : null;
         UserDTO userDTO = session != null ? (UserDTO) session.getAttribute("userDTO") : null;
 
-        System.out.println("StoreView: token=" + (token != null ? "present" : "null") + ", userId=" + (userDTO != null ? userDTO.getUserId() : "null"));
+        System.out.println("StoreManageView: token=" + (token != null ? "present" : "null") + ", userId=" + (userDTO != null ? userDTO.getUserId() : "null"));
 
         if (token == null || userDTO == null) {
             event.rerouteTo(""); // route to home (shouldn't happen)
@@ -97,14 +129,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
         this.currentUserDTO = userDTO;
         this.currentToken = token;
-        RouteParameters params = event.getRouteParameters();
-        Optional<String> optStoreId = params.get("storeId");
-        if(optStoreId.isPresent()){
-            this.storeId = Integer.parseInt(optStoreId.get());
-        }
-        else{
-            event.rerouteTo(""); // go to home if no storeId
-        }
+        
 
         this.currentStoreId = storeId; // Store storeId
 
@@ -128,24 +153,36 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         actionButtonsLayout.setAlignItems(Alignment.CENTER);
         actionButtonsLayout.getStyle().set("margin-top", "10px");
 
-        // Add Product button
+        // INVENTORY buttons
         if (effectivePermissions.contains(StoreManagerPermission.INVENTORY)) {
+            //ADD PRODUCT
             Button addProductButton = new Button("Add Product", VaadinIcon.PLUS.create());
             addProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
             addProductButton.addClickListener(e -> showAddProductDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
             actionButtonsLayout.add(addProductButton);
-        }
+            //ADD AUCTION PRODUCT
+            Button addAuctionProductButton = new Button("Add Auction Product", VaadinIcon.PLUS.create());
+            addAuctionProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            addAuctionProductButton.addClickListener(e -> showAddAuctionProductDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
+            actionButtonsLayout.add(addAuctionProductButton);
+            //REMOVE PRODUCT
+            Button removeProductButton = new Button("Remove Product", VaadinIcon.MINUS.create());
+            removeProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            removeProductButton.addClickListener(e -> removeProductDialog());
+            actionButtonsLayout.add(removeProductButton);
+            //EDIT PRODUCT
+            Button editProductButton = new Button("Edit Product", VaadinIcon.PENCIL.create());
+            editProductButton.getStyle().set("background-color", "#1976D2").set("color", "white");
+            editProductButton.addClickListener(e -> editProductDialog());
+            actionButtonsLayout.add(editProductButton);
 
-        // Add Manager button
-        if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) { // Assuming VIEW_ROLES for adding roles
+        }
+        // Add Manager & Add Owner button
+        if (isOwner) { 
             Button addManagerButton = new Button("Add Manager", VaadinIcon.PLUS.create());
             addManagerButton.getStyle().set("background-color", "#1976D2").set("color", "white");
             addManagerButton.addClickListener(e -> showAddManagerDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
             actionButtonsLayout.add(addManagerButton);
-        }
-
-        // Add Owner button
-        if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) { // Assuming VIEW_ROLES for adding roles
             Button addOwnerButton = new Button("Add Owner", VaadinIcon.PLUS.create());
             addOwnerButton.getStyle().set("background-color", "#1976D2").set("color", "white");
             addOwnerButton.addClickListener(e -> showAddOwnerDialog(currentStoreId, currentUserDTO.getUserId(), currentToken));
@@ -154,9 +191,24 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
 
         // "View/Manage Roles" button
-        Button viewManageRolesButton = new Button("View/Manage Roles", e -> showStoreManagementSection());
-        viewManageRolesButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
-        actionButtonsLayout.add(viewManageRolesButton);
+        if(effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)){
+            Button viewManageRolesButton = new Button("View Roles", e -> showStoreManagementSection());
+            viewManageRolesButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
+            actionButtonsLayout.add(viewManageRolesButton);
+        }
+
+        if(effectivePermissions.contains(StoreManagerPermission.REQUESTS_REPLY)){
+            Button viewMsgs = new Button("View Messages", e -> showMsgs());
+            viewMsgs.getStyle().set("background-color", "#2E7D32").set("color", "white");
+            actionButtonsLayout.add(viewMsgs);
+        }
+
+        if(effectivePermissions.contains(StoreManagerPermission.VIEW_PURCHASES)){
+            Button viewPurchasesButton = new Button ("View Purchases");
+            viewPurchasesButton.getStyle().set("background-color", "#2E7D32").set("color", "white");
+            viewPurchasesButton.addClickListener(e -> viewPurchases());
+            actionButtonsLayout.add(viewPurchasesButton);
+        }
 
 
         RouterLink backLink = new RouterLink("Back to Store", StorePageView.class, new RouteParameters("storeId", String.valueOf(this.storeId)));        
@@ -173,53 +225,8 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void fetchUserPermissionsForStore(int storeId, int userId, String token) {
-        String rolesUrl = String.format(backendUrl + "store/getStoreRoles/%d/%d", storeId, userId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<Response<StoreRolesDTO>> rolesResponse =
-                restTemplate.exchange(
-                    rolesUrl,
-                    HttpMethod.GET,
-                    entity,
-                    new ParameterizedTypeReference<>() {}
-                );
-
-            if (rolesResponse.getStatusCode().is2xxSuccessful() && rolesResponse.getBody().isSuccess()) {
-                StoreRolesDTO roles = rolesResponse.getBody().getData();
-                effectivePermissions.clear(); // Clear previous permissions
-
-                if (roles != null) {
-                    // Determine effective permissions for the current user (userId)
-                    if (roles.getFounderId() == userId) {
-                        effectivePermissions.addAll(Set.of(StoreManagerPermission.values())); // Founder has all permissions
-                    } else if (roles.getStoreOwners() != null && roles.getStoreOwners().contains(userId)) {
-                        effectivePermissions.addAll(Set.of(StoreManagerPermission.values())); // Owners have all permissions
-                    } else if (roles.getStoreManagers() != null && roles.getStoreManagers().containsKey(userId)) {
-                        List<StoreManagerPermission> managerPermissions = roles.getStoreManagers().get(userId);
-                        if (managerPermissions != null) {
-                            effectivePermissions.addAll(managerPermissions);
-                        }
-                    }
-                }
-            } else {
-                // If backend returns an error or success=false, we still try to proceed
-                // but effectivePermissions will remain empty or as is.
-                Notification.show("Could not fully fetch your permissions for the store: " +
-                                  (rolesResponse.getBody() != null ? rolesResponse.getBody().getMessage() : "Unknown error"),
-                                  3000, Notification.Position.MIDDLE);
-            }
-        } catch (HttpClientErrorException.Forbidden ex) {
-            // Specifically handle 403 Forbidden for getStoreRoles if backend throws it
-            // This means the user is not even a manager/owner/founder of the store, or backend is very strict
-            effectivePermissions.clear(); // Ensure no permissions if forbidden
-            Notification.show("Access to store roles denied. You may not be associated with this store.", 3000, Notification.Position.MIDDLE);
-        }
-        catch (Exception ex) {
-            // General error, effectivePermissions will remain empty
-            Notification.show("Error fetching user permissions: " + ex.getMessage(), 3000, Notification.Position.MIDDLE);
+        if(!isOwner()){
+            isManager();
         }
     }
 
@@ -261,7 +268,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         rolesDisplaySection.removeAll(); // Clear previous content
 
         // Fetch full roles data (this is where the backend fix for getStoreRoles is critical)
-        String rolesUrl = String.format(backendUrl + "store/getStoreRoles/%d/%d", currentStoreId, currentUserDTO.getUserId());
+        String rolesUrl = String.format(apiUrl + "store/getStoreRoles/%d/%d", currentStoreId, currentUserDTO.getUserId());
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", currentToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -300,8 +307,8 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
         if (canViewPendingRoles) {
             // Only attempt to fetch pending if user has VIEW_ROLES
-            String pendingManagersUrl = String.format(backendUrl + "store/getPendingManagers/%d/%d", currentStoreId, currentUserDTO.getUserId());
-            String pendingOwnersUrl = String.format(backendUrl + "store/getPendingOwners/%d/%d", currentStoreId, currentUserDTO.getUserId());
+            String pendingManagersUrl = String.format(apiUrl + "store/getPendingManagers/%d/%d", currentStoreId, currentUserDTO.getUserId());
+            String pendingOwnersUrl = String.format(apiUrl + "store/getPendingOwners/%d/%d", currentStoreId, currentUserDTO.getUserId());
 
             try {
                 ResponseEntity<Response<List<Integer>>> pendingManagersResponse =
@@ -388,8 +395,8 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                 ownerEntry.setAlignItems(Alignment.CENTER);
                 ownerEntry.add(new Span("ID: " + ownerId));
 
-                // Conditionally add "Remove Owner" button based on VIEW_ROLES
-                if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) {
+                // Conditionally add "Remove Owner" button based on ownership
+                if (isOwner) {
                     Button removeOwnerButton = new Button("Remove", VaadinIcon.MINUS.create());
                     removeOwnerButton.addThemeName("small error");
                     removeOwnerButton.getStyle().set("margin-left", "10px");
@@ -418,8 +425,8 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                 managerEntry.setAlignItems(Alignment.CENTER);
                 managerEntry.add(new Span("ID: " + managerId + " → " + formattedPermissions));
 
-                // Conditionally add "Manage Permissions" button based on VIEW_ROLES
-                if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) {
+                // Conditionally add "Manage Permissions" & "REMOVE" button based on ownership
+                if (isOwner) {
                     Button managePermissionsButton = new Button("Manage Permissions", VaadinIcon.EDIT.create());
                     managePermissionsButton.addThemeName("small");
                     managePermissionsButton.getStyle().set("margin-left", "10px");
@@ -427,10 +434,6 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                         showManageManagerPermissionsDialog(storeId, userId, managerId, managerPermissions, token);
                     });
                     managerEntry.add(managePermissionsButton);
-                }
-
-                // Conditionally add "Remove Manager" button based on VIEW_ROLES
-                if (effectivePermissions.contains(StoreManagerPermission.VIEW_ROLES)) {
                     Button removeManagerButton = new Button("Remove", VaadinIcon.MINUS.create());
                     removeManagerButton.addThemeName("small error");
                     removeManagerButton.getStyle().set("margin-left", "10px");
@@ -513,7 +516,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void callRemoveStoreOwnerApi(int storeId, int requesterId, int ownerId, String token, Dialog dialogToClose) {
-        String url = String.format(backendUrl + "store/removeStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
+        String url = String.format(apiUrl + "store/removeStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
@@ -573,7 +576,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void callRemoveStoreManagerApi(int storeId, int requesterId, int managerId, String token, Dialog dialogToClose) {
-        String url = String.format(backendUrl + "store/removeStoreManager/%d/%d/%d", storeId, requesterId, managerId);
+        String url = String.format(apiUrl + "store/removeStoreManager/%d/%d/%d", storeId, requesterId, managerId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
@@ -677,7 +680,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         }
 
         String baseUrl = String.format(
-                backendUrl + "store/addStoreManagerPermissions/%d/%d",
+                apiUrl + "store/addStoreManagerPermissions/%d/%d",
                 storeId, managerId
         );
         StringBuilder queryParams = new StringBuilder();
@@ -724,7 +727,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         }
 
         StringBuilder urlBuilder = new StringBuilder(String.format(
-                backendUrl + "store/removeStoreManagerPermissions/%d/%d",
+                apiUrl + "store/removeStoreManagerPermissions/%d/%d",
                 storeId, managerId
         ));
         urlBuilder.append("?");
@@ -813,7 +816,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     private void addStoreManager(int storeId, int requesterId, int managerId, List<StoreManagerPermission> permissions, String token) {
         // Construct the URL to include requesterId
         String baseUrl = String.format(
-                backendUrl + "store/addStoreManager/%d/%d/%d",
+                apiUrl + "store/addStoreManager/%d/%d/%d",
                 storeId, requesterId, managerId
         );
         StringBuilder queryParams = new StringBuilder();
@@ -893,7 +896,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private void addStoreOwner(int storeId, int requesterId, int ownerId, String token) {
-        String url = String.format(backendUrl + "store/addStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
+        String url = String.format(apiUrl + "store/addStoreOwner/%d/%d/%d", storeId, requesterId, ownerId);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -981,7 +984,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
     private void addProductToStore(int storeId, int requesterId, String productName, String description, double basePrice, int quantity, String category, String token) {
         String url = String.format(
-            backendUrl + "store/addProductToStore/%d/%d?productName=%s&description=%s&basePrice=%f&quantity=%d&category=%s",
+            apiUrl + "store/addProductToStore/%d/%d?productName=%s&description=%s&basePrice=%f&quantity=%d&category=%s",
             storeId, requesterId,
             URLEncoder.encode(productName, StandardCharsets.UTF_8),
             URLEncoder.encode(description, StandardCharsets.UTF_8),
@@ -1016,7 +1019,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         headers.set("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        String url = String.format(backendUrl + "store/viewStore/%d", storeId);
+        String url = String.format(apiUrl + "store/viewStore/%d", storeId);
 
         try {
             ResponseEntity<Response<StoreDTO>> response =
@@ -1047,17 +1050,438 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             return null;
         }
     }
-    
-    private boolean isGuestToken(HttpSession session) {
+
+
+    private boolean isOwner(){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
         String token = (String) session.getAttribute("token");
-        RestTemplate restTemplate = new RestTemplate();
-        String url = backendUrl + "user/isGuestToken";
-        try {
-            ResponseEntity<Response> apiResponse = restTemplate.postForEntity(url, token, Response.class);
-            Response<Boolean> response = (Response<Boolean>) apiResponse.getBody();
-            return response.isSuccess() && response.getData();
-        } catch (Exception e) {
-            return true;
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        String url = apiUrl + "/store/isStoreOwner/" + storeId + "/" + user.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Boolean>> apiResponse = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<Response<Boolean>>() {});
+        Response<Boolean> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            if(response.getData()){
+                effectivePermissions.addAll(Set.of(StoreManagerPermission.values()));
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+        else{
+            Notification.show(response.getMessage());
+            return false;
         }
     }
+
+    private boolean isManager(){
+        HttpServletRequest httpRequest = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = httpRequest.getSession(false);
+        String token = (String) session.getAttribute("token");
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        String url = apiUrl + "/store/isStoreManager/" + storeId + "/" + user.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<List<StoreManagerPermission>>> apiResponseManager = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<Response<List<StoreManagerPermission>>>() {});
+        Response<List<StoreManagerPermission>> resp = apiResponseManager.getBody();
+        if(resp.isSuccess()){
+            if(resp.getData() != null)
+                effectivePermissions = new HashSet<>(resp.getData());
+            return resp.getData() != null;
+        }
+        else{
+            Notification.show(resp.getMessage());
+            return false;
+        }
+    }
+
+
+    private void showAddAuctionProductDialog(int storeId, int userId, String token) {
+        StoreDTO store = getStoreDTO(storeId, token);
+        Collection<StoreProductDTO> prods = store.getStoreProducts();
+
+        // 1) Create the dialog
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+
+        // 2) Create a ComboBox of StoreProductDTO
+        ComboBox<StoreProductDTO> productCombo = new ComboBox<>("Select product");
+        productCombo.setItems(prods);                        // set your DTOs
+        productCombo.setItemLabelGenerator(StoreProductDTO::getName); 
+        productCombo.setPlaceholder("— choose one —");
+        productCombo.setWidthFull();
+
+        // 3) Add it to the dialog
+        dialog.add(productCombo);
+
+        NumberField basePrice = new NumberField("Starting Price");
+        dialog.add(basePrice);
+        IntegerField timeToEnd = new IntegerField("Auction Time (in minutes)");
+        dialog.add(timeToEnd);
+
+        // 4) “Save” button that reads out the selected DTO’s id
+        Button save = new Button("Save", e -> {
+            StoreProductDTO selected = productCombo.getValue();
+            Double price = basePrice.getValue();
+            Integer minutes = timeToEnd.getValue();
+            
+            if (selected == null) {
+                productCombo.focus();
+                Notification.show("Please pick a product").setPosition(Notification.Position.MIDDLE);
+                return;
+            }
+            if (price == null) {
+                basePrice.focus();
+                Notification.show("Please enter a starting price").setPosition(Notification.Position.MIDDLE);
+                return;
+            }
+            if (minutes == null) {
+                timeToEnd.focus();
+                Notification.show("Please enter auction duration").setPosition(Notification.Position.MIDDLE);
+                return;
+            }
+            int selectedProductId = selected.getProductId();
+            createAuction(storeId, userId, selectedProductId, token, price, minutes);
+            dialog.close();
+        });
+        save.getStyle().set("margin-top", "1em");
+        dialog.add(save);
+        dialog.open();
+    }
+
+    private void createAuction(int storeId, int userId, int productId, String token, double price, int minutes){
+        String url = apiUrl + "store/addAuctionProductToStore/" + storeId + "/" + userId + "/" + productId + "?basePrice=" + price + "&MinutesToEnd=" + minutes;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+            url,
+            HttpMethod.POST,
+            entity,
+            new ParameterizedTypeReference<Response<Void>>() {}
+        );
+        Response<Void> response = apiResp.getBody();
+        if(response.isSuccess()){
+            Notification.show("Auction Created Succefully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void showMsgs(){
+        Dialog dialog = new Dialog();
+        HashMap<Integer, String> msgs = getMsgs();
+        if(msgs.isEmpty()){
+            dialog.add("No Messages");
+        }
+        else{
+            for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
+                Integer user = entry.getKey();
+                String messageText = entry.getValue();
+
+                // ─── Build a “message card” ─────────────────────────────
+                // Container for one message
+                VerticalLayout messageCard = new VerticalLayout();
+                messageCard.getStyle()
+                        .set("border", "1px solid #ccc")
+                        .set("border-radius", "4px")
+                        .set("padding", "0.5em")
+                        .set("margin-bottom", "0.5em")
+                        .set("width", "100%");
+
+                // user id
+                H4 userTitle = new H4(String.valueOf(user));
+                userTitle.getStyle().set("margin", "0");
+
+                // The message body
+                Span body = new Span(messageText);
+                body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
+
+                // Reply button stub
+                Button replyBtn = new Button("Reply");
+                replyBtn.addClickListener(evt -> {
+                    dialog.close();
+                    replyDialog(currentUserDTO.getUserId(), storeId, user);
+                });
+
+                // Assemble card
+                messageCard.add(userTitle, body, replyBtn);
+
+                // Add to the main container
+                dialog.add(messageCard);
+            }
+        }
+        dialog.open();
+    }
+
+    private void replyDialog(int managerId, int storeId, int userId){
+        Dialog dialog = new Dialog();
+        TextField textField = new TextField("Message");
+        Button send = new Button("Send");
+        send.addClickListener(e -> {if(!textField.isEmpty())
+                                     sendMsg(managerId, storeId, userId, textField.getValue());
+                                     dialog.close();
+                                    });
+        dialog.add(textField);
+        dialog.add(send);
+        dialog.open();
+    }
+
+    private void sendMsg(int managerId, int storeId, int userId, String msg){
+        String url = apiUrl + "store/sendMessageToUser/" + managerId + "/" + storeId +"/" + userId;
+        Request<String> req = new Request<>(currentToken, msg);
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Request<String>> entity = new HttpEntity<>(req, header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Message Sent Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private HashMap<Integer, String> getMsgs(){
+        String url = apiUrl + "store/getAllStoreMessages/" +storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
+        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
+        }
+        else{
+            Notification.show(response.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    private void viewPurchases(){
+        Dialog dialog = new Dialog();
+        dialog.setWidth("800px");
+        dialog.setHeight("600px");
+
+        VerticalLayout content = new VerticalLayout();
+        content.setPadding(true);
+        content.setSpacing(true);
+
+        List<OrderDTO> orders = getPurchases();
+        if (orders == null || orders.isEmpty()) {
+            content.add(new H1("No Orders"));
+        } else {
+            Accordion accordion = new Accordion();
+            for (OrderDTO order : orders) {
+                // Panel title
+                String title = String.format("Order #%d - %s", order.getOrderId(), order.getOrderState());
+                // Details layout inside panel
+                VerticalLayout detailsLayout = new VerticalLayout();
+                detailsLayout.setPadding(false);
+                detailsLayout.setSpacing(true);
+
+                // Order metadata
+                detailsLayout.add(new H3("Order Details"));
+                Div meta = new Div();
+                meta.getStyle().set("display", "grid");
+                meta.getStyle().set("grid-template-columns", "1fr 1fr");
+                meta.getStyle().set("gap", "10px");
+                meta.add(new Div(new H3("Address: "), new Div(order.getAddress())));
+                meta.add(new Div(new H3("Payment: "), new Div(order.getPaymentMethod())));
+                meta.add(new Div(new H3("Store ID: "), new Div(String.valueOf(order.getStoreId()))));
+                meta.add(new Div(new H3("User ID: "), new Div(String.valueOf(order.getUserId()))));
+                detailsLayout.add(meta);
+
+                // Products grid
+                detailsLayout.add(new H3("Products"));
+                Grid<ProductDTO> grid = new Grid<>(ProductDTO.class, false);
+                grid.addColumn(ProductDTO::getName).setHeader("Name");
+                grid.setItems(order.getProducts());
+                grid.setHeight("200px");               // or use setSizeFull() only
+                detailsLayout.add(grid);
+                AccordionPanel panel = accordion.add(title, detailsLayout);
+                panel.setHeight("300px");
+            }
+            content.add(accordion);
+        }
+
+        dialog.add(content);
+        dialog.open();
+    }
+
+    
+    private List<OrderDTO> getPurchases(){
+        String url = apiUrl + "store/getAllStoreOrders/" +storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<List<OrderDTO>>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.GET, 
+            entity, 
+            new ParameterizedTypeReference<Response<List<OrderDTO>>>() {});
+        Response<List<OrderDTO>> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            return response.getData();
+        }
+        else{
+            Notification.show(response.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+
+    private void removeProductDialog(){
+        StoreDTO store = getStoreDTO(storeId, currentToken);
+        Collection<StoreProductDTO> prods = store.getStoreProducts();
+
+        // 1) Create the dialog
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+
+        // 2) Create a ComboBox of StoreProductDTO
+        ComboBox<StoreProductDTO> productCombo = new ComboBox<>("Select product");
+        productCombo.setItems(prods);                        // set your DTOs
+        productCombo.setItemLabelGenerator(StoreProductDTO::getName); 
+        productCombo.setPlaceholder("— choose one —");
+        productCombo.setWidthFull();
+
+        // 3) Add it to the dialog
+        dialog.add(productCombo);
+        
+        Button removeButton = new Button("Remove");
+        removeButton.addClickListener(e -> {
+            if(productCombo.getValue() != null){
+                dialog.close();
+                confirmRemoveDialog(productCombo.getValue());
+            }
+        });
+        dialog.add(removeButton);
+        dialog.open();
+    }
+
+    private void confirmRemoveDialog(StoreProductDTO product){
+        Dialog dialog = new Dialog();
+        dialog.add(new H3("This can not be undone and will also remove all auction listings\n of the product if there are any"));
+        Button confirm = new Button("Confirm Removal");
+        confirm.addClickListener(e -> {removeProduct(product); dialog.close();});
+        dialog.add(confirm);
+        dialog.open();
+    }
+
+    private void removeProduct(StoreProductDTO product){
+        String url = apiUrl + "store/removeProductFromStore/" + currentStoreId + "/" + currentUserDTO.getUserId() + "/" + product.getProductId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.DELETE, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Removed Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+
+    }
+
+    private void editProductDialog() {
+        StoreDTO store = getStoreDTO(storeId, currentToken);
+        Collection<StoreProductDTO> prods = store.getStoreProducts();
+
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+
+        ComboBox<StoreProductDTO> productCombo = new ComboBox<>("Select product");
+        productCombo.setItems(prods);
+        productCombo.setItemLabelGenerator(StoreProductDTO::getName);
+        productCombo.setPlaceholder("— choose one —");
+        productCombo.setWidthFull();
+
+        // Fields for details
+        Label nameLabel = new Label();
+        Label categoryLabel = new Label();
+        Label ratingLabel = new Label();
+
+        NumberField basePriceField = new NumberField("Base Price");
+        IntegerField quantityField = new IntegerField("Quantity");
+        
+        basePriceField.setWidthFull();
+        quantityField.setWidthFull();
+
+        // Layout to hold the fields
+        FormLayout formLayout = new FormLayout();
+        formLayout.setVisible(false); // Initially hidden
+
+        formLayout.addFormItem(nameLabel, "Name");
+        formLayout.addFormItem(categoryLabel, "Category");
+        formLayout.addFormItem(ratingLabel, "Average Rating");
+        formLayout.add(basePriceField, quantityField);
+        Button confirmButton = new Button("Update");
+        confirmButton.addClickListener(e -> {
+            StoreProductDTO selected = productCombo.getValue();
+            if(selected != null && basePriceField.getValue() != null && quantityField.getValue() != null
+                && basePriceField.getValue() > 0 && quantityField.getValue() > 0){
+                    dialog.close();
+                    editProduct(selected, basePriceField.getValue(), quantityField.getValue());
+            }
+        });
+        formLayout.add(confirmButton);
+
+        productCombo.addValueChangeListener(event -> {
+            StoreProductDTO selected = event.getValue();
+            if (selected != null) {
+                nameLabel.setText(selected.getName());
+                categoryLabel.setText(selected.getCategory().toString());
+                ratingLabel.setText(String.valueOf(selected.getAverageRating()));
+                basePriceField.setValue(selected.getBasePrice());
+                quantityField.setValue(selected.getQuantity());
+                formLayout.setVisible(true);
+            } else {
+                formLayout.setVisible(false);
+            }
+        });
+
+        dialog.add(productCombo, formLayout);
+        dialog.open();
+    }
+
+    private void editProduct(StoreProductDTO product, Double basePrice, Integer quantity){
+        String url = apiUrl + "store/updateProductInStore/" + currentStoreId + "/" + currentUserDTO.getUserId() +"/" + product.getProductId() + "?basePrice=" + basePrice + "&quantity=" + quantity;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+            url, 
+            HttpMethod.POST, 
+            entity, 
+            new ParameterizedTypeReference<Response<Void>>() {});
+        Response<Void> response = apiResponse.getBody();
+        if(response.isSuccess()){
+            Notification.show("Product Edited Successfully");
+        }
+        else{
+            Notification.show(response.getMessage());
+        }
+    }
+
 }
