@@ -16,6 +16,7 @@ import DomainLayer.Enums.RoleName;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreOwner;
+import DomainLayer.Model.helpers.StoreMsg;
 import ApplicationLayer.Response;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import com.fakezone.fakezone.controller.UserController;
@@ -325,13 +326,13 @@ class UserControllerTest {
     void testGetAllMessages_Success() {
         String token = "validToken";
         int userId = 1;
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Message 1");
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Message 1"));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAllMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
 
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAllMessages(token, userId);
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAllMessages(token, userId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -346,7 +347,7 @@ class UserControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAllMessages(token, userId);
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAllMessages(token, userId);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -396,13 +397,13 @@ class UserControllerTest {
     void testGetAuctionEndedMessages_Success() {
         String token = "validToken";
         int userId = 1;
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Auction ended message");
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Auction ended message"));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAuctionEndedMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
 
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAuctionEndedMessages(token, userId);
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -417,7 +418,7 @@ class UserControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAuctionEndedMessages(token, userId);
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -429,13 +430,13 @@ class UserControllerTest {
     void testGetAssignmentMessages_Success() {
         String token = "validToken";
         int userId = 1;
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Assignment message");
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Assignment message"));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAssignmentMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
 
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAssignmentMessages(token, userId);
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAssignmentMessages(token, userId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
@@ -450,7 +451,7 @@ class UserControllerTest {
 
         when(authenticatorAdapter.isValid(token)).thenReturn(false);
 
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAssignmentMessages(token, userId);
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAssignmentMessages(token, userId);
 
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
@@ -747,9 +748,9 @@ class UserControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAllMessages(userId))
                 .thenReturn(new Response<>(null, "Failed to retrieve messages", false, ErrorType.INVALID_INPUT, null));
-    
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAllMessages(token, userId);
-    
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAllMessages(token, userId);
+
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Failed to retrieve messages", response.getBody().getMessage());
@@ -782,9 +783,9 @@ class UserControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAuctionEndedMessages(userId))
                 .thenReturn(new Response<>(null, "Failed to retrieve auction ended messages", false, ErrorType.INVALID_INPUT, null));
-    
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAuctionEndedMessages(token, userId);
-    
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
+
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Failed to retrieve auction ended messages", response.getBody().getMessage());
@@ -798,9 +799,9 @@ class UserControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAssignmentMessages(userId))
                 .thenReturn(new Response<>(null, "Failed to retrieve assignment messages", false, ErrorType.INVALID_INPUT, null));
-    
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAssignmentMessages(token, userId);
-    
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAssignmentMessages(token, userId);
+
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Failed to retrieve assignment messages", response.getBody().getMessage());
@@ -813,9 +814,9 @@ class UserControllerTest {
         int userId = 1;
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAllMessages(userId)).thenThrow(new RuntimeException("Unexpected error"));
-    
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAllMessages(token, userId);
-    
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAllMessages(token, userId);
+
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("An error occurred while retrieving messages", response.getBody().getMessage());
@@ -829,9 +830,9 @@ class UserControllerTest {
         int userId = 1;
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAuctionEndedMessages(userId)).thenThrow(new RuntimeException("Unexpected error"));
-    
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAuctionEndedMessages(token, userId);
-    
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
+
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("An error occurred while retrieving auction ended messages", response.getBody().getMessage());
@@ -845,9 +846,9 @@ class UserControllerTest {
         int userId = 1;
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAssignmentMessages(userId)).thenThrow(new RuntimeException("Unexpected error"));
-    
-        ResponseEntity<Response<HashMap<Integer, String>>> response = userController.getAssignmentMessages(token, userId);
-    
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAssignmentMessages(token, userId);
+
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("An error occurred while retrieving assignment messages", response.getBody().getMessage());
@@ -1380,5 +1381,7 @@ class UserControllerTest {
         assertEquals("An error occurred while  removeFromBasket", response.getBody().getMessage());
         verify(systemService, times(1)).removeFromBasket(userId, productId, storeId);
     }
+
+    
 
 }

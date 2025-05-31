@@ -29,6 +29,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Store;
+import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Repositories.StoreRepository;
 import ApplicationLayer.Enums.ErrorType;
 import static org.mockito.Mockito.*;
@@ -149,9 +150,11 @@ class StoreServiceTest {
         String message = "Hello, this is a test message.";
         storeService.receivingMessage(storeId, founderId, message);
 
-        // Verify that the message was received successfully
-        assertEquals(message, storeService.getMessagesFromUsers(founderId, storeId).peek().getValue(),
-                "Message should be received successfully");
+        Response<Map<Integer, UserMsg>> ResMessages = storeService.getMessagesFromUsers(storeId, founderId);
+        Map<Integer, UserMsg> messages = ResMessages.getData();
+        assertFalse(messages.isEmpty(), "Messages from users should not be empty");
+        assertEquals(message, messages.entrySet().iterator().next().getValue().getMsg());
+
     }
 
     @Test
@@ -358,16 +361,16 @@ class StoreServiceTest {
     }
 
     @Test
-    void testGetAllStoreMessages_Success() {
+    void testgetMessagesFromUsers_Success() {
         int storeId = 1;
         Store mockStore = mock(Store.class);
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Hello");
+        Map<Integer,UserMsg> messages = new HashMap<>();
+        messages.put(1, new UserMsg(1, "Hello from user 1"));
         when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
-        when(mockStore.getAllStoreMessages(1)).thenReturn(messages);
+        when(mockStore.getMessagesFromUsers(1)).thenReturn(messages);
 
         StoreService service = new StoreService(mockStoreRepository, publisher);
-        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
+        Response<Map<Integer, UserMsg>> response = service.getMessagesFromUsers(storeId,1);
 
         assertTrue(response.isSuccess());
         assertEquals(messages, response.getData());
@@ -375,14 +378,14 @@ class StoreServiceTest {
         assertNull(response.getErrorType());
     }
     @Test
-    void testGetAllStoreMessages_EmptyMessages() {
+    void testgetMessagesFromUsers_EmptyMessages() {
         int storeId = 2;
         Store mockStore = mock(Store.class);
         when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
-        when(mockStore.getAllStoreMessages(1)).thenReturn(new HashMap<>());
+        when(mockStore.getMessagesFromUsers(1)).thenReturn(new HashMap<>());
 
         StoreService service = new StoreService(mockStoreRepository, publisher);
-        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
+        Response<Map<Integer,UserMsg>> response = service.getMessagesFromUsers(storeId,1);
 
         assertFalse(response.isSuccess());
         assertNull(response.getData());
@@ -390,14 +393,14 @@ class StoreServiceTest {
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
     }
     @Test
-    void testGetAllStoreMessages_StoreThrowsException() {
+    void testgetMessagesFromUsers_StoreThrowsException() {
         int storeId = 3;
         Store mockStore = mock(Store.class);
         when(mockStoreRepository.findById(storeId)).thenReturn(mockStore);
-        when(mockStore.getAllStoreMessages(1)).thenThrow(new IllegalArgumentException("DB error"));
+        when(mockStore.getMessagesFromUsers(1)).thenThrow(new IllegalArgumentException("DB error"));
         StoreService service = new StoreService(mockStoreRepository, publisher);
     
-        Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
+        Response<Map<Integer,UserMsg>> response = service.getMessagesFromUsers(storeId,1);
     
         assertFalse(response.isSuccess());
         assertNull(response.getData());
@@ -405,19 +408,13 @@ class StoreServiceTest {
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
     }
         @Test
-        void testGetAllStoreMessages_StoreNotFound() {
+        void testgetMessagesFromUsers_StoreNotFound() {
             int storeId = 999;
             when(mockStoreRepository.findById(storeId)).thenReturn(null);
 
             StoreService service = new StoreService(mockStoreRepository, publisher);
-            Response<HashMap<Integer, String>> response = service.getAllStoreMessages(storeId,1);
-
-            assertFalse(response.isSuccess());
-            assertNull(response.getData());
-            assertEquals("Store not found", response.getMessage());
-            assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+            assertThrows(IllegalArgumentException.class, () -> service.getMessagesFromUsers(storeId, 1));
         }
-    
     @Test
     void testCalcAmount_SingleStore_Success() {
         int userId = 1;

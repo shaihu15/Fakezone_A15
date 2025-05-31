@@ -15,6 +15,7 @@ import ApplicationLayer.Response;
 import DomainLayer.Model.Registered;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/user")
@@ -118,22 +120,22 @@ public class UserController {
     }
 
     @GetMapping("/getAllMessages/{userId}")
-    public ResponseEntity<Response<HashMap<Integer, String>>> getAllMessages(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<Map<Integer, StoreMsg>>> getAllMessages(@RequestHeader("Authorization") String token,
                                                                       @PathVariable int userId) {
         try {
             logger.info("Received request to get all messages for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<Integer, StoreMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, String>> response = systemService.getAllMessages(userId);
+            Response<Map<Integer, StoreMsg>> response = systemService.getAllMessages(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAllMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving messages", false, ErrorType.INTERNAL_ERROR, null);
+            Response<Map<Integer, StoreMsg>> response = new Response<>(null, "An error occurred while retrieving messages", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -194,43 +196,43 @@ public class UserController {
         }
     }
     @GetMapping("/getAssignmentMessages/{userId}")
-    public ResponseEntity<Response<HashMap<Integer, String>>> getAssignmentMessages(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<Map<Integer, StoreMsg>>> getAssignmentMessages(@RequestHeader("Authorization") String token,
                                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to get assignment messages for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<Integer, StoreMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, String>> response = systemService.getAssignmentMessages(userId);
+            Response<Map<Integer, StoreMsg>> response = systemService.getAssignmentMessages(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getAssignmentMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving assignment messages", false, ErrorType.INTERNAL_ERROR, null);
+            Response<Map<Integer, StoreMsg>> response = new Response<>(null, "An error occurred while retrieving assignment messages", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
 
     @GetMapping("/getAuctionEndedMessages/{userId}")
-    public ResponseEntity<Response<HashMap<Integer, String>>> getAuctionEndedMessages(@RequestHeader("Authorization") String token,
-                                                                                @PathVariable int userId) {
+    public ResponseEntity<Response<Map<Integer, StoreMsg>>> getAuctionEndedMessages(@RequestHeader("Authorization") String token,
+                                                                                       @PathVariable int userId) {
         try {
             logger.info("Received request to get auction ended messages for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<Integer, StoreMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, String>> response = systemService.getAuctionEndedMessages(userId);
+            Response<Map<Integer, StoreMsg>> response = systemService.getAuctionEndedMessages(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
-            logger.error("Error in getAuctionEndedtMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving auction ended messages", false, ErrorType.INTERNAL_ERROR, null);
+            logger.error("Error in getAuctionEndedMessages: {}", e.getMessage());
+            Response<Map<Integer, StoreMsg>> response = new Response<>(null, "An error occurred while retrieving auction ended messages", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
@@ -369,6 +371,26 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
+    @PostMapping("/removeUserMessageById/{requesterId}/{messageId}")
+    public ResponseEntity<Response<Void>> removeUserMessageById(@PathVariable("requesterId") int requesterId, @PathVariable("messageId") int messageId, @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to remove user message with id: {}", messageId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.removeUserMessageById(requesterId, messageId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in removeUserMessageById: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred while removing user message", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
     @GetMapping("/getAllSuspendedUsers/{requesterId}")
     public ResponseEntity<Response<List<Registered>>> getAllSuspendedUsers(@PathVariable("requesterId") int requesterId, @RequestHeader("Authorization") String token) {
         try {
@@ -690,22 +712,22 @@ public class UserController {
     }
 
     @GetMapping("/getMessagesFromStore/{userId}")
-    public ResponseEntity<Response<HashMap<Integer, String>>> getMessagesFromStore(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Response<Map<Integer, StoreMsg>>> getMessagesFromStore(@RequestHeader("Authorization") String token,
                                                                              @PathVariable int userId) {
         try {
             logger.info("Received request to get messages from stores for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<Integer, StoreMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, String>> response = systemService.getMessagesFromStore(userId);
+            Response<Map<Integer, StoreMsg>> response = systemService.getMessagesFromStore(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
             logger.error("Error in getMessagesFromStore: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving  messages from stores ", false, ErrorType.INTERNAL_ERROR, null);
+            Response<Map<Integer, StoreMsg>> response = new Response<>(null, "An error occurred while retrieving  messages from stores ", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

@@ -21,6 +21,8 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -340,12 +342,12 @@ public class UserService implements IUserService {
     }    
 
     @Override
-    public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getAllMessages(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
 
             try {
-                HashMap<Integer, String> messages = Registered.get().getAllMessages();
+                Map<Integer, StoreMsg> messages = Registered.get().getAllMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
                     return new Response<>(null, "No messages found", true, null, null);
@@ -365,12 +367,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
 
             try {
-                HashMap<Integer, String> messages = Registered.get().getAssignmentMessages();
+               Map<Integer, StoreMsg> messages = Registered.get().getAssignmentMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
                     return new Response<>(null, "No messages found", true, null, null);
@@ -390,12 +392,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
 
             try {
-                HashMap<Integer, String> messages = Registered.get().getAuctionEndedMessages();
+               Map<Integer, StoreMsg> messages = Registered.get().getAuctionEndedMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
                     return new Response<>(null, "No messages found", true, null, null);
@@ -479,6 +481,24 @@ public class UserService implements IUserService {
         return count;
     }
 
+    @Override
+    public boolean removeMsgById(int userId, int msgId) {
+        Optional<Registered> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent()) {
+            Registered user = optionalUser.get();
+            boolean removed = user.removeMsgById(msgId);
+            if (removed) {
+                logger.info("Message with ID " + msgId + " removed from user ID " + userId);
+            } else {
+                logger.warn("Message with ID " + msgId + " not found for user ID " + userId);
+            }
+            return removed;
+        } else {
+            logger.error("Failed to remove message: User with ID " + userId + " not found");
+            throw new IllegalArgumentException("User not found");
+        }
+    }
+
     // Suspension management methods (admin only)
     
     /**
@@ -516,7 +536,12 @@ public class UserService implements IUserService {
             logger.info("User ID " + userId + " suspended until " + endOfSuspension + " by admin ID " + adminId);
         }
     }
-    
+
+    @Override
+    public boolean isUserRegistered(int userId) {
+        return userRepository.isUserRegistered(userId);
+    }
+
     /**
      * Remove suspension from a user. Requires admin privileges.
      * 
@@ -823,12 +848,12 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getMessagesFromStore(int userID) {
+    public Response<Map<Integer, StoreMsg>> getMessagesFromStore(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
 
             try {
-                HashMap<Integer, String> messages = Registered.get().getMessagesFromStore();
+               Map<Integer, StoreMsg> messages = Registered.get().getMessagesFromStore();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
                     return new Response<>(null, "No messages found", true, null, null);

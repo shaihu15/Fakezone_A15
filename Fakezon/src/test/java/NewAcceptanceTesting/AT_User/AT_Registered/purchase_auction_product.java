@@ -29,6 +29,7 @@ import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
@@ -100,10 +101,10 @@ public class purchase_auction_product {
         TimeUnit.SECONDS.sleep(5); // Small buffer
         
         // Check ended auction message for store owner
-        Response<HashMap<Integer, String>> ownerMessages = systemService.getAllMessages(storeOwnerId);
+        Response<Map<Integer, StoreMsg>> ownerMessages = systemService.getAllMessages(storeOwnerId);
         assertTrue(ownerMessages.isSuccess(), "Store owner should be able to retrieve messages");
         assertFalse(ownerMessages.getData().isEmpty(), "Store owner should have messages");
-        assertTrue(ownerMessages.getData().values().stream().anyMatch(msg -> msg.contains("Auction ended for product " + auctionProductId + ". Highest bid was " + buyer2Bid +
+        assertTrue(ownerMessages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("Auction ended for product " + auctionProductId + ". Highest bid was " + buyer2Bid +
                             " by user " + buyer2Id + ". Please approve or decline this bid.")),
                 "Store owner should receive a message indicating the auction has ended");
        
@@ -114,17 +115,17 @@ public class purchase_auction_product {
 
         // User1 logs back in and checks messages - should see that they lost
         Response<UserDTO> buyer1LoginResponse = testHelper.login2();
-        Response<HashMap<Integer, String>> buyer1Messages = systemService.getAllMessages(buyer1Id);
+        Response<Map<Integer, StoreMsg>> buyer1Messages = systemService.getAllMessages(buyer1Id);
         assertTrue(buyer1Messages.isSuccess(), "Buyer1 should be able to retrieve messages");
         assertFalse(buyer1Messages.getData().isEmpty(), "Buyer1 should have messages");
-        assertTrue(buyer1Messages.getData().values().stream().anyMatch(msg -> msg.contains("rejected due to a higher bid")),
+        assertTrue(buyer1Messages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("rejected due to a higher bid")),
                 "Buyer1 should receive a message indicating their bid was rejected due to a higher bid");
 
         // User2 checks messages - should see that they won and need to purchase
-        Response<HashMap<Integer, String>> buyer2Messages = systemService.getAllMessages(buyer2Id);
+        Response<Map<Integer, StoreMsg>> buyer2Messages = systemService.getAllMessages(buyer2Id);
         assertTrue(buyer2Messages.isSuccess(), "Buyer2 should be able to retrieve messages");
         assertFalse(buyer2Messages.getData().isEmpty(), "Buyer2 should have messages");
-        assertTrue(buyer2Messages.getData().values().stream().anyMatch(msg -> msg.contains("We are pleased to inform you that your bid has won the auction on product: "+auctionProductId)),
+        assertTrue(buyer2Messages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("We are pleased to inform you that your bid has won the auction on product: "+auctionProductId)),
                 "Buyer2 should receive a message indicating they won the auction and need to purchase");
 
         // User2 purchases the product from their cart
@@ -177,17 +178,17 @@ public class purchase_auction_product {
 
         // User1 logs back in and checks messages - should see that they lost
         Response<UserDTO> buyer1LoginResponse = testHelper.login2();
-        Response<HashMap<Integer, String>> buyer1Messages = systemService.getAllMessages(buyer1Id);
+        Response<Map<Integer, StoreMsg>> buyer1Messages = systemService.getAllMessages(buyer1Id);
         assertTrue(buyer1Messages.isSuccess(), "Buyer1 should be able to retrieve messages");
         assertFalse(buyer1Messages.getData().isEmpty(), "Buyer1 should have messages");
-        assertTrue(buyer1Messages.getData().values().stream().anyMatch(msg -> msg.contains("rejected due to a higher bid")),
+        assertTrue(buyer1Messages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("rejected due to a higher bid")),
                 "Buyer1 should receive a message indicating their bid was rejected due to a higher bid");
 
         // User2 checks messages - should see that they won and need to purchase
-        Response<HashMap<Integer, String>> buyer2Messages = systemService.getAllMessages(buyer2Id);
+        Response<Map<Integer, StoreMsg>> buyer2Messages = systemService.getAllMessages(buyer2Id);
         assertTrue(buyer2Messages.isSuccess(), "Buyer2 should be able to retrieve messages");
         assertFalse(buyer2Messages.getData().isEmpty(), "Buyer2 should have messages");
-        assertTrue(buyer2Messages.getData().values().stream().anyMatch(msg -> msg.contains("We regret to inform you that the offer for product: " + auctionProductId + " was not approved by the store.")),
+        assertTrue(buyer2Messages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("We regret to inform you that the offer for product: " + auctionProductId + " was not approved by the store.")),
                 "Buyer2 should receive a message indicating their bid was not approved by the store");
 
 }

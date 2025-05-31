@@ -168,6 +168,13 @@ public class MainLayout extends AppLayout implements RouterLayout {
             notificationsIcon.setSize("30px");
             notificationsButton = new Button(notificationsIcon);
             notificationsButton.addClickListener(event -> showNotifications());
+            int unreadNotifs;
+            String numOfUnread = (String) session.getAttribute("unreadNotifs");
+            unreadNotifs = numOfUnread == null ? 0 : Integer.parseInt(numOfUnread);
+            if(unreadNotifs > 0){
+                notificationsButton.setText(String.valueOf(unreadNotifs));
+            }
+
             // USER VIEW BUTTON
             Button userViewButton = new Button("User area", click -> {
                         if (!isGuestToken() && session.getAttribute("userDTO") != null) {
@@ -476,6 +483,7 @@ public class MainLayout extends AppLayout implements RouterLayout {
         String numOfUnread = (String) session.getAttribute("unreadNotifs");
         unreadNotifs = numOfUnread == null ? 0 : Integer.parseInt(numOfUnread);
         unreadNotifs++;
+        session.setAttribute("unreadNotifs", String.valueOf(unreadNotifs));
         notificationsButton.setText(String.valueOf(unreadNotifs));
         Notification.show("New Message Arrived!\n" + payloadJson, 5000, Notification.Position.TOP_CENTER).addThemeVariants(NotificationVariant.LUMO_SUCCESS);
     }

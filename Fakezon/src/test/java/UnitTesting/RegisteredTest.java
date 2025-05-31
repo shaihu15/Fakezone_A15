@@ -5,6 +5,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -23,6 +24,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
+import DomainLayer.Model.helpers.StoreMsg;
 
 public class RegisteredTest {
     private Registered registeredUser;
@@ -137,17 +139,16 @@ public class RegisteredTest {
         int storeID = 1;
         String message = "Hello, this is a test message.";
         registeredUser.sendMessageToStore(storeID, message);
-        assertEquals(message, registeredUser.getMessagesFromUser().get(storeID),
+        assertEquals(message, registeredUser.getMessagesFromUser().get(0).getMessage(),
                 "Message should be received successfully");
     }
 
 
-    
     @Test
-    public void testSendMessageToStore_Sucssses() {
+    public void testSendMessageToStore_Success() {
         registeredUser.sendMessageToStore(1, "Hello Store!");
-        HashMap<Integer, String> messages = registeredUser.getMessagesFromUser();
-        assertEquals("Hello Store!", messages.get(1));
+        List<StoreMsg> messages = registeredUser.getMessagesFromUser();
+        assertEquals("Hello Store!", messages.get(0).getMessage());
     }
     @Test
     public void testAddRoleAndGetRole() {
@@ -187,36 +188,36 @@ public class RegisteredTest {
     void testAddMessageFromStoreAndGetMessagesFromStore() {
         int storeID = 5;
         String message = "Store message!";
-        registeredUser.addMessageFromStore(new SimpleEntry<>(storeID, message));
-        assertEquals(message, registeredUser.getMessagesFromStore().get(storeID));
+        int messageId = registeredUser.addMessageFromStore(new StoreMsg(storeID, -1, message));
+        assertEquals(message, registeredUser.getMessagesFromStore().get(messageId).getMessage());
     }
 
     @Test
     void testAddAuctionEndedMessageAndGetAuctionEndedMessages() {
         int storeID = 7;
         String message = "Auction ended!";
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(storeID, message));
-        assertEquals(message, registeredUser.getAuctionEndedMessages().get(storeID));
+        int messageId = registeredUser.addAuctionEndedMessage(new StoreMsg(storeID, -1, message));
+        assertEquals(message, registeredUser.getAuctionEndedMessages().get(messageId).getMessage());
     }
 
     @Test
     void testAssignmentMessagesAndGetAssignmentMessages() {
         int storeID = 3;
         String message = "Assignment!";
-        registeredUser.AssignmentMessages(new SimpleEntry<>(storeID, message));
-        assertEquals(message, registeredUser.getAssignmentMessages().get(storeID));
+        int messageId = registeredUser.addAssignmentMessage(new StoreMsg(storeID, -1, message));
+        assertEquals(message, registeredUser.getAssignmentMessages().get(messageId).getMessage());
     }
 
     @Test
     void testGetAllMessagesCombinesAll() {
         int storeID1 = 1, storeID2 = 2, storeID3 = 3;
-        registeredUser.addMessageFromStore(new SimpleEntry<>(storeID1, "store"));
-        registeredUser.AssignmentMessages(new SimpleEntry<>(storeID2, "assign"));
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(storeID3, "auction"));
+        int messageId1 = registeredUser.addMessageFromStore(new StoreMsg(storeID1, -1, "store"));
+        int messageId2 = registeredUser.addAssignmentMessage(new StoreMsg(storeID2, -1, "assign"));
+        int messageId3 = registeredUser.addAuctionEndedMessage(new StoreMsg(storeID3, -1, "auction"));
         var all = registeredUser.getAllMessages();
-        assertEquals("store", all.get(storeID1));
-        assertEquals("assign", all.get(storeID2));
-        assertEquals("auction", all.get(storeID3));
+        assertEquals("store", all.get(messageId1).getMessage());
+        assertEquals("assign", all.get(messageId2).getMessage());
+        assertEquals("auction", all.get(messageId3).getMessage());
     }
 
     @Test
@@ -225,61 +226,61 @@ public class RegisteredTest {
     }
     @Test
     void testAddMultipleMessagesFromStore() {
-        registeredUser.addMessageFromStore(new SimpleEntry<>(1, "msg1"));
-        registeredUser.addMessageFromStore(new SimpleEntry<>(2, "msg2"));
-        HashMap<Integer, String> messages = registeredUser.getMessagesFromStore();
-        assertEquals("msg1", messages.get(1));
-        assertEquals("msg2", messages.get(2));
+        int messageId1 = registeredUser.addMessageFromStore(new StoreMsg(1, -1, "msg1"));
+        int messageId2 = registeredUser.addMessageFromStore(new StoreMsg(2, -1, "msg2"));
+       Map<Integer, StoreMsg> messages = registeredUser.getMessagesFromStore();
+        assertEquals("msg1", messages.get(messageId1).getMessage());
+        assertEquals("msg2", messages.get(messageId2).getMessage());
     }
 
     @Test
     void testAddMultipleAuctionEndedMessages() {
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(1, "auction1"));
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(2, "auction2"));
-        HashMap<Integer, String> messages = registeredUser.getAuctionEndedMessages();
-        assertEquals("auction1", messages.get(1));
-        assertEquals("auction2", messages.get(2));
+        int messageId1 = registeredUser.addAuctionEndedMessage(new StoreMsg(1, -1, "auction1"));
+        int messageId2 = registeredUser.addAuctionEndedMessage(new StoreMsg(2, -1, "auction2"));
+        Map<Integer, StoreMsg> messages = registeredUser.getAuctionEndedMessages();
+        assertEquals("auction1", messages.get(messageId1).getMessage());
+        assertEquals("auction2", messages.get(messageId2).getMessage());
     }
     @Test
     void testGetMessagesFromStore() {
-        registeredUser.addMessageFromStore(new SimpleEntry<>(1, "store1"));
-        registeredUser.addMessageFromStore(new SimpleEntry<>(2, "store2"));
-        HashMap<Integer, String> messages = registeredUser.getMessagesFromStore();
+        int messageId1 = registeredUser.addMessageFromStore(new StoreMsg(1, -1, "store1"));
+        int messageId2 = registeredUser.addMessageFromStore(new StoreMsg(2, -1, "store2"));
+        Map<Integer, StoreMsg> messages = registeredUser.getMessagesFromStore();
         assertEquals(2, messages.size());
-        assertEquals("store1", messages.get(1));
-        assertEquals("store2", messages.get(2));
+        assertEquals("store1", messages.get(messageId1).getMessage());
+        assertEquals("store2", messages.get(messageId2).getMessage());
     }
     
     @Test
     void testGetAssignmentMessages() {
-        registeredUser.AssignmentMessages(new SimpleEntry<>(10, "assign1"));
-        registeredUser.AssignmentMessages(new SimpleEntry<>(20, "assign2"));
-        HashMap<Integer, String> messages = registeredUser.getAssignmentMessages();
+        int messageId1 = registeredUser.addAssignmentMessage(new StoreMsg(10, -1, "assign1"));
+        int messageId2 = registeredUser.addAssignmentMessage(new StoreMsg(20, -1, "assign2"));
+        Map<Integer, StoreMsg> messages = registeredUser.getAssignmentMessages();
         assertEquals(2, messages.size());
-        assertEquals("assign1", messages.get(10));
-        assertEquals("assign2", messages.get(20));
+        assertEquals("assign1", messages.get(messageId1).getMessage());
+        assertEquals("assign2", messages.get(messageId2).getMessage());
     }
     
     @Test
     void testGetAuctionEndedMessages() {
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(100, "auction1"));
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(200, "auction2"));
-        HashMap<Integer, String> messages = registeredUser.getAuctionEndedMessages();
+        int messageId1 = registeredUser.addAuctionEndedMessage(new StoreMsg(100, -1, "auction1"));
+        int messageId2 = registeredUser.addAuctionEndedMessage(new StoreMsg(200, -1, "auction2"));
+        Map<Integer, StoreMsg> messages = registeredUser.getAuctionEndedMessages();
         assertEquals(2, messages.size());
-        assertEquals("auction1", messages.get(100));
-        assertEquals("auction2", messages.get(200));
+        assertEquals("auction1", messages.get(messageId1).getMessage());
+        assertEquals("auction2", messages.get(messageId2).getMessage());
     }
     
     @Test
     void testGetAllMessagesCombinesAllTypes() {
-        registeredUser.addMessageFromStore(new SimpleEntry<>(1, "storeMsg"));
-        registeredUser.AssignmentMessages(new SimpleEntry<>(2, "assignMsg"));
-        registeredUser.addAuctionEndedMessage(new SimpleEntry<>(3, "auctionMsg"));
-        HashMap<Integer, String> all = registeredUser.getAllMessages();
+        int messageId1 = registeredUser.addMessageFromStore(new StoreMsg(1, -1, "storeMsg"));
+        int messageId2 = registeredUser.addAssignmentMessage(new StoreMsg(2, -1, "assignMsg"));
+        int messageId3 = registeredUser.addAuctionEndedMessage(new StoreMsg(3, -1, "auctionMsg"));
+        Map<Integer, StoreMsg> all = registeredUser.getAllMessages();
         assertEquals(3, all.size());
-        assertEquals("storeMsg", all.get(1));
-        assertEquals("assignMsg", all.get(2));
-        assertEquals("auctionMsg", all.get(3));
+        assertEquals("storeMsg", all.get(messageId1).getMessage());
+        assertEquals("assignMsg", all.get(messageId2).getMessage());
+        assertEquals("auctionMsg", all.get(messageId3).getMessage());
     }
     @Test
     void testSaveCartOrderAndDeleteIt_SingleStoreSingleProduct() {

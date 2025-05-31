@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
+import DomainLayer.Model.helpers.StoreMsg;
 
 public class Registered extends User {
     protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
@@ -22,10 +24,12 @@ public class Registered extends User {
     private String email;
     private String password;
     private int age;
-    private Stack<SimpleEntry<Integer, String>> messagesFromUser; // storeID -> message
-    private Queue<SimpleEntry<Integer, String>> messagesFromStore; // storeID -> message
-    private Queue<SimpleEntry<Integer, String>> assignmentMessages; // storeID -> message
-    private Queue<SimpleEntry<Integer, String>> auctionEndedMessages; // storeID -> message    \
+    private List<StoreMsg> messagesFromUser;
+    private Map<Integer, StoreMsg> messagesFromStore;//msgId -> StoreMsg
+    private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
+    private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
+    protected static final AtomicInteger MsgIdCounter = new AtomicInteger(0);
+
     public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super();
         this.email = email;
@@ -34,9 +38,9 @@ public class Registered extends User {
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
-        messagesFromStore = new LinkedList<>();
-        assignmentMessages = new LinkedList<>();
-        auctionEndedMessages = new LinkedList<>();
+        messagesFromStore = new HashMap<>();
+        assignmentMessages = new HashMap<>();
+        auctionEndedMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -51,9 +55,9 @@ public class Registered extends User {
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
-        messagesFromStore = new LinkedList<>();
-        assignmentMessages = new LinkedList<>();
-        auctionEndedMessages = new LinkedList<>();
+        messagesFromStore = new HashMap<>();
+        assignmentMessages = new HashMap<>();
+        auctionEndedMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -68,34 +72,37 @@ public class Registered extends User {
     }
 
     public void sendMessageToStore(int storeID, String message) {
-        messagesFromUser.push(new SimpleEntry<>(storeID, message));
+        messagesFromUser.add(new StoreMsg(storeID,-1, message));
 
     }
 
-    public void addMessageFromStore(SimpleEntry<Integer, String> message) {
-        this.messagesFromStore.add(message);
+    public int addMessageFromStore(StoreMsg message) {
+        int msgId = MsgIdCounter.getAndIncrement();
+        this.messagesFromStore.put(msgId, message);
+        return msgId;
     }
 
-    public void addAuctionEndedMessage(SimpleEntry<Integer, String> message) {
-        this.auctionEndedMessages.add(message);
+    public int addAuctionEndedMessage(StoreMsg message) {
+        int msgId = MsgIdCounter.getAndIncrement();
+        this.auctionEndedMessages.put(msgId, message);
+        return msgId;
     }
 
-    public HashMap<Integer, String> getMessagesFromUser() {
-        return messagesFromUser.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
-        
+    public List<StoreMsg> getMessagesFromUser() {
+        return messagesFromUser;
     }
 
-    public HashMap<Integer, String> getMessagesFromStore() {
-        return messagesFromStore.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+    public Map<Integer, StoreMsg> getMessagesFromStore() {
+        return messagesFromStore;
     }
-    public HashMap<Integer, String> getAssignmentMessages() {
-        return assignmentMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+    public Map<Integer, StoreMsg> getAssignmentMessages() {
+        return assignmentMessages;
     }
-    public HashMap<Integer, String> getAuctionEndedMessages() {
-        return auctionEndedMessages.stream().collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+    public Map<Integer, StoreMsg> getAuctionEndedMessages() {
+        return auctionEndedMessages;
     }
-    public HashMap<Integer, String> getAllMessages() {
-        HashMap<Integer, String> allMessages = new HashMap<>();
+    public Map<Integer, StoreMsg> getAllMessages() {
+        Map<Integer, StoreMsg> allMessages = new HashMap<>();
         allMessages.putAll(getMessagesFromStore());
         allMessages.putAll(getAssignmentMessages());
         allMessages.putAll(getAuctionEndedMessages());
@@ -160,8 +167,10 @@ public class Registered extends User {
         return new UserDTO(userId, email, age);
     }
 
-    public void AssignmentMessages(SimpleEntry simpleEntry) {
-        this.assignmentMessages.add(simpleEntry);
+    public int addAssignmentMessage(StoreMsg msg) {
+        int msgId = MsgIdCounter.getAndIncrement();
+        this.assignmentMessages.put(msgId, msg);
+        return msgId;
     }
 
     @Override
@@ -182,12 +191,17 @@ public class Registered extends User {
     }
 
     public void removeAssignmentMessage(int storeId){
-        for (SimpleEntry<Integer,String> simpleEntry : assignmentMessages) {
-            if(simpleEntry.getKey().equals(storeId)){
-                assignmentMessages.remove(simpleEntry);
-                return;
-            }
+        assignmentMessages.values().removeIf(msg -> msg.getStoreId() == storeId);
+    }
+
+    public boolean removeMsgById(int msgId) {
+        if (!messagesFromStore.containsKey(msgId) && !assignmentMessages.containsKey(msgId) && !auctionEndedMessages.containsKey(msgId)) {
+            return false; // Message ID not found
         }
+        messagesFromStore.remove(msgId);
+        assignmentMessages.remove(msgId);
+        auctionEndedMessages.remove(msgId);
+        return true;
     }
 
 }

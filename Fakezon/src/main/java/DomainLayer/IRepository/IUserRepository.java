@@ -12,6 +12,8 @@ public interface IUserRepository {
 
     List<Registered> findAll();
 
+    boolean isUserRegistered(int userId);
+
     void deleteByUserName(String email);
         void clearAllData();
 

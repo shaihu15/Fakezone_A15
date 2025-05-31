@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,7 @@ import ApplicationLayer.Enums.ErrorType;
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
-
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
@@ -88,9 +89,12 @@ public class StoreOwner_Manager_Appointment {
         
         TimeUnit.SECONDS.sleep(1);
         // Verify assignment message is sent
-        Response<HashMap<Integer, String>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
-        assertTrue(assignmentMessagesRes.getData().containsKey(storeId), "Expected manager to have pending assignment for the store");
+        assertTrue(assignmentMessagesRes.getData().size() > 0, "Expected manager to have at least one assignment message");
+        StoreMsg assignmentMessage = assignmentMessagesRes.getData().values().iterator().next();
+        assertEquals(storeId, assignmentMessage.getStoreId(), "Assignment message should be for the correct store");
+        assertTrue(assignmentMessage.getMessage().contains("Please approve or decline this role"), "Expected assignment message to contain appointment notification");
     }
 
     @Test
@@ -114,7 +118,7 @@ public class StoreOwner_Manager_Appointment {
         assertTrue(storeRolesData.getStoreManagers().get(managerUserId).containsAll(perms), "Manager should have the assigned permissions");
 
         // Verify assignment message is cleared after acceptance
-        Response<HashMap<Integer, String>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages");
     }
 
@@ -137,7 +141,7 @@ public class StoreOwner_Manager_Appointment {
         assertFalse(storeRolesData.getStoreManagers().containsKey(managerUserId), "Manager should NOT be listed in store roles after decline");
 
         // Verify assignment message is cleared after decline
-        Response<HashMap<Integer, String>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages");
 
     }
@@ -156,14 +160,13 @@ public class StoreOwner_Manager_Appointment {
 
     @Test
     void testAddStoreManager_Failure_InvalidManagerUserId() {
-        int invalidUserId = -1;
+        int invalidUserId = -100;
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
 
         Response<Void> response = systemService.addStoreManager(storeId, ownerUserId, invalidUserId, perms);
         assertFalse(response.isSuccess(), "Expected manager appointment to fail for invalid manager user ID");
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        assertTrue(response.getMessage().contains("Error during adding store manager"), "Expected error message for invalid manager user ID");
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
     }
 
     @Test
