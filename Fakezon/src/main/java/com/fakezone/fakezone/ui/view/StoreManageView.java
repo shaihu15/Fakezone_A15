@@ -140,6 +140,11 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             return;
         }
 
+        if(!store.isOpen() && store.getFounderId() != currentUserDTO.getUserId()){
+            event.rerouteTo("");
+            Notification.show("Store is Closed - Contact Store Founder");
+        }
+
         // --- Fetch permissions immediately ---
         fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
 
@@ -219,6 +224,21 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             actionButtonsLayout.add(viewPurchasesButton);
         }
 
+        if(store.getFounderId() == currentUserDTO.getUserId()){
+            if(store.isOpen()){
+                Button closeStoreButton = new Button("Close Store");
+                closeStoreButton.getStyle().set("background-color", "#c22a2a").set("color", "white");
+                closeStoreButton.addClickListener(e -> closeStoreDialog());
+                actionButtonsLayout.add(closeStoreButton);
+            }
+            else{
+                Button openStoreButton = new Button("Open Store");
+                openStoreButton.getStyle().set("background-color", "#c22a2a").set("color", "white");
+                openStoreButton.addClickListener(e -> openStoreDialog());
+                actionButtonsLayout.add(openStoreButton);
+            }
+        }
+    
 
         RouterLink backLink = new RouterLink("Back to Store", StorePageView.class, new RouteParameters("storeId", String.valueOf(this.storeId)));        
         backLink.getStyle().set("margin", "10px").set("color", "#1976D2");
@@ -229,8 +249,8 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         rolesDisplaySection.setSpacing(true);
         rolesDisplaySection.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
-
         add(backLink, storeInfoCard, actionButtonsLayout, rolesDisplaySection);
+        
     }
 
     private void fetchUserPermissionsForStore(int storeId, int userId, String token) {
@@ -1492,5 +1512,58 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             Notification.show(response.getMessage());
         }
     }
+
+    private void closeStoreDialog(){
+        Dialog dialog = new Dialog();
+        dialog.add(new H2("Confirm Closing Store"));
+        dialog.add(new Button("Confirm", e -> {dialog.close(); closeStore();}));
+        dialog.open();
+    }
+
+    private void openStoreDialog() {
+        Dialog dialog = new Dialog();
+        dialog.add(new H2("Confirm Opening Store"));
+        dialog.add(new Button("Confirm", e -> {dialog.close(); openStore(); }));
+        dialog.open();
+    }
+
+    private void closeStore(){
+        String url = apiUrl + "store/closeStoreByFounder/" + storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<String>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<String>>() {
+                });
+        Response<String> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Store Closed Successfully");
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void openStore() {
+        String url = apiUrl + "store/openStore/" + storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Store Opened Successfully");
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
+
 
 }

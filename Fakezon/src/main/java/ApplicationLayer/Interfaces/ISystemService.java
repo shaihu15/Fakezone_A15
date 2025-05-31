@@ -241,4 +241,6 @@ public interface ISystemService {
 
     Response<HashMap<Integer, String>> getMessagesFromStore(int userID);
 
+    Response<Void> openStore(int storeId, int userId);
+
 }
