@@ -1060,7 +1060,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("Store: " + storeID + " is already closed");
             }
             this.isOpen = false;
-            // this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
+            this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
 
         } else {
             throw new IllegalArgumentException(
@@ -1099,8 +1099,18 @@ public class Store implements IStore {
     }
 
     @Override
-    public void openStore() {
-        this.isOpen = true;
+    public void openStore(int userId) {
+        if(userId == this.storeFounderID){
+            if(!this.isOpen){
+                this.isOpen = true;
+            }
+            else{
+                throw new IllegalArgumentException("Store is Already Open");
+            }
+        }
+        else{
+            throw new IllegalArgumentException("Not Store Founder");
+        }
     }
 
     @Override

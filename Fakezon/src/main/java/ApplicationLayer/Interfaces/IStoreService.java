@@ -135,4 +135,6 @@ public interface IStoreService {
 
   List<StoreManagerPermission> isStoreManager(int storeId, int userId); // returns null if not manager
 
+  void openStore(int storeId, int userId);
+
 }

@@ -77,7 +77,7 @@ public interface IStore {
 
     StoreRating getStoreRatingByUser(int userID);
 
-    void openStore();
+    void openStore(int userId);
 
     boolean isOpen();
 

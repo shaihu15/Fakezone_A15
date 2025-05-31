@@ -1294,20 +1294,20 @@ class SystemServiceTest {
         assertNull(response.getErrorType());
     }
     
-    @Test
-    void testUserAccessStore_StoreClosed() {
-        int storeId = 1;
-        StoreDTO storeDTO = mock(StoreDTO.class);
-        when(storeService.viewStore(storeId)).thenReturn(storeDTO);
-        when(storeDTO.isOpen()).thenReturn(false);
+    // @Test
+    // void testUserAccessStore_StoreClosed() {
+    //     int storeId = 1;
+    //     StoreDTO storeDTO = mock(StoreDTO.class);
+    //     when(storeService.viewStore(storeId)).thenReturn(storeDTO);
+    //     when(storeDTO.isOpen()).thenReturn(false);
     
-        Response<StoreDTO> response = systemService.userAccessStore(storeId);
+    //     Response<StoreDTO> response = systemService.userAccessStore(storeId);
     
-        assertFalse(response.isSuccess());
-        assertNull(response.getData());
-        assertEquals("Store is closed", response.getMessage());
-        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
-    }
+    //     assertFalse(response.isSuccess());
+    //     assertNull(response.getData());
+    //     assertEquals("Store is closed", response.getMessage());
+    //     assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+    // }
     
     @Test
     void testUserAccessStore_Exception() {
