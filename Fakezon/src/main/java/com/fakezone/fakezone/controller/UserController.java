@@ -371,7 +371,7 @@ public class UserController {
             return ResponseEntity.status(500).body(response);
         }
     }
-    @GetMapping("/removeUserMessageById/{requesterId}/{messageId}")
+    @PostMapping("/removeUserMessageById/{requesterId}/{messageId}")
     public ResponseEntity<Response<Void>> removeUserMessageById(@PathVariable("requesterId") int requesterId, @PathVariable("messageId") int messageId, @RequestHeader("Authorization") String token) {
         try {
             logger.info("Received request to remove user message with id: {}", messageId);

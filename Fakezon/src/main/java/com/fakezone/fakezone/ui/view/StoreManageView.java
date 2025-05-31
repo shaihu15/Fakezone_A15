@@ -40,6 +40,7 @@ import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.helpers.UserMsg;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -1185,14 +1186,14 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
     private void showMsgs(){
         Dialog dialog = new Dialog();
-        HashMap<Integer, String> msgs = getMsgs();
+        Map<Integer, UserMsg> msgs = getMsgs();
         if(msgs.isEmpty()){
             dialog.add("No Messages");
         }
         else{
-            for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
-                Integer user = entry.getKey();
-                String messageText = entry.getValue();
+            for (Map.Entry<Integer, UserMsg> entry : msgs.entrySet()) {
+                Integer user = entry.getValue().getUserId();
+                String messageText = entry.getValue().getMsg();
 
                 // ─── Build a “message card” ─────────────────────────────
                 // Container for one message
@@ -1205,7 +1206,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                         .set("width", "100%");
 
                 // user id
-                H4 userTitle = new H4(String.valueOf(user));
+                H4 userTitle = new H4("From: " + String.valueOf(user));
                 userTitle.getStyle().set("margin", "0");
 
                 // The message body
@@ -1262,17 +1263,17 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         }
     }
 
-    private HashMap<Integer, String> getMsgs(){
+    private Map<Integer, UserMsg> getMsgs(){
         String url = apiUrl + "store/getMessagesFromUsers/" +storeId + "/" + currentUserDTO.getUserId();
         HttpHeaders header = new HttpHeaders();
         header.add("Authorization", currentToken);
         HttpEntity<Void> entity = new HttpEntity<>(header);
-        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+        ResponseEntity<Response<Map<Integer,UserMsg>>> apiResponse = restTemplate.exchange(
             url, 
             HttpMethod.GET, 
             entity, 
-            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
-        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+            new ParameterizedTypeReference<Response<Map<Integer, UserMsg>>>() {});
+        Response<Map<Integer, UserMsg>> response = apiResponse.getBody();
         if(response.isSuccess()){
             return response.getData();
         }
