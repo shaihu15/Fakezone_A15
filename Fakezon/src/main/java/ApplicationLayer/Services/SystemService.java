@@ -54,6 +54,7 @@ import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
 import DomainLayer.Model.helpers.StoreMsg;
+import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -825,21 +826,21 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId) {
+    public Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId) {
         if(!userService.isUserLoggedIn(userId)){
             logger.error("System Service - User is not logged in: " + userId);
-            return new Response<HashMap<Integer, String>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            return new Response<Map<Integer,UserMsg>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
         }
         try{
             if (this.storeService.isStoreOpen(storeId)) {
-                return this.storeService.getAllStoreMessages(storeId, userId);
+                return this.storeService.getMessagesFromUsers(storeId, userId);
             } else {
                 logger.error("System Service - Store is closed: " + storeId);
-                return new Response<HashMap<Integer, String>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+                return new Response<Map<Integer,UserMsg>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<Map<Integer,UserMsg>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
 
     }

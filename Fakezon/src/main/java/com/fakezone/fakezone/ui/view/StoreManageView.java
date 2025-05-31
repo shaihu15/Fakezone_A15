@@ -1263,7 +1263,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
     }
 
     private HashMap<Integer, String> getMsgs(){
-        String url = apiUrl + "store/getAllStoreMessages/" +storeId + "/" + currentUserDTO.getUserId();
+        String url = apiUrl + "store/getMessagesFromUsers/" +storeId + "/" + currentUserDTO.getUserId();
         HttpHeaders header = new HttpHeaders();
         header.add("Authorization", currentToken);
         HttpEntity<Void> entity = new HttpEntity<>(header);

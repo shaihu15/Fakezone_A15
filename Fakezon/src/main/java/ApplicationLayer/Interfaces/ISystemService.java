@@ -29,6 +29,7 @@ import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.helpers.StoreMsg;
+import DomainLayer.Model.helpers.UserMsg;
 
 
 public interface ISystemService {
@@ -101,7 +102,7 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
-    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
+    Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId);
 
     Response<Map<Integer, StoreMsg>> getAllMessages(int userID); // get all the messages of the user
 

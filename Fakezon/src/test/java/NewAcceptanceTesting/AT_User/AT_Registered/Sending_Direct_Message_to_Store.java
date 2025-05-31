@@ -9,6 +9,7 @@ import ApplicationLayer.Response;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -128,11 +130,12 @@ public class Sending_Direct_Message_to_Store {
         assertEquals("Message sent successfully", response.getMessage());
 
         // Verify that the message was sent
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
+        Response<Map<Integer,UserMsg>> messagesResponse = systemService.getMessagesFromUsers(storeId, storeOwnerId);
         assertEquals("Messages retrieved successfully", messagesResponse.getMessage());
         assertTrue(messagesResponse.isSuccess());
-        HashMap<Integer, String> messages = messagesResponse.getData();
-        assertTrue(messages.containsValue(message));
+        Map<Integer,UserMsg> messages = messagesResponse.getData();
+        assertTrue(messages.entrySet().stream()
+                .anyMatch(entry -> entry.getValue().getMsg().equals(message) && entry.getValue().getUserId() == registeredId));
     }
 
     @Test
@@ -142,7 +145,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Message cannot be empty", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
+        Response<Map<Integer, UserMsg>> messagesResponse = systemService.getMessagesFromUsers(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -153,7 +156,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Message cannot be empty", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
+        Response<Map<Integer,UserMsg>> messagesResponse = systemService.getMessagesFromUsers(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -166,7 +169,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Error during sending message to store: Store not found", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
+        Response<Map<Integer, UserMsg>> messagesResponse = systemService.getMessagesFromUsers(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -179,7 +182,7 @@ public class Sending_Direct_Message_to_Store {
         assertFalse(response.isSuccess());
         assertEquals("Error during sending message to store: User not found", response.getMessage());
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
+        Response<Map<Integer, UserMsg>> messagesResponse = systemService.getMessagesFromUsers(storeId, storeOwnerId);
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
@@ -194,11 +197,12 @@ public class Sending_Direct_Message_to_Store {
         assertEquals("Message sent successfully", response.getMessage());
 
                 // Verify that the message was sent
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
+        Response<Map<Integer, UserMsg>> messagesResponse = systemService.getMessagesFromUsers(storeId, storeOwnerId);
         assertEquals("Messages retrieved successfully", messagesResponse.getMessage());
         assertTrue(messagesResponse.isSuccess());
-       HashMap<Integer, String> messages = messagesResponse.getData();
-        assertTrue(messages.containsValue(message));
+        Map<Integer, UserMsg> messages = messagesResponse.getData();
+        assertTrue(messages.entrySet().stream()
+                .anyMatch(entry -> entry.getValue().getMsg().equals(message) && entry.getValue().getUserId() == newUserId));
     }
 
 }
