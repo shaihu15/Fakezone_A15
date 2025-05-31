@@ -197,7 +197,7 @@ public class Sending_Direct_Message_to_Store {
         Response<HashMap<Integer, String>> messagesResponse = systemService.getAllStoreMessages(storeId, storeOwnerId);
         assertEquals("Messages retrieved successfully", messagesResponse.getMessage());
         assertTrue(messagesResponse.isSuccess());
-        HashMap<Integer, String> messages = messagesResponse.getData();
+       HashMap<Integer, String> messages = messagesResponse.getData();
         assertTrue(messages.containsValue(message));
     }
 

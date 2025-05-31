@@ -32,6 +32,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.Tree;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -1374,7 +1375,7 @@ public class Store implements IStore {
         rolesLock.lock();
         try{
             if(isOwner(userId) || (isManager(userId) && storeManagers.get(userId).contains(StoreManagerPermission.REQUESTS_REPLY))){
-                HashMap<Integer, String> messages = new HashMap<>();
+               HashMap<Integer, String> messages = new HashMap<>();
                 for (SimpleEntry<Integer, String> message : messagesFromUsers) {
                     messages.put(message.getKey(), message.getValue());
                 }

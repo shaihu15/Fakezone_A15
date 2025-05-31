@@ -28,6 +28,7 @@ import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.helpers.StoreMsg;
 
 
 public interface ISystemService {
@@ -102,11 +103,11 @@ public interface ISystemService {
 
     Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
 
-    Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
+    Response<Map<Integer, StoreMsg>> getAllMessages(int userID); // get all the messages of the user
 
-    Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
+    Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID); // get all the messages of the user
 
-    Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
+    Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID); // get all the messages of the user
 
     Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
 
@@ -239,6 +240,8 @@ public interface ISystemService {
     Response<Void> addXorDiscountWithStoreScope(int storeId, int requesterId, int cartId,
             List<Predicate<DomainLayer.Model.Cart>> conditions, double percentage);
 
-    Response<HashMap<Integer, String>> getMessagesFromStore(int userID);
+    Response<Map<Integer, StoreMsg>> getMessagesFromStore(int userID);
+
+    Response<Void> removeUserMessageById(int userId, int msgId);
 
 }

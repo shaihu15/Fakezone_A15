@@ -38,6 +38,8 @@ import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -635,7 +637,7 @@ public class StoreService implements IStoreService {
                     return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
                 }
                 logger.info("Messages retrieved for store: " + storeId);
-                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
+                return new Response<HashMap<Integer, String>>(messages, "Messages retrieved successfully", true, null, null);
             } catch (Exception e) {
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: "+ e.getMessage());
