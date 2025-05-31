@@ -15,5 +15,6 @@ public enum PCategory {
     MOVIES,
     VIDEO_GAMES,
     SOFTWARE,
-    OFFICE_SUPPLIES
+    OFFICE_SUPPLIES,
+    FOOD
 }
