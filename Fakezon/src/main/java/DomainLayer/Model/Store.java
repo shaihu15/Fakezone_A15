@@ -32,7 +32,9 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.Tree;
+import DomainLayer.Model.helpers.UserMsg;
 
 import static org.mockito.ArgumentMatchers.*;
 
@@ -56,7 +58,9 @@ public class Store implements IStore {
     private HashMap<Integer, Integer> pendingOwners; // appointee : appointor
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
     private Tree rolesTree;
-    private Queue<SimpleEntry<Integer, String>> messagesFromUsers; // HASH userID to message
+    private Map<Integer, UserMsg> messagesFromUsers; // HASH msgId to message
+    protected static final AtomicInteger UserMsgIdCounter = new AtomicInteger(0);
+
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
     private static final AtomicInteger idCounter = new AtomicInteger(0);
     private static final AtomicInteger policyIDCounter = new AtomicInteger(0);
@@ -88,7 +92,7 @@ public class Store implements IStore {
         this.storeOwners.add(founderID);
         this.pendingOwners = new HashMap<>(); // appointee : appointor
         this.storeManagers = new HashMap<>(); // HASH userID to store manager
-        this.messagesFromUsers = new LinkedList<>();
+        this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
         this.messagesFromStore = new Stack<>();
         this.publisher = publisher;
         this.pendingManagersPerms = new HashMap<>();
@@ -114,7 +118,7 @@ public class Store implements IStore {
         this.storeOwners.add(founderID);
         this.pendingOwners = new HashMap<>(); // appointee : appointor
         this.storeManagers = new HashMap<>(); // HASH userID to store manager
-        this.messagesFromUsers = new LinkedList<>();
+        this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
         this.messagesFromStore = new Stack<>();
         this.publisher = publisher;
         this.pendingManagersPerms = new HashMap<>();
@@ -582,7 +586,8 @@ public class Store implements IStore {
 
     @Override
     public void receivingMessage(int userID, String message) {
-        messagesFromUsers.add(new SimpleEntry<>(userID, message));
+        int msgId = UserMsgIdCounter.incrementAndGet();
+        messagesFromUsers.put(msgId, new UserMsg(userID, message));
     }
 
     public void receivedResponseForAuctionByOwner(int ownerId, int productID, boolean approved) {
@@ -653,7 +658,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId) {
+    public Map<Integer,UserMsg> getMessagesFromUsers(int managerId) {
         rolesLock.lock();
         try {
             if (isOwner(managerId) || (isManager(managerId)
@@ -1378,31 +1383,6 @@ public class Store implements IStore {
             productsLock.unlock();
         }
     }
-
-    @Override
-    public HashMap<Integer, String> getAllStoreMessages(int userId){
-        rolesLock.lock();
-        try{
-            if(isOwner(userId) || (isManager(userId) && storeManagers.get(userId).contains(StoreManagerPermission.REQUESTS_REPLY))){
-                HashMap<Integer, String> messages = new HashMap<>();
-                for (SimpleEntry<Integer, String> message : messagesFromUsers) {
-                    messages.put(message.getKey(), message.getValue());
-                }
-                return messages ;
-            }
-            else{
-                throw new IllegalArgumentException("Insufficient Permissions");
-            }
-        }
-        catch(Exception e){
-            throw e;
-        }
-        finally{
-            rolesLock.unlock();
-        }
-
-    }
-
 
     public Map<StoreProductDTO, Boolean> decrementProductsInStore(int userId, Map<Integer,Integer> productsToBuy)
     {
