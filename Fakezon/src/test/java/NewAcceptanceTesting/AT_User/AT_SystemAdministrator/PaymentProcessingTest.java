@@ -8,11 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -44,7 +41,6 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
 
-@SpringBootTest(classes = FakezoneApplication.class)
 
 public class PaymentProcessingTest {
 
