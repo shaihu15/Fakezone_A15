@@ -245,4 +245,6 @@ public interface ISystemService {
 
     Response<Void> removeUserMessageById(int userId, int msgId);
 
+    Response<Void> openStore(int storeId, int userId);
+
 }

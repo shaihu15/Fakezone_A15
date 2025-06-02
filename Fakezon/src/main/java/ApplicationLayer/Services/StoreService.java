@@ -888,4 +888,14 @@ public class StoreService implements IStoreService {
         return store.isManagerAndGetPerms(userId);
     }
 
+    @Override
+    public void openStore(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("openStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.openStore(userId);
+    }
+
 }

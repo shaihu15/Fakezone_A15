@@ -670,7 +670,7 @@ public class StoreTest {
     @Test
     void testOpenStore() {
         store.closeStore(founderId);
-        store.openStore();
+        store.openStore(founderId);
         assertTrue(store.isOpen());
     }
 

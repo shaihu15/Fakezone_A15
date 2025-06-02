@@ -239,11 +239,9 @@ public class SystemService implements ISystemService {
             logger.info("System Service - User accessed store: " + storeId);
             
             StoreDTO s = this.storeService.viewStore(storeId);
-            if (s.isOpen()) {
-                return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
-            }
-            logger.error("System Service - Store is closed: " + storeId);
-            return new Response<StoreDTO>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+
+            return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
+
 
         } catch (Exception e) {
             // Handle exception if needed
@@ -2269,6 +2267,15 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during removing user message: " + e.getMessage());
             return new Response<>(null, "Error during removing user message: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
+
+    public Response<Void> openStore(int storeId, int userId){
+        try{
+            this.storeService.openStore(storeId, userId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+
         }
     }
 
