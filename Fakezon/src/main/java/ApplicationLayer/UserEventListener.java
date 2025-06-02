@@ -1,6 +1,9 @@
 package ApplicationLayer;
 
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.StoreOwner;
+import DomainLayer.Enums.RoleName;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
@@ -18,6 +21,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,11 +82,14 @@ public class UserEventListener {
         // As requested, fetching all users with roles in the store
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
-            String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
-                            " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
-            registeredUser.addAuctionEndedMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
-            if (registeredUser.isLoggedIn()) {
-                wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+            HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
+            if(roles.containsKey(event.getStoreId()) && roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER){
+                String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
+                                " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
+                registeredUser.addAuctionEndedMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
+                if (registeredUser.isLoggedIn()) {
+                    wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+                }
             }
         }
     }
