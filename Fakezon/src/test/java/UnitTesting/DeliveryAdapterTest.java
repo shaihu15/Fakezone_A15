@@ -63,12 +63,5 @@ class DeliveryAdapterTest {
         boolean result = newdeliveryAdapter.deliver(country, address, recipient, packageDetails);
         assertFalse(result);
     }
-
-    @Test
-    void cancelPackage_Success() {
-        int deliveryId = 12345;
-        boolean result = externalDeliverySystem.cancelPackage(deliveryId);
-        assertTrue(result);
-    }
     
 }

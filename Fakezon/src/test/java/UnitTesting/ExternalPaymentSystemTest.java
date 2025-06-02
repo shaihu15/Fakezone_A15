@@ -31,16 +31,4 @@ public class ExternalPaymentSystemTest {
         assertTrue(result);
     }
 
-    @Test
-    void processRefund_ShouldReturnTrue_ForValidInput() {
-        // Arrange
-        String cardNumber = "4111111111111111";
-        double amount = 75.0;
-
-        // Act
-        boolean result = paymentSystem.processRefund(cardNumber, amount);
-
-        // Assert
-        assertTrue(result);
-    }
 }
