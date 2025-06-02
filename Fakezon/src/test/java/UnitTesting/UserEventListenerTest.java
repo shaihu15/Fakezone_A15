@@ -2,8 +2,10 @@ package UnitTesting;
 
 import ApplicationLayer.UserEventListener;
 import DomainLayer.Enums.RoleName;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
@@ -25,6 +27,7 @@ import javax.management.relation.Role;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -220,7 +223,10 @@ public class UserEventListenerTest {
 
         List<Registered> users = Arrays.asList(mockRegisteredUser1, mockRegisteredUser2);
         when(userRepository.UsersWithRolesInStoreId(storeId)).thenReturn(users);
-
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(101, new StoreOwner());
+        when(mockRegisteredUser1.getAllRoles()).thenReturn(map);
+        when(mockRegisteredUser2.getAllRoles()).thenReturn(map);
         // Act
         userEventListener.handleAuctionEndedToOwnersEvent(event);
 

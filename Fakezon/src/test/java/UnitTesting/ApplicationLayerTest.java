@@ -1,5 +1,6 @@
 package UnitTesting;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,8 +23,10 @@ import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Response;
 import ApplicationLayer.UserEventListener;
 import DomainLayer.Enums.RoleName;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
@@ -147,6 +150,10 @@ public class ApplicationLayerTest {
         when(userRepository.UsersWithRolesInStoreId(5)).thenReturn(List.of(user1, user2));
         when(user1.isLoggedIn()).thenReturn(false);
         when(user2.isLoggedIn()).thenReturn(true);
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(5, new StoreOwner());
+        when(user1.getAllRoles()).thenReturn(map);
+        when(user2.getAllRoles()).thenReturn(map);
 
         listener.handleAuctionEndedToOwnersEvent(event);
 
