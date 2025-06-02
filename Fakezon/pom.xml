@@ -47,6 +47,7 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+
         <!-- CREATING LOG ISSUES -->
         <!-- <dependency>
             <groupId>ch.qos.logback</groupId>

@@ -1757,13 +1757,20 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during getting all products", false, ErrorType.INTERNAL_ERROR, null);
         }
     }
-    private void init(){
-        logger.info("system service init");
-        this.login("testNormalUser1004@gmail.com", "a12345");
-        this.purchaseCart(1004, "IL", LocalDate.of(1998, 10, 15), PaymentMethod.CREDIT_CARD, "deliver", "1234", "Yuval Bachar", "never", "123","address1004","Yuval Bachar", "details");
-        this.ratingStoreProduct(1001, 1001, 1004, 4.5, "Great!");
-        this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
-        this.userLogout(1004);
+    public boolean init(){
+        try{
+            logger.info("system service init");
+            this.login("testNormalUser1004@gmail.com", "a12345");
+            this.purchaseCart(1004, "IL", LocalDate.of(1998, 10, 15), PaymentMethod.CREDIT_CARD, "deliver", "1234", "Yuval Bachar", "never", "123","address1004","Yuval Bachar", "details");
+            this.ratingStoreProduct(1001, 1001, 1004, 4.5, "Great!");
+            this.ratingStoreProduct(1001, 1002, 1004, 2, "Meh");
+            this.userLogout(1004);
+            return true;
+        }
+        catch(Exception e){
+            logger.error("System Service - Error during init: " + e.getMessage());
+            return false;
+        }
 
     }
 

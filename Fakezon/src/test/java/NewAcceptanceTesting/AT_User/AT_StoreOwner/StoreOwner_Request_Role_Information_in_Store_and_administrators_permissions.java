@@ -115,8 +115,22 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
 
     @Test
     void testRequestRoleInformation_Request_administrators_permissions_Success() {
-        //no function for that yet
-        
+        Response<StoreRolesDTO> result = systemService.getStoreRoles(storeId, storeOwnerId);
+
+        // Assert: Validate the response
+        assertTrue(result.isSuccess(), "Request for administrators' permissions failed");
+        assertEquals("Store roles retrieved successfully", result.getMessage());
+
+        StoreRolesDTO storeRoles = result.getData();
+        assertNotNull(storeRoles, "Store roles data is null");
+        assertEquals(storeId, storeRoles.getStoreId(), "Store ID mismatch");
+
+        // Validate that administrators' roles and permissions are displayed
+        assertFalse(storeRoles.getStoreManagers().isEmpty(), "No store managers found");
+        assertTrue(storeRoles.getStoreOwners().stream().anyMatch(ownerId -> ownerId == storeOwnerId),
+                "Store owner is not listed in the roles");
+
+
     }
 
 
