@@ -1450,6 +1450,12 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> addSystemAdmin(int requesterId, int userId) {
         try {
+            if (userId == 1) { // Check if the target user ID is 1 for initial admin setup
+                logger.info("System Service - User ID 1 detected. Attempting to add user ID 1 as the first system admin, bypassing requester check.");
+                userService.addSystemAdmin(userId); // This calls the UserService method which calls UserRepository
+                logger.info("System Service - User ID 1 successfully added as the FIRST system admin.");
+                return new Response<>(null, "Initial system admin appointed successfully", true, null, null);
+            }
             if (!userService.isSystemAdmin(requesterId)) {
                 logger.error(
                         "System Service - Unauthorized attempt to add system admin: Admin privileges required for user ID "
