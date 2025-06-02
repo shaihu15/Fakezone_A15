@@ -40,6 +40,7 @@ import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.helpers.UserMsg;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -140,6 +141,11 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             return;
         }
 
+        if(!store.isOpen() && store.getFounderId() != currentUserDTO.getUserId()){
+            event.rerouteTo("");
+            Notification.show("Store is Closed - Contact Store Founder");
+        }
+
         // --- Fetch permissions immediately ---
         fetchUserPermissionsForStore(currentStoreId, currentUserDTO.getUserId(), currentToken);
 
@@ -219,6 +225,21 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             actionButtonsLayout.add(viewPurchasesButton);
         }
 
+        if(store.getFounderId() == currentUserDTO.getUserId()){
+            if(store.isOpen()){
+                Button closeStoreButton = new Button("Close Store");
+                closeStoreButton.getStyle().set("background-color", "#c22a2a").set("color", "white");
+                closeStoreButton.addClickListener(e -> closeStoreDialog());
+                actionButtonsLayout.add(closeStoreButton);
+            }
+            else{
+                Button openStoreButton = new Button("Open Store");
+                openStoreButton.getStyle().set("background-color", "#c22a2a").set("color", "white");
+                openStoreButton.addClickListener(e -> openStoreDialog());
+                actionButtonsLayout.add(openStoreButton);
+            }
+        }
+    
 
         RouterLink backLink = new RouterLink("Back to Store", StorePageView.class, new RouteParameters("storeId", String.valueOf(this.storeId)));        
         backLink.getStyle().set("margin", "10px").set("color", "#1976D2");
@@ -229,8 +250,8 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         rolesDisplaySection.setSpacing(true);
         rolesDisplaySection.setDefaultHorizontalComponentAlignment(Alignment.CENTER);
 
-
         add(backLink, storeInfoCard, actionButtonsLayout, rolesDisplaySection);
+        
     }
 
     private void fetchUserPermissionsForStore(int storeId, int userId, String token) {
@@ -1185,14 +1206,14 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
 
     private void showMsgs(){
         Dialog dialog = new Dialog();
-        HashMap<Integer, String> msgs = getMsgs();
+        Map<Integer, UserMsg> msgs = getMsgs();
         if(msgs.isEmpty()){
             dialog.add("No Messages");
         }
         else{
-            for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
-                Integer user = entry.getKey();
-                String messageText = entry.getValue();
+            for (Map.Entry<Integer, UserMsg> entry : msgs.entrySet()) {
+                Integer user = entry.getValue().getUserId();
+                String messageText = entry.getValue().getMsg();
 
                 // ─── Build a “message card” ─────────────────────────────
                 // Container for one message
@@ -1205,7 +1226,7 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                         .set("width", "100%");
 
                 // user id
-                H4 userTitle = new H4(String.valueOf(user));
+                H4 userTitle = new H4("From: " + String.valueOf(user));
                 userTitle.getStyle().set("margin", "0");
 
                 // The message body
@@ -1262,17 +1283,17 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         }
     }
 
-    private HashMap<Integer, String> getMsgs(){
-        String url = apiUrl + "store/getAllStoreMessages/" +storeId + "/" + currentUserDTO.getUserId();
+    private Map<Integer, UserMsg> getMsgs(){
+        String url = apiUrl + "store/getMessagesFromUsers/" +storeId + "/" + currentUserDTO.getUserId();
         HttpHeaders header = new HttpHeaders();
         header.add("Authorization", currentToken);
         HttpEntity<Void> entity = new HttpEntity<>(header);
-        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+        ResponseEntity<Response<Map<Integer,UserMsg>>> apiResponse = restTemplate.exchange(
             url, 
             HttpMethod.GET, 
             entity, 
-            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
-        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+            new ParameterizedTypeReference<Response<Map<Integer, UserMsg>>>() {});
+        Response<Map<Integer, UserMsg>> response = apiResponse.getBody();
         if(response.isSuccess()){
             return response.getData();
         }
@@ -1492,5 +1513,58 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
             Notification.show(response.getMessage());
         }
     }
+
+    private void closeStoreDialog(){
+        Dialog dialog = new Dialog();
+        dialog.add(new H2("Confirm Closing Store"));
+        dialog.add(new Button("Confirm", e -> {dialog.close(); closeStore();}));
+        dialog.open();
+    }
+
+    private void openStoreDialog() {
+        Dialog dialog = new Dialog();
+        dialog.add(new H2("Confirm Opening Store"));
+        dialog.add(new Button("Confirm", e -> {dialog.close(); openStore(); }));
+        dialog.open();
+    }
+
+    private void closeStore(){
+        String url = apiUrl + "store/closeStoreByFounder/" + storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<String>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<String>>() {
+                });
+        Response<String> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Store Closed Successfully");
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void openStore() {
+        String url = apiUrl + "store/openStore/" + storeId + "/" + currentUserDTO.getUserId();
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", currentToken);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Store Opened Successfully");
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
+
 
 }

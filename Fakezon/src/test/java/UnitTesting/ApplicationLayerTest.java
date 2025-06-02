@@ -78,7 +78,7 @@ public class ApplicationLayerTest {
 
         listener.handleAssignmentEvent(event);
 
-        verify(user, times(1)).AssignmentMessages(any());
+        verify(user, times(1)).addAssignmentMessage(any());
     }
 
     @Test

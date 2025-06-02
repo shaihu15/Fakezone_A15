@@ -17,6 +17,8 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.ProductRating;
+import DomainLayer.Model.helpers.UserMsg;
+
 import java.time.LocalDate;
 
 public interface IStoreService {
@@ -78,8 +80,6 @@ public interface IStoreService {
 
   void sendMessageToUser(int managerId, int storeId, int userId, String message);
 
-  Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId, int storeId);
-
   Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId);
 
   Map<StoreDTO, Map<StoreProductDTO, Boolean>> decrementProductsInStores(int userId, Map<Integer,Map<Integer,Integer>> productsToBuy);
@@ -108,7 +108,7 @@ public interface IStoreService {
 
   List<ProductRating> getStoreProductRatings(int storeId, int productID);
 
-  Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
+  Response<Map<Integer, UserMsg>> getMessagesFromUsers(int storeId, int userId);
 
   void clearAllData();
 
@@ -136,5 +136,7 @@ public interface IStoreService {
   boolean isStoreOwner(int storeId, int userId);
 
   List<StoreManagerPermission> isStoreManager(int storeId, int userId); // returns null if not manager
+
+  void openStore(int storeId, int userId);
 
 }

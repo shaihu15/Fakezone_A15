@@ -53,6 +53,8 @@ import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
+import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -237,11 +239,9 @@ public class SystemService implements ISystemService {
             logger.info("System Service - User accessed store: " + storeId);
             
             StoreDTO s = this.storeService.viewStore(storeId);
-            if (s.isOpen()) {
-                return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
-            }
-            logger.error("System Service - Store is closed: " + storeId);
-            return new Response<StoreDTO>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+
+            return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
+
 
         } catch (Exception e) {
             // Handle exception if needed
@@ -584,7 +584,7 @@ public class SystemService implements ISystemService {
             logger.error("System service - user " + requesterId + " is not logged in, cannot add as manager");
             return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
         }
-        if(userService.isUnsignedUser(managerId)) {
+        if(!userService.isUserRegistered(managerId)) {
             logger.error("System service - user " + managerId + " is not registered, cannot add as manager");
             return new Response<>(null, "User is not registered", false, ErrorType.INVALID_INPUT, null);
         }
@@ -600,6 +600,14 @@ public class SystemService implements ISystemService {
 
     @Override
     public Response<Void> addStoreOwner(int storeId, int requesterId, int ownerId) {
+        if(!userService.isUserLoggedIn(requesterId)) {
+            logger.error("System service - user " + requesterId + " is not logged in, cannot add as owner");
+            return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+        }
+        if(!userService.isUserRegistered(ownerId)) {
+            logger.error("System service - user " + ownerId + " is not registered, cannot add as owner");
+            return new Response<>(null, "User is not registered", false, ErrorType.INVALID_INPUT, null);
+        }
         try {
             logger.info("System service - user " + requesterId + " trying to add owner " + ownerId + " to store: "
                     + storeId);
@@ -839,69 +847,73 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId) {
+    public Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId) {
+        if(!userService.isUserLoggedIn(userId)){
+            logger.error("System Service - User is not logged in: " + userId);
+            return new Response<Map<Integer,UserMsg>>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+        }
         try{
             if (this.storeService.isStoreOpen(storeId)) {
-                return this.storeService.getAllStoreMessages(storeId, userId);
+                return this.storeService.getMessagesFromUsers(storeId, userId);
             } else {
                 logger.error("System Service - Store is closed: " + storeId);
-                return new Response<HashMap<Integer, String>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+                return new Response<Map<Integer,UserMsg>>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+            return new Response<Map<Integer,UserMsg>>(null, "Error during getting all messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
 
     }
 
 
 	@Override
-	public Response<HashMap<Integer, String>> getAllMessages(int userID) {
+	public Response<Map<Integer, StoreMsg>> getAllMessages(int userID) {
 		try{
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAllMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                return new Response<Map<Integer, StoreMsg>>(null, "User is not logged in", false,
                         ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+            return new Response<Map<Integer, StoreMsg>>(null, "Error during getting all messages: " + e.getMessage(),
                     false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAssignmentMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAssignmentMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                return new Response<Map<Integer, StoreMsg>>(null, "User is not logged in", false,
                         ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+            return new Response<Map<Integer, StoreMsg>>(null, "Error during getting all messages: " + e.getMessage(),
                     false, ErrorType.INTERNAL_ERROR, null);
         }
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getAuctionEndedMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                return new Response<Map<Integer, StoreMsg>>(null, "User is not logged in", false,
                         ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+            return new Response<Map<Integer, StoreMsg>>(null, "Error during getting all messages: " + e.getMessage(),
                     false, ErrorType.INTERNAL_ERROR, null);
         }
     }
@@ -1461,6 +1473,12 @@ public class SystemService implements ISystemService {
     @Override
     public Response<Void> addSystemAdmin(int requesterId, int userId) {
         try {
+            if (userId == 1) { // Check if the target user ID is 1 for initial admin setup
+                logger.info("System Service - User ID 1 detected. Attempting to add user ID 1 as the first system admin, bypassing requester check.");
+                userService.addSystemAdmin(userId); // This calls the UserService method which calls UserRepository
+                logger.info("System Service - User ID 1 successfully added as the FIRST system admin.");
+                return new Response<>(null, "Initial system admin appointed successfully", true, null, null);
+            }
             if (!userService.isSystemAdmin(requesterId)) {
                 logger.error(
                         "System Service - Unauthorized attempt to add system admin: Admin privileges required for user ID "
@@ -2242,19 +2260,54 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getMessagesFromStore(int userID) {
+    public Response<Map<Integer, StoreMsg>> getMessagesFromStore(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
                 return this.userService.getMessagesFromStore(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
-                return new Response<HashMap<Integer, String>>(null, "User is not logged in", false,
+                return new Response<Map<Integer, StoreMsg>>(null, "User is not logged in", false,
                         ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
             logger.error("System Service - Error during getting all messages: " + e.getMessage());
-            return new Response<HashMap<Integer, String>>(null, "Error during getting all messages: " + e.getMessage(),
+            return new Response<Map<Integer, StoreMsg>>(null, "Error during getting all messages: " + e.getMessage(),
                     false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> removeUserMessageById(int userId, int msgId) {
+        try {
+            if (this.userService.isUserLoggedIn(userId)) {
+                boolean removed = this.userService.removeMsgById(userId, msgId);
+                if (removed) {
+                    logger.info("System Service - User message removed successfully: " + msgId + " by user: " + userId);
+                    return new Response<>(null, "Message removed successfully", true, null, null);
+                } else {
+                    logger.error("System Service - Message not found or could not be removed: " + msgId + " by user: " + userId);
+                    return new Response<>(null, "Message not found or could not be removed", false, ErrorType.INVALID_INPUT, null);
+                }
+            } else {
+                logger.error("System Service - User is not logged in: " + userId);
+                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing user message: " + e.getMessage());
+            return new Response<>(null, "Error during removing user message: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> openStore(int storeId, int userId){
+        try{
+            this.storeService.openStore(storeId, userId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+
         }
     }
 

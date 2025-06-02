@@ -373,5 +373,10 @@ public class UserRepository implements IUserRepository {
         return rolesInStore;
     }
 
+    @Override
+    public boolean isUserRegistered(int userId) {
+        return users.containsKey(userId) && users.get(userId) instanceof Registered;
+    }
+
 
 }

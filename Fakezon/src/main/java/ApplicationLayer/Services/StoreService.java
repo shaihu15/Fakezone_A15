@@ -38,6 +38,9 @@ import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
+import DomainLayer.Model.helpers.UserMsg;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -391,21 +394,6 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId, int storeId) {
-        Store store = storeRepository.findById(storeId);
-        if (store == null) {
-            logger.error("getMessagesFromUsers - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
-        }
-        try {
-            return store.getMessagesFromUsers(managerId);
-        } catch (IllegalArgumentException e) {
-            logger.error("getMessagesFromUsers - Manager not found: " + managerId);
-            throw new IllegalArgumentException("Manager not found");
-        }
-    }
-
-    @Override
     public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId) {
         Store store = storeRepository.findById(storeId);
         if (store == null) {
@@ -636,25 +624,26 @@ public class StoreService implements IStoreService {
     }
 
     @Override
-    public Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId){
+    public Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
-        if (store != null) {
-            try{
-                HashMap<Integer, String> messages = store.getAllStoreMessages(userId);
+        if (store == null) {
+            logger.error("getMessagesFromUsers - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }            
+        try{
+                Map<Integer, UserMsg> messages = store.getMessagesFromUsers(userId);
                 if (messages.isEmpty()) {
                     logger.info("No messages found for store: " + storeId);
                     return new Response<>(null, "No messages found", false, ErrorType.INVALID_INPUT, null);
                 }
                 logger.info("Messages retrieved for store: " + storeId);
-                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
+                return new Response<Map<Integer,UserMsg>>(messages, "Messages retrieved successfully", true, null, null);
             } catch (Exception e) {
                 System.out.println("Error during get messages: " + e.getMessage());
                 logger.error("Error during get messages: "+ e.getMessage());
                 return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
             }
-        }
-        logger.error("Store not found: " + storeId);
-        return new Response<>(null, "Store not found", false, ErrorType.INVALID_INPUT, null);
+        
     }
 
 
@@ -908,6 +897,16 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         return store.isManagerAndGetPerms(userId);
+    }
+
+    @Override
+    public void openStore(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("openStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.openStore(userId);
     }
 
 }
