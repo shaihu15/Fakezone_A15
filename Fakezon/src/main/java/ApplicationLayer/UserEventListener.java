@@ -101,10 +101,14 @@ public class UserEventListener {
         // As requested, fetching all users with roles in the store
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
-            String msg = "Auction failed for product " + event.getProductID() + ". Base price was " + event.getBasePrice() + ". " + event.getMessage();
-            registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
-            if (registeredUser.isLoggedIn()) {
-                wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+            HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
+            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
+                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+                String msg = "Auction failed for product " + event.getProductID() + ". Base price was " + event.getBasePrice() + ". " + event.getMessage();
+                registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
+                if (registeredUser.isLoggedIn()) {
+                    wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+                }
             }
         }
     }
