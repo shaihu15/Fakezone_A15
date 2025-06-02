@@ -258,7 +258,10 @@ public class UserEventListenerTest {
 
         List<Registered> users = Arrays.asList(mockRegisteredUser1, mockRegisteredUser2);
         when(userRepository.UsersWithRolesInStoreId(storeId)).thenReturn(users);
-
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(101, new StoreOwner());
+        when(mockRegisteredUser1.getAllRoles()).thenReturn(map);
+        when(mockRegisteredUser2.getAllRoles()).thenReturn(map);
         // Act
         userEventListener.handleAuctionFailedToOwnersEvent(event);
 

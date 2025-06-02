@@ -26,6 +26,7 @@ import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
@@ -171,7 +172,10 @@ public class ApplicationLayerTest {
         when(event.getMessage()).thenReturn("fail");
         when(userRepository.UsersWithRolesInStoreId(3)).thenReturn(List.of(user));
         when(user.isLoggedIn()).thenReturn(false);
-
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(3, new StoreFounder());
+        when(user.getAllRoles()).thenReturn(map);
+        
         listener.handleAuctionFailedToOwnersEvent(event);
 
         verify(user, times(1)).addMessageFromStore(any());
