@@ -75,6 +75,8 @@ public interface IStore {
 
     void closeStore(int requesterId);
 
+    void closeStoreByAdmin(int adminId);
+
     StoreRating getStoreRatingByUser(int userID);
 
     void openStore();
