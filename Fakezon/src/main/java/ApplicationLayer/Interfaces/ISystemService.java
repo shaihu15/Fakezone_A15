@@ -104,7 +104,6 @@ public interface ISystemService {
 
     Response<String> closeStoreByAdmin(int storeId, int adminId);
 
-    Response<HashMap<Integer, String>> getAllStoreMessages(int storeId, int userId);
     Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId);
 
     Response<Map<Integer, StoreMsg>> getAllMessages(int userID); // get all the messages of the user
