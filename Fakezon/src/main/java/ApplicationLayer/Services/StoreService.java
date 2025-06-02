@@ -153,6 +153,17 @@ public class StoreService implements IStoreService {
     }
 
     @Override
+    public void closeStoreByAdmin(int storeId, int adminId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("closeStoreByAdmin - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.closeStoreByAdmin(adminId);
+        logger.info("Store closed by admin: " + storeId + " by admin: " + adminId);
+    }
+
+    @Override
     public void updateStoreName(int storeId, String newName, int requesterId) {
     }
 
