@@ -83,7 +83,8 @@ public class UserEventListener {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER){
+            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
+                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
                 String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
                                 " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
                 registeredUser.addAuctionEndedMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
