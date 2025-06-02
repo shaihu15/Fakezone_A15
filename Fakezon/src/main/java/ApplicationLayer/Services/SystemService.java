@@ -2267,7 +2267,10 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during removing user message: " + e.getMessage());
             return new Response<>(null, "Error during removing user message: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
+        }
+    }
 
+    @Override
     public Response<Void> openStore(int storeId, int userId){
         try{
             this.storeService.openStore(storeId, userId);
