@@ -1,25 +1,28 @@
 package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
 import com.fakezone.fakezone.FakezoneApplication;
-import NewAcceptanceTesting.TestHelper;
+
 import ApplicationLayer.Response;
-import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Enums.ErrorType;
+
 import ApplicationLayer.Services.SystemService;
+import DomainLayer.Enums.StoreManagerPermission;
+
+import NewAcceptanceTesting.TestHelper;
 import DomainLayer.Enums.StoreManagerPermission;
 
 
@@ -35,9 +38,10 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
     int storeId;
     int storeOwnerId;
     int newManagerID;
+    List<StoreManagerPermission> perms ;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws InterruptedException{
         systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
@@ -55,19 +59,35 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
 
         Response<UserDTO> newManagerResult = testHelper.register_and_login2();
         newManagerID = newManagerResult.getData().getUserId();
-        int newManagerID = newManagerResult.getData().getUserId();
+        newManagerID = newManagerResult.getData().getUserId();
 
-        List<StoreManagerPermission> perms = new ArrayList<>();
+        perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
         perms.add(StoreManagerPermission.PURCHASE_POLICY);
         perms.add(StoreManagerPermission.DISCOUNT_POLICY);
-        Response<Void>  addManagerResult = systemService.addStoreManager(storeId, storeOwnerId, newManagerID, perms);
-        assertEquals("Store manager added successfully", addManagerResult.getMessage());
-        assertTrue(addManagerResult.isSuccess());
+
+
+        Response<Void> response = systemService.addStoreManager(storeId, storeOwnerId, newManagerID, perms);
+        assertTrue(response.isSuccess(), "Expected manager appointment to succeed");
+        assertEquals("Store manager added successfully", response.getMessage());
+        
+        TimeUnit.SECONDS.sleep(1);
+        // Verify assignment message is sent
+        Response<HashMap<Integer, String>> assignmentMessagesRes = systemService.getAssignmentMessages(newManagerID);
+        assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
+        assertTrue(assignmentMessagesRes.getData().containsKey(storeId), "Expected manager to have pending assignment for the store");
+
+         // Manager accepts the assignment
+        Response<String> acceptRes = systemService.acceptAssignment(storeId, newManagerID);
+        assertTrue(acceptRes.isSuccess(), "Expected manager to successfully accept assignment");
+
     }
+
+
 
     @Test
     void testRequestRoleInformation_Success() {
+
         Response<StoreRolesDTO> result = systemService.getStoreRoles(storeId, storeOwnerId);
         assertEquals("Store roles retrieved successfully", result.getMessage());
         assertTrue(result.isSuccess());
@@ -76,15 +96,8 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         assertNotNull(storeRoles);
         assertEquals(storeId, storeRoles.getStoreId());
 
-        assertFalse(storeRoles.getStoreManagers().isEmpty());
-
-        //assertTrue(storeRoles.getStoreManagers().containsKey(newManagerID));
-        
-        assertTrue(storeRoles.getStoreOwners().stream().anyMatch(ownerId -> ownerId == storeOwnerId));
-
-
-   
-        //add a manager to the store and test if the manager is present in the user roles list
+        assertTrue(storeRoles.getStoreOwners().contains(storeOwnerId));
+        assertTrue(storeRoles.getStoreManagers().containsKey(newManagerID));
     }
 
     @Test
@@ -104,7 +117,7 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
     @Test
     void testRequestRoleInformation_UserNotStoreOwner_Failure() {
         // Create a new user and try to get store roles
-        Response<UserDTO> newUserResult = testHelper.register_and_login2();
+        Response<UserDTO> newUserResult = testHelper.register_and_login3();
         assertTrue(newUserResult.isSuccess());
         int newUserId = newUserResult.getData().getUserId();
 
@@ -112,9 +125,10 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         assertFalse(result.isSuccess());
         assertEquals("Error during getting store roles: User with id: " + newUserId + " has insufficient permissions for store ID: " + storeId, result.getMessage());
     }
-
+ 
     @Test
     void testRequestRoleInformation_Request_administrators_permissions_Success() {
+        
         //no function for that yet
         
     }

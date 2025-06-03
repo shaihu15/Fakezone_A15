@@ -160,7 +160,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(managers.containsKey(noPermsId));
         verify(storeRepository, times(3)).findById(storeId);
     }
-
+ 
     @Test
     void addStoreManager_noPermsRequest_shouldThrow(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -270,7 +270,7 @@ public class StoreServiceAcceptanceTest {
                 storeService.addStoreManagerPermissions(storeId, founderId, noPermsId, perms));
         assertTrue(ex.getMessage().contains("not a valid store manager"));
     }
-
+ 
     @Test
     void addStoreManagerPermissions_notFather_shouldThrow(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -316,7 +316,7 @@ public class StoreServiceAcceptanceTest {
                 storeService.removeStoreManagerPermissions(storeId, founderId, noPermsId, perms));
         assertTrue(ex.getMessage().contains("not a valid store manager"));
     }
-
+ 
     @Test
     void removeStoreManagerPermissions_managerDoesNotHaveRequestedPermission_shouldThrow_shouldReset(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -463,7 +463,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(ex.getMessage().contains("Can not remove Store Founder"));
         assertTrue(owners.equals(storeService.getStoreOwners(storeId, founderId)));
     }
-
+ 
     @Test
     void removeStoreManager_success(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -512,7 +512,7 @@ public class StoreServiceAcceptanceTest {
                 storeService.removeStoreManager(storeId, founderId, noPermsId));
         assertTrue(ex.getMessage().contains(noPermsId + " is not a valid store manager"));
     }
-    
+ 
     @Test
     void removeStoreManager_notFather_shouldThrow(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -575,7 +575,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(owners.equals(List.of(founderId)));
         verify(storeRepository, times(3)).findById(storeId);
     }
-
+ 
     @Test
     void declineAssignment_ForManager_OwnerRequestUserDecline_success(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -626,7 +626,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(!storeService.getStoreOwners(storeId, founderId).contains(noPermsId));
         assertTrue(!storeService.getPendingOwners(storeId, founderId).contains(noPermsId));
     }
-
+ 
     @Test
     void acceptAssignment_ForManager_AppointorNoLongerOwner_shouldThrow(){
         when(storeRepository.findById(storeId)).thenReturn(store);
@@ -674,7 +674,7 @@ public class StoreServiceAcceptanceTest {
         assertTrue(ex.getMessage().contains("Already pending user " + noPermsId + " approval for managment"));
         assertTrue(storeService.getPendingManagers(storeId, founderId).contains(noPermsId));
     }
-
+    
     @Test
     void addStoreManager_AppointeeAlreadyPendingOwner_shouldThrow(){
         when(storeRepository.findById(storeId)).thenReturn(store);
