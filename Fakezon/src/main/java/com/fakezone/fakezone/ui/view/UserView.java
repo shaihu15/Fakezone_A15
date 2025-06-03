@@ -14,6 +14,8 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -30,6 +32,7 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.RoleName;
+import DomainLayer.Model.helpers.StoreMsg;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -241,7 +244,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<Response<HashMap<Integer, String>>> response =
+            ResponseEntity<Response<Map<Integer, StoreMsg>>> response =
                 restTemplate.exchange(
                     assignmentsUrl,
                     HttpMethod.GET,
@@ -250,11 +253,11 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                 );
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody().isSuccess()) {
-                HashMap<Integer, String> assignments = response.getBody().getData();
+                Map<Integer, StoreMsg> assignments = response.getBody().getData();
                 if (assignments != null && !assignments.isEmpty()) {
-                    for (Map.Entry<Integer, String> entry : assignments.entrySet()) {
-                        int storeId = entry.getKey();
-                        String message = entry.getValue();
+                    for (Map.Entry<Integer, StoreMsg> entry : assignments.entrySet()) {
+                        int storeId = entry.getValue().getStoreId();
+                        String message = entry.getValue().getMessage();
                         VerticalLayout assignmentCard = new VerticalLayout();
                         assignmentCard.setPadding(true);
                         assignmentCard.getStyle().set("border", "1px solid #ccc").set("border-radius", "8px");
@@ -455,21 +458,21 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         HttpHeaders header = new HttpHeaders();
         header.add("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(header);
-        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> apiResponse = restTemplate.exchange(
             url, 
             HttpMethod.GET, 
             entity, 
-            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
-        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+            new ParameterizedTypeReference<Response<Map<Integer, StoreMsg>>>() {});
+        Response<Map<Integer, StoreMsg>> response = apiResponse.getBody();
         if(response.isSuccess()){
             if(response.getData() == null || response.getData().isEmpty()){
                 messagesFromStoreCard.add(new Span("No Messages from Stores"));
             }
             else{
-                HashMap<Integer, String> msgs  = response.getData();
-                for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
-                    Integer storeId = entry.getKey();
-                    String messageText = entry.getValue();
+                Map<Integer, StoreMsg> msgs  = response.getData();
+                for (Map.Entry<Integer, StoreMsg> entry : msgs.entrySet()) {
+                    Integer storeId = entry.getValue().getStoreId();
+                    String messageText = entry.getValue().getMessage();
 
                     // Fetch store info
                     StoreDTO store = getStoreDTO(storeId, token);
@@ -493,14 +496,17 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                     Span body = new Span(messageText);
                     body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
 
-                    // Reply button stub
+                    // Reply button 
                     Button replyBtn = new Button("Reply");
                     replyBtn.addClickListener(evt -> {
                         replyDialog(userId, storeId, token);
                     });
 
+                    // Bin Button
+                    Button binButton = new Button(new Icon(VaadinIcon.TRASH));
+                    binButton.addClickListener(e -> {removeMessage(userId, entry.getKey(), token); updateMsgFromStores(userId, token);});
                     // Assemble card
-                    messageCard.add(nameHeader, body, replyBtn);
+                    messageCard.add(nameHeader, body, replyBtn, binButton);
 
                     // Add to the main container
                     messagesFromStoreCard.add(messageCard);
@@ -552,21 +558,21 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         HttpHeaders header = new HttpHeaders();
         header.add("Authorization", token);
         HttpEntity<Void> entity = new HttpEntity<>(header);
-        ResponseEntity<Response<HashMap<Integer, String>>> apiResponse = restTemplate.exchange(
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> apiResponse = restTemplate.exchange(
             url, 
             HttpMethod.GET, 
             entity, 
-            new ParameterizedTypeReference<Response<HashMap<Integer, String>>>() {});
-        Response<HashMap<Integer, String>> response = apiResponse.getBody();
+            new ParameterizedTypeReference<Response<Map<Integer, StoreMsg>>>() {});
+        Response<Map<Integer, StoreMsg>> response = apiResponse.getBody();
         if(response.isSuccess()){
             if(response.getData() == null || response.getData().isEmpty()){
                 auctionMessagesCard.add(new Span("No Auction Messages"));
             }
             else{
-                HashMap<Integer, String> msgs  = response.getData();
-                for (Map.Entry<Integer, String> entry : msgs.entrySet()) {
-                    Integer storeId = entry.getKey();
-                    String messageText = entry.getValue();
+                Map<Integer, StoreMsg> msgs  = response.getData();
+                for (Map.Entry<Integer, StoreMsg> entry : msgs.entrySet()) {
+                    Integer storeId = entry.getValue().getStoreId();
+                    String messageText = entry.getValue().getMessage();
 
                     // Fetch store info
                     StoreDTO store = getStoreDTO(storeId, token);
@@ -589,22 +595,17 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                     // The message body
                     Span body = new Span(messageText);
                     body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
-                    // WHEN MSGS ARE FIXED SHOULD REMOVE THIS STRING SPLICING VVVVVVVVV
-                    String prefix  = "product ";
-                    String suffix  = ". Highest bid";
-                    int start = messageText.indexOf(prefix) + prefix.length();
-                    int end   = messageText.indexOf(suffix, start);
-                    String productIdString = messageText.substring(start, end);
-                    int productId = Integer.parseInt(productIdString);
+                    
+                    int productId = entry.getValue().getProductId();
                     // Reply button stub
                     Button accButton = new Button("Accept Bid");
                     accButton.addClickListener(evt -> {
-                        sendResponseForAuction(storeId, userId, productId, token, true);
+                        sendResponseForAuction(storeId, userId, productId, token, true, entry.getKey());
                     });
 
                     Button decButton = new Button("Decline Bid");
                     decButton.addClickListener(evt -> {
-                        sendResponseForAuction(userId, storeId, productId, token, false);
+                        sendResponseForAuction(userId, storeId, productId, token, false, entry.getKey());
                     });
 
                     // Assemble card
@@ -620,7 +621,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
-    private void sendResponseForAuction(int storeId, int userId, int productId, String token, boolean answer){
+    private void sendResponseForAuction(int storeId, int userId, int productId, String token, boolean answer, int msgId){
         String url = backendUrl + "store/sendResponseForAuctionByOwner/" + storeId + "/" + userId + "/" + productId + "?accept=" + answer;
         HttpHeaders header = new HttpHeaders();
         header.add("Authorization", token);
@@ -633,10 +634,31 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         Response<Void> response = apiResponse.getBody();
         if(response.isSuccess()){
             Notification.show("Message Sent Successfully");
+            removeMessage(userId, msgId, token);
+            updateAuctionMsgs(userId, token);
         }
         else{
             Notification.show(response.getMessage());
         }   
+    }
+
+    private void removeMessage(int userId, int msgId, String token){
+        String url = backendUrl + "user/removeUserMessageById/" + userId + "/" + msgId;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResponse.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Message Removed Successfully");
+        } else {
+            Notification.show(response.getMessage());
+        }
     }
 
 }

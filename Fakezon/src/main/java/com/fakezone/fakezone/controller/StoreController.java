@@ -3,6 +3,7 @@ package com.fakezone.fakezone.controller;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import ApplicationLayer.Interfaces.ISystemService;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 
 @RestController
@@ -786,24 +788,50 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
         }
     }
 
-    @GetMapping("/getAllStoreMessages/{storeId}/{userId}")
-    public ResponseEntity<Response<HashMap<Integer, String>>> getAllStoreMessages(@RequestHeader("Authorization") String token,
+    @GetMapping("/getMessagesFromUsers/{storeId}/{userId}")
+    public ResponseEntity<Response<Map<Integer,UserMsg>>> getMessagesFromUsers(@RequestHeader("Authorization") String token,
                                                                       @PathVariable("storeId") int storeId,
                                                                         @PathVariable("userId") int userId) {
         try {
             logger.info("Received request to get all messages for Store: {} by user {}", storeId, userId);
             if (!authenticatorAdapter.isValid(token)) {
-                Response<HashMap<Integer, String>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                Response<Map<Integer,UserMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<HashMap<Integer, String>> response = systemService.getAllStoreMessages(storeId, userId);
+            Response<Map<Integer,UserMsg>> response = systemService.getMessagesFromUsers(storeId, userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
-            logger.error("Error in getAllStoreMessages: {}", e.getMessage());
-            Response<HashMap<Integer, String>> response = new Response<>(null, "An error occurred while retrieving messages", false, ErrorType.INTERNAL_ERROR, null);
+            logger.error("Error in getMessagesFromUsers: {}", e.getMessage());
+            Response<Map<Integer,UserMsg>> response = new Response<>(null, "An error occurred while retrieving messages", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/openStore/{storeId}/{userId}")
+    public ResponseEntity<Response<Void>> openStore(@PathVariable("storeId") int storeId,
+                                                        @PathVariable("userId") int userId,
+                                                        @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to open store {} by user {} with token {}", storeId, userId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.openStore(storeId, userId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
+                    ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }
