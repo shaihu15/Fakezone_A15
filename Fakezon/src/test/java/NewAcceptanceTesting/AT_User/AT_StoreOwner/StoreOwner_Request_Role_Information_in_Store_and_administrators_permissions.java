@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,7 @@ import ApplicationLayer.Enums.ErrorType;
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
-
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 import DomainLayer.Enums.StoreManagerPermission;
 
@@ -73,7 +74,7 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         
         TimeUnit.SECONDS.sleep(1);
         // Verify assignment message is sent
-        Response<HashMap<Integer, String>> assignmentMessagesRes = systemService.getAssignmentMessages(newManagerID);
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(newManagerID);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
         assertTrue(assignmentMessagesRes.getData().containsKey(storeId), "Expected manager to have pending assignment for the store");
 

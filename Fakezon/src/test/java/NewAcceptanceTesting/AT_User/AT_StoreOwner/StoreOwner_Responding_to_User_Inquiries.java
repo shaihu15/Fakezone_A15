@@ -3,6 +3,7 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import com.fakezone.fakezone.FakezoneApplication;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Services.SystemService;
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
@@ -63,9 +65,9 @@ public class StoreOwner_Responding_to_User_Inquiries {
         assertEquals("Message sent successfully", replyResp.getMessage());
 
         // Simulate customer checking messages
-        Response<HashMap<Integer, String>> inboxResp = systemService.getAllMessages(customerId);
+        Response<Map<Integer, StoreMsg>> inboxResp = systemService.getAllMessages(customerId);
         assertTrue(inboxResp.isSuccess());
-        boolean found = inboxResp.getData().values().stream().anyMatch(m -> m.contains("vegan"));
+        boolean found = inboxResp.getData().values().stream().anyMatch(m -> m.getMessage().contains("vegan"));
         assertTrue(found, "Expected reply to be found in customer inbox.");
     }
 

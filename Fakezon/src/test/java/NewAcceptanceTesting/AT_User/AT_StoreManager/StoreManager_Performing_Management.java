@@ -6,6 +6,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,7 @@ import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Services.SystemService;
 
@@ -82,7 +84,7 @@ public class StoreManager_Performing_Management {
             fail("Thread was interrupted during sleep");
         }
         // Verify assignment message is sent
-        Response<HashMap<Integer, String>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
         assertTrue(assignmentMessagesRes.getData().containsKey(storeId), "Expected manager to have pending assignment for the store");
 
