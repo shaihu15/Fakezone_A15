@@ -676,6 +676,29 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    public Response<String> closeStoreByAdmin(int storeId, int adminId) {
+        try {
+            if (this.userService.isUserLoggedIn(adminId)) {
+                if (this.userService.isSystemAdmin(adminId)) {
+                    this.storeService.closeStoreByAdmin(storeId, adminId);
+                    logger.info("System Service - Admin closed store: " + storeId + " by admin: " + adminId);
+                    return new Response<String>("Store closed successfully by admin", "Store closed successfully by admin", true, null, null);
+                } else {
+                    logger.error("System Service - User is not a system admin: " + adminId);
+                    return new Response<String>(null, "User is not a system admin", false, ErrorType.UNAUTHORIZED, null);
+                }
+            } else {
+                logger.error("System Service - User is not logged in: " + adminId);
+                return new Response<String>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+            }
+        } catch (Exception e) {
+            logger.error("System Service - Error during closing store by admin: " + e.getMessage());
+            return new Response<String>(null, "Error during closing store by admin: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
     public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName,
             String description, double basePrice, int quantity, String category) {
         String name = null;

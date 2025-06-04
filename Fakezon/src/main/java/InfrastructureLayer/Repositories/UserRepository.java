@@ -39,7 +39,7 @@ public class UserRepository implements IUserRepository {
 
 
         // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
-        //init();
+        init();
     }
 
     @Override
@@ -352,6 +352,8 @@ public class UserRepository implements IUserRepository {
         Registered uiUserNormal = this.findById(1004).get();
         uiUserNormal.addToBasket(1001, 1001, 1);
         uiUserNormal.addToBasket(1001, 1002, 2);
+
+        systemAdmins.add(1001);
     }
 
     @Override

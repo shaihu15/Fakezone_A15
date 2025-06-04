@@ -1073,6 +1073,14 @@ public class Store implements IStore {
         }
     }
 
+    public void closeStoreByAdmin(int adminId) {
+        if (!this.isOpen) {
+            throw new IllegalArgumentException("Store: " + storeID + " is already closed");
+        }
+        this.isOpen = false;
+        // this.publisher.publishEvent(new ClosingStoreEvent(this.storeID));
+    }
+
     @Override
     public StoreRating getStoreRatingByUser(int userID) {
         if (Sratings.containsKey(userID)) {
