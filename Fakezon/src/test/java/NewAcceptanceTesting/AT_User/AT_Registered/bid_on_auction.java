@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -25,6 +26,7 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.SystemService;
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
@@ -254,15 +256,16 @@ public class bid_on_auction {
             fail("Sleep was interrupted");
         }
 
-        Response<HashMap<Integer, String>> messagesResponse = systemService.getAllMessages(buyer1Id);
+        Response<Map<Integer, StoreMsg>> messagesResponse = systemService.getAllMessages(buyer1Id);
         assertTrue(messagesResponse.isSuccess(), "Expected messages retrieval to succeed");
         assertTrue(messagesResponse.getData() != null && !messagesResponse.getData().isEmpty(),
                 "Expected messages for user1 to be non-empty");
-        HashMap<Integer, String> messages = messagesResponse.getData();
+        Map<Integer, StoreMsg> messages = messagesResponse.getData();
         assertFalse(messages.isEmpty());
-        assertTrue(messages.containsKey(storeId), "Expected messages for storeId: " + storeId);
-        String outbidMessage = messages.get(storeId);
-                
+        assertTrue(messages.values().stream().anyMatch(msg -> msg.getStoreId() == storeId && msg.getProductId() == auctionProductId),
+                "Expected messages to contain auction-related messages for user1");
+        String outbidMessage = messages.get(0).getMessage();
+
         // Check if user1 received the outbid message
         assertTrue(outbidMessage.contains("rejected due to a higher bid"), "Expected outbid message to mention rejection due to a higher bid");
     }

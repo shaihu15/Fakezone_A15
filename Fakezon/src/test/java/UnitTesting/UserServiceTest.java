@@ -2,6 +2,8 @@ package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import DomainLayer.IRepository.IRegisteredRole;
 import ApplicationLayer.Response;
@@ -10,6 +12,7 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import java.util.Map;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.Cart;
 import DomainLayer.IRepository.IUserRepository;
@@ -177,13 +180,13 @@ public class UserServiceTest {
     void testGetAllMessages_Success() {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Hello");
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Hello"));
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenReturn(messages);
-    
-        Response<HashMap<Integer, String>> response = userService.getAllMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
+
         assertTrue(response.isSuccess());
         assertEquals(messages, response.getData());
         assertEquals("Messages retrieved successfully", response.getMessage());
@@ -196,9 +199,9 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenReturn(new HashMap<>());
-    
-        Response<HashMap<Integer, String>> response = userService.getAllMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
+
         assertTrue(response.isSuccess());
         assertNull(response.getData());
         assertEquals("No messages found", response.getMessage());
@@ -211,9 +214,9 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenThrow(new RuntimeException("DB error"));
-    
-        Response<HashMap<Integer, String>> response = userService.getAllMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
+
         assertFalse(response.isSuccess());
         assertNull(response.getData());
         assertTrue(response.getMessage().contains("Error during get messages: DB error"));
@@ -224,9 +227,9 @@ public class UserServiceTest {
     void testGetAllMessages_UserNotFound() {
         int userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
-    
-        Response<HashMap<Integer, String>> response = userService.getAllMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
+
         assertFalse(response.isSuccess());
         assertNull(response.getData());
         assertEquals("User not found", response.getMessage());
@@ -236,13 +239,13 @@ public class UserServiceTest {
     void testGetAssignmentMessages_Success() {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Assignment message");
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Assignment message"));
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenReturn(messages);
-    
-        Response<HashMap<Integer, String>> response = userService.getAssignmentMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
+
         assertTrue(response.isSuccess());
         assertEquals(messages, response.getData());
         assertEquals("Messages retrieved successfully", response.getMessage());
@@ -255,9 +258,9 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenReturn(new HashMap<>());
-    
-        Response<HashMap<Integer, String>> response = userService.getAssignmentMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
+
         assertTrue(response.isSuccess());
         assertNull(response.getData());
         assertEquals("No messages found", response.getMessage());
@@ -270,9 +273,9 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenThrow(new RuntimeException("DB error"));
-    
-        Response<HashMap<Integer, String>> response = userService.getAssignmentMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
+
         assertFalse(response.isSuccess());
         assertNull(response.getData());
         assertTrue(response.getMessage().contains("Error during get messages: DB error"));
@@ -283,9 +286,9 @@ public class UserServiceTest {
     void testGetAssignmentMessages_UserNotFound() {
         int userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
-    
-        Response<HashMap<Integer, String>> response = userService.getAssignmentMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
+
         assertFalse(response.isSuccess());
         assertNull(response.getData());
         assertEquals("User not found", response.getMessage());
@@ -296,13 +299,13 @@ public class UserServiceTest {
     void testGetAuctionEndedMessages_Success() {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
-        HashMap<Integer, String> messages = new HashMap<>();
-        messages.put(1, "Auction ended");
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Auction ended"));
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAuctionEndedMessages()).thenReturn(messages);
-    
-        Response<HashMap<Integer, String>> response = userService.getAuctionEndedMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+
         assertTrue(response.isSuccess());
         assertEquals(messages, response.getData());
         assertEquals("Messages retrieved successfully", response.getMessage());
@@ -315,9 +318,9 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAuctionEndedMessages()).thenReturn(new HashMap<>());
-    
-        Response<HashMap<Integer, String>> response = userService.getAuctionEndedMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+
         assertTrue(response.isSuccess());
         assertNull(response.getData());
         assertEquals("No messages found", response.getMessage());
@@ -330,9 +333,9 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAuctionEndedMessages()).thenThrow(new RuntimeException("DB error"));
-    
-        Response<HashMap<Integer, String>> response = userService.getAuctionEndedMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+
         assertFalse(response.isSuccess());
         assertNull(response.getData());
         assertTrue(response.getMessage().contains("Error during get messages: DB error"));
@@ -343,9 +346,9 @@ public class UserServiceTest {
     void testGetAuctionEndedMessages_UserNotFound() {
         int userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
-    
-        Response<HashMap<Integer, String>> response = userService.getAuctionEndedMessages(userId);
-    
+
+        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+
         assertFalse(response.isSuccess());
         assertNull(response.getData());
         assertEquals("User not found", response.getMessage());

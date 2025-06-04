@@ -23,6 +23,7 @@ import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
 import  DomainLayer.Model.StoreRating;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.UserMsg;
 import DomainLayer.Interfaces.IDiscountPolicy;
 public interface IStore {
     String getName();
@@ -46,8 +47,6 @@ public interface IStore {
     void receivingMessage(int userID, String message);
 
     void sendMessage(int managerId, int userID, String message);
-
-    Queue<SimpleEntry<Integer, String>> getMessagesFromUsers(int managerId);
 
     Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId);
 
@@ -77,7 +76,7 @@ public interface IStore {
 
     StoreRating getStoreRatingByUser(int userID);
 
-    void openStore();
+    void openStore(int userId);
 
     boolean isOpen();
 
@@ -111,7 +110,7 @@ public interface IStore {
     
     double calcAmount(int userId,Map<Integer,Integer> productToBuy, LocalDate dob, Cart cart);
 
-    HashMap<Integer, String> getAllStoreMessages(int userId);
+    Map<Integer,UserMsg> getMessagesFromUsers(int userId);
 
     Map<StoreProductDTO, Boolean> checkIfProductsInStore(int userID, Map<Integer,Integer> products);
 
@@ -141,7 +140,6 @@ public interface IStore {
 
     public void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    
     List<StoreManagerPermission> isManagerAndGetPerms(int userId);
 
 }

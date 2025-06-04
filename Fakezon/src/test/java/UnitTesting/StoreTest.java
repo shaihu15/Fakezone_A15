@@ -31,6 +31,7 @@ import DomainLayer.Model.AuctionProduct;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import DomainLayer.Model.helpers.UserMsg;
 import DomainLayer.Model.AndDiscount;
 
 import DomainLayer.Model.Cart;
@@ -136,9 +137,9 @@ public class StoreTest {
         String message = "Hello, this is a test message.";
 
         store.receivingMessage(userId, message);
-
-        assertEquals(message, store.getMessagesFromUsers(founderId).peek().getValue(),
-                "Message should be received successfully");
+        Map<Integer,UserMsg> messages = store.getMessagesFromUsers(founderId);
+        assertFalse(messages.isEmpty(), "Messages from users should not be empty");
+        assertEquals(message, messages.entrySet().iterator().next().getValue().getMsg());
     }
 
     // Test sending message to user
@@ -573,11 +574,12 @@ public class StoreTest {
     }
 
     @Test
-    void testGetAllStoreMessages() {
+    void testgetMessagesFromUsers() {
         int userId = 1;
         store.receivingMessage(userId, "msg");
-        Map<Integer, String> messages = store.getAllStoreMessages(founderId);
-        assertEquals("msg", messages.get(userId));
+        Map<Integer,UserMsg> messages = store.getMessagesFromUsers(founderId);
+        assertFalse(messages.isEmpty(), "Messages from users should not be empty");
+        assertEquals("msg", messages.entrySet().iterator().next().getValue().getMsg());
     }
 
     @Test
@@ -668,7 +670,7 @@ public class StoreTest {
     @Test
     void testOpenStore() {
         store.closeStore(founderId);
-        store.openStore();
+        store.openStore(founderId);
         assertTrue(store.isOpen());
     }
 

@@ -1,5 +1,6 @@
 package UnitTesting;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,8 +23,11 @@ import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Response;
 import ApplicationLayer.UserEventListener;
 import DomainLayer.Enums.RoleName;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.StoreFounder;
+import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
@@ -78,7 +82,7 @@ public class ApplicationLayerTest {
 
         listener.handleAssignmentEvent(event);
 
-        verify(user, times(1)).AssignmentMessages(any());
+        verify(user, times(1)).addAssignmentMessage(any());
     }
 
     @Test
@@ -147,6 +151,10 @@ public class ApplicationLayerTest {
         when(userRepository.UsersWithRolesInStoreId(5)).thenReturn(List.of(user1, user2));
         when(user1.isLoggedIn()).thenReturn(false);
         when(user2.isLoggedIn()).thenReturn(true);
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(5, new StoreOwner());
+        when(user1.getAllRoles()).thenReturn(map);
+        when(user2.getAllRoles()).thenReturn(map);
 
         listener.handleAuctionEndedToOwnersEvent(event);
 
@@ -164,7 +172,10 @@ public class ApplicationLayerTest {
         when(event.getMessage()).thenReturn("fail");
         when(userRepository.UsersWithRolesInStoreId(3)).thenReturn(List.of(user));
         when(user.isLoggedIn()).thenReturn(false);
-
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(3, new StoreFounder());
+        when(user.getAllRoles()).thenReturn(map);
+        
         listener.handleAuctionFailedToOwnersEvent(event);
 
         verify(user, times(1)).addMessageFromStore(any());

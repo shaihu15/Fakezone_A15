@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +22,7 @@ import ApplicationLayer.Enums.ErrorType;
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
-
+import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
@@ -58,10 +60,20 @@ public class StoreOwner_Owner_Appointment {
         Response<Void> addManagerRes = systemService.addStoreManager(storeId, OwnerUserId, ManagerUserId, perms);
         assertTrue(addManagerRes.isSuccess());
 
-        Response<HashMap<Integer, String>> AssignmentMessagesRes = systemService.getAssignmentMessages(ManagerUserId);
-        assertTrue(AssignmentMessagesRes.isSuccess());
-        assertTrue(AssignmentMessagesRes.getData().keySet().contains(storeId));
+        
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Sleep was interrupted");
+        }
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(ManagerUserId);
+        assertTrue(assignmentMessagesRes.isSuccess());
+        assertTrue(assignmentMessagesRes.getData().size() > 0);
+        StoreMsg assignmentMessage = assignmentMessagesRes.getData().values().iterator().next();
+        assertEquals(storeId, assignmentMessage.getStoreId(), "Assignment message should be for the correct store");
 
+        
         Response<String> acceptRes = systemService.acceptAssignment(storeId, ManagerUserId);
         assertTrue(acceptRes.isSuccess());
     }
@@ -72,9 +84,11 @@ public class StoreOwner_Owner_Appointment {
         assertTrue(response.isSuccess());
         assertEquals("Store owner added successfully", response.getMessage());
 
-        Response<HashMap<Integer, String>> AssignmentMessagesRes = systemService.getAssignmentMessages(ManagerUserId);
-        assertTrue(AssignmentMessagesRes.isSuccess());
-        assertTrue(AssignmentMessagesRes.getData().keySet().contains(storeId));
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(ManagerUserId);
+        assertTrue(assignmentMessagesRes.isSuccess());
+        assertTrue(assignmentMessagesRes.getData().size() > 0);
+        StoreMsg assignmentMessage = assignmentMessagesRes.getData().values().iterator().next();
+        assertEquals(storeId, assignmentMessage.getStoreId(), "Assignment message should be for the correct store");
     }
 
     @Test
