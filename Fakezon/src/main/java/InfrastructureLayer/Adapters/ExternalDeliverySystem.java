@@ -6,23 +6,38 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExternalDeliverySystem {
     private static final String API_URL = "https://damp-lynna-wsep-1984852e.koyeb.app/";
     private final HttpClient httpClient;
 
+    private static final Logger logger = LoggerFactory.getLogger(ExternalDeliverySystem.class);
     public ExternalDeliverySystem() {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
     }
 
-    public boolean sendPackage(String address, String recipient, String packageDetails) {
+     public int sendPackage(String fullAddress, String recipient, String packageDetails) {
         try {
+            String[] addressParts = parseAddress(fullAddress);
+            if (addressParts.length != 4) {
+                logger.error("Invalid address format: {}", fullAddress);
+                return -1; // Return -1 on invalid format
+            }
+            String address = addressParts[0]; // This is the street address
+            String city = addressParts[1];
+            String country = addressParts[2];
+            String zip = addressParts[3];
             // Create form-data payload for supply request
             String formData = String.format(
-                "action_type=supply&name=%s&address=%s&city=Beer%%20Sheva&country=Israel&zip=8458527",
-                urlEncode(recipient), urlEncode(address)
+                "action_type=supply&name=%s&address=%s&city=%s&country=%s&zip=%s",
+                urlEncode(recipient), urlEncode(address),
+                urlEncode(city),
+                urlEncode(country),
+                urlEncode(zip)
             );
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -37,17 +52,21 @@ public class ExternalDeliverySystem {
             // if body is a number between  [10000, 100000] return true, else return false
             int body = Integer.parseInt(response.body());
             if (body >= 10000 && body <= 100000) {
-                return true;
+                return body; // Return the transaction ID
             }
-            return false;
+            return -1; // Return -1 on failure
             
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Error sending package: " + e.getMessage());
-            return false;
+        } catch (IOException | InterruptedException | NumberFormatException e) {
+            logger.error("Error sending package: " + e.getMessage());
+            return -1;
+        } catch (IllegalArgumentException e) {
+            logger.error("Address parsing error: " + e.getMessage());
+            return -1; // Indicate failure due to parsing
         }
+        
     }
 
-    public boolean cancelPackage(int deliveryId) {
+    public int cancelPackage(int deliveryId) {
         try {
             // Create form-data payload for cancel_supply request
             String formData = String.format(
@@ -66,14 +85,14 @@ public class ExternalDeliverySystem {
             
             // if body is a number between  [10000, 100000] return true, else return false
             int body = Integer.parseInt(response.body());
-            if (body >= 10000 && body <= 100000) {
-                return true;
+             if (body == 1) {
+                return 1;
             }
-            return false;
+            return -1;
             
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Error canceling package: " + e.getMessage());
-            return false;
+        } catch (IOException | InterruptedException | NumberFormatException e) {
+            logger.error("Error canceling package: " + e.getMessage());
+            return -1;
         }
     }
 
@@ -85,6 +104,14 @@ public class ExternalDeliverySystem {
         } catch (java.io.UnsupportedEncodingException e) {
             return value;
         }
+    }
+    // This method is used to parse the full address into its components to avoid changeing parameters in the deliver method
+    private String[] parseAddress(String fullAddress) {
+        String[] parts = fullAddress.split("\\*");
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("Invalid address format. Expected: street*city*country*zip");
+        }
+        return parts;
     }
 }
 

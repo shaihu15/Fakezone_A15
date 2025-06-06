@@ -7,17 +7,21 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ExternalPaymentSystem {
     private static final String API_URL = "https://damp-lynna-wsep-1984852e.koyeb.app/";
     private final HttpClient httpClient;
 
+    private static final Logger logger = LoggerFactory.getLogger(ExternalPaymentSystem.class);
     public ExternalPaymentSystem() {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
     }
 
-    public boolean processPayment(String cardNumber, String cardHolder, String expDate, String cvv, double amount) {
+    public int processPayment(String cardNumber, String cardHolder, String expDate, String cvv, double amount,int userId) {
         try {
             // Parse expDate to separate month and year
             String month = "";
@@ -32,17 +36,20 @@ public class ExternalPaymentSystem {
                         year = "20" + year;
                     }
                 }
+            }   else {
+                    logger.error("Invalid expiration date format: {}", expDate);
+                    return -1;
             }
-
             // Create form-data payload for payment request
             String formData = String.format(
-                "action_type=pay&amount=%.0f&currency=USD&card_number=%s&month=%s&year=%s&holder=%s&cvv=%s&id=20444444",
+                "action_type=pay&amount=%.0f&currency=USD&card_number=%s&month=%s&year=%s&holder=%s&cvv=%s&id=%d",
                 amount, 
                 urlEncode(cardNumber), 
                 urlEncode(month), 
                 urlEncode(year), 
                 urlEncode(cardHolder), 
-                urlEncode(cvv)
+                urlEncode(cvv),
+                urlEncode(String.valueOf(userId))
             );
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -57,20 +64,21 @@ public class ExternalPaymentSystem {
             // if body is a number between  [10000, 100000] return true, else return false
             int body = Integer.parseInt(response.body());
             if (body >= 10000 && body <= 100000) {
-                return true;
+                return body; // Return the transaction ID
             }
-            return false;
+            logger.error("Payment failed with response: {}", response.body());
+            return -1;
             
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Error processing payment: " + e.getMessage());
-            return false;
+        } catch (IOException | InterruptedException | NumberFormatException e) {
+            logger.error("Error processing payment: " + e.getMessage());
+            return -1;
         }
     }
 
-    public boolean processRefund(String cardNumber, double amount) {
+    public int processRefund(int transactionId) {
         try {
             // Create form-data payload for cancel payment request
-            String formData = "action_type=cancel_pay&transaction_id=20123";
+            String formData =  String.format("action_type=cancel_pay&transaction_id=%d", transactionId);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(API_URL))
@@ -83,14 +91,15 @@ public class ExternalPaymentSystem {
             
             // if body is a number between  [10000, 100000] return true, else return false
             int body = Integer.parseInt(response.body());
-            if (body >= 10000 && body <= 100000) {
-                return true;
+            if (body == 1) {
+                return 1;
             }
-            return false;
+            logger.error("Process refund failed. External system returned: {}", body);
+            return -1;
             
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | NumberFormatException e) {
             System.err.println("Error processing refund: " + e.getMessage());
-            return false;
+            return -1;
         }
     }
 

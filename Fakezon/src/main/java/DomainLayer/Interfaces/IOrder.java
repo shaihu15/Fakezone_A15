@@ -21,4 +21,6 @@ public interface IOrder {
     PaymentMethod getPaymentMethod();
     List<OrderedProduct> getProducts();
     double getTotalPrice();
+    int getPaymentTransactionId();
+    int getDeliveryTransactionId();
 }

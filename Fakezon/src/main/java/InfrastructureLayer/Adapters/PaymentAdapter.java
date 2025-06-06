@@ -20,32 +20,32 @@ public class PaymentAdapter implements IPayment {
         this.externalSystem = externalSystem;
     }
     @Override
-    public boolean pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount) {
+    public int pay(String cardNumber, String cardHolder, String expDate, String cvv, double amount, int userId) {
         logger.info("Attempting payment for " + cardHolder + ", amount: " + amount);
         if (cardNumber == null || cardHolder == null || expDate == null || cvv == null) {
             logger.error("Payment failed due to missing information for " + cardHolder);
-            return false;
+            return -1;
         }
-        boolean result = externalSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
-        if (result) {
+        int transactionId = externalSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
+        if (transactionId != -1) {
             logger.info("Payment succeeded for " + cardHolder);
-            return true;
+            return transactionId;
         } else {
             logger.error("Payment failed for " + cardHolder);
-            return false;
+            return -1;
         }
     }
 
     @Override
-    public boolean refund(String cardNumber, double amount) {
-        logger.info("Attempting refund for payment cardNumber: " + cardNumber + ", amount: " + amount);
-        boolean result = externalSystem.processRefund(cardNumber, amount);
-        if (result) {
-            logger.info("Refund succeeded for payment ID: " + cardNumber);
-            return true;
+    public int refund(int transactionId) {
+        logger.info("Attempting refund for payment with the transactionID: " + transactionId);
+        int result = externalSystem.processRefund(transactionId);
+        if (result==1) {
+            logger.info("Refund succeeded for payment with the transaction ID: " + transactionId);
+            return 1;
         } else {
-            logger.error("Refund failed for payment ID: " + cardNumber);
-            return false;
+            logger.error("Refund failed for payment with the transaction ID: " + transactionId);
+            return -1;
         }
     }
 }
