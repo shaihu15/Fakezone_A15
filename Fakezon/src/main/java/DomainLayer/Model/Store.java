@@ -1417,6 +1417,10 @@ public class Store implements IStore {
                         auctionProducts.remove(productId);
                     }
                 }
+                Offer offer = getUserOfferOnStoreProduct(userId, productId);
+                if(offer != null){
+                    removeOffer(offer);
+                }
                 if (newQuantity == quantity) { //this if was else-if, it might cause problems now?
                     products.put(new StoreProductDTO(storeProduct, quantity),true);
                     storeProduct.decrementProductQuantity(newQuantity);
@@ -1612,18 +1616,22 @@ public class Store implements IStore {
             else{
                 if(offer.isDeclined()){
                     this.publisher.publishEvent(new OfferDeclined(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount(), offer.getDeclinedBy()));
-                    List<Offer> offers = offersOnProducts.get(offer.getUserId());
-                    if(offers != null){
-                        offers.remove(offer);
-                    }
-                    if(offers == null || offers.isEmpty()){
-                        offersOnProducts.remove(offer.getUserId());
-                    }
+                    removeOffer(offer);
                 }
             }
         }
         finally{
             offersLock.unlock();
+        }
+    }
+
+    private void removeOffer(Offer offer){
+        List<Offer> offers = offersOnProducts.get(offer.getUserId());
+        if(offers != null){
+            offers.remove(offer);
+        }
+        if(offers == null || offers.isEmpty()){
+            offersOnProducts.remove(offer.getUserId());
         }
     }
 
