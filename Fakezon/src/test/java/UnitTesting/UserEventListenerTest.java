@@ -2,11 +2,14 @@ package UnitTesting;
 
 import ApplicationLayer.UserEventListener;
 import DomainLayer.Enums.RoleName;
+import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.Registered;
+import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionApprovedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
@@ -24,10 +27,13 @@ import javax.management.relation.Role;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class UserEventListenerTest {
@@ -57,13 +63,19 @@ public class UserEventListenerTest {
         // Act
         userEventListener.handleAssignmentEvent(event);
 
+                try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Sleep was interrupted");
+        }
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor = ArgumentCaptor.forClass(SimpleEntry.class);
-        verify(mockRegisteredUser).AssignmentMessages(messageCaptor.capture());
-        SimpleEntry<Integer, String> capturedMessage = messageCaptor.getValue();
+        ArgumentCaptor<StoreMsg> messageCaptor = ArgumentCaptor.forClass(StoreMsg.class);
+        verify(mockRegisteredUser).addAssignmentMessage(messageCaptor.capture());
+        StoreMsg capturedMessage = messageCaptor.getValue();
 
-        assertEquals(storeId, capturedMessage.getKey());
-        assertEquals("Please approve or decline this role: " + roleName + " for store " + storeId, capturedMessage.getValue());
+        assertEquals(storeId, capturedMessage.getStoreId());
+        assertEquals("Please approve or decline this role: " + roleName + " for store " + storeId, capturedMessage.getMessage());
     }
 
     @Test
@@ -104,11 +116,11 @@ public class UserEventListenerTest {
         userEventListener.handleClosingStore(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor1 = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor1 = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser1).addMessageFromStore(messageCaptor1.capture());
-        SimpleEntry<Integer, String> capturedMessage1 = messageCaptor1.getValue();
-        assertEquals(storeId, capturedMessage1.getKey());
-        assertEquals("Store " + storeId + " is now closed.", capturedMessage1.getValue());
+        StoreMsg capturedMessage1 = messageCaptor1.getValue();
+        assertEquals(storeId, capturedMessage1.getStoreId());
+        assertEquals("Store " + storeId + " is now closed.", capturedMessage1.getMessage());
 
         verify(mockRegisteredUser2).addMessageFromStore(any()); // No message added to logged-in user
     }
@@ -147,12 +159,12 @@ public class UserEventListenerTest {
         userEventListener.handleResponseFromStore(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser).addMessageFromStore(messageCaptor.capture());
-        SimpleEntry<Integer, String> capturedMessage = messageCaptor.getValue();
+        StoreMsg capturedMessage = messageCaptor.getValue();
 
-        assertEquals(storeId, capturedMessage.getKey());
-        assertEquals(message, capturedMessage.getValue());
+        assertEquals(storeId, capturedMessage.getStoreId());
+        assertEquals(message, capturedMessage.getMessage());
     }
 
     @Test
@@ -211,17 +223,20 @@ public class UserEventListenerTest {
 
         List<Registered> users = Arrays.asList(mockRegisteredUser1, mockRegisteredUser2);
         when(userRepository.UsersWithRolesInStoreId(storeId)).thenReturn(users);
-
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(101, new StoreOwner());
+        when(mockRegisteredUser1.getAllRoles()).thenReturn(map);
+        when(mockRegisteredUser2.getAllRoles()).thenReturn(map);
         // Act
         userEventListener.handleAuctionEndedToOwnersEvent(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor1 = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor1 = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser1).addAuctionEndedMessage(messageCaptor1.capture());
-        SimpleEntry<Integer, String> capturedMessage1 = messageCaptor1.getValue();
-        assertEquals(storeId, capturedMessage1.getKey());
+        StoreMsg capturedMessage1 = messageCaptor1.getValue();
+        assertEquals(storeId, capturedMessage1.getStoreId());
         assertEquals("Auction ended for product " + productId + ". Highest bid was " + currentHighestBid +
-                " by user " + userIdHighestBid + ". Please approve or decline this bid.", capturedMessage1.getValue());
+                " by user " + userIdHighestBid + ". Please approve or decline this bid.", capturedMessage1.getMessage());
 
         verify(mockRegisteredUser2).addAuctionEndedMessage(any());
     }
@@ -243,16 +258,19 @@ public class UserEventListenerTest {
 
         List<Registered> users = Arrays.asList(mockRegisteredUser1, mockRegisteredUser2);
         when(userRepository.UsersWithRolesInStoreId(storeId)).thenReturn(users);
-
+        HashMap<Integer, IRegisteredRole> map = new HashMap<>();
+        map.put(101, new StoreOwner());
+        when(mockRegisteredUser1.getAllRoles()).thenReturn(map);
+        when(mockRegisteredUser2.getAllRoles()).thenReturn(map);
         // Act
         userEventListener.handleAuctionFailedToOwnersEvent(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor1 = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor1 = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser1).addMessageFromStore(messageCaptor1.capture());
-        SimpleEntry<Integer, String> capturedMessage1 = messageCaptor1.getValue();
-        assertEquals(storeId, capturedMessage1.getKey());
-        assertEquals("Auction failed for product " + productId + ". Base price was " + basePrice + ". " + message, capturedMessage1.getValue());
+        StoreMsg capturedMessage1 = messageCaptor1.getValue();
+        assertEquals(storeId, capturedMessage1.getStoreId());
+        assertEquals("Auction failed for product " + productId + ". Base price was " + basePrice + ". " + message, capturedMessage1.getMessage());
 
         verify(mockRegisteredUser2).addMessageFromStore(any());
     }
@@ -277,12 +295,12 @@ public class UserEventListenerTest {
         userEventListener.handleApprovedBidOnAuctionEvent(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser).addMessageFromStore(messageCaptor.capture());
-        SimpleEntry<Integer, String> capturedMessage = messageCaptor.getValue();
+        StoreMsg capturedMessage = messageCaptor.getValue();
 
-        assertEquals(storeId, capturedMessage.getKey());
-        assertEquals("We are pleased to inform you that your bid has won the auction on product: " + productId + ", at a price of: " + currentHighestBid + "! The product has been added to your shopping cart, please purchase it as soon as possible.", capturedMessage.getValue());
+        assertEquals(storeId, capturedMessage.getStoreId());
+        assertEquals("We are pleased to inform you that your bid has won the auction on product: " + productId + ", at a price of: " + currentHighestBid + "! The product has been added to your shopping cart, please purchase it as soon as possible.", capturedMessage.getMessage());
 
         verify(mockRegisteredUser).addToBasket(storeId, productId, 1);
     }
@@ -329,12 +347,12 @@ public class UserEventListenerTest {
         userEventListener.handleAuctionGotHigherBidEvent(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser).addMessageFromStore(messageCaptor.capture());
-        SimpleEntry<Integer, String> capturedMessage = messageCaptor.getValue();
+        StoreMsg capturedMessage = messageCaptor.getValue();
 
-        assertEquals(storeId, capturedMessage.getKey());
-        assertEquals("Your auction bid on product: " + productId + " was rejected due to a higher bid of: " + currentHighestBid + ".", capturedMessage.getValue());
+        assertEquals(storeId, capturedMessage.getStoreId());
+        assertEquals("Your auction bid on product: " + productId + " was rejected due to a higher bid of: " + currentHighestBid + ".", capturedMessage.getMessage());
     }
 
     @Test
@@ -377,12 +395,12 @@ public class UserEventListenerTest {
         userEventListener.handleDeclinedBidOnAuctionEvent(event);
 
         // Assert
-        ArgumentCaptor<SimpleEntry<Integer, String>> messageCaptor = ArgumentCaptor.forClass(SimpleEntry.class);
+        ArgumentCaptor<StoreMsg> messageCaptor = ArgumentCaptor.forClass(StoreMsg.class);
         verify(mockRegisteredUser).addMessageFromStore(messageCaptor.capture());
-        SimpleEntry<Integer, String> capturedMessage = messageCaptor.getValue();
+        StoreMsg capturedMessage = messageCaptor.getValue();
 
-        assertEquals(storeId, capturedMessage.getKey());
-        assertEquals("We regret to inform you that the offer for product: " + productId + " was not approved by the store.", capturedMessage.getValue());
+        assertEquals(storeId, capturedMessage.getStoreId());
+        assertEquals("We regret to inform you that the offer for product: " + productId + " was not approved by the store.", capturedMessage.getMessage());
     }
 
     @Test

@@ -9,6 +9,7 @@ import java.util.AbstractMap;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Response;
 import ApplicationLayer.Services.SystemService;
@@ -135,7 +136,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
@@ -148,7 +149,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
@@ -168,7 +169,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
@@ -181,7 +182,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
@@ -201,7 +202,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
@@ -222,7 +223,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
@@ -243,7 +244,7 @@ public class TestHelper {
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
         Response<UserDTO> loginResult = loginResponse.isSuccess() 
             ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, null, null);
+            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
         if(!loginResult.isSuccess()){
             return null;
         }
