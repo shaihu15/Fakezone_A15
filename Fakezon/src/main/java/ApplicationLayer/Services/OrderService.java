@@ -133,7 +133,7 @@ public class OrderService implements IOrderService {
                     orderedProducts.add(new OrderedProduct(storeProduct, quantity));
                 }
                 double price = prices.get(store.getStoreId());
-                Order order = new Order(idCounter.incrementAndGet(), userId, store.getStoreId(), OrderState.SHIPPED, orderedProducts, address, paymentMethod, price);
+                Order order = new Order(idCounter.incrementAndGet(), userId, store.getStoreId(), OrderState.SHIPPED, orderedProducts, address, paymentMethod, price,paymentTransactionId,deliveryTransactionId);
                 orderRepository.addOrder(order);
             }
 

@@ -26,79 +26,79 @@ class PaymentAdapterTest {
 
     @Test
     void givenValidPaymentDetails_WhenPayIsCalled_ThenReturnsTrueOnSuccess() {
-        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
-                .thenReturn(true);
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(12345);
 
-        boolean result = adapter.pay("1234567890123456", "John Doe", "12/25", "123", 100.0);
+        int result = adapter.pay("1234567890123456", "John Doe", "12/25", "123", 100.0, 1);
 
-        assertTrue(result);
-        verify(mockExternal, times(1)).processPayment("1234567890123456", "John Doe", "12/25", "123", 100.0);
+        assertEquals(12345, result);
+        verify(mockExternal, times(1)).processPayment("1234567890123456", "John Doe", "12/25", "123", 100.0, 1);
     }
 
     @Test
     void givenInValidCardNumberPaymentDetails_WhenPayFails_ThenReturnsFalse() {
-        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
-                .thenReturn(false);
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(-1);
 
-        boolean result = adapter.pay(null, "John Doe", "12/25", "123", 100.0);
+        int result = adapter.pay(null, "John Doe", "12/25", "123", 100.0, 1);
 
-        assertFalse(result);
+        assertEquals(-1, result);
     }
     @Test
     void givenInValidcardHolderPaymentDetails_WhenPayFails_ThenReturnsFalse() {
-        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
-                .thenReturn(false);
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(-1);
 
-        boolean result = adapter.pay("1234567890123456", null, "12/25", "123", 100.0);
+        int result = adapter.pay("1234567890123456", null, "12/25", "123", 100.0, 1);
 
-        assertFalse(result);
+        assertEquals(-1, result);
     }
     @Test
     void givenInValidexpDatePaymentDetails_WhenPayFails_ThenReturnsFalse() {
-        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
-                .thenReturn(false);
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(-1);
 
-        boolean result = adapter.pay("1234567890123456", "John Doe", null, "123", 100.0);
+        int result = adapter.pay("1234567890123456", "John Doe", null, "123", 100.0, 1);
 
-        assertFalse(result);
+        assertEquals(-1, result);
     }
     @Test
     void givenInValidcvvPaymentDetails_WhenPayFails_ThenReturnsFalse() {
-        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
-                .thenReturn(false);
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(-1);
 
-        boolean result = adapter.pay("1234567890123456", "John Doe", "12/25", null, 100.0);
+        int result = adapter.pay("1234567890123456", "John Doe", "12/25", null, 100.0, 1);
 
-        assertFalse(result);
+        assertEquals(-1, result);
     }
     @Test
     void givenValidPaymentDetails_WhenPayFails_ThenReturnsFalse() {
-        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble()))
-                .thenReturn(false);
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenReturn(-1);
 
-        boolean result = adapter.pay("1234567890123456", "John Doe", "12/25", "123", 100.0);
+        int result = adapter.pay("1234567890123456", "John Doe", "12/25", "123", 100.0, 1);
 
-        assertFalse(result);
-        verify(mockExternal, times(1)).processPayment("1234567890123456", "John Doe", "12/25", "123", 100.0);
+        assertEquals(-1, result);
+        verify(mockExternal, times(1)).processPayment("1234567890123456", "John Doe", "12/25", "123", 100.0, 1);
     }
 
     @Test
     void givenValidRefundDetails_WhenRefundSucceeds_ThenReturnsTrue() {
-        when(mockExternal.processRefund("1234567890123456", 50.0)).thenReturn(true);
+        when(mockExternal.processRefund(12345)).thenReturn(1);
 
-        boolean result = adapter.refund("1234567890123456", 50.0);
+        int result = adapter.refund(12345);
 
-        assertTrue(result);
-        verify(mockExternal, times(1)).processRefund("1234567890123456", 50.0);
+        assertEquals(1, result);
+        verify(mockExternal, times(1)).processRefund(12345);
     }
 
     @Test
     void givenValidRefundDetails_WhenRefundFails_ThenReturnsFalse() {
-        when(mockExternal.processRefund("1234567890123456", 50.0)).thenReturn(false);
+        when(mockExternal.processRefund(12345)).thenReturn(-1);
 
-        boolean result = adapter.refund("1234567890123456", 50.0);
+        int result = adapter.refund(12345);
 
-        assertFalse(result);
-        verify(mockExternal, times(1)).processRefund("1234567890123456", 50.0);
+        assertEquals(-1, result);
+        verify(mockExternal, times(1)).processRefund(12345);
     }
 }

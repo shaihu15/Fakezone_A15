@@ -247,7 +247,7 @@ void testAddOrderCart_Exception() {
         PaymentMethod paymentMethod = PaymentMethod.CREDIT_CARD;
     
         // Act
-        orderService.addOrderCart(cart, prices, userId, address, paymentMethod);
+        orderService.addOrderCart(cart, prices, userId, address, paymentMethod, 12345, 67890);
     
         // Assert
         verify(orderRepository, times(1)).addOrder(any(Order.class));
@@ -288,7 +288,7 @@ void testAddOrderCart_Exception() {
         PaymentMethod paymentMethod = PaymentMethod.CASH_ON_DELIVERY;
     
         // Act
-        orderService.addOrderCart(cart, prices, userId, address, paymentMethod);
+        orderService.addOrderCart(cart, prices, userId, address, paymentMethod, 12345, 67890);
     
         // Assert: Should call addOrder twice (once per store)
         verify(orderRepository, times(2)).addOrder(any(Order.class));
@@ -319,7 +319,7 @@ void testAddOrderCart_Exception() {
     
         // Act & Assert
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-            orderService.addOrderCart(cart, prices, userId, address, paymentMethod)
+            orderService.addOrderCart(cart, prices, userId, address, paymentMethod, 12345, 67890)
         );
         assertEquals("Order error", ex.getMessage());
         verify(orderRepository, times(1)).addOrder(any(Order.class));
@@ -335,7 +335,7 @@ void testAddOrderCart_Exception() {
         PaymentMethod paymentMethod = PaymentMethod.CREDIT_CARD;
     
         // Act
-        orderService.addOrderCart(cart, prices, userId, address, paymentMethod);
+        orderService.addOrderCart(cart, prices, userId, address, paymentMethod, 12345, 67890);
     
         // Assert: No orders should be added
         verify(orderRepository, never()).addOrder(any(Order.class));

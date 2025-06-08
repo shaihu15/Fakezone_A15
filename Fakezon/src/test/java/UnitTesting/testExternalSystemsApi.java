@@ -23,47 +23,47 @@ public class testExternalSystemsApi {
 
     @Test
     @DisplayName("Delivery: Send package with valid details should succeed")
-    void sendPackage_ValidDetails_ShouldReturnTrue() {
+    void sendPackage_ValidDetails_ShouldReturnSuccessCode() {
         // Arrange
-        String address = "123 Main Street";
+        String address = "123 Main Street*Tel-Aviv*Israel*12345";
         String recipient = "John Doe";
         String packageDetails = "Electronics Package";
 
         // Act
-        boolean result = deliverySystem.sendPackage(address, recipient, packageDetails);
+        int result = deliverySystem.sendPackage(address, recipient, packageDetails);
 
         // Assert
-        assertTrue(result, "Valid package delivery should succeed");
+        assertTrue(result > 0, "Valid package delivery should return a positive delivery ID");
     }
 
     @Test
     @DisplayName("Delivery: Send package with null address should fail")
-    void sendPackage_NullAddress_ShouldReturnFalse() {
+    void sendPackage_NullAddress_ShouldReturnFailureCode() {
         // Arrange
         String address = null;
         String recipient = "John Doe";
         String packageDetails = "Electronics Package";
 
         // Act
-        boolean result = deliverySystem.sendPackage(address, recipient, packageDetails);
+        int result = deliverySystem.sendPackage(address, recipient, packageDetails);
 
         // Assert
-        assertTrue(result || !result, "Test should handle null address gracefully");
+        assertTrue(result <= 0, "Null address should return failure code");
     }
 
     @Test
     @DisplayName("Delivery: Send package with null recipient should fail")
-    void sendPackage_NullRecipient_ShouldReturnFalse() {
+    void sendPackage_NullRecipient_ShouldReturnFailureCode() {
         // Arrange
-        String address = "123 Main Street";
+        String address = "123 Main Street*Tel-Aviv*Israel*12345";
         String recipient = null;
         String packageDetails = "Electronics Package";
 
         // Act
-        boolean result = deliverySystem.sendPackage(address, recipient, packageDetails);
+        int result = deliverySystem.sendPackage(address, recipient, packageDetails);
 
         // Assert
-        assertTrue(result || !result, "Test should handle null recipient gracefully");
+        assertTrue(result <= 0, "Null recipient should return failure code");
     }
 
     @Test
@@ -75,10 +75,10 @@ public class testExternalSystemsApi {
         String packageDetails = "";
 
         // Act
-        boolean result = deliverySystem.sendPackage(address, recipient, packageDetails);
+        int result = deliverySystem.sendPackage(address, recipient, packageDetails);
 
         // Assert
-        assertTrue(result || !result, "Test should handle empty strings gracefully");
+        assertTrue(result <= 0, "Empty strings should return failure code");
     }
 
     @Test
@@ -90,85 +90,61 @@ public class testExternalSystemsApi {
         String packageDetails = "Package with \"quotes\" and \\backslashes\\";
 
         // Act
-        boolean result = deliverySystem.sendPackage(address, recipient, packageDetails);
+        int result = deliverySystem.sendPackage(address, recipient, packageDetails);
 
         // Assert
-        assertTrue(result || !result, "Test should handle special characters gracefully");
+        assertTrue(result <= 0 || result > 0, "Special characters should be handled");
     }
 
     @Test
     @DisplayName("Delivery: Cancel package with valid ID should succeed")
-    void cancelPackage_ValidId_ShouldReturnTrue() {
+    void cancelPackage_ValidId_ShouldReturnSuccessCode() {
         // Arrange
-        int deliveryId = 12345;
+        int transactionId = 12345;
 
         // Act
-        boolean result = deliverySystem.cancelPackage(deliveryId);
+        int result = deliverySystem.cancelPackage(transactionId);
 
         // Assert
-        assertTrue(result || !result, "Valid package cancellation should be handled");
-    }
-
-    @Test
-    @DisplayName("Delivery: Cancel package with negative ID should handle gracefully")
-    void cancelPackage_NegativeId_ShouldHandleGracefully() {
-        // Arrange
-        int deliveryId = -1;
-
-        // Act
-        boolean result = deliverySystem.cancelPackage(deliveryId);
-
-        // Assert
-        assertTrue(result || !result, "Negative delivery ID should be handled gracefully");
-    }
-
-    @Test
-    @DisplayName("Delivery: Cancel package with zero ID should handle gracefully")
-    void cancelPackage_ZeroId_ShouldHandleGracefully() {
-        // Arrange
-        int deliveryId = 0;
-
-        // Act
-        boolean result = deliverySystem.cancelPackage(deliveryId);
-
-        // Assert
-        assertTrue(result || !result, "Zero delivery ID should be handled gracefully");
+        assertEquals(1, result, "Valid package cancellation should return 1");
     }
 
     // =============== PAYMENT SYSTEM TESTS ===============
 
     @Test
     @DisplayName("Payment: Process payment with valid details should succeed")
-    void processPayment_ValidDetails_ShouldReturnTrue() {
+    void processPayment_ValidDetails_ShouldReturnTransactionId() {
         // Arrange
         String cardNumber = "4111111111111111";
         String cardHolder = "John Doe";
         String expDate = "12/25";
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Valid payment processing should be handled");
+        assertTrue(result > 0, "Valid payment processing should return a positive transaction ID");
     }
 
     @Test
     @DisplayName("Payment: Process payment with 4-digit year format should succeed")
-    void processPayment_FourDigitYear_ShouldReturnTrue() {
+    void processPayment_FourDigitYear_ShouldReturnTransactionId() {
         // Arrange
         String cardNumber = "4111111111111111";
         String cardHolder = "John Doe";
         String expDate = "12/2025";
         String cvv = "123";
         double amount = 150.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Payment with 4-digit year should be handled");
+        assertTrue(result > 0, "Payment with 4-digit year should return a positive transaction ID");
     }
 
     @Test
@@ -180,12 +156,13 @@ public class testExternalSystemsApi {
         String expDate = "12/25";
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Null card number should be handled gracefully");
+        assertTrue(result <= 0, "Null card number should return failure code");
     }
 
     @Test
@@ -197,12 +174,13 @@ public class testExternalSystemsApi {
         String expDate = "12/25";
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Null card holder should be handled gracefully");
+        assertTrue(result <= 0, "Null card holder should return failure code");
     }
 
     @Test
@@ -214,12 +192,13 @@ public class testExternalSystemsApi {
         String expDate = "invalid-date";
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Invalid expiration date format should be handled gracefully");
+        assertTrue(result <= 0, "Invalid expiration date format should return failure code");
     }
 
     @Test
@@ -231,12 +210,13 @@ public class testExternalSystemsApi {
         String expDate = null;
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Null expiration date should be handled gracefully");
+        assertTrue(result <= 0, "Null expiration date should return failure code");
     }
 
     @Test
@@ -248,47 +228,15 @@ public class testExternalSystemsApi {
         String expDate = "12/25";
         String cvv = null;
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Null CVV should be handled gracefully");
+        assertTrue(result <= 0, "Null CVV should return failure code");
     }
 
-    @Test
-    @DisplayName("Payment: Process payment with zero amount should handle gracefully")
-    void processPayment_ZeroAmount_ShouldHandleGracefully() {
-        // Arrange
-        String cardNumber = "4111111111111111";
-        String cardHolder = "John Doe";
-        String expDate = "12/25";
-        String cvv = "123";
-        double amount = 0.0;
-
-        // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
-
-        // Assert
-        assertTrue(result || !result, "Zero amount should be handled gracefully");
-    }
-
-    @Test
-    @DisplayName("Payment: Process payment with negative amount should handle gracefully")
-    void processPayment_NegativeAmount_ShouldHandleGracefully() {
-        // Arrange
-        String cardNumber = "4111111111111111";
-        String cardHolder = "John Doe";
-        String expDate = "12/25";
-        String cvv = "123";
-        double amount = -50.0;
-
-        // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
-
-        // Assert
-        assertTrue(result || !result, "Negative amount should be handled gracefully");
-    }
 
     @Test
     @DisplayName("Payment: Process payment with large amount should handle gracefully")
@@ -299,12 +247,13 @@ public class testExternalSystemsApi {
         String expDate = "12/25";
         String cvv = "123";
         double amount = 999999.99;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Large amount should be handled gracefully");
+        assertTrue(result > 0 || result <= 0, "Large amount should be handled");
     }
 
     @Test
@@ -316,68 +265,26 @@ public class testExternalSystemsApi {
         String expDate = "12/25";
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Act
-        boolean result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int result = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Assert
-        assertTrue(result || !result, "Special characters in name should be handled gracefully");
+        assertTrue(result > 0 || result <= 0, "Special characters in name should be handled");
     }
 
     @Test
     @DisplayName("Payment: Process refund with valid details should succeed")
-    void processRefund_ValidDetails_ShouldReturnTrue() {
+    void processRefund_ValidDetails_ShouldReturnSuccessCode() {
         // Arrange
-        String cardNumber = "4111111111111111";
-        double amount = 50.0;
+        int transactionId = 12345;
 
         // Act
-        boolean result = paymentSystem.processRefund(cardNumber, amount);
+        int result = paymentSystem.processRefund(transactionId);
 
         // Assert
-        assertTrue(result || !result, "Valid refund processing should be handled");
-    }
-
-    @Test
-    @DisplayName("Payment: Process refund with null card number should handle gracefully")
-    void processRefund_NullCardNumber_ShouldHandleGracefully() {
-        // Arrange
-        String cardNumber = null;
-        double amount = 50.0;
-
-        // Act
-        boolean result = paymentSystem.processRefund(cardNumber, amount);
-
-        // Assert
-        assertTrue(result || !result, "Null card number for refund should be handled gracefully");
-    }
-
-    @Test
-    @DisplayName("Payment: Process refund with zero amount should handle gracefully")
-    void processRefund_ZeroAmount_ShouldHandleGracefully() {
-        // Arrange
-        String cardNumber = "4111111111111111";
-        double amount = 0.0;
-
-        // Act
-        boolean result = paymentSystem.processRefund(cardNumber, amount);
-
-        // Assert
-        assertTrue(result || !result, "Zero refund amount should be handled gracefully");
-    }
-
-    @Test
-    @DisplayName("Payment: Process refund with negative amount should handle gracefully")
-    void processRefund_NegativeAmount_ShouldHandleGracefully() {
-        // Arrange
-        String cardNumber = "4111111111111111";
-        double amount = -25.0;
-
-        // Act
-        boolean result = paymentSystem.processRefund(cardNumber, amount);
-
-        // Assert
-        assertTrue(result || !result, "Negative refund amount should be handled gracefully");
+        assertEquals(1, result, "Valid refund processing should return 1");
     }
 
     // =============== INTEGRATION TESTS ===============
@@ -391,40 +298,40 @@ public class testExternalSystemsApi {
         String expDate = "12/25";
         String cvv = "123";
         double amount = 100.0;
+        int userId = 12345678;
 
         // Arrange - Delivery details
-        String address = "123 Main Street";
+        String address = "123 Main Street*Tel-Aviv*Israel*12345";
         String recipient = "John Doe";
         String packageDetails = "Purchased item";
 
         // Act - Process payment first
-        boolean paymentResult = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount);
+        int paymentTransactionId = paymentSystem.processPayment(cardNumber, cardHolder, expDate, cvv, amount, userId);
 
         // Act - Then process delivery
-        boolean deliveryResult = deliverySystem.sendPackage(address, recipient, packageDetails);
+        int deliveryId = deliverySystem.sendPackage(address, recipient, packageDetails);
 
         // Assert
-        assertTrue(paymentResult || !paymentResult, "Payment should be processed");
-        assertTrue(deliveryResult || !deliveryResult, "Delivery should be processed");
+        assertTrue(paymentTransactionId > 0, "Payment should return a positive transaction ID");
+        assertTrue(deliveryId > 0, "Delivery should return a positive delivery ID");
     }
 
     @Test
     @DisplayName("Integration: Cancellation workflow should work for both systems")
     void cancellationWorkflow_PaymentAndDelivery_ShouldWork() {
         // Arrange
-        String cardNumber = "4111111111111111";
-        double refundAmount = 100.0;
+        int transactionId = 12345;
         int deliveryId = 12345;
 
         // Act - Cancel payment
-        boolean refundResult = paymentSystem.processRefund(cardNumber, refundAmount);
+        int refundResult = paymentSystem.processRefund(transactionId);
 
         // Act - Cancel delivery
-        boolean cancelDeliveryResult = deliverySystem.cancelPackage(deliveryId);
+        int cancelDeliveryResult = deliverySystem.cancelPackage(deliveryId);
 
         // Assert
-        assertTrue(refundResult || !refundResult, "Refund should be processed");
-        assertTrue(cancelDeliveryResult || !cancelDeliveryResult, "Delivery cancellation should be processed");
+        assertEquals(1, refundResult, "Refund should return 1 for success");
+        assertEquals(1, cancelDeliveryResult, "Delivery cancellation should return 1 for success");
     }
 
     // =============== EDGE CASE TESTS ===============
@@ -434,14 +341,14 @@ public class testExternalSystemsApi {
     void edgeCase_VeryLongStrings_ShouldHandleGracefully() {
         // Arrange
         String longString = "A".repeat(1000);
-        
+        int userId = 12345678;
         // Act & Assert - Delivery
-        boolean deliveryResult = deliverySystem.sendPackage(longString, longString, longString);
-        assertTrue(deliveryResult || !deliveryResult, "Very long strings in delivery should be handled");
+        int deliveryId = deliverySystem.sendPackage(longString, longString, longString);
+        assertTrue(deliveryId <= 0 || deliveryId > 0, "Very long strings in delivery should be handled");
 
         // Act & Assert - Payment
-        boolean paymentResult = paymentSystem.processPayment(longString, longString, "12/25", "123", 100.0);
-        assertTrue(paymentResult || !paymentResult, "Very long strings in payment should be handled");
+        int paymentTransactionId = paymentSystem.processPayment(longString, longString, "12/25", "123", 100.0, userId);
+        assertTrue(paymentTransactionId <= 0 || paymentTransactionId > 0, "Very long strings in payment should be handled");
     }
 
     @Test
@@ -449,13 +356,13 @@ public class testExternalSystemsApi {
     void edgeCase_UnicodeCharacters_ShouldHandleGracefully() {
         // Arrange
         String unicodeString = "José María 李小龙 москва 🏠📦💳";
-        
+        int userId = 12345678;
         // Act & Assert - Delivery
-        boolean deliveryResult = deliverySystem.sendPackage(unicodeString, unicodeString, unicodeString);
-        assertTrue(deliveryResult || !deliveryResult, "Unicode characters in delivery should be handled");
+        int deliveryId = deliverySystem.sendPackage(unicodeString, unicodeString, unicodeString);
+        assertTrue(deliveryId <= 0 || deliveryId > 0, "Unicode characters in delivery should be handled");
 
         // Act & Assert - Payment
-        boolean paymentResult = paymentSystem.processPayment("4111111111111111", unicodeString, "12/25", "123", 100.0);
-        assertTrue(paymentResult || !paymentResult, "Unicode characters in payment should be handled");
+        int paymentTransactionId = paymentSystem.processPayment("4111111111111111", unicodeString, "12/25", "123", 100.0, userId);
+        assertTrue(paymentTransactionId <= 0 || paymentTransactionId > 0, "Unicode characters in payment should be handled");
     }
-} 
+}

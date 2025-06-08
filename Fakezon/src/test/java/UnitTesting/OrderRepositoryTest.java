@@ -52,8 +52,8 @@ public class OrderRepositoryTest {
         List<OrderedProduct> orderedProducts2 = products2.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
         double totalPrice1 = products1.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
         double totalPrice2 = products2.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
-        order1 = new Order(1,user1Id, storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1);
-        order2 = new Order(2, user2Id,storeId, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2);
+        order1 = new Order(1, user1Id, storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1, 111, 222);
+        order2 = new Order(2, user2Id, storeId, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2, 333, 444);
     }
     @Test
     void givenValidOrder_WhenAddOrder_ThenOrderIsAdded() {

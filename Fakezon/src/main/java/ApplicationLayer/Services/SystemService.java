@@ -998,7 +998,7 @@ public class SystemService implements ISystemService {
                     + " at card number: " + cardNumber);
         }
 
-        this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod);
+        this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod, paymentTransactionId, deliveryTransactionId);
         this.userService.clearUserCart(userId);
 
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);
