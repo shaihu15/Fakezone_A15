@@ -2300,4 +2300,23 @@ public class SystemService implements ISystemService {
     }
 
 
+    @Override
+    public Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
+        try{
+            logger.info("User " + userId + " Placing offer on product " + productId + " in store " + storeId + " amount " + offerAmount);
+            if(!userService.isUserRegistered(userId)){
+                logger.error("placeOfferOnStoreProduct FAIL - user is guest");
+                return new Response<>(null, "Only Registered Users May Place Offers", false, ErrorType.BAD_REQUEST, null);
+            }
+            storeService.placeOfferOnStoreProduct(storeId, userId, productId, offerAmount);
+            logger.info("User " + userId + " successfully placed offer");
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("placeOfferOnStoreProduct FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+
 }

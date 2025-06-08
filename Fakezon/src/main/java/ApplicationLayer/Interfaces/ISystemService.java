@@ -247,4 +247,6 @@ public interface ISystemService {
 
     Response<Void> openStore(int storeId, int userId);
 
+    Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount);
+
 }

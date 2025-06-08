@@ -137,4 +137,6 @@ public interface IStoreService {
 
   void openStore(int storeId, int userId);
 
+  void placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount);
+
 }

@@ -397,7 +397,7 @@ public class UserService implements IUserService {
         if (Registered.isPresent()) {
 
             try {
-               Map<Integer, StoreMsg> messages = Registered.get().getAuctionEndedMessages();
+               Map<Integer, StoreMsg> messages = Registered.get().getOffersMessages();
                 if (messages.isEmpty()) {
                     logger.info("No messages found for user: " + userID);
                     return new Response<>(null, "No messages found", true, null, null);

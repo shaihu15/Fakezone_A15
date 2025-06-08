@@ -27,7 +27,7 @@ public class Registered extends User {
     private List<StoreMsg> messagesFromUser;
     private Map<Integer, StoreMsg> messagesFromStore;//msgId -> StoreMsg
     private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
-    private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
+    private Map<Integer, StoreMsg> offersMessages;//msgId -> StoreMsg
     protected static final AtomicInteger MsgIdCounter = new AtomicInteger(0);
 
     public Registered(String email, String password, LocalDate dateOfBirth,String state) {
@@ -40,7 +40,7 @@ public class Registered extends User {
         messagesFromUser = new Stack<>();
         messagesFromStore = new HashMap<>();
         assignmentMessages = new HashMap<>();
-        auctionEndedMessages = new HashMap<>();
+        offersMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -57,7 +57,7 @@ public class Registered extends User {
         messagesFromUser = new Stack<>();
         messagesFromStore = new HashMap<>();
         assignmentMessages = new HashMap<>();
-        auctionEndedMessages = new HashMap<>();
+        offersMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -82,9 +82,9 @@ public class Registered extends User {
         return msgId;
     }
 
-    public int addAuctionEndedMessage(StoreMsg message) {
+    public int addOfferMessage(StoreMsg message) {
         int msgId = MsgIdCounter.getAndIncrement();
-        this.auctionEndedMessages.put(msgId, message);
+        this.offersMessages.put(msgId, message);
         return msgId;
     }
 
@@ -98,14 +98,14 @@ public class Registered extends User {
     public Map<Integer, StoreMsg> getAssignmentMessages() {
         return assignmentMessages;
     }
-    public Map<Integer, StoreMsg> getAuctionEndedMessages() {
-        return auctionEndedMessages;
+    public Map<Integer, StoreMsg> getOffersMessages() {
+        return offersMessages;
     }
     public Map<Integer, StoreMsg> getAllMessages() {
         Map<Integer, StoreMsg> allMessages = new HashMap<>();
         allMessages.putAll(getMessagesFromStore());
         allMessages.putAll(getAssignmentMessages());
-        allMessages.putAll(getAuctionEndedMessages());
+        allMessages.putAll(getOffersMessages());
         return allMessages;
     }
 
@@ -195,12 +195,12 @@ public class Registered extends User {
     }
 
     public boolean removeMsgById(int msgId) {
-        if (!messagesFromStore.containsKey(msgId) && !assignmentMessages.containsKey(msgId) && !auctionEndedMessages.containsKey(msgId)) {
+        if (!messagesFromStore.containsKey(msgId) && !assignmentMessages.containsKey(msgId) && !offersMessages.containsKey(msgId)) {
             return false; // Message ID not found
         }
         messagesFromStore.remove(msgId);
         assignmentMessages.remove(msgId);
-        auctionEndedMessages.remove(msgId);
+        offersMessages.remove(msgId);
         return true;
     }
 

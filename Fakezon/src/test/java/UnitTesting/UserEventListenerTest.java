@@ -232,13 +232,13 @@ public class UserEventListenerTest {
 
         // Assert
         ArgumentCaptor<StoreMsg> messageCaptor1 = ArgumentCaptor.forClass(StoreMsg.class);
-        verify(mockRegisteredUser1).addAuctionEndedMessage(messageCaptor1.capture());
+        verify(mockRegisteredUser1).addOfferMessage(messageCaptor1.capture());
         StoreMsg capturedMessage1 = messageCaptor1.getValue();
         assertEquals(storeId, capturedMessage1.getStoreId());
         assertEquals("Auction ended for product " + productId + ". Highest bid was " + currentHighestBid +
                 " by user " + userIdHighestBid + ". Please approve or decline this bid.", capturedMessage1.getMessage());
 
-        verify(mockRegisteredUser2).addAuctionEndedMessage(any());
+        verify(mockRegisteredUser2).addOfferMessage(any());
     }
 
     @Test

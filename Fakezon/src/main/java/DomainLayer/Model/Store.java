@@ -75,6 +75,8 @@ public class Store implements IStore {
                                                                                  // perms
     private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private HashMap<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited 
+    private final ReentrantLock offersLock = new ReentrantLock();
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
@@ -97,6 +99,7 @@ public class Store implements IStore {
         this.publisher = publisher;
         this.pendingManagersPerms = new HashMap<>();
         this.pendingManagers = new HashMap<>();
+        this.offersOnProducts = new HashMap<>();
     }
 
     /**
@@ -1476,6 +1479,38 @@ public class Store implements IStore {
             rolesLock.unlock();
         }
 
+    }
+
+    @Override
+    public void placeOfferOnStoreProduct(int userId, int productId, double offerAmount){
+        productsLock.lock();
+        offersLock.lock();
+        rolesLock.lock();
+        try{
+            if(!storeProducts.containsKey(productId)){
+                throw new IllegalArgumentException("Store Product " + productId + " Does Not Exist in Store " + storeID);
+            }
+            if(offerAmount < 1){
+                throw new IllegalArgumentException("Offer must be at least $1");
+            }
+            List<Offer> userOffers = offersOnProducts.get(userId);
+            if (userOffers == null){
+                userOffers = new ArrayList<>();
+                offersOnProducts.put(userId, userOffers);
+            }
+            for(Offer offer : userOffers){
+                if(offer.getProductId() == productId){
+                    throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
+                }
+            }
+            userOffers.add(new Offer(userId, productId, offerAmount));
+            offersOnProducts.put(userId, userOffers);
+        }
+        finally{
+            rolesLock.lock();
+            offersLock.unlock();
+            productsLock.unlock();
+        }
     }
 
 }

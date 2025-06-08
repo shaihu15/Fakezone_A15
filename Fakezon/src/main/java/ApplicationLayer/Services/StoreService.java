@@ -898,4 +898,14 @@ public class StoreService implements IStoreService {
         store.openStore(userId);
     }
 
+    @Override
+    public void placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("placeOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.placeOfferOnStoreProduct(userId, productId, offerAmount);
+    }
+
 }

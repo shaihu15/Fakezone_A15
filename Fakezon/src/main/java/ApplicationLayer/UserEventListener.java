@@ -14,6 +14,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import DomainLayer.Model.helpers.OfferEvents.OfferReceivedEvent;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 
 import org.springframework.context.event.EventListener;
@@ -87,7 +88,7 @@ public class UserEventListener {
                     .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
                 String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
                                 " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
-                registeredUser.addAuctionEndedMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
+                registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg));
                 if (registeredUser.isLoggedIn()) {
                     wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
                 }
@@ -151,5 +152,23 @@ public class UserEventListener {
                 wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
             }
         });
+    }
+
+    @Async
+    @EventListener
+    public void handleOfferReceivedEvent(OfferReceivedEvent event){
+         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
+        for (Registered registeredUser : users) {
+            HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
+            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
+                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+                String msg =   "Received an offer for product " + event.getProductId() + ". Offer is: $" + event.getOfferAmount() +
+                                " by user " + event.getUserId() + ". Please approve or decline this offer.";
+                registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductId(), msg));
+                if (registeredUser.isLoggedIn()) {
+                    wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+                }
+            }
+        }
     }
 }

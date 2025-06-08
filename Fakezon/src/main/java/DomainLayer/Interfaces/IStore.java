@@ -120,26 +120,28 @@ public interface IStore {
 
     List<ProductRating> getStoreProductAllRatings(int productId);
 
-    public void addSimpleDiscountWithProductsScope(int userID, List<Integer> productIDs, double percentage);
+    void addSimpleDiscountWithProductsScope(int userID, List<Integer> productIDs, double percentage);
 
-    public void addSimpleDiscountWithStoreScope(int userID, double percentage);
+    void addSimpleDiscountWithStoreScope(int userID, double percentage);
 
-    public void addConditionDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addConditionDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addConditionDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addConditionDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addAndDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addAndDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addAndDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addAndDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addOrDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addOrDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addOrDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addOrDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addXorDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addXorDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
     List<StoreManagerPermission> isManagerAndGetPerms(int userId);
+
+    void placeOfferOnStoreProduct(int userId, int productId, double offerAmount);
 
 }
