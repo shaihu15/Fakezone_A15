@@ -1317,7 +1317,13 @@ public class Store implements IStore {
                 }
                 
             } else {
-                amount += product.getBasePrice() * quantity;
+                Offer offer = getUserOfferOnStoreProduct(userId, productId);
+                if(offer != null && offer.getUserId() == userId && offer.isApproved()){
+                    amount += offer.getOfferAmount();
+                }
+                else{
+                    amount += product.getBasePrice() * quantity;
+                }
             }
         }
         double totalDiscount = discountPolicies.values().stream()
@@ -1612,6 +1618,13 @@ public class Store implements IStore {
             else{
                 if(offer.isDeclined()){
                     this.publisher.publishEvent(new OfferDeclined(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount(), offer.getDeclinedBy()));
+                    List<Offer> offers = offersOnProducts.get(offer.getUserId());
+                    if(offers != null){
+                        offers.remove(offer);
+                    }
+                    if(offers == null || offers.isEmpty()){
+                        offersOnProducts.remove(offer.getUserId());
+                    }
                 }
             }
         }
