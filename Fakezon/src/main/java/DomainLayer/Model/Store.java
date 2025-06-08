@@ -4,10 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.RoleName;
@@ -37,11 +33,9 @@ import DomainLayer.Model.helpers.OfferEvents.OfferReceivedEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
-import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.Tree;
 import DomainLayer.Model.helpers.UserMsg;
 
-import static org.mockito.ArgumentMatchers.*;
 
 import java.time.LocalDate;
 import java.util.concurrent.Executors;
@@ -1415,7 +1409,7 @@ public class Store implements IStore {
                 int newQuantity = Math.min(quantity, storeProduct.getQuantity());
                 if(auctionProducts.containsKey(productId)){
                     AuctionProduct auctionProduct = auctionProducts.get(productId);
-                    if(auctionProduct.getUserIDHighestBid() == userId  && !auctionProduct.isApprovedByAllOwners()){
+                    if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isApprovedByAllOwners()){
                         if(auctionProduct.getQuantity() < quantity) {
                             throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
                         }
@@ -1423,7 +1417,7 @@ public class Store implements IStore {
                         auctionProducts.remove(productId);
                     }
                 }
-                else if (newQuantity == quantity) {
+                if (newQuantity == quantity) { //this if was else-if, it might cause problems now?
                     products.put(new StoreProductDTO(storeProduct, quantity),true);
                     storeProduct.decrementProductQuantity(newQuantity);
                 }
