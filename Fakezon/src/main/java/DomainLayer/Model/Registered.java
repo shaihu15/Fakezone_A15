@@ -72,7 +72,7 @@ public class Registered extends User {
     }
 
     public void sendMessageToStore(int storeID, String message) {
-        messagesFromUser.add(new StoreMsg(storeID,-1, message));
+        messagesFromUser.add(new StoreMsg(storeID,-1, message, null));
 
     }
 
@@ -202,6 +202,16 @@ public class Registered extends User {
         assignmentMessages.remove(msgId);
         offersMessages.remove(msgId);
         return true;
+    }
+
+    public void removeOfferMessage(int storeId, int productId, int offeredBy){
+        for(Map.Entry<Integer, StoreMsg> entry : offersMessages.entrySet()){
+            StoreMsg msg = entry.getValue();
+            if(msg.getStoreId() == storeId && msg.getProductId() == productId && msg.getOfferedBy() == offeredBy){
+                offersMessages.remove(entry.getKey());
+                return;
+            }
+        }
     }
 
 }

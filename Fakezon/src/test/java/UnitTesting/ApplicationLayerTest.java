@@ -212,7 +212,7 @@ public class ApplicationLayerTest {
         listener.handleApprovedBidOnAuctionEvent(event);
 
         verify(user).addMessageFromStore(any());
-        verify(user).addToBasket(anyInt(), anyInt(), anyInt());
+        verify(user).addToBasketQuantity(anyInt(), anyInt(), anyInt());
     }
 
     @Test

@@ -100,7 +100,9 @@ public class User {
         cart.removeItem(storeId, productId);
     }
 
-
+    public void addToBasketQuantity(int storeId, int productId, int quantity) {
+        cart.addProductQuantity(storeId, productId, quantity);
+    }
 
 
 }

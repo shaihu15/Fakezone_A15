@@ -302,7 +302,7 @@ public class UserEventListenerTest {
         assertEquals(storeId, capturedMessage.getStoreId());
         assertEquals("We are pleased to inform you that your bid has won the auction on product: " + productId + ", at a price of: " + currentHighestBid + "! The product has been added to your shopping cart, please purchase it as soon as possible.", capturedMessage.getMessage());
 
-        verify(mockRegisteredUser).addToBasket(storeId, productId, 1);
+        verify(mockRegisteredUser).addToBasketQuantity(storeId, productId, 1);
     }
 
     @Test
@@ -326,7 +326,7 @@ public class UserEventListenerTest {
 
         // Assert
         verify(mockRegisteredUser).addMessageFromStore(any());
-        verify(mockRegisteredUser).addToBasket(anyInt(), anyInt(), anyInt());
+        verify(mockRegisteredUser).addToBasketQuantity(anyInt(), anyInt(), anyInt());
     }
 
     @Test

@@ -2299,7 +2299,6 @@ public class SystemService implements ISystemService {
         }
     }
 
-
     @Override
     public Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
         try{
@@ -2314,6 +2313,34 @@ public class SystemService implements ISystemService {
         }
         catch(Exception e){
             logger.error("placeOfferOnStoreProduct FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        try{
+            logger.info("Owner " + userId + " accepting offer on product " + productId + " in store " + storeId + " from user " + userId);
+            storeService.acceptOfferOnStoreProduct(storeId, ownerId, userId, productId);
+            logger.info("Owner " + userId + " successfully accepted offer on product " + productId + " from user " + userId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("acceptOfferOnStoreProduct FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        try{
+            logger.info("Owner " + userId + " declineing offer on product " + productId + " in store " + storeId + " from user " + userId);
+            storeService.declineOfferOnStoreProduct(storeId, ownerId, userId, productId);
+            logger.info("Owner " + userId + " successfully declineed offer on product " + productId + " from user " + userId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("declineOfferOnStoreProduct FAIL - " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }

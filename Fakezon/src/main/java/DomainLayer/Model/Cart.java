@@ -76,4 +76,15 @@ public class Cart {
         return false;
     }
 
+    public void addProductQuantity(int storeID, int productId, int quantity) {
+        if (baskets.containsKey(storeID)) {
+            baskets.get(storeID).addProductQuantity(productId, quantity);
+        } else {
+            Basket newBasket = new Basket(storeID);
+            newBasket.addProductQuantity(productId, quantity);
+            baskets.put(storeID, newBasket);
+        }
+    }
+    
+
 }

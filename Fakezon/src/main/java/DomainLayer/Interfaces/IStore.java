@@ -144,4 +144,8 @@ public interface IStore {
 
     void placeOfferOnStoreProduct(int userId, int productId, double offerAmount);
 
+    void acceptOfferOnStoreProduct(int ownerId, int userId, int productId);
+
+    void declineOfferOnStoreProduct(int ownerId, int userId, int productId);
+
 }

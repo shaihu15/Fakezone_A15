@@ -908,4 +908,24 @@ public class StoreService implements IStoreService {
         store.placeOfferOnStoreProduct(userId, productId, offerAmount);
     }
 
+    @Override
+    public void acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("acceptOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.acceptOfferOnStoreProduct(ownerId, userId, productId);
+    }
+
+    @Override
+    public void declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("declineOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.declineOfferOnStoreProduct(ownerId, userId, productId);
+    }
+
 }
