@@ -89,8 +89,7 @@ public class UserEventListener {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+            if(isOwner(roles, event.getStoreId())){
                 String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
                                 " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
                 registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
@@ -108,8 +107,7 @@ public class UserEventListener {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+            if(isOwner(roles, event.getStoreId())){
                 String msg = "Auction failed for product " + event.getProductID() + ". Base price was " + event.getBasePrice() + ". " + event.getMessage();
                 registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
                 if (registeredUser.isLoggedIn()) {
@@ -165,8 +163,7 @@ public class UserEventListener {
          List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+            if(isOwner(roles, event.getStoreId())){
                 String msg =   "Received an offer for product " + event.getProductId() + ". Offer is: $" + event.getOfferAmount() +
                                 " by user " + event.getUserId() + " in Store " + event.getStoreId() + ". Please approve or decline this offer.";
                 registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductId(), msg, event.getUserId()));
@@ -185,8 +182,7 @@ public class UserEventListener {
         for (Registered registeredUser : users) {
             if(registeredUser.getUserId() != event.getOwnerId()){
                 HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-                if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                        .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+                if(isOwner(roles, event.getStoreId())){
                     String msg =   "Owner " + event.getOwnerId() + " accepted an offer for product " + event.getProductId() + " in Store " + event.getStoreId() +". Offer is: $" + event.getOfferAmount() +
                                     " by user " + event.getUserId() + ".";
                     registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
@@ -204,8 +200,7 @@ public class UserEventListener {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+            if(isOwner(roles, event.getStoreId())){
                 String msg =   "An Offer for product " + event.getProductId() + " in Store " + event.getStoreId() +" was accepted by all owners. Offer is: $" + event.getOfferAmount() +
                                 " by user " + event.getUserId() + ".";
                 registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
@@ -232,8 +227,7 @@ public class UserEventListener {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+            if(isOwner(roles, event.getStoreId())){
                 String msg =   "An Offer for product " + event.getProductId() + " in Store " + event.getStoreId() +" was Declined by " + event.getDeclinedBy() + ". Offer was: $" + event.getOfferAmount() +
                                 " by user " + event.getUserId() + ".";
 
@@ -276,8 +270,7 @@ public class UserEventListener {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
-            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
-                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+            if(isOwner(roles, event.getStoreId())){
                 String msg = "User " + event.getUserId() + " Declined your Store's (ID " + event.getStoreId() + ") Counter Offer of $" + event.getOfferAmount() + 
                                 " on Product " + event.getProductId();
                 registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
@@ -286,6 +279,10 @@ public class UserEventListener {
                 }
             }
         }
+    }
+
+    private boolean isOwner(HashMap<Integer, IRegisteredRole> roles, int storeId){
+        return roles.containsKey(storeId) && (roles.get(storeId).getRoleName() == RoleName.STORE_OWNER || roles.get(storeId).getRoleName() == RoleName.STORE_FOUNDER);
     }
 
 
