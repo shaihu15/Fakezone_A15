@@ -14,6 +14,7 @@ public class Offer {
     private boolean isApproved = false;
     private boolean isDeclined = false;
     private int declinedBy;
+    private boolean isHandled = false;
 
     public Offer(int userId, int storeId, int productId, double offerAmount, List<Integer> currentStoreOwners){
         this.userId = userId;
@@ -84,5 +85,13 @@ public class Offer {
 
     public int getDeclinedBy(){
         return declinedBy;
+    }
+
+    public boolean isHandled(){
+        return isHandled;
+    }
+
+    public void setHandled(){
+        isHandled = true;
     }
 }

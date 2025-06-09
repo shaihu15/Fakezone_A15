@@ -26,9 +26,10 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import DomainLayer.Model.helpers.OfferEvents.CounterOfferDeclineEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedByAll;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedSingleOwnerEvent;
-import DomainLayer.Model.helpers.OfferEvents.OfferDeclined;
+import DomainLayer.Model.helpers.OfferEvents.OfferDeclinedEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferReceivedEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
@@ -76,6 +77,7 @@ public class Store implements IStore {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private HashMap<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited 
     private final ReentrantLock offersLock = new ReentrantLock();
+    private HashMap<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
@@ -99,6 +101,7 @@ public class Store implements IStore {
         this.pendingManagersPerms = new HashMap<>();
         this.pendingManagers = new HashMap<>();
         this.offersOnProducts = new HashMap<>();
+        this.pendingOffers = new HashMap<>();
     }
 
     /**
@@ -1507,12 +1510,10 @@ public class Store implements IStore {
             List<Offer> userOffers = offersOnProducts.get(userId);
             if (userOffers == null){
                 userOffers = new ArrayList<>();
-                offersOnProducts.put(userId, userOffers);
             }
-            for(Offer offer : userOffers){
-                if(offer.getProductId() == productId){
-                    throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
-                }
+            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            if(offer != null){
+                throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }
             userOffers.add(new Offer(userId, this.storeID, productId, offerAmount, List.copyOf(this.storeOwners)));
             offersOnProducts.put(userId, userOffers);
@@ -1596,7 +1597,7 @@ public class Store implements IStore {
             for(List<Offer> offersList : offersOnProducts.values()){
                 for(Offer offer : offersList){
                     offer.removeOwner(ownerId);
-                    if(offer.isApproved()){
+                    if(offer.isApproved() && !offer.isHandled()){
                         handleOfferDone(offer);
                     }
                 }
@@ -1610,13 +1611,15 @@ public class Store implements IStore {
     private void handleOfferDone(Offer offer){
         offersLock.lock();
         try{
-            if(offer.isApproved()){
+            if(offer.isApproved() && !offer.isHandled()){
                 this.publisher.publishEvent(new OfferAcceptedByAll(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount()));
+                offer.setHandled();
             }
             else{
-                if(offer.isDeclined()){
-                    this.publisher.publishEvent(new OfferDeclined(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount(), offer.getDeclinedBy()));
+                if(offer.isDeclined() && !offer.isHandled()){
+                    this.publisher.publishEvent(new OfferDeclinedEvent(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount(), offer.getDeclinedBy()));
                     removeOffer(offer);
+                    offer.setHandled();
                 }
             }
         }
@@ -1626,14 +1629,111 @@ public class Store implements IStore {
     }
 
     private void removeOffer(Offer offer){
-        List<Offer> offers = offersOnProducts.get(offer.getUserId());
-        if(offers != null){
-            offers.remove(offer);
+        offersLock.lock();
+        try{
+            List<Offer> offers = offersOnProducts.get(offer.getUserId());
+            if(offers != null){
+                offers.remove(offer);
+            }
+            if(offers == null || offers.isEmpty()){
+                offersOnProducts.remove(offer.getUserId());
+            }
         }
-        if(offers == null || offers.isEmpty()){
-            offersOnProducts.remove(offer.getUserId());
+        finally{
+            offersLock.unlock();
         }
     }
 
+    public void counterOffer(int ownerId, int userId, int productId, double offerAmount){
+        offersLock.lock();
+        rolesLock.lock();
+        try{
+            if(!isOwner(ownerId)){
+                throw new IllegalArgumentException("User " + ownerId + " is not a valid Store Owner in store " + storeID);
+            }
+            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            if(offer == null){
+                throw new IllegalArgumentException("User " + userId + " does not have an offer on product " + productId + " in store " + storeID);
+            }
+            if(offerAmount < 1){
+                throw new IllegalArgumentException("Counter offer must be more than $1");
+            }
+            declineOfferOnStoreProduct(ownerId, userId, productId); // handles the decline too (msgs & all)
+            Offer counterOffer = new Offer(userId, storeID, productId, offerAmount, List.copyOf(storeOwners));
+            List<Offer> pendingUserOffers = pendingOffers.get(userId);
+            if(pendingUserOffers == null){
+                pendingUserOffers = new ArrayList<>();
+            }
+            pendingUserOffers.add(counterOffer);
+            pendingOffers.put(userId, pendingUserOffers);
+        }
+        finally{
+            rolesLock.unlock();
+            offersLock.unlock();
+        }
 
+    }
+
+    private Offer getUserPendingOfferOnStoreProduct(int userId, int productId){
+        offersLock.lock();
+        try{
+            if(pendingOffers.containsKey(userId)){
+                for(Offer offer : pendingOffers.get(userId)){
+                    if(offer.getProductId() == productId){
+                        return offer;
+                    }
+                }
+            }
+            return null;
+        }
+        finally{
+            offersLock.unlock();
+        }
+    }
+
+    public void acceptCounterOffer(int userId, int productId){
+        offersLock.lock();
+        try{
+            Offer pendingOffer = getUserPendingOfferOnStoreProduct(userId, productId);
+            if(pendingOffer == null){
+                throw new IllegalArgumentException("User has no Pending Counter Offers");
+            }
+            placeOfferOnStoreProduct(userId, productId, pendingOffer.getOfferAmount());
+            removePendingOffer(pendingOffer);
+        }
+        finally{
+            offersLock.unlock();
+        }
+    }
+
+    public void declineCounterOffer(int userId, int productId){
+        offersLock.lock();
+        try{
+            Offer pendingOffer = getUserPendingOfferOnStoreProduct(userId, productId);
+            if(pendingOffer == null){
+                throw new IllegalArgumentException("User has no Pending Counter Offers");
+            }
+            this.publisher.publishEvent(new CounterOfferDeclineEvent(storeID, productId, userId, pendingOffer.getOfferAmount()));
+            removePendingOffer(pendingOffer);
+        }
+        finally{
+            offersLock.unlock();
+        }
+    }
+
+    private void removePendingOffer(Offer offer){
+        offersLock.lock();
+        try{
+            List<Offer> offers = pendingOffers.get(offer.getUserId());
+            if(offers != null){
+                offers.remove(offer);
+            }
+            if(offers == null || offers.isEmpty()){
+                pendingOffers.remove(offer.getUserId());
+            }
+        }
+        finally{
+            offersLock.unlock();
+        }
+    }
 }

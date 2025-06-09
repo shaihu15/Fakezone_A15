@@ -14,9 +14,11 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import DomainLayer.Model.helpers.OfferEvents.CounterOfferDeclineEvent;
+import DomainLayer.Model.helpers.OfferEvents.CounterOfferEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedByAll;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedSingleOwnerEvent;
-import DomainLayer.Model.helpers.OfferEvents.OfferDeclined;
+import DomainLayer.Model.helpers.OfferEvents.OfferDeclinedEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferReceivedEvent;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 
@@ -213,7 +215,7 @@ public class UserEventListener {
             }
         }
 
-        Optional<Registered> user = userRepository.findById(event.getUserId()); // Event targets the highest bidder
+        Optional<Registered> user = userRepository.findById(event.getUserId()); 
         user.ifPresent(registeredUser -> {
             String msg = "We are pleased to inform you that your offer on product: " + event.getProductId() + ", has been approved at a price of: " + event.getOfferAmount() + "! The product has been added to your shopping cart, please purchase it as soon as possible.";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
@@ -226,7 +228,7 @@ public class UserEventListener {
 
     @Async
     @EventListener
-    public void handleOfferDeclined(OfferDeclined event){
+    public void handleOfferDeclinedEvent(OfferDeclinedEvent event){
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
@@ -234,22 +236,56 @@ public class UserEventListener {
                     .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
                 String msg =   "An Offer for product " + event.getProductId() + " in Store " + event.getStoreId() +" was Declined by " + event.getDeclinedBy() + ". Offer was: $" + event.getOfferAmount() +
                                 " by user " + event.getUserId() + ".";
+                                
+                registeredUser.removeOfferMessage(event.getStoreId(), event.getProductId(), event.getUserId());
                 registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
                 if (registeredUser.isLoggedIn()) {
                     wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
                 }
-                registeredUser.removeOfferMessage(event.getStoreId(), event.getProductId(), event.getUserId());
             }
         }
         Optional<Registered> user = userRepository.findById(event.getUserId()); 
         user.ifPresent(registeredUser -> {
-            String msg = "We regret to inform you that the offer for product: " + event.getProductId() + " was not declined by the store.";
+            String msg = "We regret to inform you that the offer for product: " + event.getProductId() + " was declined by the store.";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
             if (registeredUser.isLoggedIn()) {
                 wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
             }
         });
 
+    }
+
+    @Async
+    @EventListener
+    public void handleCounterOfferEvent(CounterOfferEvent event){
+        Optional<Registered> user = userRepository.findById(event.getUserId()); 
+        user.ifPresent(registeredUser -> {
+            String msg = "Store " + event.getStoreId() + "'s Owner sent you a Counter Offer for product " + event.getProductId() + ", with amount: $" + event.getOfferAmount();
+            StoreMsg storeMsg = new StoreMsg(event.getStoreId(), event.getProductId(), msg, null);
+            storeMsg.setCounterOffer();
+            registeredUser.addMessageFromStore(storeMsg);
+            if (registeredUser.isLoggedIn()) {
+                wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+            }
+        });
+    }
+
+    @Async
+    @EventListener
+    public void handleCounterOfferDeclineEvent(CounterOfferDeclineEvent event){
+        List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
+        for (Registered registeredUser : users) {
+            HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
+            if(roles.containsKey(event.getStoreId()) && (roles.get(event.getStoreId()).getRoleName() == RoleName.STORE_OWNER || roles
+                    .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
+                String msg = "User " + event.getUserId() + " Declined your Store's (ID " + event.getStoreId() + ") Counter Offer of $" + event.getOfferAmount() + 
+                                " on Product " + event.getProductId();
+                registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
+                if (registeredUser.isLoggedIn()) {
+                    wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
+                }
+            }
+        }
     }
 
 

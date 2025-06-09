@@ -1,13 +1,13 @@
 package DomainLayer.Model.helpers.OfferEvents;
 
-public class OfferDeclined {
+public class OfferDeclinedEvent {
     private int storeId;
     private int productId;
     private int userId;
     private double offerAmount;
     private int declinedBy;
     
-    public OfferDeclined(int storeId, int productID, int userId, double offerAmount, int declinedBy){
+    public OfferDeclinedEvent(int storeId, int productID, int userId, double offerAmount, int declinedBy){
         this.storeId = storeId;
         this.productId = productID;
         this.userId = userId;

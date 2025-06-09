@@ -12,6 +12,8 @@ public class StoreMsg {
     String msg;
     @JsonProperty("offeredBy")
     Integer offeredBy;
+    @JsonProperty("isCounterOffer")
+    boolean isCounterOffer = false;
 
     @JsonCreator
     public StoreMsg(int storeId, int productId, String msg, Integer offeredBy) {
@@ -32,5 +34,9 @@ public class StoreMsg {
     
     public Integer getOfferedBy(){
         return offeredBy;
+    }
+
+    public void setCounterOffer(){
+        isCounterOffer = true;
     }
 }
