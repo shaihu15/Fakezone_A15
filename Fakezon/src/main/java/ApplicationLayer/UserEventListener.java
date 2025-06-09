@@ -236,7 +236,7 @@ public class UserEventListener {
                     .get(event.getStoreId()).getRoleName() == RoleName.STORE_FOUNDER)){
                 String msg =   "An Offer for product " + event.getProductId() + " in Store " + event.getStoreId() +" was Declined by " + event.getDeclinedBy() + ". Offer was: $" + event.getOfferAmount() +
                                 " by user " + event.getUserId() + ".";
-                                
+
                 registeredUser.removeOfferMessage(event.getStoreId(), event.getProductId(), event.getUserId());
                 registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
                 if (registeredUser.isLoggedIn()) {
@@ -262,7 +262,7 @@ public class UserEventListener {
         user.ifPresent(registeredUser -> {
             String msg = "Store " + event.getStoreId() + "'s Owner sent you a Counter Offer for product " + event.getProductId() + ", with amount: $" + event.getOfferAmount();
             StoreMsg storeMsg = new StoreMsg(event.getStoreId(), event.getProductId(), msg, null);
-            storeMsg.setCounterOffer();
+            storeMsg.setCounterOffer(); // for ui purposes
             registeredUser.addMessageFromStore(storeMsg);
             if (registeredUser.isLoggedIn()) {
                 wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);

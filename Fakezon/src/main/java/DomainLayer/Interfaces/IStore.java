@@ -148,4 +148,10 @@ public interface IStore {
 
     void declineOfferOnStoreProduct(int ownerId, int userId, int productId);
 
+    void counterOffer(int ownerId, int userId, int productId, double offerAmount);
+
+    void acceptCounterOffer(int userId, int productId);
+
+    void declineCounterOffer(int userId, int productId);
+
 }

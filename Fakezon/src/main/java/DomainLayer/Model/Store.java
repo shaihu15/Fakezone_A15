@@ -1644,6 +1644,7 @@ public class Store implements IStore {
         }
     }
 
+    @Override
     public void counterOffer(int ownerId, int userId, int productId, double offerAmount){
         offersLock.lock();
         rolesLock.lock();
@@ -1691,6 +1692,7 @@ public class Store implements IStore {
         }
     }
 
+    @Override
     public void acceptCounterOffer(int userId, int productId){
         offersLock.lock();
         try{
@@ -1706,6 +1708,7 @@ public class Store implements IStore {
         }
     }
 
+    @Override
     public void declineCounterOffer(int userId, int productId){
         offersLock.lock();
         try{
