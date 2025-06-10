@@ -960,8 +960,10 @@ public class SystemService implements ISystemService {
         prices = this.storeService.calcAmount(userId, cart, dob);
         totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
         logger.info("System Service - User " + userId + "cart price: " + totalPrice);
+        int paymentTransactionId = -1;
         try {
-            if (this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice))
+            paymentTransactionId = this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice,userId);
+            if (paymentTransactionId != -1)
                 logger.info("System Service - User " + userId + " cart purchased successfully, payment method: "
                         + paymentMethod);
             else {
@@ -980,11 +982,21 @@ public class SystemService implements ISystemService {
             return new Response<String>(null, "Error during payment: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
         }
+        int deliveryTransactionId = -1;
         try {
-            if (this.deliveryService.deliver(country, address, recipient, packageDetails))
+            deliveryTransactionId = this.deliveryService.deliver(country, address, recipient, packageDetails);
+            if (deliveryTransactionId != -1)  
                 logger.info("System Service - User " + userId + " cart delivered to: " + recipient + " at address: "
                         + address);
             else {
+                if (paymentTransactionId != -1) { // Only refund if payment was successful
+                    int refundResult = this.paymentService.refund(paymentTransactionId);
+                    if (refundResult == 1) {
+                        logger.info("System Service - User " + userId + " cart purchase failed, refund issued for Payment Transaction ID: " + paymentTransactionId);
+                    } else {
+                        logger.error("System Service - User " + userId + " cart purchase failed, refund FAILED for Payment Transaction ID: " + paymentTransactionId + ". Manual intervention needed!");
+                    }
+                }
                 if (!returnProductInCaseOfError) {
                     storeService.returnProductsToStores(userId, validCart);
                     returnProductInCaseOfError = true;
@@ -992,7 +1004,7 @@ public class SystemService implements ISystemService {
                 return new Response<String>(null, "Delivery failed", false, ErrorType.INVALID_INPUT, null);
             }
         } catch (Exception e) {
-            this.paymentService.refund(cardNumber, totalPrice);
+            this.paymentService.refund(paymentTransactionId);
             if (!returnProductInCaseOfError) {
                 storeService.returnProductsToStores(userId, validCart);
                 returnProductInCaseOfError = true;
@@ -1002,7 +1014,7 @@ public class SystemService implements ISystemService {
                     + " at card number: " + cardNumber);
         }
 
-        this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod);
+        this.orderService.addOrderCart(validCartDTO, prices, userId, address, paymentMethod, paymentTransactionId, deliveryTransactionId);
         this.userService.clearUserCart(userId);
 
         return new Response<String>("Cart purchased successfully", "Cart purchased successfully", true, null, null);

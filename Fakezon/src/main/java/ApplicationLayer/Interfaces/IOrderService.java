@@ -18,6 +18,6 @@ public interface IOrderService {
     List<IOrder> getOrdersByUserId(int userId);
     List<Integer> getOrderProductIds(int orderId);
     List<IOrder> getOrdersByStoreId(int storeId);
-    void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod);
+    void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod, int paymentTransactionId, int deliveryTransactionId);
     void clearAllData();
 }

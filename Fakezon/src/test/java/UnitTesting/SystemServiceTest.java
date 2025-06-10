@@ -115,9 +115,9 @@ class SystemServiceTest {
         when(storeService.getProductFromStore(anyInt(), anyInt())).thenReturn(mock(StoreProductDTO.class));
         when(storeService.checkIfProductsInStores(eq(userId), any())).thenReturn(new HashMap<>());
         IPayment paymentService = mock(IPayment.class);
-        when(paymentService.pay(anyString(), anyString(), anyString(), anyString(), anyDouble())).thenReturn(true);
+        when(paymentService.pay(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt())).thenReturn(12345);
         IDelivery deliveryService = mock(IDelivery.class);
-        when(deliveryService.deliver(anyString(), anyString(), anyString(), anyString())).thenReturn(true);
+        when(deliveryService.deliver(anyString(), anyString(), anyString(), anyString())).thenReturn(67890);
 
         // inject mocks for payment and delivery
         systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, null, paymentService, publisher, notificationWebSocketHandler);
@@ -1617,4 +1617,4 @@ class SystemServiceTest {
 
 
 }
-    
+

@@ -44,7 +44,7 @@ public class OrderTest {
         double totalPrice1 = products1.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
 
 
-        order = new Order(orderId,userId,storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1);
+        order = new Order(orderId, userId, storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1, 111, 222);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class OrderTest {
 
         List<StoreProductDTO> products1 = Arrays.asList(product1, product2, product3);
         List<OrderedProduct> orderedProducts1 = products1.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
-        order = new Order(1,storeId, 101, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CASH_ON_DELIVERY, 10);        
+        order = new Order(1, storeId, 101, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CASH_ON_DELIVERY, 10, 111, 222);
         order.setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
         assertEquals(PaymentMethod.CASH_ON_DELIVERY, order.getPaymentMethod());
     }
@@ -119,7 +119,7 @@ public class OrderTest {
                 new OrderedProduct(product2, 1)
         );
         double expectedTotal = product1.getBasePrice() * 2 + product2.getBasePrice() * 1;
-        Order customOrder = new Order(99, 88, 77, OrderState.PENDING, orderedProducts, "Test Address", PaymentMethod.CREDIT_CARD, expectedTotal);
+        Order customOrder = new Order(99, 88, 77, OrderState.PENDING, orderedProducts, "Test Address", PaymentMethod.CREDIT_CARD, expectedTotal, 111, 222);
 
         // Test getProducts
         List<OrderedProduct> productsFromOrder = customOrder.getProducts();

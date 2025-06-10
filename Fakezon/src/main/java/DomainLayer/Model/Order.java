@@ -19,8 +19,10 @@ public class Order implements IOrder{
     private String address;
     private PaymentMethod paymentMethod;
     private static AtomicInteger idCounter = new AtomicInteger(0);
+    private int paymentTransactionId;
+    private int deliveryTransactionId;
 
-    public Order(int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice) {
+    public Order(int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
         this.orderId = idCounter.incrementAndGet();
         this.storeId = storeId;
         this.userId = userId;
@@ -29,9 +31,11 @@ public class Order implements IOrder{
         this.address = address;
         this.paymentMethod = paymentMethod;
         this.totalPrice = totalPrice;
+        this.paymentTransactionId = paymentTransactionId;
+        this.deliveryTransactionId = deliveryTransactionId;
     }
     
-    public Order(int id, int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice) {
+    public Order(int id, int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
         this.orderId = id;
         this.userId = userId;
         this.storeId = storeId;
@@ -40,6 +44,8 @@ public class Order implements IOrder{
         this.address = address;
         this.paymentMethod = paymentMethod;
         this.totalPrice = totalPrice;
+        this.paymentTransactionId = paymentTransactionId;
+        this.deliveryTransactionId = deliveryTransactionId;
     }
 
     @Override
@@ -106,6 +112,14 @@ public class Order implements IOrder{
     @Override
     public double getTotalPrice() {
         return totalPrice;
+    }
+    @Override
+    public int getPaymentTransactionId() {
+        return paymentTransactionId;
+    }
+    @Override
+    public int getDeliveryTransactionId() {
+        return deliveryTransactionId;
     }
 
 
