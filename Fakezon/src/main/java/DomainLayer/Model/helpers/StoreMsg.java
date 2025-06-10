@@ -39,4 +39,8 @@ public class StoreMsg {
     public void setCounterOffer(){
         isCounterOffer = true;
     }
+
+    public boolean isCounterOffer(){
+        return isCounterOffer;
+    }
 }

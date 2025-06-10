@@ -30,7 +30,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
-
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 
 import DomainLayer.Model.Registered;
@@ -956,6 +956,16 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.declineCounterOffer(userId, productId);
+    }
+
+    @Override
+    public List<Offer> getUserOffers(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getUserOffers - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.getUserOffers(userId);
     }
 
 }
