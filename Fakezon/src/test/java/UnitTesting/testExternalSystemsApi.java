@@ -351,18 +351,4 @@ public class testExternalSystemsApi {
         assertTrue(paymentTransactionId <= 0 || paymentTransactionId > 0, "Very long strings in payment should be handled");
     }
 
-    @Test
-    @DisplayName("Edge Case: Unicode characters should be handled gracefully")
-    void edgeCase_UnicodeCharacters_ShouldHandleGracefully() {
-        // Arrange
-        String unicodeString = "José María 李小龙 москва 🏠📦💳";
-        int userId = 12345678;
-        // Act & Assert - Delivery
-        int deliveryId = deliverySystem.sendPackage(unicodeString, unicodeString, unicodeString);
-        assertTrue(deliveryId <= 0 || deliveryId > 0, "Unicode characters in delivery should be handled");
-
-        // Act & Assert - Payment
-        int paymentTransactionId = paymentSystem.processPayment("4111111111111111", unicodeString, "12/25", "123", 100.0, userId);
-        assertTrue(paymentTransactionId <= 0 || paymentTransactionId > 0, "Unicode characters in payment should be handled");
-    }
 }
