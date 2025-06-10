@@ -15,6 +15,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.User;
+import DomainLayer.Model.helpers.StoreMsg;
 public interface IUserService {
     Optional<Registered> getUserByUserName(String userName);
 
@@ -58,11 +59,11 @@ public interface IUserService {
 
     UserDTO convertUserToDTO(User user);
   
-    Response<HashMap<Integer, String>> getAllMessages(int userID); // get all the messages of the user
-  
-    Response<HashMap<Integer, String>> getAssignmentMessages(int userID); // get all the messages of the user
-  
-    Response<HashMap<Integer, String>> getAuctionEndedMessages(int userID); // get all the messages of the user
+    Response<Map<Integer, StoreMsg>> getAllMessages(int userID); // get all the messages of the user
+
+    Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID); // get all the messages of the user
+
+    Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID); // get all the messages of the user
 
     Optional<User> getAnyUserById(int Id); // get any user by id, guest or registered
     
@@ -114,6 +115,9 @@ public interface IUserService {
 
     void removeAssignmentMessage(int storeId, int userId);
 
-    Response<HashMap<Integer, String>> getMessagesFromStore(int userID);
+    Response<Map<Integer, StoreMsg>> getMessagesFromStore(int userID);
 
+    boolean isUserRegistered(int userId);
+
+    boolean removeMsgById(int userId, int msgId);
 }
