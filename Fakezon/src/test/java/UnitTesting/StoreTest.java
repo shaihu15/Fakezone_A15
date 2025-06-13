@@ -509,27 +509,6 @@ public class StoreTest {
             assertTrue(exception.getMessage().contains(expectedMessage), "Exception message should indicate missing product");
         }
 
-        // @Test
-        // void decrementProductsInStore_AuctionProductNotHighestBidder_ShouldThrowException() {
-        //     int productId = 102;
-        //     int userId = 1; // not the highest bidder
-        //     int highestBidderId = 3;
-        //     int basePrice = 1;
-        //     int quantity = 2;
-        
-        //     store.addStoreProduct(founderId,productId,"p", basePrice,1,PCategory.AUTOMOTIVE);
-        //     store.addAuctionProduct(founderId, productId, basePrice, quantity);
-        //     store.addBidOnAuctionProduct(highestBidderId, productId, basePrice*3);
-
-        //     Map<Integer, Integer> toBuy = new HashMap<>();
-        //     toBuy.put(productId, quantity);
-        
-        //     assertThrows(IllegalArgumentException.class, () -> {
-        //         store.decrementProductsInStore(userId, toBuy);
-        //     });
-        
-        // }
-
     @Test
     void testStoreCtorWithId() {
         Store s = new Store("Another Store", founderId, publisher, 42);
