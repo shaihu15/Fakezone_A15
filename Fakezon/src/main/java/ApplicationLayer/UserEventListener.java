@@ -92,6 +92,7 @@ public class UserEventListener {
             if(isOwner(roles, event.getStoreId())){
                 String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
                                 " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
+                //THIS SHOULD BE REMOVED SINCE OWNERS DONT NEED TO ACCEPT VVVVVVVVVVVVVVV
                 registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
                 if (registeredUser.isLoggedIn()) {
                     wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
