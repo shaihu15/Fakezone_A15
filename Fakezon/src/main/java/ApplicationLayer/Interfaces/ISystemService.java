@@ -102,6 +102,8 @@ public interface ISystemService {
 
     Response<String> closeStoreByFounder(int storeId, int userId);
 
+    Response<String> closeStoreByAdmin(int storeId, int adminId);
+
     Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId);
 
     Response<Map<Integer, StoreMsg>> getAllMessages(int userID); // get all the messages of the user
@@ -254,7 +256,7 @@ public interface ISystemService {
     Response<Void> declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
 
     Response<Void> counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount);
-    
+
     Response<Void> acceptCounterOffer(int storeId, int userId, int productId);
 
     Response<Void> declineCounterOffer(int storeId, int userId, int productId);

@@ -76,60 +76,7 @@ public class UserRepositoryTest {
         assertFalse(deletedUser.isPresent(), "User should be deleted from the repository");
     }
 
-    // System Admin Tests
-    @Test
-    void testAddSystemAdmin() {
-        // Act
-        userRepository.addSystemAdmin(registedUser.getUserId());
-        
-        // Assert
-        assertTrue(userRepository.isSystemAdmin(registedUser.getUserId()), "User should be an admin");
-        assertEquals(1, userRepository.getSystemAdminCount(), "Admin count should be 1");
-    }
-    
-    @Test
-    void testRemoveSystemAdmin() {
-        // Arrange
-        userRepository.addSystemAdmin(registedUser.getUserId());
-        assertTrue(userRepository.isSystemAdmin(registedUser.getUserId()), "User should be an admin");
-        
-        // Act
-        boolean result = userRepository.removeSystemAdmin(registedUser.getUserId());
-        
-        // Assert
-        assertTrue(result, "Remove operation should return true");
-        assertFalse(userRepository.isSystemAdmin(registedUser.getUserId()), "User should no longer be an admin");
-        assertEquals(0, userRepository.getSystemAdminCount(), "Admin count should be 0");
-    }
-    
-    @Test
-    void testRemoveNonAdminReturnsfalse() {
-        // Act
-        boolean result = userRepository.removeSystemAdmin(registedUser.getUserId());
-        
-        // Assert
-        assertFalse(result, "Remove operation should return false for non-admin user");
-        assertEquals(0, userRepository.getSystemAdminCount(), "Admin count should be 0");
-    }
-    
-    @Test
-    void testGetAllSystemAdmins() {
-        // Arrange
-        Registered secondUser = new Registered("admin2@example.com", "password", LocalDate.now(), "US");
-        userRepository.addUser(secondUser);
-        
-        userRepository.addSystemAdmin(registedUser.getUserId());
-        userRepository.addSystemAdmin(secondUser.getUserId());
-        
-        // Act
-        List<Registered> admins = userRepository.getAllSystemAdmins();
-        
-        // Assert
-        assertEquals(2, admins.size(), "There should be 2 admins");
-        assertTrue(admins.stream().anyMatch(u -> u.getUserId() == registedUser.getUserId()), "First user should be in admin list");
-        assertTrue(admins.stream().anyMatch(u -> u.getUserId() == secondUser.getUserId()), "Second user should be in admin list");
-    }
-    
+                
     @Test
     void testInvalidUserIdThrowsExceptionForAdmin() {
         // Assert

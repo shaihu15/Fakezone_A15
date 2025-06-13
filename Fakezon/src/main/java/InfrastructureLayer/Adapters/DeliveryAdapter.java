@@ -20,19 +20,19 @@ public class DeliveryAdapter implements IDelivery {
         this.externalSystem = externalSystem;
     }
     @Override
-    public boolean deliver(String country, String address, String recipient, String packageDetails) {
+    public int deliver(String country, String address, String recipient, String packageDetails) {
         logger.info("Attempting delivery to "+country+" to " + recipient + " at " + address + ": " + packageDetails);
         if (country == null || address == null || recipient == null || packageDetails == null) {
             logger.error("Delivery failed due to missing information for " + recipient);
-            return false;
+            return -1;
         }
-        boolean result = externalSystem.sendPackage(address, recipient, packageDetails);
-        if (result) {
-            logger.info("Delivery succeeded for " + recipient);
-            return true;
+        int transactionId  = externalSystem.sendPackage(address, recipient, packageDetails);
+        if (transactionId != -1) {
+            logger.info("Delivery succeeded for " + recipient+ " with transaction ID: " + transactionId);
+            return transactionId; 
         } else {
-            logger.error("Delivery failed for " + recipient);
-            return false;
+            logger.error("Delivery failed for " + recipient + "External system returned -1 or invalid transaction ID");
+            return -1;
         }
     }
 }

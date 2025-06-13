@@ -118,7 +118,7 @@ public class PaymentProcessingTest {
             "John Doe",
             "12/25",
             "123",
-            "123 Main St",
+            "123 Main St*New York*USA*12345",
             "John Doe",
             "Order Details"
         );

@@ -38,6 +38,8 @@ public interface IStoreService {
 
   void closeStore(int storeId, int requesterId);
 
+  void closeStoreByAdmin(int storeId, int adminId);
+
   boolean isStoreOpen(int storeId);
 
   void updateStoreName(int storeId, String newName, int requesterId);

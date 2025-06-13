@@ -260,6 +260,31 @@ public class StoreController {
         }
     }
 
+    @PostMapping("/closeStoreByAdmin/{storeId}/{adminId}")
+    public ResponseEntity<Response<String>> closeStoreByAdmin(@PathVariable("storeId") int storeId,
+                                                         @PathVariable("adminId") int adminId,
+                                                         @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to close store {} by admin {} with token {}", storeId, adminId, token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<String> response = systemService.closeStoreByAdmin(storeId, adminId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
     @PostMapping("/ratingStore/{storeId}/{userId}")
     public ResponseEntity<Response<Void>> ratingStore(@PathVariable("storeId") int storeId,
                                                @PathVariable("userId") int userId,

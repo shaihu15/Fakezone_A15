@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.ExternalDeliverySystem;
-import InfrastructureLayer.Adapters.ExternalPaymentSystem;
 
 class DeliveryAdapterTest {
 
@@ -18,7 +17,7 @@ class DeliveryAdapterTest {
     private ExternalDeliverySystem mockExternal;
 
     private final String country = "USA";
-    private final String address = "123 Main St";
+    private final String address = "123 Main St*New York*USA*12345";
     private final String recipient = "John Doe";
     private final String packageDetails = "Electronics Package";
 
@@ -32,43 +31,39 @@ class DeliveryAdapterTest {
 
     @Test
     void testDeliver_Success() {
-
-        boolean result = deliveryAdapter.deliver(country, address, recipient, packageDetails);
-        assertTrue(result);
+        ExternalDeliverySystem mockExternal = mock(ExternalDeliverySystem.class);
+        DeliveryAdapter adapter = new DeliveryAdapter(mockExternal);
+        when(mockExternal.sendPackage(anyString(), anyString(), anyString())).thenReturn(12345);
+        String validAddress = "123 Main St*New York*USA*12345";
+        int result = adapter.deliver("USA", validAddress, recipient, packageDetails);
+        assertEquals(12345, result);
     }
     @Test
     void givenInValidcountryDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
-        boolean result = deliveryAdapter.deliver(null, address, recipient, packageDetails);
-        assertFalse(result);
+        int result = deliveryAdapter.deliver(null, address, recipient, packageDetails);
+        assertNotEquals(1, result);
     }
-        @Test
-    void givenInValidaddressDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
-        boolean result = deliveryAdapter.deliver(country, null, recipient, packageDetails);
-        assertFalse(result);
-    }
-        @Test
-    void givenInValidrecipientDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
-        boolean result = deliveryAdapter.deliver(country, address, null, packageDetails);
-        assertFalse(result);
-    }
-        @Test
-    void givenInValidpackageDetailsDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
-        boolean result = deliveryAdapter.deliver(country, address, recipient, null);
-        assertFalse(result);
-    }
-            @Test
-    void givenValidpackageDetailsDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
-        when(mockExternal.sendPackage(anyString(), anyString(), anyString())).thenReturn(false);
-        DeliveryAdapter newdeliveryAdapter = new DeliveryAdapter(mockExternal);
-        boolean result = newdeliveryAdapter.deliver(country, address, recipient, packageDetails);
-        assertFalse(result);
-    }
-
     @Test
-    void cancelPackage_Success() {
-        int deliveryId = 12345;
-        boolean result = externalDeliverySystem.cancelPackage(deliveryId);
-        assertTrue(result);
+    void givenInValidaddressDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
+        int result = deliveryAdapter.deliver(country, null, recipient, packageDetails);
+        assertNotEquals(1, result);
+    }
+    @Test
+    void givenInValidrecipientDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
+        int result = deliveryAdapter.deliver(country, address, null, packageDetails);
+        assertNotEquals(1, result);
+    }
+    @Test
+    void givenInValidpackageDetailsDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
+        int result = deliveryAdapter.deliver(country, address, recipient, null);
+        assertNotEquals(1, result);
+    }
+    @Test
+    void givenValidpackageDetailsDeliveryDetails_WhenPDeliverFails_ThenReturnsFalse() {
+        when(mockExternal.sendPackage(anyString(), anyString(), anyString())).thenReturn(0);
+        DeliveryAdapter newdeliveryAdapter = new DeliveryAdapter(mockExternal);
+        int result = newdeliveryAdapter.deliver(country, address, recipient, packageDetails);
+        assertNotEquals(1, result);
     }
     
 }

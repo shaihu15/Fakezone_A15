@@ -119,7 +119,7 @@ public class OrderRetrievalIntegrationTest {
             Response<String> purchaseResponse = systemService.purchaseCart(
                 userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
                 "Standard", "123456789", "Test User", "12/25", "123",
-                "Test Address", "Test Recipient", "Test Package"
+                "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
             );
             assertTrue(purchaseResponse.isSuccess(), "Purchase failed: " + purchaseResponse.getMessage());
 
@@ -154,7 +154,7 @@ public class OrderRetrievalIntegrationTest {
             Response<String> purchase1Response = systemService.purchaseCart(
                 userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
                 "Standard", "123456789", "Test User", "12/25", "123",
-                "Test Address", "Test Recipient", "Test Package"
+                "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
             );
             assertTrue(purchase1Response.isSuccess(), "First purchase failed");
 
@@ -163,7 +163,7 @@ public class OrderRetrievalIntegrationTest {
             Response<String> purchase2Response = systemService.purchaseCart(
                 userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
                 "Standard", "123456789", "Test User", "12/25", "123",
-                "Test Address", "Test Recipient", "Test Package"
+                "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
             );
             assertTrue(purchase2Response.isSuccess(), "Second purchase failed");
 
