@@ -1057,25 +1057,6 @@ public class SystemService implements ISystemService {
 }
 
     @Override
-    public Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
-        try {
-            if (this.userService.isUserLoggedIn(requesterId)) {
-                this.storeService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
-                logger.info("System Service - User sent response for auction: " + productId + " in store: " + storeId
-                        + " by user: " + requesterId + " with accept: " + accept);
-                return new Response<>("Response sent successfully", "Response sent successfully", true, null, null);
-            } else {
-                logger.error("System Service - User is not logged in: " + requesterId);
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during sending response for auction: " + e.getMessage());
-            return new Response<>(null, "Error during sending response for auction: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
-        }
-    }
-
-    @Override
     public Response<List<StoreProductDTO>> getTopRatedProducts(int limit) {
         try {
             logger.info("System service - fetching top " + limit + " rated products");

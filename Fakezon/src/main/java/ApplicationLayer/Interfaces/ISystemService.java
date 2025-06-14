@@ -112,8 +112,6 @@ public interface ISystemService {
 
     Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID); // get all the messages of the user
 
-    Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
-
     Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description,
             double basePrice, int quantity, String category); // add product to store
 

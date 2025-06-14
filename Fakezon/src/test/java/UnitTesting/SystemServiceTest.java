@@ -1099,30 +1099,6 @@ class SystemServiceTest {
         assertFalse(response.isSuccess());
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
     }
-    
-    @Test
-    void testSendResponseForAuctionByOwner_Success() {
-    int storeId = 2, requesterId = 1, productId = 3;
-    boolean accept = true;
-    doNothing().when(storeService).sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
-    when(userService.isUserLoggedIn(requesterId)).thenReturn(true);
-
-    Response<String> response = systemService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
-
-    assertTrue(response.isSuccess());
-    }
-    
-    @Test
-    void testSendResponseForAuctionByOwner_Exception() {
-        int ownerId = 1, storeId = 2, auctionId = 3;
-        boolean responseValue = true;
-        doThrow(new RuntimeException("fail")).when(storeService).sendResponseForAuctionByOwner(ownerId, storeId, auctionId, responseValue);
-
-        Response<String> response = systemService.sendResponseForAuctionByOwner(ownerId, storeId, auctionId, responseValue);
-
-        assertFalse(response.isSuccess());
-        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
-    }
 
 
     @Test

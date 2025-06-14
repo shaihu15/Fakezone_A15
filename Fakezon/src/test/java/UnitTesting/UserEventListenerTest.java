@@ -236,7 +236,7 @@ public class UserEventListenerTest {
         StoreMsg capturedMessage1 = messageCaptor1.getValue();
         assertEquals(storeId, capturedMessage1.getStoreId());
         assertEquals("Auction ended for product " + productId + ". Highest bid was " + currentHighestBid +
-                " by user " + userIdHighestBid + ". Please approve or decline this bid.", capturedMessage1.getMessage());
+                " by user " + userIdHighestBid + ".", capturedMessage1.getMessage());
 
         verify(mockRegisteredUser2).addOfferMessage(any());
     }
