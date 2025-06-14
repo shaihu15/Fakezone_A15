@@ -176,7 +176,7 @@ public class TempDataLoader implements ApplicationRunner {
             }
 
             // Purchase all items in u6's cart
-            Response<String> purchaseResponse = systemService.purchaseCart(u6Id, "FR", LocalDate.of(1999, 6, 6), PaymentMethod.CREDIT_CARD, "Standard", "123456789", "French user", "12/25", "123", "French Address", "French Recipient", "French Package");
+            Response<String> purchaseResponse = systemService.purchaseCart(u6Id, "FR", LocalDate.of(1999, 6, 6), PaymentMethod.CREDIT_CARD, "Standard", "123456789", "French user", "12/25", "123", "French Address*French-City*France*123456", "French Recipient", "French Package");
             if (!purchaseResponse.isSuccess()) {
                 System.err.println("Failed to complete purchase for u6: " + purchaseResponse.getMessage());
             } else {
