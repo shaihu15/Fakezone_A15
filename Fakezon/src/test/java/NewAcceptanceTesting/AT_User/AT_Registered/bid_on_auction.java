@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -264,10 +265,13 @@ public class bid_on_auction {
         assertFalse(messages.isEmpty());
         assertTrue(messages.values().stream().anyMatch(msg -> msg.getStoreId() == storeId && msg.getProductId() == auctionProductId),
                 "Expected messages to contain auction-related messages for user1");
-        String outbidMessage = messages.get(0).getMessage();
+        Optional<String> maybeOutbidMsg = messages.values().stream()
+                .filter(msg -> msg.getStoreId() == storeId && msg.getProductId() == auctionProductId)
+                .map(StoreMsg::getMessage)
+                .filter(msg -> msg.contains("rejected due to a higher bid"))
+                .findFirst();
 
-        // Check if user1 received the outbid message
-        assertTrue(outbidMessage.contains("rejected due to a higher bid"), "Expected outbid message to mention rejection due to a higher bid");
+        assertTrue(maybeOutbidMsg.isPresent(), "Expected outbid message to mention rejection due to a higher bid");
     }
 
     @Test

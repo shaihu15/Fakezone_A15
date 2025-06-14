@@ -139,4 +139,16 @@ public interface IStoreService {
 
   void openStore(int storeId, int userId);
 
+  void placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount);
+
+  void acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+  void declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+  void counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount);
+
+  void acceptCounterOffer(int storeId, int userId, int productId);
+
+  void declineCounterOffer(int storeId, int userId, int productId);
+
 }

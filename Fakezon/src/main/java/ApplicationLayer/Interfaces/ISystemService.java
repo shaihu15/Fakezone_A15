@@ -249,4 +249,16 @@ public interface ISystemService {
 
     Response<Void> openStore(int storeId, int userId);
 
+    Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount);
+
+    Response<Void> acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+    Response<Void> declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+    Response<Void> counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount);
+
+    Response<Void> acceptCounterOffer(int storeId, int userId, int productId);
+
+    Response<Void> declineCounterOffer(int storeId, int userId, int productId);
+
 }

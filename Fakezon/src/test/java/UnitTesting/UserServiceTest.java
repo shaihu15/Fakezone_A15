@@ -181,7 +181,7 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Hello"));
+        messages.put(1, new StoreMsg(1, -1, "Hello", null));
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenReturn(messages);
 
@@ -240,7 +240,7 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Assignment message"));
+        messages.put(1, new StoreMsg(1, -1, "Assignment message", null));
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenReturn(messages);
 
@@ -300,9 +300,9 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Auction ended"));
+        messages.put(1, new StoreMsg(1, -1, "Auction ended", null));
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(mockUser.getAuctionEndedMessages()).thenReturn(messages);
+        when(mockUser.getOffersMessages()).thenReturn(messages);
 
         Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
 
@@ -317,7 +317,7 @@ public class UserServiceTest {
         int userId = 2;
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(mockUser.getAuctionEndedMessages()).thenReturn(new HashMap<>());
+        when(mockUser.getOffersMessages()).thenReturn(new HashMap<>());
 
         Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
 
@@ -332,7 +332,7 @@ public class UserServiceTest {
         int userId = 3;
         Registered mockUser = mock(Registered.class);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(mockUser.getAuctionEndedMessages()).thenThrow(new RuntimeException("DB error"));
+        when(mockUser.getOffersMessages()).thenThrow(new RuntimeException("DB error"));
 
         Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
 

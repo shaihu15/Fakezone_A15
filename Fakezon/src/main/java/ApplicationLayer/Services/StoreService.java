@@ -909,4 +909,64 @@ public class StoreService implements IStoreService {
         store.openStore(userId);
     }
 
+    @Override
+    public void placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("placeOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.placeOfferOnStoreProduct(userId, productId, offerAmount);
+    }
+
+    @Override
+    public void acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("acceptOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.acceptOfferOnStoreProduct(ownerId, userId, productId);
+    }
+
+    @Override
+    public void declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("declineOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.declineOfferOnStoreProduct(ownerId, userId, productId);
+    }
+
+    @Override
+    public void counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("counterOffer - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.counterOffer(ownerId, userId, productId, offerAmount);
+    }
+
+    @Override
+    public void acceptCounterOffer(int storeId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("acceptCounterOffer - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.acceptCounterOffer(userId, productId);
+    }
+
+    @Override
+    public void declineCounterOffer(int storeId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("declineCounterOffer - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.declineCounterOffer(userId, productId);
+    }
+
 }

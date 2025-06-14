@@ -327,7 +327,7 @@ class UserControllerTest {
         String token = "validToken";
         int userId = 1;
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Message 1"));
+        messages.put(1, new StoreMsg(1, -1, "Message 1", null));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAllMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
@@ -398,7 +398,7 @@ class UserControllerTest {
         String token = "validToken";
         int userId = 1;
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Auction ended message"));
+        messages.put(1, new StoreMsg(1, -1, "Auction ended message", null));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAuctionEndedMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
@@ -431,7 +431,7 @@ class UserControllerTest {
         String token = "validToken";
         int userId = 1;
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Assignment message"));
+        messages.put(1, new StoreMsg(1, -1, "Assignment message", null));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAssignmentMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));

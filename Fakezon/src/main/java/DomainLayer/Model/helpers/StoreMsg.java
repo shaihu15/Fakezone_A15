@@ -10,11 +10,17 @@ public class StoreMsg {
     int productId;
     @JsonProperty("msg")
     String msg;
+    @JsonProperty("offeredBy")
+    Integer offeredBy;
+    @JsonProperty("isCounterOffer")
+    boolean isCounterOffer = false;
+
     @JsonCreator
-    public StoreMsg(int storeId, int productId, String msg) {
+    public StoreMsg(int storeId, int productId, String msg, Integer offeredBy) {
         this.storeId = storeId;
         this.productId = productId;
         this.msg = msg;
+        this.offeredBy = offeredBy;
     }
     public int getStoreId() {
         return storeId;
@@ -24,5 +30,13 @@ public class StoreMsg {
     }
     public String getMessage() {
         return msg;
+    }
+    
+    public Integer getOfferedBy(){
+        return offeredBy;
+    }
+
+    public void setCounterOffer(){
+        isCounterOffer = true;
     }
 }

@@ -862,4 +862,32 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
     }
 
 
+    @PostMapping("/placeOfferOnStoreProduct/{storeId}/{productId}/{userId}")
+    public ResponseEntity<Response<Void>> placeOfferOnStoreProduct(@PathVariable("storeId") int storeId,
+                                                            @PathVariable("userId") int userId,
+                                                            @PathVariable("productId") int productId,
+                                                            @RequestParam("offerAmount") double offerAmount,
+                                                            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to placeOfferOnStoreProduct '{}' to store {} by user {} with amount {}", productId, storeId, userId, offerAmount);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.placeOfferOnStoreProduct(storeId, userId, productId, offerAmount);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
 }
