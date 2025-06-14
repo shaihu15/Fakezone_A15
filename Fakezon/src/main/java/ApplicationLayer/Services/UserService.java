@@ -392,7 +392,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
 

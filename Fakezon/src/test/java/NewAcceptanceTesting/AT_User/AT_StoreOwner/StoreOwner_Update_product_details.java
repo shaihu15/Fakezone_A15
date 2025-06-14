@@ -169,14 +169,6 @@ public class StoreOwner_Update_product_details {
     }
 
     @Test
-    void testUpdateProductDetails_invalidQuantity_Failure() {
-        int invalidQuantity = -5;
-        Response<Void> updateResponse = systemService.updateProductInStore(storeId, userId, productId, newBasePrice, invalidQuantity);
-        assertFalse(updateResponse.isSuccess());
-        assertEquals("Error during updating product in store: Product's quantity must be greater than 0", updateResponse.getMessage());
-    }
-
-    @Test
     void testUpdateProductDetails_sameDetails_Success() {
         Response<Void> updateResponse = systemService.updateProductInStore(storeId, userId, productId, newBasePrice, newQuantity);
         assertTrue(updateResponse.isSuccess());

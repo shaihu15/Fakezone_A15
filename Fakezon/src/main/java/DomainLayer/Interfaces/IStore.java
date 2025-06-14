@@ -18,6 +18,7 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
@@ -155,5 +156,7 @@ public interface IStore {
     void acceptCounterOffer(int userId, int productId);
 
     void declineCounterOffer(int userId, int productId);
+
+    List<Offer> getUserOffers(int userId);
 
 }

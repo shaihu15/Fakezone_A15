@@ -304,7 +304,7 @@ public class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenReturn(messages);
 
-        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+        Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
 
         assertTrue(response.isSuccess());
         assertEquals(messages, response.getData());
@@ -319,7 +319,7 @@ public class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenReturn(new HashMap<>());
 
-        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+        Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
 
         assertTrue(response.isSuccess());
         assertNull(response.getData());
@@ -334,7 +334,7 @@ public class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenThrow(new RuntimeException("DB error"));
 
-        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+        Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
 
         assertFalse(response.isSuccess());
         assertNull(response.getData());
@@ -347,7 +347,7 @@ public class UserServiceTest {
         int userId = 999;
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        Response<Map<Integer, StoreMsg>> response = userService.getAuctionEndedMessages(userId);
+        Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
 
         assertFalse(response.isSuccess());
         assertNull(response.getData());

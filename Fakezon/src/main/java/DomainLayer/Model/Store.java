@@ -27,6 +27,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
 import DomainLayer.Model.helpers.OfferEvents.CounterOfferDeclineEvent;
+import DomainLayer.Model.helpers.OfferEvents.CounterOfferEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedByAll;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedSingleOwnerEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferDeclinedEvent;
@@ -239,9 +240,6 @@ public class Store implements IStore {
             }
             if (!storeProducts.containsKey(productID)) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
-            }
-            if (quantity <= 0) {
-                throw new IllegalArgumentException("Product's quantity must be greater than 0");
             }
             if (basePrice <= 0) {
                 throw new IllegalArgumentException("Product's base price must be greater than 0");
@@ -1323,8 +1321,11 @@ public class Store implements IStore {
                 
             } else {
                 Offer offer = getUserOfferOnStoreProduct(userId, productId);
-                if(offer != null && offer.getUserId() == userId && offer.isApproved()){
+                if(offer != null && offer.getUserId() == userId && offer.isApproved() && offer.isHandled()){
                     amount += offer.getOfferAmount();
+                    if(quantity > 1){
+                        amount += product.getBasePrice() * (quantity - 1);
+                    }
                 }
                 else{
                     amount += product.getBasePrice() * quantity;
@@ -1523,7 +1524,12 @@ public class Store implements IStore {
             if(offer != null){
                 throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }
-            userOffers.add(new Offer(userId, this.storeID, productId, offerAmount, List.copyOf(this.storeOwners)));
+            offer = getUserPendingOfferOnStoreProduct(userId, productId);
+            if(offer != null){
+                throw new IllegalArgumentException("User already has pending counter offer on the same product");
+            }
+
+            userOffers.add(new Offer(userId, this.storeID, productId, offerAmount, new ArrayList<>(this.storeOwners)));
             offersOnProducts.put(userId, userOffers);
             this.publisher.publishEvent(new OfferReceivedEvent(this.storeID, productId, userId, offerAmount));
         }
@@ -1566,7 +1572,7 @@ public class Store implements IStore {
         rolesLock.lock();
         try{
             if(!isOwner(ownerId)){
-                throw new IllegalArgumentException("Only Store Owners can Accept Offers");
+                throw new IllegalArgumentException("Only Store Owners can Decline Offers");
             }
             Offer offer = getUserOfferOnStoreProduct(userId, productId);
             if(offer == null){
@@ -1662,10 +1668,14 @@ public class Store implements IStore {
             }
             Offer offer = getUserOfferOnStoreProduct(userId, productId);
             if(offer == null){
-                throw new IllegalArgumentException("User " + userId + " does not have an offer on product " + productId + " in store " + storeID);
+                throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
             if(offerAmount < 1){
                 throw new IllegalArgumentException("Counter offer must be more than $1");
+            }
+            offer = getUserPendingOfferOnStoreProduct(userId, productId);
+            if(offer != null){
+                throw new IllegalArgumentException("User already has a counter offer pending");
             }
             declineOfferOnStoreProduct(ownerId, userId, productId); // handles the decline too (msgs & all)
             Offer counterOffer = new Offer(userId, storeID, productId, offerAmount, List.copyOf(storeOwners));
@@ -1675,6 +1685,7 @@ public class Store implements IStore {
             }
             pendingUserOffers.add(counterOffer);
             pendingOffers.put(userId, pendingUserOffers);
+            this.publisher.publishEvent(new CounterOfferEvent(storeID, productId, userId, offerAmount));
         }
         finally{
             rolesLock.unlock();
@@ -1708,8 +1719,8 @@ public class Store implements IStore {
             if(pendingOffer == null){
                 throw new IllegalArgumentException("User has no Pending Counter Offers");
             }
-            placeOfferOnStoreProduct(userId, productId, pendingOffer.getOfferAmount());
             removePendingOffer(pendingOffer);
+            placeOfferOnStoreProduct(userId, productId, pendingOffer.getOfferAmount());
         }
         finally{
             offersLock.unlock();
@@ -1746,5 +1757,13 @@ public class Store implements IStore {
         finally{
             offersLock.unlock();
         }
+    }
+
+    public List<Offer> getUserOffers(int userId){
+        List<Offer> offers = offersOnProducts.get(userId);
+        if(offers == null){
+            return new ArrayList<>();
+        }
+        return offers;
     }
 }
