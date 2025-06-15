@@ -378,5 +378,26 @@ public class UserRepository implements IUserRepository {
         return users.containsKey(userId) && users.get(userId) instanceof Registered;
     }
 
+    @Override
+    public User save(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        
+        // Check if user exists in either map
+        if (user instanceof Registered) {
+            if (!users.containsKey(user.getUserId())) {
+                throw new IllegalArgumentException("Registered user with ID " + user.getUserId() + " does not exist.");
+            }
+            users.put(user.getUserId(), (Registered) user);
+            return user;
+        } else {
+            if (!unsignedUsers.containsKey(user.getUserId())) {
+                throw new IllegalArgumentException("Guest user with ID " + user.getUserId() + " does not exist.");
+            }
+            unsignedUsers.put(user.getUserId(), user);
+            return user;
+        }
+    }
 
 }

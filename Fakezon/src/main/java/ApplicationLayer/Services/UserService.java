@@ -99,6 +99,7 @@ public class UserService implements IUserService {
         if (optionalUser.isPresent()) {
             Registered user = optionalUser.get();
             user.logout();
+            userRepository.save(user);
             logger.info("User logged out: " + email);
         } else {
             logger.warn("Logout failed: User with email {} not found", email);
@@ -122,6 +123,7 @@ public class UserService implements IUserService {
                 throw new IllegalArgumentException("Incorrect password");
             }
             user.login();
+            userRepository.save(user);
             return user.toDTO();
         } catch (Exception e) {
             // Handle exception if needed
