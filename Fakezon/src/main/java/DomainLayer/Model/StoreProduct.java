@@ -6,19 +6,40 @@ import java.util.List;
 import java.util.Map;
 
 import ApplicationLayer.Enums.PCategory;
+import jakarta.persistence.*;
 
 import java.util.Locale.Category;
 
-
+@Entity
+@Table(name = "store_products")
 public class StoreProduct {
+    
+    @Id
     private int SproductID;
+    
+    @Column(nullable = false)
     private int storeId;
+    
+    @Column(nullable = false)
     private String name;
+    
+    @Column(nullable = false)
     private double basePrice;
+    
+    @Column(nullable = false)
     private int quantity;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PCategory category;
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_product_id")
+    @MapKeyColumn(name = "user_id")
     private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
 
+    // Default constructor for JPA
+    public StoreProduct() {}
 
    public StoreProduct(int SproductID, int storeId,String name, double basePrice, int quantity,PCategory category) {
         this.SproductID = SproductID;

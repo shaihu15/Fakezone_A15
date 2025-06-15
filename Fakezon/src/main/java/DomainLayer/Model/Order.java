@@ -9,18 +9,51 @@ import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.IOrder;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "orders")
 public class Order implements IOrder{
-    private final int orderId;
-    private final int userId;
-    private final int storeId;
-    private final double totalPrice;
+    @Id
+    @Column(name = "order_id")
+    private int orderId;
+    
+    @Column(name = "user_id", nullable = false)
+    private int userId;
+    
+    @Column(name = "store_id", nullable = false)
+    private int storeId;
+    
+    @Column(name = "total_price", nullable = false)
+    private double totalPrice;
+    
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderedProduct> products;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_state", nullable = false)
     private OrderState orderState;
+    
+    @Column(name = "address", nullable = false)
     private String address;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
+    
+    @Transient
     private static AtomicInteger idCounter = new AtomicInteger(0);
+    
+    @Column(name = "payment_transaction_id")
     private int paymentTransactionId;
+    
+    @Column(name = "delivery_transaction_id")
     private int deliveryTransactionId;
+
+    // Default constructor for JPA
+    protected Order() {
+        // JPA will populate fields
+    }
 
     public Order(int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
         this.orderId = idCounter.incrementAndGet();
@@ -33,6 +66,12 @@ public class Order implements IOrder{
         this.totalPrice = totalPrice;
         this.paymentTransactionId = paymentTransactionId;
         this.deliveryTransactionId = deliveryTransactionId;
+        // Set up bidirectional relationship
+        if (products != null) {
+            for (OrderedProduct product : products) {
+                product.setOrder(this);
+            }
+        }
     }
     
     public Order(int id, int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
@@ -46,6 +85,12 @@ public class Order implements IOrder{
         this.totalPrice = totalPrice;
         this.paymentTransactionId = paymentTransactionId;
         this.deliveryTransactionId = deliveryTransactionId;
+        // Set up bidirectional relationship
+        if (products != null) {
+            for (OrderedProduct product : products) {
+                product.setOrder(this);
+            }
+        }
     }
 
     @Override

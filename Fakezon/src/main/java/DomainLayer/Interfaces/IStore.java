@@ -50,9 +50,9 @@ public interface IStore {
 
     Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId);
 
-    HashMap<Integer, StoreProduct> getStoreProducts();
+    Map<Integer, StoreProduct> getStoreProducts();
 
-    HashMap<Integer, StoreRating> getRatings();
+    Map<Integer, StoreRating> getRatings();
 
     HashMap<Integer, PurchasePolicy> getPurchasePolicies();
 

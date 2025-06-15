@@ -17,31 +17,59 @@ import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.helpers.StoreMsg;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "registered_users")
+@DiscriminatorValue("REGISTERED")
 public class Registered extends User {
-    protected HashMap<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
+    @ElementCollection
+    @CollectionTable(name = "user_product_purchases", 
+                    joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "store_id")
+    @Column(name = "product_ids")
+    protected Map<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
+    
+    @Transient
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
+    
+    @Column(name = "password", nullable = false)
     private String password;
+    
+    @Column(name = "age")
     private int age;
+    
+    @Transient
     private List<StoreMsg> messagesFromUser;
+    
+    @Transient
     private Map<Integer, StoreMsg> messagesFromStore;//msgId -> StoreMsg
+    
+    @Transient
     private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
+    
+    @Transient
     private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
+    
+    @Transient
     protected static final AtomicInteger MsgIdCounter = new AtomicInteger(0);
 
+    // Default constructor for JPA
+    protected Registered() {
+        super(true); // Use JPA constructor
+        initializeFields();
+    }
+
     public Registered(String email, String password, LocalDate dateOfBirth,String state) {
-        super();
+        super(); // Use regular constructor with auto-generated ID
         this.email = email;
         this.password = password;
-        this.roles = new HashMap<>();
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
-        messagesFromUser = new Stack<>();
-        messagesFromStore = new HashMap<>();
-        assignmentMessages = new HashMap<>();
-        auctionEndedMessages = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
+        initializeFields();
     }
 
     /**
@@ -51,16 +79,19 @@ public class Registered extends User {
         super(userId);
         this.email = email;
         this.password = password;
-        this.roles = new HashMap<>();
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
-        messagesFromUser = new Stack<>();
-        messagesFromStore = new HashMap<>();
-        assignmentMessages = new HashMap<>();
-        auctionEndedMessages = new HashMap<>();
-        this.productsPurchase = new HashMap<>();
+        initializeFields();
     }
 
+    private void initializeFields() {
+        this.roles = new HashMap<>();
+        this.messagesFromUser = new Stack<>();
+        this.messagesFromStore = new HashMap<>();
+        this.assignmentMessages = new HashMap<>();
+        this.auctionEndedMessages = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
+    }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
         this.productsPurchase.put(storeID, productsPurchase);
@@ -202,6 +233,26 @@ public class Registered extends User {
         assignmentMessages.remove(msgId);
         auctionEndedMessages.remove(msgId);
         return true;
+    }
+
+    // JPA lifecycle methods
+    @PostLoad
+    private void initializeTransientFields() {
+        if (this.roles == null) {
+            this.roles = new HashMap<>();
+        }
+        if (this.messagesFromUser == null) {
+            this.messagesFromUser = new Stack<>();
+        }
+        if (this.messagesFromStore == null) {
+            this.messagesFromStore = new HashMap<>();
+        }
+        if (this.assignmentMessages == null) {
+            this.assignmentMessages = new HashMap<>();
+        }
+        if (this.auctionEndedMessages == null) {
+            this.auctionEndedMessages = new HashMap<>();
+        }
     }
 
 }

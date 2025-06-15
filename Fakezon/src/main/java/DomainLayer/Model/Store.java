@@ -36,6 +36,8 @@ import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.Tree;
 import DomainLayer.Model.helpers.UserMsg;
 
+import jakarta.persistence.*;
+
 import static org.mockito.ArgumentMatchers.*;
 
 import java.time.LocalDate;
@@ -43,60 +45,110 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Entity
+@Table(name = "stores")
 public class Store implements IStore {
 
-    private String name;
+    @Id
     private int storeID;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    @Column(nullable = false)
     private boolean isOpen = true;
+    
+    @Column(nullable = false)
     private int storeFounderID; // store founder ID
-    private HashMap<Integer, StoreRating> Sratings; // HASH userID to store rating
-    private HashMap<Integer, StoreProduct> storeProducts; // HASH productID to store product
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    @MapKeyColumn(name = "user_id")
+    private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_store_id")
+    @MapKeyColumn(name = "product_id")
+    private Map<Integer, StoreProduct> storeProducts; // HASH productID to store product
+    
+    // For now, let's skip AuctionProduct and complex policies for initial implementation
+    @Transient
     private HashMap<Integer, AuctionProduct> auctionProducts; // HASH productID to auction product
+    
+    @Transient
     private HashMap<Integer, PurchasePolicy> purchasePolicies; // HASH policyID to purchase policy
+    
+    @Transient
     private HashMap<Integer, IDiscountPolicy> discountPolicies; // HASH policyID to discount policy
+    
+    @ElementCollection
+    @CollectionTable(name = "store_owners", joinColumns = @JoinColumn(name = "store_id"))
+    @Column(name = "owner_id")
     private List<Integer> storeOwners;
-    private HashMap<Integer, Integer> pendingOwners; // appointee : appointor
+    
+    @ElementCollection
+    @CollectionTable(name = "pending_owners", joinColumns = @JoinColumn(name = "store_id"))
+    @MapKeyColumn(name = "appointee_id")
+    @Column(name = "appointor_id")
+    private Map<Integer, Integer> pendingOwners; // appointee : appointor
+    
+    // Store managers permissions - simplified for now
+    @Transient
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
+    
+    @Transient
     private Tree rolesTree;
+    
+    @Transient
     private Map<Integer, UserMsg> messagesFromUsers; // HASH msgId to message
+    
+    @Transient
     protected static final AtomicInteger UserMsgIdCounter = new AtomicInteger(0);
 
+    @Transient
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
+    
+    @Transient
     private static final AtomicInteger idCounter = new AtomicInteger(0);
+    
+    @Transient
     private static final AtomicInteger policyIDCounter = new AtomicInteger(0);
-    private final ApplicationEventPublisher publisher;
+    
+    @Transient
+    private ApplicationEventPublisher publisher;
+    
+    @Transient
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
-    private final ReentrantLock rolesLock = new ReentrantLock(); // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED
-                                                                 // BOTH!
-    private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED
-                                                                    // BOTH
+    
+    @Transient
+    private final ReentrantLock rolesLock = new ReentrantLock(); // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED BOTH!
+    
+    @Transient                                                                 
+    private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED BOTH
+    
+    @Transient
     private final ReentrantLock ratingLock = new ReentrantLock();
-    private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager
-                                                                                 // perms
+    
+    @Transient
+    private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
+    
+    @Transient
     private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
+    
+    @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    // Default constructor for JPA
+    public Store() {
+        initializeTransientFields();
+    }
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
-        this.storeOwners = new ArrayList<>();
-        // storeOwners.put(founderID, new StoreOwner(founderID, name));
-        this.storeManagers = new HashMap<>();
         this.name = name;
         this.storeID = idCounter.incrementAndGet();
-        this.Sratings = new HashMap<>();
-        this.storeProducts = new HashMap<>();
-        this.auctionProducts = new HashMap<>();
-        this.purchasePolicies = new HashMap<>();
-        this.discountPolicies = new HashMap<>();
-        this.rolesTree = new Tree(founderID); // founder = root
-        this.storeOwners.add(founderID);
-        this.pendingOwners = new HashMap<>(); // appointee : appointor
-        this.storeManagers = new HashMap<>(); // HASH userID to store manager
-        this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
-        this.messagesFromStore = new Stack<>();
         this.publisher = publisher;
-        this.pendingManagersPerms = new HashMap<>();
-        this.pendingManagers = new HashMap<>();
+        initializeCollections();
     }
 
     /**
@@ -104,25 +156,44 @@ public class Store implements IStore {
      **/
     public Store(String name, int founderID, ApplicationEventPublisher publisher, int storeId) {
         this.storeFounderID = founderID;
-        this.storeOwners = new ArrayList<>();
-        // storeOwners.put(founderID, new StoreOwner(founderID, name));
-        this.storeManagers = new HashMap<>();
         this.name = name;
         this.storeID = storeId;
+        this.publisher = publisher;
+        initializeCollections();
+    }
+
+    private void initializeCollections() {
+        this.storeOwners = new ArrayList<>();
+        this.storeManagers = new HashMap<>();
         this.Sratings = new HashMap<>();
         this.storeProducts = new HashMap<>();
         this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
-        this.rolesTree = new Tree(founderID); // founder = root
-        this.storeOwners.add(founderID);
+        this.rolesTree = new Tree(storeFounderID); // founder = root
+        this.storeOwners.add(storeFounderID);
         this.pendingOwners = new HashMap<>(); // appointee : appointor
         this.storeManagers = new HashMap<>(); // HASH userID to store manager
         this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
         this.messagesFromStore = new Stack<>();
-        this.publisher = publisher;
         this.pendingManagersPerms = new HashMap<>();
         this.pendingManagers = new HashMap<>();
+    }
+
+    private void initializeTransientFields() {
+        this.auctionProducts = new HashMap<>();
+        this.purchasePolicies = new HashMap<>();
+        this.discountPolicies = new HashMap<>();
+        this.storeManagers = new HashMap<>();
+        this.messagesFromUsers = new HashMap<>();
+        this.messagesFromStore = new Stack<>();
+        this.pendingManagersPerms = new HashMap<>();
+        this.pendingManagers = new HashMap<>();
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        this.publisher = null; // Will be injected/set when needed
+        if (storeFounderID != 0) {
+            this.rolesTree = new Tree(storeFounderID);
+        }
     }
 
     @Override
@@ -700,12 +771,12 @@ public class Store implements IStore {
     }
 
     @Override
-    public HashMap<Integer, StoreProduct> getStoreProducts() {
+    public Map<Integer, StoreProduct> getStoreProducts() {
         return storeProducts;
     }
 
     @Override
-    public HashMap<Integer, StoreRating> getRatings() {
+    public Map<Integer, StoreRating> getRatings() {
         return Sratings;
     }
 
