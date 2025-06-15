@@ -14,6 +14,10 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.DTO.StoreDTO;
@@ -44,15 +48,18 @@ import DomainLayer.Model.Product;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
+import InfrastructureLayer.ProductRepositoryImpl;
+import InfrastructureLayer.StoreRepositoryImpl;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 
+@SpringBootTest(classes = com.fakezone.fakezone.FakezoneApplication.class)
+@ActiveProfiles("test")
+@Transactional
 public class DiscountPolicyIntegrationTest {
 
     private SystemService systemService;
@@ -61,10 +68,15 @@ public class DiscountPolicyIntegrationTest {
     private IProductService productService;
     private IOrderService orderService;
     
-    // Repositories 
+    // Repositories - Injected by Spring
+    @Autowired
     private IStoreRepository storeRepository;
-    private IUserRepository userRepository;
+    
+    @Autowired  
     private IProductRepository productRepository;
+    
+    // These still use old implementations until they get Hibernate support
+    private IUserRepository userRepository;
     private IOrderRepository orderRepository;
     
     // Services
@@ -88,11 +100,10 @@ public class DiscountPolicyIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize repositories
-        storeRepository = new StoreRepository();
+        // Initialize repositories that are not yet migrated to Hibernate
         userRepository = new UserRepository();
-        productRepository = new ProductRepository();
         orderRepository = new OrderRepository();
+        // Note: storeRepository and productRepository are now injected by Spring via @Autowired
         
         // Initialize services
         eventPublisher = mock(ApplicationEventPublisher.class);

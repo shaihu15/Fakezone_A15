@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
@@ -22,6 +24,8 @@ import ApplicationLayer.Services.SystemService;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+@Transactional
 public class OrderRetrievalIntegrationTest {
 
     @Autowired
@@ -39,8 +43,7 @@ public class OrderRetrievalIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize repositories
-        
+        // Clear all data before each test
         systemService.clearAllData();
 
         setupTestData();
