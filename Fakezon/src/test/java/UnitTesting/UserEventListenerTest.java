@@ -400,7 +400,7 @@ public class UserEventListenerTest {
         StoreMsg capturedMessage = messageCaptor.getValue();
 
         assertEquals(storeId, capturedMessage.getStoreId());
-        assertEquals("We regret to inform you that the offer for product: " + productId + " was not approved by the store.", capturedMessage.getMessage());
+        assertEquals("We regret to inform you that the offer for product: " + productId + " was declined because product is out of store", capturedMessage.getMessage());
     }
 
     @Test
