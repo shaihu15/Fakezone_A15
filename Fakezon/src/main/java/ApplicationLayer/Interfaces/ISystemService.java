@@ -27,6 +27,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.UserMsg;
@@ -110,7 +111,7 @@ public interface ISystemService {
 
     Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID); // get all the messages of the user
 
-    Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID); // get all the messages of the user
+    Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID); // get all the messages of the user
 
     Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description,
             double basePrice, int quantity, String category); // add product to store
@@ -258,5 +259,7 @@ public interface ISystemService {
     Response<Void> acceptCounterOffer(int storeId, int userId, int productId);
 
     Response<Void> declineCounterOffer(int storeId, int userId, int productId);
+    
+    Response<List<Offer>> getUserOffers(int storeId, int userId); //FOR TESTS ONLY
 
 }

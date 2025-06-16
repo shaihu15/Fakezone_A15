@@ -16,6 +16,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.helpers.UserMsg;
 
@@ -148,5 +149,7 @@ public interface IStoreService {
   void acceptCounterOffer(int storeId, int userId, int productId);
 
   void declineCounterOffer(int storeId, int userId, int productId);
+
+  List<Offer> getUserOffers(int storeId, int userId);
 
 }

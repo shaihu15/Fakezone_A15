@@ -63,7 +63,7 @@ public interface IUserService {
 
     Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID); // get all the messages of the user
 
-    Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID); // get all the messages of the user
+    Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID); // get all the messages of the user
 
     Optional<User> getAnyUserById(int Id); // get any user by id, guest or registered
     

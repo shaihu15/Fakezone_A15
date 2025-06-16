@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
@@ -38,9 +39,9 @@ public class Registered extends User {
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
-        messagesFromStore = new HashMap<>();
-        assignmentMessages = new HashMap<>();
-        offersMessages = new HashMap<>();
+        messagesFromStore = new ConcurrentHashMap<>();
+        assignmentMessages = new ConcurrentHashMap<>();
+        offersMessages = new ConcurrentHashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 

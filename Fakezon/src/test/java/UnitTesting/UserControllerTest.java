@@ -401,14 +401,14 @@ class UserControllerTest {
         messages.put(1, new StoreMsg(1, -1, "Auction ended message", null));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getAuctionEndedMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
+        when(systemService.getUserOfferMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
 
         ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(response.getBody().isSuccess());
         assertEquals("Messages retrieved successfully", response.getBody().getMessage());
-        verify(systemService, times(1)).getAuctionEndedMessages(userId);
+        verify(systemService, times(1)).getUserOfferMessages(userId);
     }
 
     @Test
@@ -423,7 +423,7 @@ class UserControllerTest {
         assertEquals(401, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Invalid token", response.getBody().getMessage());
-        verify(systemService, never()).getAuctionEndedMessages(anyInt());
+        verify(systemService, never()).getUserOfferMessages(anyInt());
     }
 
     @Test
@@ -781,7 +781,7 @@ class UserControllerTest {
         String token = "validToken";
         int userId = 1;
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getAuctionEndedMessages(userId))
+        when(systemService.getUserOfferMessages(userId))
                 .thenReturn(new Response<>(null, "Failed to retrieve auction ended messages", false, ErrorType.INVALID_INPUT, null));
 
         ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
@@ -789,7 +789,7 @@ class UserControllerTest {
         assertEquals(400, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Failed to retrieve auction ended messages", response.getBody().getMessage());
-        verify(systemService, times(1)).getAuctionEndedMessages(userId);
+        verify(systemService, times(1)).getUserOfferMessages(userId);
     }
     
     @Test
@@ -829,14 +829,14 @@ class UserControllerTest {
         String token = "validToken";
         int userId = 1;
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
-        when(systemService.getAuctionEndedMessages(userId)).thenThrow(new RuntimeException("Unexpected error"));
+        when(systemService.getUserOfferMessages(userId)).thenThrow(new RuntimeException("Unexpected error"));
 
         ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getAuctionEndedMessages(token, userId);
 
         assertEquals(500, response.getStatusCodeValue());
         assertFalse(response.getBody().isSuccess());
         assertEquals("An error occurred while retrieving auction ended messages", response.getBody().getMessage());
-        verify(systemService, times(1)).getAuctionEndedMessages(userId);
+        verify(systemService, times(1)).getUserOfferMessages(userId);
     }
     
     // --- Example for getAssignmentMessages ---

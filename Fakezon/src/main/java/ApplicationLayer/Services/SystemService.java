@@ -47,6 +47,7 @@ import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
@@ -906,10 +907,10 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
-                return this.userService.getAuctionEndedMessages(userID);
+                return this.userService.getUserOfferMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
                 return new Response<Map<Integer, StoreMsg>>(null, "User is not logged in", false,
@@ -2399,6 +2400,22 @@ public class SystemService implements ISystemService {
         }
         catch(Exception e){
             logger.error("declineCounterOffer FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    /**
+     * **********DO NOT USE - JUST FOR TESTS PURPOSES**********
+     **/
+    @Override
+    public Response<List<Offer>> getUserOffers(int storeId, int userId){
+        try{
+            logger.info("fetching user " + userId + " offers from store " + storeId);
+            List<Offer> offers = storeService.getUserOffers(storeId, userId);
+            return new Response<>(offers, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("getUserOffers FAIL - " + e.getMessage());
             return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
