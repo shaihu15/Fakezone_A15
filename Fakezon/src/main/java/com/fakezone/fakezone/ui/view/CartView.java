@@ -304,22 +304,34 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
             TextField cardNumber = new TextField("Credit Card Number");
             cardNumber.setAllowedCharPattern("\\d");
             TextField cardHolder = new TextField("Card Holder");
+            
             DatePicker exp = new DatePicker("Expiry Date");
-            exp.setPlaceholder("YYYY-MM-DD");
+            exp.setPlaceholder("MM/YYYY"); 
+            
             TextField cvv = new TextField("cvv");
             cvv.setAllowedCharPattern("\\d");
             cvv.setMaxLength(3);
             dialog.add(cardNumber, cardHolder, exp, cvv);
-            TextField address = new TextField("Address");
+
+            // New fields for address details
+            TextField streetAddress = new TextField("Street Address");
+            streetAddress.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            TextField city = new TextField("City");
+            city.setAllowedCharPattern("[^*]*"); // Restrict '*'
             ComboBox<String> countryComboBox = new ComboBox<>("Country");
+            TextField zipCode = new TextField("Zip Code"); 
+            zipCode.setAllowedCharPattern("[^*]*"); // Restrict '*'
+
             List<String> countryNames = Arrays.stream(Locale.getISOCountries())
                 .map(code -> Locale.forLanguageTag("und-" + code).getDisplayCountry())
                 .sorted()
                 .collect(Collectors.toList());
             countryComboBox.setItems(countryNames);
-            dialog.add(countryComboBox);
+
+            dialog.add(streetAddress, city, countryComboBox, zipCode); // Add all address components
             TextField packageDetails = new TextField("Package Details");
-            dialog.add(address, packageDetails);
+            dialog.add(packageDetails);
+            
             NativeLabel totalLabel = new NativeLabel("Total:");
             totalLabel.getStyle().set("font-weight", "bold");
             NativeLabel totalValue = new NativeLabel(String.format(Locale.US, "$%.2f", response.getData()));
@@ -330,11 +342,12 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
             Button confirmPurchase = new Button("Confirm Purchase");
             confirmPurchase.addClickListener(e ->{
                                 if(!paymentMethodComboBox.isEmpty() && !deliveryMethod.isEmpty() && !cardNumber.isEmpty() &&
-                                   !cardHolder.isEmpty() && !exp.isEmpty() && !cvv.isEmpty() && !address.isEmpty() &&
-                                   !countryComboBox.isEmpty() &&!packageDetails.isEmpty()){
+                                   !cardHolder.isEmpty() && !exp.isEmpty() && !cvv.isEmpty() && !streetAddress.isEmpty() && 
+                                   !city.isEmpty() && !zipCode.isEmpty() && !countryComboBox.isEmpty() && !packageDetails.isEmpty()){
                                         dialog.close();
                                         confirmPurchase(firstName, lastName, dob, paymentMethodComboBox,
-                                                        deliveryMethod, cardNumber, cardHolder, exp, cvv, address, countryComboBox, packageDetails);
+                                                        deliveryMethod, cardNumber, cardHolder, exp, cvv, 
+                                                        streetAddress, city, countryComboBox, zipCode, packageDetails);
                                    }
             });
             dialog.add(confirmPurchase);
@@ -347,11 +360,37 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
        dialog.open();
 
     }
+
     private void confirmPurchase(TextField firstName, TextField lastName, DatePicker dob, ComboBox<PaymentMethod> paymentMethodComboBox,
-                                TextField deliveryMethod, TextField cardNumber, TextField cardHolder, DatePicker exp, TextField cvv, TextField address, ComboBox<String> countryComboBox,  TextField packageDetails){
+                                TextField deliveryMethod, TextField cardNumber, TextField cardHolder, DatePicker exp, TextField cvv, 
+                                TextField streetAddress, TextField city, ComboBox<String> countryComboBox, TextField zipCode, TextField packageDetails){ 
         
-        PurchaseRequest purReq = new PurchaseRequest(userId, getCountryCodeFromName(countryComboBox
-                .getValue()), dob.getValue(), paymentMethodComboBox.getValue(), deliveryMethod.getValue(), cardNumber.getValue(), cardHolder.getValue(), exp.getValue().toString(), cvv.getValue(), address.getValue(), firstName.getValue() + " " + lastName.getValue(), packageDetails.getValue());
+        // Combine address components into a single fullAddress string using "*" as the separator
+        String fullAddress = String.format("%s*%s*%s*%s", 
+                                            streetAddress.getValue(), 
+                                            city.getValue(), 
+                                            countryComboBox.getValue(), 
+                                            zipCode.getValue());
+
+        // Format the expiry date to MM/YYYY
+        String formattedExpDate = "";
+        if (exp.getValue() != null) {
+            formattedExpDate = String.format(Locale.US, "%02d/%d", exp.getValue().getMonthValue(), exp.getValue().getYear());
+        }
+
+        PurchaseRequest purReq = new PurchaseRequest(userId, 
+                                                     getCountryCodeFromName(countryComboBox.getValue()), 
+                                                     dob.getValue(), 
+                                                     paymentMethodComboBox.getValue(), 
+                                                     deliveryMethod.getValue(), 
+                                                     cardNumber.getValue(), 
+                                                     cardHolder.getValue(), 
+                                                     formattedExpDate, // Use the formatted expiry date
+                                                     cvv.getValue(), 
+                                                     fullAddress, 
+                                                     firstName.getValue() + " " + lastName.getValue(), 
+                                                     packageDetails.getValue());
+        
         Request<PurchaseRequest> apiReq = new Request<PurchaseRequest>(token, purReq);
         String url = apiUrl + "user/purchaseCart";
         HttpHeaders headers = new HttpHeaders();
