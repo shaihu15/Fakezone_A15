@@ -567,10 +567,27 @@ public class Store implements IStore {
 
             if (auctionProducts.containsKey(productID)) {
                 AuctionProduct auctionProduct = auctionProducts.get(productID);
-                    if (auctionProduct.getUserIDHighestBid() != -1) {
-                        this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID,
+                    if (auctionProduct.getUserIDHighestBid() != -1) // if there was a bid
+                    {
+                        if(auctionProduct.getQuantity() > 0){ //if there is stock
+                            //update owner
+                            this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID,
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+                            //update winner
+                            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(),
+                                auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(),
+                                auctionProduct.toDTO(storeID)));
+                        }
+                        else
+                        {
+                            //update winner for fail
+                            this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
+                                auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
+                            this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
+                                auctionProduct.getCurrentHighestBid(), "Auction failed, product no longer available in store"));
+                        }
                     } else {
+                        //update owner that no bid were placed
                         this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, no bids were placed"));
                     }
@@ -593,50 +610,6 @@ public class Store implements IStore {
     public void receivingMessage(int userID, String message) {
         int msgId = UserMsgIdCounter.incrementAndGet();
         messagesFromUsers.put(msgId, new UserMsg(userID, message));
-    }
-
-    public void receivedResponseForAuctionByOwner(int ownerId, int productID, boolean approved) {
-        if (!isOwner(ownerId))
-            throw new IllegalArgumentException("User with ID: " + ownerId + " is not a store owner");
-        if (auctionProducts.containsKey(productID)) {
-            AuctionProduct auctionProduct = auctionProducts.get(productID);
-            if (approved) {
-                auctionProduct.setBidApprovedByOwners(ownerId, true);
-                handeleIfApprovedAuction(auctionProduct);
-            } else {
-                auctionProduct.setBidApprovedByOwners(ownerId, false);
-                handeleIfDeclinedAuction(auctionProduct);
-            }
-        } else {
-            throw new IllegalArgumentException("The product with ID: " + productID + " is not an auction product.");
-        }
-    }
-
-    private void handeleIfApprovedAuction(AuctionProduct auctionProduct) {
-        if (auctionProduct.isApprovedByAllOwners()) {
-            if (auctionProduct.getQuantity() <= 0) {
-                this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
-                        auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
-                this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(),
-                        auctionProduct.getCurrentHighestBid(), "Auction failed, out of stock"));
-                throw new IllegalArgumentException("Product with ID: " + auctionProduct.getProductID()
-                        + " is out of stock in store ID: " + storeID);
-            }
-            //auctionProduct.setQuantity(auctionProduct.getQuantity() - 1);
-            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(),
-                    auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(),
-                    auctionProduct.toDTO(storeID)));
-        }
-    }
-
-    private void handeleIfDeclinedAuction(AuctionProduct auctionProduct) {
-        this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
-                auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
-        this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, auctionProduct.getProductID(),
-                auctionProduct.getCurrentHighestBid(), "Auction failed, declined by owners"));
-
-        auctionProducts.remove(auctionProduct.getProductID());
-
     }
 
     @Override
@@ -1313,7 +1286,7 @@ public class Store implements IStore {
             }
             if (auctionProducts.containsKey(productId)) {
                 AuctionProduct auctionProduct = auctionProducts.get(productId);
-                if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone() && auctionProduct.isApprovedByAllOwners()) {
+                if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone()) {
                     amount += auctionProduct.getCurrentHighestBid();
                     amount += auctionProduct.getBasePrice() * (quantity - 1); 
                 }
@@ -1420,7 +1393,7 @@ public class Store implements IStore {
                 int newQuantity = Math.min(quantity, storeProduct.getQuantity());
                 if(auctionProducts.containsKey(productId)){
                     AuctionProduct auctionProduct = auctionProducts.get(productId);
-                    if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isApprovedByAllOwners()){
+                    if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isDone()){
                         if(auctionProduct.getQuantity() < quantity) {
                             throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
                         }

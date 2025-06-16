@@ -90,8 +90,6 @@ public interface IStoreService {
 
   Map<Integer,Double> calcAmount(int user,Cart cart, LocalDate dobInput);
 
-  void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
-
   boolean canViewOrders(int storeId, int userId);
 
   boolean acceptAssignment(int storeId, int userId);

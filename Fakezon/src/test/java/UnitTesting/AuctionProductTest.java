@@ -64,31 +64,6 @@ public class AuctionProductTest {
     }
 
     @Test
-    void setOwnersToApprove_ValidOwners_ShouldInitializeApproval() {
-        auctionProduct.setOwnersToApprove(Arrays.asList(1, 2, 3));
-        assertFalse(auctionProduct.isApprovedByAllOwners(), "Not all owners should approve initially");
-    }
-
-    @Test
-    void setBidApprovedByOwners_AllOwnersApprove_ShouldSucceed() {
-        auctionProduct.setOwnersToApprove(Arrays.asList(1, 2, 3));
-        auctionProduct.setBidApprovedByOwners(1, true);
-        auctionProduct.setBidApprovedByOwners(2, true);
-        auctionProduct.setBidApprovedByOwners(3, true);
-
-        assertTrue(auctionProduct.isApprovedByAllOwners(), "All owners should approve the bid");
-    }
-
-    @Test
-    void setBidApprovedByOwners_NotAllOwnersApprove_ShouldFail() {
-        auctionProduct.setOwnersToApprove(Arrays.asList(1, 2, 3));
-        auctionProduct.setBidApprovedByOwners(1, true);
-        auctionProduct.setBidApprovedByOwners(2, false);
-
-        assertFalse(auctionProduct.isApprovedByAllOwners(), "Not all owners have approved the bid");
-    }
-
-    @Test
     void addMinutes_ValidMinutes_ShouldIncreaseMinutesToEnd() {
         auctionProduct.addMinutes(3);
         assertEquals(10, auctionProduct.getMinutesToEnd(), "Minutes to end should be increased");

@@ -576,15 +576,6 @@ public class StoreTest {
     }
 
     @Test
-    void testReceivedResponseForAuctionByOwner() {
-        int productId = 300;
-        store.addStoreProduct(founderId, productId, "Auction", 10.0, 5, PCategory.ELECTRONICS);
-        store.addAuctionProduct(founderId, productId, 10.0, 1);
-        store.receivedResponseForAuctionByOwner(founderId, productId, true);
-        // No exception means success
-    }
-
-    @Test
     void testDeclineAssignment_NoPendingAssignment_ShouldThrow() {
         int userId = 9999;
         assertThrows(IllegalArgumentException.class, () -> store.declineAssignment(userId));
@@ -688,16 +679,6 @@ public class StoreTest {
         store.addAuctionProduct(founderId, productId, 10.0, 1);
         // Simulate auction end (should publish event)
         // This is private, so you can test via public API or use reflection if needed
-    }
-
-    @Test
-    void testHandleIfApprovedAuction() {
-        int productId = 800;
-        store.addStoreProduct(founderId, productId, "Auction", 10.0, 1, PCategory.ELECTRONICS);
-        store.addAuctionProduct(founderId, productId, 10.0, 1);
-        AuctionProduct auctionProduct = store.getAuctionProducts().get(0);
-        // Use reflection or test via receivedResponseForAuctionByOwner
-        store.receivedResponseForAuctionByOwner(founderId, productId, true);
     }
 
     @Test

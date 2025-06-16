@@ -91,9 +91,8 @@ public class UserEventListener {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
             if(isOwner(roles, event.getStoreId())){
                 String msg =   "Auction ended for product " + event.getProductID() + ". Highest bid was " + event.getCurrentHighestBid() +
-                                " by user " + event.getUserIDHighestBid() + ". Please approve or decline this bid.";
-                //THIS SHOULD BE REMOVED SINCE OWNERS DONT NEED TO ACCEPT VVVVVVVVVVVVVVV
-                registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
+                                " by user " + event.getUserIDHighestBid() + ".";
+                registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
                 if (registeredUser.isLoggedIn()) {
                     wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);
                 }
@@ -150,7 +149,7 @@ public class UserEventListener {
     public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
         Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder whose bid was declined
         user.ifPresent(registeredUser -> {
-            String msg = "We regret to inform you that the offer for product: " + event.getProductID() + " was not approved by the store.";
+            String msg = "We regret to inform you that the offer for product: " + event.getProductID() + " was declined because product is out of store";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
             if (registeredUser.isLoggedIn()) {
                 wsHandler.broadcast(String.valueOf(registeredUser.getUserId()), msg);

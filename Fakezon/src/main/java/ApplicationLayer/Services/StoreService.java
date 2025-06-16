@@ -517,23 +517,6 @@ public class StoreService implements IStoreService {
         return store.canViewOrders(userId);
     }
 
-    @Override
-    public void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
-        Store store = storeRepository.findById(storeId);
-        if (store == null) {
-            logger.error("sendResponseForAuctionByOwner - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
-        }
-        try {
-            store.receivedResponseForAuctionByOwner(requesterId, productId, accept);
-            logger.info("Response for auction sent by owner: " + requesterId + " for product: " + productId
-                    + " in store: " + storeId);
-        } catch (IllegalArgumentException e) {
-            logger.error("sendResponseForAuctionByOwner - Product not found: " + productId);
-            throw new IllegalArgumentException("Product not found");
-        }
-}
-
     public boolean acceptAssignment(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
         boolean isowner;
