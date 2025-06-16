@@ -158,8 +158,8 @@ public class ApplicationLayerTest {
 
         listener.handleAuctionEndedToOwnersEvent(event);
 
-        verify(user1, times(1)).addOfferMessage(any());
-        verify(user2).addOfferMessage(any());
+        verify(user1, times(1)).addMessageFromStore(any());
+        verify(user2).addMessageFromStore(any());
     }
 
     @Test
