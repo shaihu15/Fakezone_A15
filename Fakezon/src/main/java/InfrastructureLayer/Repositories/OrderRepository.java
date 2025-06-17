@@ -1,74 +1,108 @@
 package InfrastructureLayer.Repositories;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
+import DomainLayer.Model.Order;
 
 @Repository
+@Primary
+@Transactional
 public class OrderRepository implements IOrderRepository {
-    
-    private final HashMap<Integer, IOrder> orders; 
 
-    public OrderRepository(HashMap<Integer, IOrder> orders) {
-        this.orders = orders;
+    private final OrderJpaRepository orderJpaRepository;
+
+    @Autowired
+    public OrderRepository(OrderJpaRepository orderJpaRepository) {
+        this.orderJpaRepository = orderJpaRepository;
     }
     
+    // No-argument constructor for testing compatibility
     public OrderRepository() {
-        this.orders = new HashMap<>();
+        throw new UnsupportedOperationException("OrderRepository requires OrderJpaRepository. Use @SpringBootTest for integration tests.");
     }
 
     @Override
-    public void addOrder(IOrder Order) {
-        IOrder existingOrder = orders.get(Order.getId());
-        if (existingOrder != null) {
-            throw new IllegalArgumentException("Order with ID " + Order.getId() + " already exists.");
+    public void addOrder(IOrder order) {
+        if (order == null) {
+            throw new IllegalArgumentException("Order cannot be null");
         }
-        orders.put(Order.getId(), Order);
+        
+        // Check if order already exists
+        if (orderJpaRepository.existsById(order.getId())) {
+            throw new IllegalArgumentException("Order with ID " + order.getId() + " already exists.");
+        }
+        
+        if (order instanceof Order) {
+            orderJpaRepository.save((Order) order);
+        } else {
+            throw new IllegalArgumentException("Order must be an instance of Order class");
+        }
     }
-
 
     @Override
     public void deleteOrder(int orderId) {
-        IOrder existingOrder = orders.get(orderId);
-        if (existingOrder == null) {
+        if (!orderJpaRepository.existsById(orderId)) {
             throw new IllegalArgumentException("Order with ID " + orderId + " does not exist.");
         }
-        orders.remove(orderId);    
+        orderJpaRepository.deleteById(orderId);
     }
 
     @Override
     public IOrder getOrder(int orderId) {
-        IOrder existingOrder = orders.get(orderId);
-        if (existingOrder == null) {
+        Optional<Order> order = orderJpaRepository.findById(orderId);
+        if (order.isEmpty()) {
             throw new IllegalArgumentException("Order with ID " + orderId + " does not exist.");
         }
-        return existingOrder;    
+        return order.get();
     }
 
     @Override
-    public List<IOrder> getAllOrders() {
-        return new ArrayList<>(orders.values());    
-    }
-
-    @Override
-    public void clearAllData() {
-        orders.clear();
+    public Collection<IOrder> getAllOrders() {
+        return orderJpaRepository.findAll().stream()
+                .map(order -> (IOrder) order)
+                .toList();
     }
 
     @Override
     public Collection<IOrder> getOrdersByUserId(int userId) {
-        List<IOrder> userOrders = new ArrayList<>();
-        for (IOrder order : orders.values()) {
-            if (order.getUserId() == userId) {
-                userOrders.add(order);
-            }
+        return orderJpaRepository.findByUserId(userId).stream()
+                .map(order -> (IOrder) order)
+                .toList();
+    }
+
+    @Override
+    public void clearAllData() {
+        orderJpaRepository.deleteAll();
+    }
+
+    // Additional methods for business logic
+    public Collection<IOrder> getOrdersByStoreId(int storeId) {
+        return orderJpaRepository.findByStoreId(storeId).stream()
+                .map(order -> (IOrder) order)
+                .toList();
+    }
+
+    public void updateOrder(IOrder order) {
+        if (order == null) {
+            throw new IllegalArgumentException("Order cannot be null");
         }
-        return userOrders;
+        
+        if (!orderJpaRepository.existsById(order.getId())) {
+            throw new IllegalArgumentException("Order with ID " + order.getId() + " does not exist.");
+        }
+        
+        if (order instanceof Order) {
+            orderJpaRepository.save((Order) order);
+        } else {
+            throw new IllegalArgumentException("Order must be an instance of Order class");
+        }
     }
 }

@@ -4,17 +4,17 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+// import org.springframework.context.annotation.Primary;
+// import org.springframework.stereotype.Repository;
+// import org.springframework.transaction.annotation.Transactional;
 
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Model.Order;
 
-@Repository
-@Primary
-@Transactional
+// @Repository
+// @Primary
+// @Transactional
 public class OrderRepositoryImpl implements IOrderRepository {
 
     private final OrderJpaRepository orderJpaRepository;
