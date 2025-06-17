@@ -3,6 +3,7 @@ package DomainLayer.Model;
 import ApplicationLayer.DTO.StoreProductDTO;
 
 import jakarta.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "ordered_products")
@@ -71,6 +72,33 @@ public class OrderedProduct {
 
     public void setOrder(Order order) {
         this.order = order;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        OrderedProduct that = (OrderedProduct) obj;
+        return productId == that.productId &&
+               Double.compare(that.price, price) == 0 &&
+               quantity == that.quantity &&
+               Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId, name, price, quantity);
+    }
+
+    @Override
+    public String toString() {
+        return "OrderedProduct{" +
+                "id=" + id +
+                ", productId=" + productId +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                '}';
     }
 
 }

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
 
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
@@ -167,6 +168,43 @@ public class Order implements IOrder{
         return deliveryTransactionId;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Order order = (Order) obj;
+        return orderId == order.orderId &&
+               userId == order.userId &&
+               storeId == order.storeId &&
+               Double.compare(order.totalPrice, totalPrice) == 0 &&
+               paymentTransactionId == order.paymentTransactionId &&
+               deliveryTransactionId == order.deliveryTransactionId &&
+               orderState == order.orderState &&
+               Objects.equals(address, order.address) &&
+               paymentMethod == order.paymentMethod &&
+               Objects.equals(products, order.products);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderId, userId, storeId, totalPrice, orderState, address, 
+                          paymentMethod, paymentTransactionId, deliveryTransactionId, products);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "orderId=" + orderId +
+                ", userId=" + userId +
+                ", storeId=" + storeId +
+                ", totalPrice=" + totalPrice +
+                ", orderState=" + orderState +
+                ", address='" + address + '\'' +
+                ", paymentMethod=" + paymentMethod +
+                ", paymentTransactionId=" + paymentTransactionId +
+                ", deliveryTransactionId=" + deliveryTransactionId +
+                ", products=" + products +
+                '}';
+    }
 
 }

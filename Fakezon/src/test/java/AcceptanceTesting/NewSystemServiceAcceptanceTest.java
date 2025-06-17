@@ -10,10 +10,11 @@ import java.util.Map;
 import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.method.P;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.ProductDTO;
@@ -35,6 +36,7 @@ import ApplicationLayer.Services.UserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Interfaces.IOrderRepository;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
@@ -42,45 +44,74 @@ import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
+import DomainLayer.Model.*;
+import InfrastructureLayer.Adapters.AuthenticatorAdapter;
+import InfrastructureLayer.Adapters.DeliveryAdapter;
+import InfrastructureLayer.Adapters.PaymentAdapter;
+import InfrastructureLayer.Repositories.*;
+import com.fakezone.fakezone.FakezoneApplication;
 
+@SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+@Transactional
 public class NewSystemServiceAcceptanceTest {
+    @Autowired
     private SystemService systemService;
+    
+    @Autowired
     private IStoreRepository storeRepository;
+    
+    @Autowired
     private IUserRepository userRepository;
+    
+    @Autowired
     private IProductRepository productRepository;
+    
+    @Autowired
     private IOrderRepository orderRepository;
-    private IDelivery   deliveryService;
+    
+    @Autowired
+    private IDelivery deliveryService;
+    
+    @Autowired
     private IAuthenticator authenticatorService;
+    
+    @Autowired
     private IPayment paymentService;
+    
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
+    
+    @Autowired
     private INotificationWebSocketHandler notificationWebSocketHandler;
+    
+    @Autowired
     private IStoreService storeService;
+    
+    @Autowired
     private IProductService productService;
+    
+    @Autowired
     private IUserService userService;
+    
+    @Autowired
     private IOrderService orderService;
+    
     private String systemAdmainEmail = "SystemAdmain@gmail.com";
     private String systemAdmainPassword = "IAmTheSystemAdmain";
     private String systemAdmainCountry = "IL";
-
     private LocalDate systemAdmainBirthDate = LocalDate.of(2000, 1, 1);
+    
     @BeforeEach
     void setUp() {
-
-        storeRepository = new StoreRepository();
-        userRepository = new UserRepository();
-        productRepository = new ProductRepository();
-        orderRepository = new OrderRepository();
-        paymentService = new PaymentAdapter();
-        deliveryService = new DeliveryAdapter();
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        orderService = new OrderService(orderRepository);
-        productService = new ProductService(productRepository);
-        authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService, authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
+        // Clear all data before each test
+        if (storeRepository != null) storeRepository.clearAllData();
+        if (userRepository != null) userRepository.clearAllData();
+        if (productRepository != null) productRepository.clearAllData();
+        if (orderRepository != null) orderRepository.clearAllData();
+        
         systemService.guestRegister(systemAdmainEmail, systemAdmainPassword, systemAdmainBirthDate.toString(), systemAdmainCountry);
     }
-
 
     @Test
     void testRegisterUser_validArguments_Success() {

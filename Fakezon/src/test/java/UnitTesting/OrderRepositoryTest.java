@@ -6,12 +6,18 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.StoreProduct;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import DomainLayer.Interfaces.IOrder;
 import InfrastructureLayer.Repositories.OrderRepository;
+import InfrastructureLayer.Repositories.OrderJpaRepository;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.OrderState;
@@ -25,9 +31,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Collection;
 
+import com.fakezone.fakezone.FakezoneApplication;
 
+@SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+@Transactional
 public class OrderRepositoryTest {
+    @Autowired
     private OrderRepository repository;
+    
+    @Autowired
+    private OrderJpaRepository orderJpaRepository;
+    
     private IOrder order1;
     private IOrder order2;
     private int storeId;
@@ -36,7 +51,9 @@ public class OrderRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository = new OrderRepository(new HashMap<>());
+        // Clear the database before each test
+        orderJpaRepository.deleteAll();
+        
         storeId = 1;
         // Create mock StoreProductDTO objects with all required fields
         StoreProductDTO product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, storeId,PCategory.ELECTRONICS);
@@ -64,7 +81,7 @@ public class OrderRepositoryTest {
     @Test
     void givenDuplicateOrder_WhenAddOrder_ThenThrowsException() {
         repository.addOrder(order1);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
             repository.addOrder(order1);
         });
         assertEquals("Order with ID 1 already exists.", exception.getMessage());
@@ -74,7 +91,7 @@ public class OrderRepositoryTest {
     void givenExistingOrder_WhenDeleteOrder_ThenOrderIsDeleted() {
         repository.addOrder(order1);
         repository.deleteOrder(1);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
             repository.getOrder(1);
         });
         assertEquals("Order with ID 1 does not exist.", exception.getMessage());
@@ -82,7 +99,7 @@ public class OrderRepositoryTest {
 
     @Test
     void givenNonExistingOrder_WhenDeleteOrder_ThenThrowsException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
             repository.deleteOrder(1);
         });
         assertEquals("Order with ID 1 does not exist.", exception.getMessage());
@@ -97,7 +114,7 @@ public class OrderRepositoryTest {
 
     @Test
     void givenNonExistingOrder_WhenGetOrder_ThenThrowsException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
             repository.getOrder(1);
         });
         assertEquals("Order with ID 1 does not exist.", exception.getMessage());

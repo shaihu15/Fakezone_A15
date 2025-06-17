@@ -8,8 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
-
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -40,15 +43,27 @@ import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
+import com.fakezone.fakezone.FakezoneApplication;
 
-
+@SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+@Transactional
 public class PaymentProcessingTest {
 
     private SystemService systemService;
+    
+    @Autowired
     private IStoreRepository storeRepository;
+    
+    @Autowired
     private IUserRepository userRepository;
+    
+    @Autowired
     private IProductRepository productRepository;
+    
+    @Autowired
     private IOrderRepository orderRepository;
+    
     private IDelivery deliveryService;
     private IAuthenticator authenticatorService;
     private IPayment paymentService;
@@ -66,10 +81,7 @@ public class PaymentProcessingTest {
 
     @BeforeEach
     void setUp() {
-        storeRepository = new StoreRepository();
-        userRepository = new UserRepository();
-        productRepository = new ProductRepository();
-        orderRepository = new OrderRepository();
+        // Repositories are now injected by Spring
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
 
