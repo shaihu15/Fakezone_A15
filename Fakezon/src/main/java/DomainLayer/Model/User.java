@@ -120,6 +120,9 @@ public class User {
     public void removeFromBasket(int storeId, int productId){
         cart.removeItem(storeId, productId);
     }
+    public void addToBasketQuantity(int storeId, int productId, int quantity) {
+        cart.addProductQuantity(storeId, productId, quantity);
+    }
 
     // JPA lifecycle methods
     @PostLoad
