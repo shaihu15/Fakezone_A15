@@ -139,8 +139,11 @@ public class Store implements IStore {
     
     @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    @Transient
     private HashMap<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited 
+    @Transient
     private final ReentrantLock offersLock = new ReentrantLock();
+    @Transient
     private HashMap<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept
 
     // Default constructor for JPA
@@ -196,6 +199,8 @@ public class Store implements IStore {
         this.messagesFromStore = new Stack<>();
         this.pendingManagersPerms = new HashMap<>();
         this.pendingManagers = new HashMap<>();
+        this.offersOnProducts = new HashMap<>();
+        this.pendingOffers = new HashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         this.publisher = null; // Will be injected/set when needed
         if (storeFounderID != 0) {
