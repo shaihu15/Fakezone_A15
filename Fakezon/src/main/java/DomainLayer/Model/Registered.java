@@ -76,6 +76,7 @@ public class Registered extends User {
         messagesFromStore = new ConcurrentHashMap<>();
         assignmentMessages = new ConcurrentHashMap<>();
         offersMessages = new ConcurrentHashMap<>();
+        auctionEndedMessages = new ConcurrentHashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -93,6 +94,7 @@ public class Registered extends User {
         messagesFromStore = new HashMap<>();
         assignmentMessages = new HashMap<>();
         offersMessages = new HashMap<>();
+        auctionEndedMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -101,8 +103,8 @@ public class Registered extends User {
         this.messagesFromUser = new Stack<>();
         this.messagesFromStore = new HashMap<>();
         this.assignmentMessages = new HashMap<>();
-        this.auctionEndedMessages = new HashMap<>();
         this.offersMessages = new HashMap<>();
+        this.auctionEndedMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -112,24 +114,6 @@ public class Registered extends User {
 
     public boolean checkPassword(String rawPassword) {
         return BCrypt.checkpw(rawPassword, this.password);
-    }
-
-    public int addOfferMessage(StoreMsg message) {
-        int msgId = MsgIdCounter.getAndIncrement();
-        this.offersMessages.put(msgId, message);
-        return msgId;
-    }
-
-    public Map<Integer, StoreMsg> getOffersMessages() {
-        return offersMessages;
-    }
-
-    public Map<Integer, StoreMsg> getAllMessages() {
-        Map<Integer, StoreMsg> allMessages = new HashMap<>();
-        allMessages.putAll(getMessagesFromStore());
-        allMessages.putAll(getAssignmentMessages());
-        allMessages.putAll(getOffersMessages());
-        return allMessages;
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
@@ -152,6 +136,12 @@ public class Registered extends User {
         return msgId;
     }
 
+    public int addOfferMessage(StoreMsg message) {
+        int msgId = MsgIdCounter.getAndIncrement();
+        this.offersMessages.put(msgId, message);
+        return msgId;
+    }
+
     public List<StoreMsg> getMessagesFromUser() {
         return messagesFromUser;
     }
@@ -161,6 +151,16 @@ public class Registered extends User {
     }
     public Map<Integer, StoreMsg> getAssignmentMessages() {
         return assignmentMessages;
+    }
+    public Map<Integer, StoreMsg> getOffersMessages() {
+        return offersMessages;
+    }
+    public Map<Integer, StoreMsg> getAllMessages() {
+        Map<Integer, StoreMsg> allMessages = new HashMap<>();
+        allMessages.putAll(getMessagesFromStore());
+        allMessages.putAll(getAssignmentMessages());
+        allMessages.putAll(getOffersMessages());
+        return allMessages;
     }
 
     @Override
@@ -258,30 +258,10 @@ public class Registered extends User {
         return true;
     }
 
-    // JPA lifecycle methods
-    @PostLoad
-    private void initializeTransientFields() {
-        if (this.roles == null) {
-            this.roles = new HashMap<>();
-        }
-        if (this.messagesFromUser == null) {
-            this.messagesFromUser = new Stack<>();
-        }
-        if (this.messagesFromStore == null) {
-            this.messagesFromStore = new HashMap<>();
-        }
-        if (this.assignmentMessages == null) {
-            this.assignmentMessages = new HashMap<>();
-        }
-        if (this.auctionEndedMessages == null) {
-            this.auctionEndedMessages = new HashMap<>();
-        }
-        if (this.offersMessages == null) {
-            this.offersMessages = new HashMap<>();
-        }
-        if (this.productsPurchase == null) {
-            this.productsPurchase = new HashMap<>();
-        }
+    public int addAuctionEndedMessage(StoreMsg message) {
+        int msgId = MsgIdCounter.getAndIncrement();
+        this.auctionEndedMessages.put(msgId, message);
+        return msgId;
     }
 
     public Map<Integer, StoreMsg> getAuctionEndedMessages() {

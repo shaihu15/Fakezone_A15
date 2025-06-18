@@ -139,7 +139,7 @@ public class Store implements IStore {
     
     @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private HashMap<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submitted
+    private HashMap<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited 
     private final ReentrantLock offersLock = new ReentrantLock();
     private HashMap<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept
 
@@ -153,10 +153,7 @@ public class Store implements IStore {
         this.name = name;
         this.storeID = idCounter.incrementAndGet();
         this.publisher = publisher;
-        this.pendingManagersPerms = new HashMap<>();
-        this.pendingManagers = new HashMap<>();
-        this.offersOnProducts = new HashMap<>();
-        this.pendingOffers = new HashMap<>();
+        initializeCollections();
     }
 
     /**
@@ -204,8 +201,6 @@ public class Store implements IStore {
         if (storeFounderID != 0) {
             this.rolesTree = new Tree(storeFounderID);
         }
-        this.offersOnProducts = new HashMap<>();
-        this.pendingOffers = new HashMap<>();
     }
 
     @Override

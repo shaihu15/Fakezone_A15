@@ -116,7 +116,7 @@ public class UserService implements IUserService {
                 throw new IllegalArgumentException("User not found");
             }
             Registered user = optionalUser.get();
-            if (user.getPassword().equals(password)) {    
+            if (user.checkPassword(password)) {    
                 logger.info("User password match " + email);
             } else {
                 logger.error("Login failed: Incorrect password for user with email {}", email);
@@ -393,43 +393,25 @@ public class UserService implements IUserService {
         }
     }
 
-    @Override
-    public Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID) {
-        Optional<Registered> Registered = userRepository.findById(userID);
-        if (Registered.isPresent()) {
-            try {
-                Map<Integer, StoreMsg> messages = Registered.get().getAuctionEndedMessages();
-                if (messages == null || messages.isEmpty()) {
-                    logger.info("No auction ended messages found for user: " + userID);
-                    return new Response<>(null, "No auction ended messages found", true, null, null);
-                }
-                logger.info("Auction ended messages retrieved for user: " + userID);
-                return new Response<>(messages, "Auction ended messages retrieved successfully", true, null, null);
-            } catch (Exception e) {
-                logger.error("Error during get auction ended messages: " + e.getMessage());
-                return new Response<>(null, "Error during get auction ended messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
-            }
-        } else {
-            logger.error("User not found: " + userID);
-            return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
-        }
-    }
 
     @Override
     public Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID) {
         Optional<Registered> Registered = userRepository.findById(userID);
         if (Registered.isPresent()) {
+
             try {
-                Map<Integer, StoreMsg> messages = Registered.get().getOffersMessages();
-                if (messages == null || messages.isEmpty()) {
-                    logger.info("No offer messages found for user: " + userID);
-                    return new Response<>(null, "No offer messages found", true, null, null);
+               Map<Integer, StoreMsg> messages = Registered.get().getOffersMessages();
+                if (messages.isEmpty()) {
+                    logger.info("No messages found for user: " + userID);
+                    return new Response<>(null, "No messages found", true, null, null);
                 }
-                logger.info("Offer messages retrieved for user: " + userID);
-                return new Response<>(messages, "Offer messages retrieved successfully", true, null, null);
+                logger.info("Messages retrieved for user: " + userID);
+                return new Response<>(messages, "Messages retrieved successfully", true, null, null);
             } catch (Exception e) {
-                logger.error("Error during get offer messages: " + e.getMessage());
-                return new Response<>(null, "Error during get offer messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+                // Handle exception if needed
+                System.out.println("Error during get messages: " + e.getMessage());
+                logger.error("Error during get messages: " + e.getMessage());
+                return new Response<>(null, "Error during get messages: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
             }
         } else {
             logger.error("User not found: " + userID);
