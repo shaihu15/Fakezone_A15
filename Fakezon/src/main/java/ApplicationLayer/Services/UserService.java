@@ -115,7 +115,7 @@ public class UserService implements IUserService {
                 throw new IllegalArgumentException("User not found");
             }
             Registered user = optionalUser.get();
-            if (user.getPassword().equals(password)) {    
+            if (user.checkPassword(password)) {    
                 logger.info("User password match " + email);
             } else {
                 logger.error("Login failed: Incorrect password for user with email {}", email);
