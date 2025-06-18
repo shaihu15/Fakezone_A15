@@ -121,6 +121,11 @@ public class User {
         cart.removeItem(storeId, productId);
     }
 
+    // Include any new methods from main branch
+    public void addToBasketQuantity(int storeId, int productId, int quantity) {
+        cart.addProduct(storeId, productId, quantity);
+    }
+
     // JPA lifecycle methods
     @PostLoad
     private void initializeCart() {

@@ -232,13 +232,13 @@ public class UserEventListenerTest {
 
         // Assert
         ArgumentCaptor<StoreMsg> messageCaptor1 = ArgumentCaptor.forClass(StoreMsg.class);
-        verify(mockRegisteredUser1).addAuctionEndedMessage(messageCaptor1.capture());
+        verify(mockRegisteredUser1).addMessageFromStore(messageCaptor1.capture());
         StoreMsg capturedMessage1 = messageCaptor1.getValue();
         assertEquals(storeId, capturedMessage1.getStoreId());
         assertEquals("Auction ended for product " + productId + ". Highest bid was " + currentHighestBid +
-                " by user " + userIdHighestBid + ". Please approve or decline this bid.", capturedMessage1.getMessage());
+                " by user " + userIdHighestBid + ".", capturedMessage1.getMessage());
 
-        verify(mockRegisteredUser2).addAuctionEndedMessage(any());
+        verify(mockRegisteredUser2).addMessageFromStore(any());
     }
 
     @Test
@@ -302,7 +302,7 @@ public class UserEventListenerTest {
         assertEquals(storeId, capturedMessage.getStoreId());
         assertEquals("We are pleased to inform you that your bid has won the auction on product: " + productId + ", at a price of: " + currentHighestBid + "! The product has been added to your shopping cart, please purchase it as soon as possible.", capturedMessage.getMessage());
 
-        verify(mockRegisteredUser).addToBasket(storeId, productId, 1);
+        verify(mockRegisteredUser).addToBasketQuantity(storeId, productId, 1);
     }
 
     @Test
@@ -326,7 +326,7 @@ public class UserEventListenerTest {
 
         // Assert
         verify(mockRegisteredUser).addMessageFromStore(any());
-        verify(mockRegisteredUser).addToBasket(anyInt(), anyInt(), anyInt());
+        verify(mockRegisteredUser).addToBasketQuantity(anyInt(), anyInt(), anyInt());
     }
 
     @Test
@@ -400,7 +400,7 @@ public class UserEventListenerTest {
         StoreMsg capturedMessage = messageCaptor.getValue();
 
         assertEquals(storeId, capturedMessage.getStoreId());
-        assertEquals("We regret to inform you that the offer for product: " + productId + " was not approved by the store.", capturedMessage.getMessage());
+        assertEquals("We regret to inform you that the offer for product: " + productId + " was declined because product is out of store", capturedMessage.getMessage());
     }
 
     @Test

@@ -125,7 +125,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         updateManagedStores(userId, tokenValue);
         refreshPendingAssignments(userId, tokenValue); // This already clears its content
         updateMsgFromStores(userId, tokenValue);
-        updateAuctionMsgs(userId, tokenValue);
+       // updateAuctionMsgs(userId, tokenValue);
     }
 
     private void updateOwnedStores(int userId, String token) {
@@ -551,96 +551,75 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         }
     }
 
-    private void updateAuctionMsgs(int userId, String token){
-        auctionMessagesCard.removeAll();
-        auctionMessagesCard.add(new H2("Auction Messages"));
-        String url = backendUrl + "user/getAuctionEndedMessages/" + userId;
-        HttpHeaders header = new HttpHeaders();
-        header.add("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(header);
-        ResponseEntity<Response<Map<Integer, StoreMsg>>> apiResponse = restTemplate.exchange(
-            url, 
-            HttpMethod.GET, 
-            entity, 
-            new ParameterizedTypeReference<Response<Map<Integer, StoreMsg>>>() {});
-        Response<Map<Integer, StoreMsg>> response = apiResponse.getBody();
-        if(response.isSuccess()){
-            if(response.getData() == null || response.getData().isEmpty()){
-                auctionMessagesCard.add(new Span("No Auction Messages"));
-            }
-            else{
-                Map<Integer, StoreMsg> msgs  = response.getData();
-                for (Map.Entry<Integer, StoreMsg> entry : msgs.entrySet()) {
-                    Integer storeId = entry.getValue().getStoreId();
-                    String messageText = entry.getValue().getMessage();
+    // private void updateAuctionMsgs(int userId, String token){
+    //     auctionMessagesCard.removeAll();
+    //     auctionMessagesCard.add(new H2("Auction Messages"));
+    //     String url = backendUrl + "user/getAuctionEndedMessages/" + userId;
+    //     HttpHeaders header = new HttpHeaders();
+    //     header.add("Authorization", token);
+    //     HttpEntity<Void> entity = new HttpEntity<>(header);
+    //     ResponseEntity<Response<Map<Integer, StoreMsg>>> apiResponse = restTemplate.exchange(
+    //         url, 
+    //         HttpMethod.GET, 
+    //         entity, 
+    //         new ParameterizedTypeReference<Response<Map<Integer, StoreMsg>>>() {});
+    //     Response<Map<Integer, StoreMsg>> response = apiResponse.getBody();
+    //     if(response.isSuccess()){
+    //         if(response.getData() == null || response.getData().isEmpty()){
+    //             auctionMessagesCard.add(new Span("No Auction Messages"));
+    //         }
+    //         else{
+    //             Map<Integer, StoreMsg> msgs  = response.getData();
+    //             for (Map.Entry<Integer, StoreMsg> entry : msgs.entrySet()) {
+    //                 Integer storeId = entry.getValue().getStoreId();
+    //                 String messageText = entry.getValue().getMessage();
 
-                    // Fetch store info
-                    StoreDTO store = getStoreDTO(storeId, token);
-                    String storeName = store.getName();
+    //                 // Fetch store info
+    //                 StoreDTO store = getStoreDTO(storeId, token);
+    //                 String storeName = store.getName();
 
-                    // ─── Build a “message card” ─────────────────────────────
-                    // Container for one message
-                    VerticalLayout messageCard = new VerticalLayout();
-                    messageCard.getStyle()
-                            .set("border", "1px solid #ccc")
-                            .set("border-radius", "4px")
-                            .set("padding", "0.5em")
-                            .set("margin-bottom", "0.5em")
-                            .set("width", "100%");
+    //                 // ─── Build a “message card” ─────────────────────────────
+    //                 // Container for one message
+    //                 VerticalLayout messageCard = new VerticalLayout();
+    //                 messageCard.getStyle()
+    //                         .set("border", "1px solid #ccc")
+    //                         .set("border-radius", "4px")
+    //                         .set("padding", "0.5em")
+    //                         .set("margin-bottom", "0.5em")
+    //                         .set("width", "100%");
 
-                    // Store name (bold)
-                    H4 nameHeader = new H4(storeName);
-                    nameHeader.getStyle().set("margin", "0");
+    //                 // Store name (bold)
+    //                 H4 nameHeader = new H4(storeName);
+    //                 nameHeader.getStyle().set("margin", "0");
 
-                    // The message body
-                    Span body = new Span(messageText);
-                    body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
+    //                 // The message body
+    //                 Span body = new Span(messageText);
+    //                 body.getStyle().set("white-space", "pre-wrap"); // preserve line breaks if any
                     
-                    int productId = entry.getValue().getProductId();
-                    // Reply button stub
-                    Button accButton = new Button("Accept Bid");
-                    accButton.addClickListener(evt -> {
-                        sendResponseForAuction(storeId, userId, productId, token, true, entry.getKey());
-                    });
+    //                 int productId = entry.getValue().getProductId();
+    //                 // Reply button stub
+    //                 Button accButton = new Button("Accept Bid");
+    //                 accButton.addClickListener(evt -> {
+    //                     sendResponseForAuction(storeId, userId, productId, token, true, entry.getKey());
+    //                 });
 
-                    Button decButton = new Button("Decline Bid");
-                    decButton.addClickListener(evt -> {
-                        sendResponseForAuction(userId, storeId, productId, token, false, entry.getKey());
-                    });
+    //                 Button decButton = new Button("Decline Bid");
+    //                 decButton.addClickListener(evt -> {
+    //                     sendResponseForAuction(userId, storeId, productId, token, false, entry.getKey());
+    //                 });
 
-                    // Assemble card
-                    messageCard.add(nameHeader, body, accButton, decButton);
+    //                 // Assemble card
+    //                 messageCard.add(nameHeader, body, accButton, decButton);
 
-                    // Add to the main container
-                    auctionMessagesCard.add(messageCard);
-                }
-            }
-        }
-        else{
-            Notification.show(response.getMessage());
-        }
-    }
-
-    private void sendResponseForAuction(int storeId, int userId, int productId, String token, boolean answer, int msgId){
-        String url = backendUrl + "store/sendResponseForAuctionByOwner/" + storeId + "/" + userId + "/" + productId + "?accept=" + answer;
-        HttpHeaders header = new HttpHeaders();
-        header.add("Authorization", token);
-        HttpEntity<Void> entity = new HttpEntity<>(header);
-        ResponseEntity<Response<Void>> apiResponse = restTemplate.exchange(
-            url, 
-            HttpMethod.POST, 
-            entity, 
-            new ParameterizedTypeReference<Response<Void>>() {});
-        Response<Void> response = apiResponse.getBody();
-        if(response.isSuccess()){
-            Notification.show("Message Sent Successfully");
-            removeMessage(userId, msgId, token);
-            updateAuctionMsgs(userId, token);
-        }
-        else{
-            Notification.show(response.getMessage());
-        }   
-    }
+    //                 // Add to the main container
+    //                 auctionMessagesCard.add(messageCard);
+    //             }
+    //         }
+    //     }
+    //     else{
+    //         Notification.show(response.getMessage());
+    //     }
+    // }
 
     private void removeMessage(int userId, int msgId, String token){
         String url = backendUrl + "user/removeUserMessageById/" + userId + "/" + msgId;

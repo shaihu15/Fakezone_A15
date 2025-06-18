@@ -561,33 +561,6 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
         }
     }
 
-    @PostMapping("/sendResponseForAuctionByOwner/{storeId}/{requesterId}/{productId}")
-    public ResponseEntity<Response<String>> sendResponseForAuctionByOwner(@PathVariable("storeId") int storeId,
-                                                                   @PathVariable("requesterId") int requesterId,
-                                                                   @PathVariable("productId") int productId,
-                                                                   @RequestParam("accept") boolean accept,
-                                                                   @RequestHeader("Authorization") String token) {
-        try {
-            logger.info("Received request to send response for auction product {} in store {} by user {} with token {}", productId, storeId, requesterId, token);
-            if (!authenticatorAdapter.isValid(token)) {
-                Response<String> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
-                return ResponseEntity.status(401).body(response);
-            }
-            Response<String> response = systemService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
-            if (response.isSuccess()) {
-                return ResponseEntity.ok(response);
-            }
-            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
-                return ResponseEntity.status(500).body(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (Exception e) {
-            logger.error("Error in sendResponseForAuctionByOwner: {}", e.getMessage());
-            Response<String> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
-            return ResponseEntity.status(500).body(response);
-        }
-    }
-
     @GetMapping("/getAllStoreOrders/{storeId}/{userId}")
     public ResponseEntity<Response<List<OrderDTO>>> getAllStoreOrders(@PathVariable("storeId") int storeId,
                                                                @PathVariable("userId") int userId,
@@ -857,6 +830,34 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
             logger.error("Error in StoreController: {}", e.getMessage());
             Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
                     ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    @PostMapping("/placeOfferOnStoreProduct/{storeId}/{productId}/{userId}")
+    public ResponseEntity<Response<Void>> placeOfferOnStoreProduct(@PathVariable("storeId") int storeId,
+                                                            @PathVariable("userId") int userId,
+                                                            @PathVariable("productId") int productId,
+                                                            @RequestParam("offerAmount") double offerAmount,
+                                                            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to placeOfferOnStoreProduct '{}' to store {} by user {} with amount {}", productId, storeId, userId, offerAmount);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.placeOfferOnStoreProduct(storeId, userId, productId, offerAmount);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }
     }

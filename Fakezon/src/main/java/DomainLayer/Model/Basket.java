@@ -41,4 +41,13 @@ public class Basket {
         return productQuantities.containsKey(productId);
     }
 
+    public void addProductQuantity(int productId, int quantity) {
+        if(!productQuantities.containsKey(productId))
+            addProduct(productId, quantity);
+        else{
+            int oldQuantity = productQuantities.get(productId);
+            productQuantities.put(productId, oldQuantity + quantity);
+        }
+    }
+
 }

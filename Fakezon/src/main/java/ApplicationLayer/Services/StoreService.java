@@ -30,7 +30,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
-
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 
 import DomainLayer.Model.Registered;
@@ -517,23 +517,6 @@ public class StoreService implements IStoreService {
         return store.canViewOrders(userId);
     }
 
-    @Override
-    public void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
-        Store store = storeRepository.findById(storeId);
-        if (store == null) {
-            logger.error("sendResponseForAuctionByOwner - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
-        }
-        try {
-            store.receivedResponseForAuctionByOwner(requesterId, productId, accept);
-            logger.info("Response for auction sent by owner: " + requesterId + " for product: " + productId
-                    + " in store: " + storeId);
-        } catch (IllegalArgumentException e) {
-            logger.error("sendResponseForAuctionByOwner - Product not found: " + productId);
-            throw new IllegalArgumentException("Product not found");
-        }
-}
-
     public boolean acceptAssignment(int storeId, int userId){
         Store store = storeRepository.findById(storeId);
         boolean isowner;
@@ -907,6 +890,76 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.openStore(userId);
+    }
+
+    @Override
+    public void placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("placeOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.placeOfferOnStoreProduct(userId, productId, offerAmount);
+    }
+
+    @Override
+    public void acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("acceptOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.acceptOfferOnStoreProduct(ownerId, userId, productId);
+    }
+
+    @Override
+    public void declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("declineOfferOnStoreProduct - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.declineOfferOnStoreProduct(ownerId, userId, productId);
+    }
+
+    @Override
+    public void counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("counterOffer - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.counterOffer(ownerId, userId, productId, offerAmount);
+    }
+
+    @Override
+    public void acceptCounterOffer(int storeId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("acceptCounterOffer - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.acceptCounterOffer(userId, productId);
+    }
+
+    @Override
+    public void declineCounterOffer(int storeId, int userId, int productId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("declineCounterOffer - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        store.declineCounterOffer(userId, productId);
+    }
+
+    @Override
+    public List<Offer> getUserOffers(int storeId, int userId){
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("getUserOffers - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        return store.getUserOffers(userId);
     }
 
 }

@@ -225,7 +225,7 @@ public class UserController {
                 Response<Map<Integer, StoreMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
             }
-            Response<Map<Integer, StoreMsg>> response = systemService.getAuctionEndedMessages(userId);
+            Response<Map<Integer, StoreMsg>> response = systemService.getUserOfferMessages(userId);
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }

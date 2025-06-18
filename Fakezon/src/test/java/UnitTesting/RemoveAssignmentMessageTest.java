@@ -30,7 +30,7 @@ public class RemoveAssignmentMessageTest {
     @Test
     void testRemoveAssignmentMessage_RemovesExisting() {
         // Add a message and ensure it's present
-        int msgId = registered.addAssignmentMessage(new StoreMsg(10, -1, "Test message"));
+        int msgId = registered.addAssignmentMessage(new StoreMsg(10, -1, "Test message", null));
         Map<Integer, StoreMsg> before = registered.getAssignmentMessages();
         assertTrue(before.containsKey(msgId), "Assignment message should be present before removal");
 
@@ -45,8 +45,8 @@ public class RemoveAssignmentMessageTest {
     @Test
     void testRemoveAssignmentMessage_MultipleKeepsOthers() {
         // Add two messages
-        int msgId1 = registered.addAssignmentMessage(new StoreMsg(1, -1, "first"));
-        int msgId2 = registered.addAssignmentMessage(new StoreMsg(2, -1, "second"));
+        int msgId1 = registered.addAssignmentMessage(new StoreMsg(1, -1, "first", null));
+        int msgId2 = registered.addAssignmentMessage(new StoreMsg(2, -1, "second", null));
 
         // Remove one
         registered.removeMsgById(msgId1);
@@ -61,7 +61,7 @@ public class RemoveAssignmentMessageTest {
     @Test
     void testRemoveAssignmentMessage_NonExisting_NoChange() {
         // Add a message for storeId 3
-        int msgId = registered.addAssignmentMessage(new StoreMsg(3, -1, "only-message"));
+        int msgId = registered.addAssignmentMessage(new StoreMsg(3, -1, "only-message", null));
 
         // Attempt to remove a non-existing storeId
         registered.removeMsgById(msgId+1);

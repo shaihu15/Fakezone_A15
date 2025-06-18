@@ -92,7 +92,7 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
         Response<String> responsePurchaseCart = systemService.purchaseCart
                     (registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertTrue(responsePurchaseCart.isSuccess());
@@ -164,7 +164,7 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
         Response<String> responsePurchaseCart2 = systemService.purchaseCart(
                 registeredId4, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                 "deliveryMethod", "1234567890123456", "cardHolder",
-                "12/25", "123", "123 Main St, City, Country", "Recipient",
+                "12/25", "123", "123 Main St* City* Country* 0000", "Recipient",
                 "Package details");
         assertTrue(responsePurchaseCart2.isSuccess());
         assertEquals("Cart purchased successfully", responsePurchaseCart2.getMessage());

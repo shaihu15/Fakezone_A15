@@ -18,6 +18,7 @@ import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Basket;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.PurchasePolicy;
 import DomainLayer.Model.StoreProduct;
@@ -122,26 +123,40 @@ public interface IStore {
 
     List<ProductRating> getStoreProductAllRatings(int productId);
 
-    public void addSimpleDiscountWithProductsScope(int userID, List<Integer> productIDs, double percentage);
+    void addSimpleDiscountWithProductsScope(int userID, List<Integer> productIDs, double percentage);
 
-    public void addSimpleDiscountWithStoreScope(int userID, double percentage);
+    void addSimpleDiscountWithStoreScope(int userID, double percentage);
 
-    public void addConditionDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addConditionDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addConditionDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addConditionDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addAndDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addAndDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addAndDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addAndDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addOrDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addOrDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addOrDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addOrDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addXorDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
+    void addXorDiscountWithProductsScope(int userID, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage);
 
-    public void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
+    void addXorDiscountWithStoreScope(int userID, List<Predicate<Cart>> conditions, double percentage);
 
     List<StoreManagerPermission> isManagerAndGetPerms(int userId);
+
+    void placeOfferOnStoreProduct(int userId, int productId, double offerAmount);
+
+    void acceptOfferOnStoreProduct(int ownerId, int userId, int productId);
+
+    void declineOfferOnStoreProduct(int ownerId, int userId, int productId);
+
+    void counterOffer(int ownerId, int userId, int productId, double offerAmount);
+
+    void acceptCounterOffer(int userId, int productId);
+
+    void declineCounterOffer(int userId, int productId);
+
+    List<Offer> getUserOffers(int userId);
 
 }

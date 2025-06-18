@@ -47,6 +47,7 @@ import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
@@ -906,10 +907,10 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID) {
+    public Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
-                return this.userService.getAuctionEndedMessages(userID);
+                return this.userService.getUserOfferMessages(userID);
             } else {
                 logger.error("System Service - User is not logged in: " + userID);
                 return new Response<Map<Integer, StoreMsg>>(null, "User is not logged in", false,
@@ -1055,25 +1056,6 @@ public class SystemService implements ISystemService {
     }
     return productIds;
 }
-
-    @Override
-    public Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept) {
-        try {
-            if (this.userService.isUserLoggedIn(requesterId)) {
-                this.storeService.sendResponseForAuctionByOwner(storeId, requesterId, productId, accept);
-                logger.info("System Service - User sent response for auction: " + productId + " in store: " + storeId
-                        + " by user: " + requesterId + " with accept: " + accept);
-                return new Response<>("Response sent successfully", "Response sent successfully", true, null, null);
-            } else {
-                logger.error("System Service - User is not logged in: " + requesterId);
-                return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
-            }
-        } catch (Exception e) {
-            logger.error("System Service - Error during sending response for auction: " + e.getMessage());
-            return new Response<>(null, "Error during sending response for auction: " + e.getMessage(), false,
-                    ErrorType.INTERNAL_ERROR, null);
-        }
-    }
 
     @Override
     public Response<List<StoreProductDTO>> getTopRatedProducts(int limit) {
@@ -2334,5 +2316,107 @@ public class SystemService implements ISystemService {
         }
     }
 
+    @Override
+    public Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
+        try{
+            logger.info("User " + userId + " Placing offer on product " + productId + " in store " + storeId + " amount " + offerAmount);
+            if(!userService.isUserRegistered(userId)){
+                logger.error("placeOfferOnStoreProduct FAIL - user is guest");
+                return new Response<>(null, "Only Registered Users May Place Offers", false, ErrorType.BAD_REQUEST, null);
+            }
+            storeService.placeOfferOnStoreProduct(storeId, userId, productId, offerAmount);
+            logger.info("User " + userId + " successfully placed offer");
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("placeOfferOnStoreProduct FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
 
+    @Override
+    public Response<Void> acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        try{
+            logger.info("Owner " + ownerId + " accepting offer on product " + productId + " in store " + storeId + " from user " + userId);
+            storeService.acceptOfferOnStoreProduct(storeId, ownerId, userId, productId);
+            logger.info("Owner " + ownerId + " successfully accepted offer on product " + productId + " from user " + userId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("acceptOfferOnStoreProduct FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override
+    public Response<Void> declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
+        try{
+            logger.info("Owner " + ownerId + " declineing offer on product " + productId + " in store " + storeId + " from user " + userId);
+            storeService.declineOfferOnStoreProduct(storeId, ownerId, userId, productId);
+            logger.info("Owner " + ownerId + " successfully declined offer on product " + productId + " from user " + userId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("declineOfferOnStoreProduct FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override    
+    public Response<Void> counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount){
+        try{
+            logger.info("Owner " + ownerId + " trying to submit a counter offer to user " + userId + " on product " + productId + " in store " + storeId);
+            storeService.counterOffer(storeId, ownerId, userId, productId, offerAmount);
+            logger.info("Owner " + ownerId + " successfully submited a counter offer to user " + userId + " on product " + productId + " in store " + storeId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("counterOffer FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override    
+    public Response<Void> acceptCounterOffer(int storeId, int userId, int productId){
+        try{
+            logger.info("user " + userId + " trying to accept counter offer on product " + productId + " in store " + storeId);
+            storeService.acceptCounterOffer(storeId, userId, productId);
+            logger.info("user " + userId + " successfully accepted counter offer on product " + productId + " in store " + storeId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("acceptCounterOffer FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    @Override    
+    public Response<Void> declineCounterOffer(int storeId, int userId, int productId){
+        try{
+            logger.info("user " + userId + " trying to decline counter offer on product " + productId + " in store " + storeId);
+            storeService.declineCounterOffer(storeId, userId, productId);
+            logger.info("user " + userId + " successfully declined counter offer on product " + productId + " in store " + storeId);
+            return new Response<>(null, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("declineCounterOffer FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+
+    /**
+     * **********DO NOT USE - JUST FOR TESTS PURPOSES**********
+     **/
+    @Override
+    public Response<List<Offer>> getUserOffers(int storeId, int userId){
+        try{
+            logger.info("fetching user " + userId + " offers from store " + storeId);
+            List<Offer> offers = storeService.getUserOffers(storeId, userId);
+            return new Response<>(offers, null, true, null, null);
+        }
+        catch(Exception e){
+            logger.error("getUserOffers FAIL - " + e.getMessage());
+            return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
 }

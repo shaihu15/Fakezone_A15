@@ -91,7 +91,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<String> responsePurchaseCart = systemService.purchaseCart
                     (registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertTrue(responsePurchaseCart.isSuccess());
@@ -110,7 +110,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<String> responsePurchaseCart = systemService.purchaseCart
                     (guestId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertTrue(responsePurchaseCart.isSuccess());
@@ -125,7 +125,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<String> responsePurchaseCart = systemService.purchaseCart
                     (registeredId, testHelper.invalidCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertFalse(responsePurchaseCart.isSuccess());
@@ -144,7 +144,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<String> responsePurchaseCart = systemService.purchaseCart
                     (registeredId+10 , testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertFalse(responsePurchaseCart.isSuccess());
@@ -161,7 +161,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<String> responsePurchaseCart = systemService.purchaseCart
                     (registeredId , testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertFalse(responsePurchaseCart.isSuccess());
@@ -185,7 +185,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
          Response<String> responsePurchaseCart = systemService.purchaseCart
                     (registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertTrue(responsePurchaseCart.isSuccess());
@@ -197,7 +197,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Response<String> responsePurchaseCart3 = systemService.purchaseCart
                     (registeredId3 , testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                     "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St, City, Country","Recipient",
+                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
                      "Package details");
         
         assertFalse(responsePurchaseCart3.isSuccess());
@@ -267,13 +267,13 @@ public class Immediate_Purchase_of_Shopping_Cart {
         Callable<Response<String>> task1 = () -> systemService.purchaseCart(
             registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
             "deliveryMethod", "1234567890123456", "cardHolder", "12/25", "123",
-            "123 Main St, City, Country", "Recipient", "Package details"
+            "123 Main St* City* Country* 0000", "Recipient", "Package details"
         );
 
         Callable<Response<String>> task2 = () -> systemService.purchaseCart(
             registeredId3, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
             "deliveryMethod", "1234567890123456", "cardHolder", "12/25", "123",
-            "123 Main St, City, Country", "Recipient", "Package details"
+            "123 Main St* City* Country* 0000", "Recipient", "Package details"
         );
 
         /*The submit() method of the ExecutorService submits the task for execution on an available thread in the pool. It returns a Future object.
@@ -321,7 +321,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
             return systemService.purchaseCart(
                 registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
                 "deliveryMethod", "1234567890123456", "cardHolder", "12/25", "123",
-                "123 Main St, City, Country", "Recipient", "Package details"
+                "123 Main St* City* Country* 0000", "Recipient", "Package details"
             );
         };
 

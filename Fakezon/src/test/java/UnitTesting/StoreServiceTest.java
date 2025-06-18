@@ -302,25 +302,7 @@ class StoreServiceTest {
         assertDoesNotThrow(() -> storeService.addBidOnAuctionProductInStore(storeId, 1, 102, 55.0));
     }
 
-    @Test
-    void testSendResponseForAuctionByOwner_Success() {
-        int storeId = storeService.addStore(1, "AuctionStore4");
-        assertTrue(storeId > 0, "Store ID should be a positive number");
-        StoreProductDTO storeProductDTO = storeService.addProductToStore(storeId, 1, 104, "AuctionStore4", 50.0, 5,
-                PCategory.ELECTRONICS);
-        // Adding an auction product to the store
-        storeService.addAuctionProductToStore(storeId, 1, 104, 50.0, 1);
 
-        // Sending a response for the auction
-        assertDoesNotThrow(() -> storeService.sendResponseForAuctionByOwner(storeId, 1, 104, false));
-    }
-
-    @Test
-    void testSendResponseForAuctionByOwner_InvalidStoreId() {
-        int invalidStoreId = 999; // Assuming this store ID does not exist
-        assertThrows(IllegalArgumentException.class,
-                () -> storeService.sendResponseForAuctionByOwner(invalidStoreId, 1, 104, false));
-    }
 
     @Test
     void testGetAuctionProductsFromStore_Success() {
@@ -764,15 +746,6 @@ class StoreServiceTest {
         StoreService service = new StoreService(mockStoreRepository, publisher);
 
         assertThrows(IllegalArgumentException.class, () -> service.isValidPurchaseActionForUserInStore(storeId, userId,productId));
-    }
-    
-    @Test
-    void testSendResponseForAuctionByOwner_StoreNotFound_ShouldThrow() {
-        int storeId = 999, ownerId = 1, productId = 1, userId = 2;
-        boolean approved = true;
-        when(mockStoreRepository.findById(storeId)).thenReturn(null);
-        StoreService service = new StoreService(mockStoreRepository, publisher);
-        assertThrows(IllegalArgumentException.class, () -> service.sendResponseForAuctionByOwner(storeId, ownerId, productId, approved));
     }
     
     @Test

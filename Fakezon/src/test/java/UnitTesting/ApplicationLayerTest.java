@@ -158,8 +158,8 @@ public class ApplicationLayerTest {
 
         listener.handleAuctionEndedToOwnersEvent(event);
 
-        verify(user1, times(1)).addAuctionEndedMessage(any());
-        verify(user2).addAuctionEndedMessage(any());
+        verify(user1, times(1)).addMessageFromStore(any());
+        verify(user2).addMessageFromStore(any());
     }
 
     @Test
@@ -212,7 +212,7 @@ public class ApplicationLayerTest {
         listener.handleApprovedBidOnAuctionEvent(event);
 
         verify(user).addMessageFromStore(any());
-        verify(user).addToBasket(anyInt(), anyInt(), anyInt());
+        verify(user).addToBasketQuantity(anyInt(), anyInt(), anyInt());
     }
 
     @Test

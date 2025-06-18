@@ -12,7 +12,6 @@ public class AuctionProduct extends StoreProduct {
     private int MinutesToEnd;
     private int productID;
     private int userIDHighestBid;
-    private Map<Integer, Boolean> bidApprovedByOwners = new HashMap<>(); // userID -> approved
     private boolean isDone;
 
     public AuctionProduct(StoreProduct storeProduct, double basePrice, int MinutesToEnd) {
@@ -21,7 +20,6 @@ public class AuctionProduct extends StoreProduct {
         this.MinutesToEnd = MinutesToEnd;
         this.productID = storeProduct.getSproductID();
         this.userIDHighestBid = -1;// -1 means no bids yet
-        this.bidApprovedByOwners = new HashMap<>();
         this.isDone = false;
     }
 
@@ -49,24 +47,6 @@ public class AuctionProduct extends StoreProduct {
             userIDHighestBid = userID;
         }
         return prev;
-    }
-
-    public void setOwnersToApprove(List<Integer> owners) {
-        for (int ownerID : owners) {
-            bidApprovedByOwners.put(ownerID, false); // Initialize all owners as not approved
-        }
-    }
-
-    public void setBidApprovedByOwners(int userID, boolean approved) {
-        bidApprovedByOwners.put(userID, approved);
-    }
-    public boolean isApprovedByAllOwners() {
-        for (Map.Entry<Integer, Boolean> entry : bidApprovedByOwners.entrySet()) {
-            if (!entry.getValue()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     public StoreProductDTO toDTO(int storeId) {

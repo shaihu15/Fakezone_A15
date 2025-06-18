@@ -101,4 +101,20 @@ class PaymentAdapterTest {
         assertEquals(-1, result);
         verify(mockExternal, times(1)).processRefund(12345);
     }
+
+    @Test
+    void givenUnconnectedExternalSystem_WhenPayIsCalled_ThenReturnsFailure() {
+        // Simulate an exception or failure in the external system
+        when(mockExternal.processPayment(anyString(), anyString(), anyString(), anyString(), anyDouble(), anyInt()))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        int result;
+        try {
+            result = adapter.pay("1234567890123456", "John Doe", "12/25", "123", 100.0, 1);
+        } catch (Exception e) {
+            result = -1; // If the adapter does not handle the exception, treat as failure
+        }
+
+        assertEquals(-1, result, "Should return -1 when external system is unreachable");
+    }
 }

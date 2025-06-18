@@ -509,27 +509,6 @@ public class StoreTest {
             assertTrue(exception.getMessage().contains(expectedMessage), "Exception message should indicate missing product");
         }
 
-        @Test
-        void decrementProductsInStore_AuctionProductNotHighestBidder_ShouldThrowException() {
-            int productId = 102;
-            int userId = 1; // not the highest bidder
-            int highestBidderId = 3;
-            int basePrice = 1;
-            int quantity = 2;
-        
-            store.addStoreProduct(founderId,productId,"p", basePrice,1,PCategory.AUTOMOTIVE);
-            store.addAuctionProduct(founderId, productId, basePrice, quantity);
-            store.addBidOnAuctionProduct(highestBidderId, productId, basePrice*3);
-
-            Map<Integer, Integer> toBuy = new HashMap<>();
-            toBuy.put(productId, quantity);
-        
-            assertThrows(IllegalArgumentException.class, () -> {
-                store.decrementProductsInStore(userId, toBuy);
-            });
-        
-        }
-
     @Test
     void testStoreCtorWithId() {
         Store s = new Store("Another Store", founderId, publisher, 42);
@@ -594,15 +573,6 @@ public class StoreTest {
         int userId = 1;
         store.sendMessage(founderId, userId, "msg");
         assertFalse(store.getMessagesFromStore(founderId).isEmpty());
-    }
-
-    @Test
-    void testReceivedResponseForAuctionByOwner() {
-        int productId = 300;
-        store.addStoreProduct(founderId, productId, "Auction", 10.0, 5, PCategory.ELECTRONICS);
-        store.addAuctionProduct(founderId, productId, 10.0, 1);
-        store.receivedResponseForAuctionByOwner(founderId, productId, true);
-        // No exception means success
     }
 
     @Test
@@ -709,16 +679,6 @@ public class StoreTest {
         store.addAuctionProduct(founderId, productId, 10.0, 1);
         // Simulate auction end (should publish event)
         // This is private, so you can test via public API or use reflection if needed
-    }
-
-    @Test
-    void testHandleIfApprovedAuction() {
-        int productId = 800;
-        store.addStoreProduct(founderId, productId, "Auction", 10.0, 1, PCategory.ELECTRONICS);
-        store.addAuctionProduct(founderId, productId, 10.0, 1);
-        AuctionProduct auctionProduct = store.getAuctionProducts().get(0);
-        // Use reflection or test via receivedResponseForAuctionByOwner
-        store.receivedResponseForAuctionByOwner(founderId, productId, true);
     }
 
     @Test

@@ -16,6 +16,7 @@ import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.Cart;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.helpers.UserMsg;
 
@@ -90,8 +91,6 @@ public interface IStoreService {
 
   Map<Integer,Double> calcAmount(int user,Cart cart, LocalDate dobInput);
 
-  void sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
-
   boolean canViewOrders(int storeId, int userId);
 
   boolean acceptAssignment(int storeId, int userId);
@@ -138,5 +137,19 @@ public interface IStoreService {
   List<StoreManagerPermission> isStoreManager(int storeId, int userId); // returns null if not manager
 
   void openStore(int storeId, int userId);
+
+  void placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount);
+
+  void acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+  void declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+  void counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount);
+
+  void acceptCounterOffer(int storeId, int userId, int productId);
+
+  void declineCounterOffer(int storeId, int userId, int productId);
+
+  List<Offer> getUserOffers(int storeId, int userId);
 
 }

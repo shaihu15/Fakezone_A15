@@ -10,7 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -50,11 +53,10 @@ public class Registered extends User {
     
     @Transient
     private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
-    
     @Transient
     private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
-    
     @Transient
+    private Map<Integer, StoreMsg> offersMessages;//msgId -> StoreMsg
     protected static final AtomicInteger MsgIdCounter = new AtomicInteger(0);
 
     // Default constructor for JPA
@@ -66,10 +68,15 @@ public class Registered extends User {
     public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super(); // Use regular constructor with auto-generated ID
         this.email = email;
-        this.password = password;
+        setPassword(password);
+        this.roles = new HashMap<>();
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
-        initializeFields();
+        messagesFromUser = new Stack<>();
+        messagesFromStore = new ConcurrentHashMap<>();
+        assignmentMessages = new ConcurrentHashMap<>();
+        offersMessages = new ConcurrentHashMap<>();
+        this.productsPurchase = new HashMap<>();
     }
 
     /**
@@ -78,10 +85,15 @@ public class Registered extends User {
     public Registered(String email, String password, LocalDate dateOfBirth,String state, int userId) {
         super(userId);
         this.email = email;
-        this.password = password;
+        setPassword(password);
+        this.roles = new HashMap<>();
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
-        initializeFields();
+        messagesFromUser = new Stack<>();
+        messagesFromStore = new HashMap<>();
+        assignmentMessages = new HashMap<>();
+        offersMessages = new HashMap<>();
+        this.productsPurchase = new HashMap<>();
     }
 
     private void initializeFields() {
@@ -90,7 +102,34 @@ public class Registered extends User {
         this.messagesFromStore = new HashMap<>();
         this.assignmentMessages = new HashMap<>();
         this.auctionEndedMessages = new HashMap<>();
+        this.offersMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
+    }
+
+    public void setPassword(String rawPassword) {
+        this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+    }
+
+    public boolean checkPassword(String rawPassword) {
+        return BCrypt.checkpw(rawPassword, this.password);
+    }
+
+    public int addOfferMessage(StoreMsg message) {
+        int msgId = MsgIdCounter.getAndIncrement();
+        this.offersMessages.put(msgId, message);
+        return msgId;
+    }
+
+    public Map<Integer, StoreMsg> getOffersMessages() {
+        return offersMessages;
+    }
+
+    public Map<Integer, StoreMsg> getAllMessages() {
+        Map<Integer, StoreMsg> allMessages = new HashMap<>();
+        allMessages.putAll(getMessagesFromStore());
+        allMessages.putAll(getAssignmentMessages());
+        allMessages.putAll(getOffersMessages());
+        return allMessages;
     }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
@@ -103,19 +142,13 @@ public class Registered extends User {
     }
 
     public void sendMessageToStore(int storeID, String message) {
-        messagesFromUser.add(new StoreMsg(storeID,-1, message));
+        messagesFromUser.add(new StoreMsg(storeID,-1, message, null));
 
     }
 
     public int addMessageFromStore(StoreMsg message) {
         int msgId = MsgIdCounter.getAndIncrement();
         this.messagesFromStore.put(msgId, message);
-        return msgId;
-    }
-
-    public int addAuctionEndedMessage(StoreMsg message) {
-        int msgId = MsgIdCounter.getAndIncrement();
-        this.auctionEndedMessages.put(msgId, message);
         return msgId;
     }
 
@@ -128,16 +161,6 @@ public class Registered extends User {
     }
     public Map<Integer, StoreMsg> getAssignmentMessages() {
         return assignmentMessages;
-    }
-    public Map<Integer, StoreMsg> getAuctionEndedMessages() {
-        return auctionEndedMessages;
-    }
-    public Map<Integer, StoreMsg> getAllMessages() {
-        Map<Integer, StoreMsg> allMessages = new HashMap<>();
-        allMessages.putAll(getMessagesFromStore());
-        allMessages.putAll(getAssignmentMessages());
-        allMessages.putAll(getAuctionEndedMessages());
-        return allMessages;
     }
 
     @Override
@@ -190,7 +213,7 @@ public class Registered extends User {
     }
 
     public String getPassword() {
-        return password;
+        return "*********"; // Return masked password for security
     }
 
     @Override
@@ -226,12 +249,12 @@ public class Registered extends User {
     }
 
     public boolean removeMsgById(int msgId) {
-        if (!messagesFromStore.containsKey(msgId) && !assignmentMessages.containsKey(msgId) && !auctionEndedMessages.containsKey(msgId)) {
+        if (!messagesFromStore.containsKey(msgId) && !assignmentMessages.containsKey(msgId) && !offersMessages.containsKey(msgId)) {
             return false; // Message ID not found
         }
         messagesFromStore.remove(msgId);
         assignmentMessages.remove(msgId);
-        auctionEndedMessages.remove(msgId);
+        offersMessages.remove(msgId);
         return true;
     }
 
@@ -253,6 +276,16 @@ public class Registered extends User {
         if (this.auctionEndedMessages == null) {
             this.auctionEndedMessages = new HashMap<>();
         }
+        if (this.offersMessages == null) {
+            this.offersMessages = new HashMap<>();
+        }
+        if (this.productsPurchase == null) {
+            this.productsPurchase = new HashMap<>();
+        }
+    }
+
+    public Map<Integer, StoreMsg> getAuctionEndedMessages() {
+        return auctionEndedMessages;
     }
 
 }

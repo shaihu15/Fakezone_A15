@@ -27,6 +27,7 @@ import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Interfaces.IAuthenticator;
 import DomainLayer.Interfaces.IDelivery;
 import DomainLayer.Interfaces.IPayment;
+import DomainLayer.Model.Offer;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.UserMsg;
@@ -110,9 +111,7 @@ public interface ISystemService {
 
     Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID); // get all the messages of the user
 
-    Response<Map<Integer, StoreMsg>> getAuctionEndedMessages(int userID); // get all the messages of the user
-
-    Response<String> sendResponseForAuctionByOwner(int storeId, int requesterId, int productId, boolean accept);
+    Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID); // get all the messages of the user
 
     Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName, String description,
             double basePrice, int quantity, String category); // add product to store
@@ -248,5 +247,19 @@ public interface ISystemService {
     Response<Void> removeUserMessageById(int userId, int msgId);
 
     Response<Void> openStore(int storeId, int userId);
+
+    Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount);
+
+    Response<Void> acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+    Response<Void> declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId);
+
+    Response<Void> counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount);
+
+    Response<Void> acceptCounterOffer(int storeId, int userId, int productId);
+
+    Response<Void> declineCounterOffer(int storeId, int userId, int productId);
+    
+    Response<List<Offer>> getUserOffers(int storeId, int userId); //FOR TESTS ONLY
 
 }

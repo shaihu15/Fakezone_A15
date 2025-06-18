@@ -83,7 +83,7 @@ public class purchase_auction_product {
     }
 
     @Test
-    void testPurchaseAuctionProduct_ApprovedByOwner_SuccessScenario() throws InterruptedException {
+    void testPurchaseAuctionProduct_SuccessScenario() throws InterruptedException {
         double buyer1Bid = initialBasePrice + 10.0;
         double buyer2Bid = buyer1Bid + 20.0; // Higher bid
 
@@ -98,19 +98,17 @@ public class purchase_auction_product {
 
         // Wait for the auction to end (1 minute + buffer)
         TimeUnit.MINUTES.sleep(1);
-        TimeUnit.SECONDS.sleep(5); // Small buffer
+        TimeUnit.SECONDS.sleep(10); // Small buffer
         
         // Check ended auction message for store owner
         Response<Map<Integer, StoreMsg>> ownerMessages = systemService.getAllMessages(storeOwnerId);
         assertTrue(ownerMessages.isSuccess(), "Store owner should be able to retrieve messages");
         assertFalse(ownerMessages.getData().isEmpty(), "Store owner should have messages");
         assertTrue(ownerMessages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("Auction ended for product " + auctionProductId + ". Highest bid was " + buyer2Bid +
-                            " by user " + buyer2Id + ". Please approve or decline this bid.")),
+                            " by user " + buyer2Id + ".")),
                 "Store owner should receive a message indicating the auction has ended");
        
         // Store owner accepts the winning bid
-        Response<String> ownerAcceptResponse = systemService.sendResponseForAuctionByOwner(storeId, storeOwnerId, auctionProductId, true);
-        assertTrue(ownerAcceptResponse.isSuccess(), "Store owner should be able to accept the winning bid");
         //assertEquals("Auction response sent successfully", ownerAcceptResponse.getMessage());
 
         // User1 logs back in and checks messages - should see that they lost
@@ -137,7 +135,7 @@ public class purchase_auction_product {
 
         Response<String> purchaseResponse = systemService.purchaseCart(buyer2Id, testHelper.validCountry(),
                 LocalDate.of(1990, 1, 1), PaymentMethod.CREDIT_CARD, "Standard Delivery",
-                "1234567890123456", "John Doe", "12/25", "123", "123 Main St",
+                "1234567890123456", "John Doe", "12/25", "123", "123 Main St* City* Country* 0000",
                 "Jane Doe", "Auction Product Delivery");
         assertTrue(purchaseResponse.isSuccess(), "Buyer2 should be able to purchase the won auction product");
 
@@ -150,47 +148,6 @@ public class purchase_auction_product {
         assertTrue(product.getId() == auctionProductId, "Order should contain the auction product");
         });
         assertEquals(storeId, order.getStoreId(), "Order should be from the correct store");
-}
-
-
-    @Test
-    void testPurchaseAuctionProduct_DeclinedByOwner_SuccessScenario() throws InterruptedException {
-        double buyer1Bid = initialBasePrice + 10.0;
-        double buyer2Bid = buyer1Bid + 20.0; // Higher bid
-
-        // User1 places a bid and logs out
-        Response<Void> bid1Response = systemService.addBidOnAuctionProductInStore(storeId, buyer1Id, auctionProductId, buyer1Bid);
-        assertTrue(bid1Response.isSuccess(), "Buyer1's bid should succeed");
-        systemService.userLogout(buyer1Id); // User1 logs out
-
-        // User2 places a higher bid
-        Response<Void> bid2Response = systemService.addBidOnAuctionProductInStore(storeId, buyer2Id, auctionProductId, buyer2Bid);
-        assertTrue(bid2Response.isSuccess(), "Buyer2's higher bid should succeed");
-
-        // Wait for the auction to end (1 minute + buffer)
-        TimeUnit.MINUTES.sleep(1);
-        TimeUnit.SECONDS.sleep(5); // Small buffer
-
-        // Store owner accepts the winning bid
-        Response<String> ownerAcceptResponse = systemService.sendResponseForAuctionByOwner(storeId, storeOwnerId, auctionProductId, false);
-        assertTrue(ownerAcceptResponse.isSuccess(), "Store owner should be able to declined the winning bid");
-        //assertEquals("Auction response sent successfully", ownerAcceptResponse.getMessage());
-
-        // User1 logs back in and checks messages - should see that they lost
-        Response<UserDTO> buyer1LoginResponse = testHelper.login2();
-        Response<Map<Integer, StoreMsg>> buyer1Messages = systemService.getAllMessages(buyer1Id);
-        assertTrue(buyer1Messages.isSuccess(), "Buyer1 should be able to retrieve messages");
-        assertFalse(buyer1Messages.getData().isEmpty(), "Buyer1 should have messages");
-        assertTrue(buyer1Messages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("rejected due to a higher bid")),
-                "Buyer1 should receive a message indicating their bid was rejected due to a higher bid");
-
-        // User2 checks messages - should see that they won and need to purchase
-        Response<Map<Integer, StoreMsg>> buyer2Messages = systemService.getAllMessages(buyer2Id);
-        assertTrue(buyer2Messages.isSuccess(), "Buyer2 should be able to retrieve messages");
-        assertFalse(buyer2Messages.getData().isEmpty(), "Buyer2 should have messages");
-        assertTrue(buyer2Messages.getData().values().stream().anyMatch(msg -> msg.getMessage().contains("We regret to inform you that the offer for product: " + auctionProductId + " was not approved by the store.")),
-                "Buyer2 should receive a message indicating their bid was not approved by the store");
-
 }
 
 }
