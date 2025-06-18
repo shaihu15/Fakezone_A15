@@ -4,126 +4,125 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Product;
+import InfrastructureLayer.Repositories.ProductJpaRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 
 public class ProductRepositoryTest {
     private ProductRepository repository;
-    private IProduct product1;
-    private IProduct product2;
+    private Product product1;
+    private Product product2;
+
+    @Mock
+    private ProductJpaRepository productJpaRepository;
 
     @BeforeEach
     void setUp() {
-        repository = new ProductRepository(new HashMap<>());
+        MockitoAnnotations.openMocks(this);
+        repository = new ProductRepository(productJpaRepository);
 
-        // Use Mockito to create mock objects for IProduct
-        product1 = mock(IProduct.class);
-        product2 = mock(IProduct.class);
+        // Create actual Product instances instead of mocks
+        product1 = new Product("Product1", "good product", PCategory.ELECTRONICS, 1);
+        product2 = new Product("Product2", "another good product", PCategory.BEAUTY, 2);
 
-        // Define behavior for product1
-        when(product1.getId()).thenReturn(1);
-        when(product1.getName()).thenReturn("Product1");
-        when(product1.getDescription()).thenReturn("good product");
-        when(product1.getCategory()).thenReturn(PCategory.ELECTRONICS);
-        when(product1.getStoresIds()).thenReturn(new ArrayList<>());
-        doNothing().when(product1).setName(anyString());
-        doNothing().when(product1).setDescription(anyString());
-        doNothing().when(product1).addStore(anyInt());
-        doNothing().when(product1).removeStore(anyInt());
-
-        // Define behavior for product2
-        when(product2.getId()).thenReturn(2);
-        when(product2.getName()).thenReturn("Product2");
-        when(product2.getDescription()).thenReturn("another good product");
-        when(product2.getCategory()).thenReturn(PCategory.BEAUTY);
-        when(product2.getStoresIds()).thenReturn(new ArrayList<>());
-        doNothing().when(product2).setName(anyString());
-        doNothing().when(product2).setDescription(anyString());
-        doNothing().when(product2).addStore(anyInt());
-        doNothing().when(product2).removeStore(anyInt());
+        // Setup JPA repository mock behavior
+        when(productJpaRepository.findById(1)).thenReturn(Optional.of(product1));
+        when(productJpaRepository.findById(2)).thenReturn(Optional.of(product2));
+        when(productJpaRepository.findAll()).thenReturn(Arrays.asList(product1, product2));
+        when(productJpaRepository.findByCategory(PCategory.ELECTRONICS)).thenReturn(Arrays.asList(product1));
+        when(productJpaRepository.findByCategory(PCategory.BEAUTY)).thenReturn(Arrays.asList(product2));
+        when(productJpaRepository.findByCategory(PCategory.FOOD)).thenReturn(new ArrayList<>());
+        when(productJpaRepository.searchByKeyword("Product1")).thenReturn(Arrays.asList(product1));
+        when(productJpaRepository.searchByKeyword("good product")).thenReturn(Arrays.asList(product1, product2));
+        when(productJpaRepository.findByNameContainingIgnoreCase("Product1")).thenReturn(Arrays.asList(product1));
+        when(productJpaRepository.findByNameContainingIgnoreCase("Product2")).thenReturn(Arrays.asList(product2));
+        when(productJpaRepository.findByNameContainingIgnoreCase("product1")).thenReturn(Arrays.asList(product1));
+        when(productJpaRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
     void givenValidProduct_WhenAddProduct_ThenProductIsAdded() {
         repository.addProduct(product1);
-        assertEquals(product1, repository.getProductById(1));
+        verify(productJpaRepository).save(product1);
     }
 
     @Test
     void givenExistingProduct_WhenUpdateProduct_ThenProductIsUpdated() {
-        repository.addProduct(product1);
-        repository.updateProduct(product1.getId(), "UpdatedProduct1", "UpdatedDesc", new HashSet<>(Arrays.asList(5, 6)));
-        verify(product1, times(1)).setName("UpdatedProduct1");
-        verify(product1, times(1)).setDescription("UpdatedDesc");
-        verify(product1, atLeast(1)).addStore(anyInt());
+        repository.updateProduct(1, "UpdatedProduct1", "UpdatedDesc", new HashSet<>(Arrays.asList(5, 6)));
+        verify(productJpaRepository).save(product1);
+        assertEquals("UpdatedProduct1", product1.getName());
+        assertEquals("UpdatedDesc", product1.getDescription());
+        assertTrue(product1.getStoresIds().contains(5));
+        assertTrue(product1.getStoresIds().contains(6));
     }
 
     @Test
     void givenExistingProduct_WhenUpdateProduct_OnlyName() {
-        repository.addProduct(product1);
-        repository.updateProduct(product1.getId(), "UpdatedProduct1", null, null);
-        verify(product1, times(1)).setName("UpdatedProduct1");
-        verify(product1, never()).setDescription(anyString());
+        repository.updateProduct(1, "UpdatedProduct1", null, null);
+        verify(productJpaRepository).save(product1);
+        assertEquals("UpdatedProduct1", product1.getName());
+        assertEquals("good product", product1.getDescription());
     }
 
     @Test
     void givenExistingProduct_WhenUpdateProduct_OnlyDescription() {
-        repository.addProduct(product1);
-        repository.updateProduct(product1.getId(), null, "UpdatedDesc", null);
-        verify(product1, never()).setName(anyString());
-        verify(product1, times(1)).setDescription("UpdatedDesc");
+        repository.updateProduct(1, null, "UpdatedDesc", null);
+        verify(productJpaRepository).save(product1);
+        assertEquals("Product1", product1.getName());
+        assertEquals("UpdatedDesc", product1.getDescription());
     }
 
     @Test
     void givenNonExistingProduct_WhenUpdateProduct_ThenThrowsException() {
+        when(productJpaRepository.findById(999)).thenReturn(Optional.empty());
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.updateProduct(product1.getId(), "UpdatedProduct1", null, null);
+            repository.updateProduct(999, "UpdatedProduct1", null, null);
         });
-        assertEquals("Product not found in the repository.", exception.getMessage());
+        assertEquals("Product not found with id: 999", exception.getMessage());
     }
 
     @Test
     void givenExistingProduct_WhenDeleteProduct_ThenProductIsDeleted() {
-        repository.addProduct(product1);
+        when(productJpaRepository.existsById(1)).thenReturn(true);
         repository.deleteProduct(1);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.getProductById(1);
-        });
-        assertEquals("Product not found in the repository.", exception.getMessage());
+        verify(productJpaRepository).deleteById(1);
     }
 
     @Test
     void givenNonExistingProduct_WhenDeleteProduct_ThenThrowsException() {
+        when(productJpaRepository.existsById(999)).thenReturn(false);
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.deleteProduct(1);
+            repository.deleteProduct(999);
         });
         assertEquals("Product not found in the repository.", exception.getMessage());
     }
 
     @Test
     void givenExistingProduct_WhenGetProductById_ThenReturnsProduct() {
-        repository.addProduct(product1);
         IProduct retrievedProduct = repository.getProductById(1);
         assertEquals(product1, retrievedProduct);
     }
 
     @Test
     void givenNonExistingProduct_WhenGetProductById_ThenThrowsException() {
+        when(productJpaRepository.findById(999)).thenReturn(Optional.empty());
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.getProductById(1);
+            repository.getProductById(999);
         });
         assertEquals("Product not found in the repository.", exception.getMessage());
     }
 
     @Test
     void givenMultipleProducts_WhenGetAllProducts_ThenReturnsAllProducts() {
-        repository.addProduct(product1);
-        repository.addProduct(product2);
         Collection<IProduct> products = repository.getAllProducts();
         assertTrue(products.contains(product1));
         assertTrue(products.contains(product2));
@@ -132,8 +131,6 @@ public class ProductRepositoryTest {
 
     @Test
     void givenExistingCategory_WhenGetProductsByCategory_ThenReturnsProductsInCategory() {
-        repository.addProduct(product1);
-        repository.addProduct(product2);
         Collection<IProduct> products = repository.getProductsByCategory(PCategory.ELECTRONICS);
         assertTrue(products.contains(product1));
         assertEquals(1, products.size());
@@ -141,15 +138,12 @@ public class ProductRepositoryTest {
 
     @Test
     void givenNonExistingCategory_WhenGetProductsByCategory_ThenReturnsEmptyCollection() {
-        repository.addProduct(product1);
-        Collection<IProduct> products = repository.getProductsByCategory(PCategory.BEAUTY);
+        Collection<IProduct> products = repository.getProductsByCategory(PCategory.FOOD);
         assertTrue(products.isEmpty());
     }
 
     @Test
     void testSearchProducts_FindsByName() {
-        repository.addProduct(product1);
-        repository.addProduct(product2);
         Collection<IProduct> found = repository.searchProducts("Product1");
         assertTrue(found.contains(product1));
         assertFalse(found.contains(product2));
@@ -157,8 +151,6 @@ public class ProductRepositoryTest {
 
     @Test
     void testSearchProducts_FindsByDescription() {
-        repository.addProduct(product1);
-        repository.addProduct(product2);
         Collection<IProduct> found = repository.searchProducts("good product");
         assertTrue(found.contains(product1));
         assertTrue(found.contains(product2));
@@ -166,8 +158,6 @@ public class ProductRepositoryTest {
 
     @Test
     void testSearchProductsByName_FindsCorrectProduct() {
-        repository.addProduct(product1);
-        repository.addProduct(product2);
         Collection<IProduct> found = repository.searchProductsByName("Product2");
         assertTrue(found.contains(product2));
         assertFalse(found.contains(product1));
@@ -175,15 +165,13 @@ public class ProductRepositoryTest {
 
     @Test
     void testSearchProductsByName_CaseInsensitive() {
-        repository.addProduct(product1);
         Collection<IProduct> found = repository.searchProductsByName("product1");
         assertTrue(found.contains(product1));
     }
 
     @Test
     void testClearAllData() {
-        repository.addProduct(product1);
         repository.clearAllData();
-        assertEquals(0, repository.getAllProducts().size());
+        verify(productJpaRepository).deleteAll();
     }
 }
