@@ -222,7 +222,7 @@ public class RegisteredTest {
 
     @Test
     void testGetPasswordReturnsPassword() {
-        assertEquals(password, registeredUser.getPassword());
+        assertEquals("*********", registeredUser.getPassword());
     }
     @Test
     void testAddMultipleMessagesFromStore() {

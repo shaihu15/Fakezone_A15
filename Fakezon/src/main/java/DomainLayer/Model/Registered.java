@@ -12,6 +12,8 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -34,7 +36,7 @@ public class Registered extends User {
     public Registered(String email, String password, LocalDate dateOfBirth,String state) {
         super();
         this.email = email;
-        this.password = password;
+        setPassword(password);
         this.roles = new HashMap<>();
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
@@ -51,7 +53,7 @@ public class Registered extends User {
     public Registered(String email, String password, LocalDate dateOfBirth,String state, int userId) {
         super(userId);
         this.email = email;
-        this.password = password;
+        setPassword(password);
         this.roles = new HashMap<>();
         this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
@@ -62,6 +64,13 @@ public class Registered extends User {
         this.productsPurchase = new HashMap<>();
     }
 
+    public void setPassword(String rawPassword) {
+        this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+    }
+
+    public boolean checkPassword(String rawPassword) {
+        return BCrypt.checkpw(rawPassword, this.password);
+    }
 
     public void setproductsPurchase(int storeID, List<Integer> productsPurchase) {
         this.productsPurchase.put(storeID, productsPurchase);
@@ -160,7 +169,7 @@ public class Registered extends User {
     }
 
     public String getPassword() {
-        return password;
+        return "*********"; // Return masked password for security
     }
 
     @Override
