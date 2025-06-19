@@ -1,6 +1,7 @@
 package UnitTesting;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import DomainLayer.Model.Registered;
@@ -36,61 +38,49 @@ public class UserRepositoryTest {
     void setUp() {
         MockitoAnnotations.openMocks(this); // Initialize Mockito annotations
         registedUser = new Registered(testEmail,testPassword ,testDate,testCountry);
-
         userRepository = new UserRepository(userJpaRepository); // Initialize the repository before each test
-       // userRepository.addUser(registedUser); // Add a test user to the repository
+        // Mock default behavior for the main test user
+        Mockito.when(userJpaRepository.findByUserId(registedUser.getUserId())).thenReturn(Optional.of(registedUser));
+        Mockito.when(userJpaRepository.findRegisteredByEmail(registedUser.getEmail())).thenReturn(Optional.of(registedUser));
+        Mockito.when(userJpaRepository.save(registedUser)).thenReturn(registedUser);
     }
 
     @Test
     void testAddUser() {
-        String testEmail1 = "test1@gmail.com";
-
-        registedUser = new Registered(testEmail1,testPassword ,testDate,testCountry);
-
-        userRepository.addUser(registedUser); // Add a test user to the repository
-
-        // Act
-        System.out.println("Registered User ID: " + registedUser.getUserId());
-
-        // Assert
-        Optional<Registered> retrievedUser = userRepository.findById(registedUser.getUserId());
-        if(retrievedUser.isPresent()) {
-            System.out.println("Retrieved User ID: " + retrievedUser.get().getUserId());
-        } else {
-            System.out.println("User not found in repository.");
-        }
-        assertTrue(retrievedUser.isPresent(), "User should be added to the repository");
-        assertEquals("test@gmail.com", retrievedUser.get().getEmail(), "Email should match");
+        Registered registedUser2 = new Registered("test2@gmail.com", "password123", testDate, testCountry);
+        Mockito.when(userJpaRepository.findRegisteredById(registedUser2.getUserId()))
+               .thenReturn(Optional.of(registedUser2));
+        userRepository.addUser(registedUser2); // Should not throw
+        verify(userJpaRepository).save(registedUser2);
+        Optional<Registered> retrievedUser2 = userRepository.findById(registedUser2.getUserId());
+        assertTrue(retrievedUser2.isPresent(), "User should be added to the repository");
     }
 
     @Test
     void testFindById() {
-        // Act
-        Optional<Registered> retrievedUser = userRepository.findById(registedUser.getUserId());
-
-        // Assert
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findRegisteredById(user.getUserId())).thenReturn(Optional.of(user));
+        Optional<Registered> retrievedUser = userRepository.findById(user.getUserId());
         assertTrue(retrievedUser.isPresent(), "User should be found by ID");
-        assertEquals(registedUser.getUserId(), retrievedUser.get().getUserId(), "User ID should match");
+        assertEquals(user.getUserId(), retrievedUser.get().getUserId(), "User ID should match");
     }
 
     @Test
     void testFindByEmail() {
-       
-        // Act
-        Optional<Registered> retrievedUser = userRepository.findByUserName(registedUser.getEmail());
-
-        // Assert
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findRegisteredByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        Optional<Registered> retrievedUser = userRepository.findByUserName(user.getEmail());
         assertTrue(retrievedUser.isPresent(), "User should be found by username");
-        assertEquals("test@gmail.com", retrievedUser.get().getEmail(), "Email should match");
+        assertEquals(user.getEmail(), retrievedUser.get().getEmail(), "Email should match");
     }
 
     @Test
     void testDeleteByUserName() {
-        // Act
-        userRepository.deleteByUserName(testEmail);
-
-        // Assert
-        Optional<Registered> deletedUser = userRepository.findById(registedUser.getUserId());
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findRegisteredByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user), Optional.empty());
+        userRepository.deleteByUserName(user.getEmail());
+        Optional<Registered> deletedUser = userRepository.findById(user.getUserId());
         assertFalse(deletedUser.isPresent(), "User should be deleted from the repository");
     }
 
@@ -114,47 +104,39 @@ public class UserRepositoryTest {
     // User Suspension Tests
     @Test
     void testSuspendUserTemporarily() {
-        // Arrange
+        Registered user = registedUser;
         LocalDate endDate = LocalDate.now().plusDays(7);
-        
-        // Act
-        userRepository.suspendUser(registedUser.getUserId(), endDate);
-        
-        // Assert
-        assertTrue(userRepository.isUserSuspended(registedUser.getUserId()), "User should be suspended");
-        assertEquals(endDate, userRepository.getSuspensionEndDate(registedUser.getUserId()), "End date should match");
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
+        userRepository.suspendUser(user.getUserId(), endDate);
+        assertTrue(userRepository.isUserSuspended(user.getUserId()), "User should be suspended");
+        assertEquals(endDate, userRepository.getSuspensionEndDate(user.getUserId()), "End date should match");
     }
     
     @Test
     void testSuspendUserPermanently() {
-        // Act
-        userRepository.suspendUser(registedUser.getUserId(), null);
-        
-        // Assert
-        assertTrue(userRepository.isUserSuspended(registedUser.getUserId()), "User should be suspended");
-        assertNull(userRepository.getSuspensionEndDate(registedUser.getUserId()), "End date should be null for permanent suspension");
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
+        userRepository.suspendUser(user.getUserId(), null);
+        assertTrue(userRepository.isUserSuspended(user.getUserId()), "User should be suspended");
+        assertNull(userRepository.getSuspensionEndDate(user.getUserId()), "End date should be null for permanent suspension");
     }
     
     @Test
     void testUnsuspendUser() {
-        // Arrange
-        userRepository.suspendUser(registedUser.getUserId(), LocalDate.now().plusDays(7));
-        assertTrue(userRepository.isUserSuspended(registedUser.getUserId()), "User should be suspended");
-        
-        // Act
-        boolean result = userRepository.unsuspendUser(registedUser.getUserId());
-        
-        // Assert
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
+        userRepository.suspendUser(user.getUserId(), LocalDate.now().plusDays(7));
+        assertTrue(userRepository.isUserSuspended(user.getUserId()), "User should be suspended");
+        boolean result = userRepository.unsuspendUser(user.getUserId());
         assertTrue(result, "Unsuspend operation should return true");
-        assertFalse(userRepository.isUserSuspended(registedUser.getUserId()), "User should no longer be suspended");
+        assertFalse(userRepository.isUserSuspended(user.getUserId()), "User should no longer be suspended");
     }
     
     @Test
     void testUnsuspendNonSuspendedUserReturnsFalse() {
-        // Act
-        boolean result = userRepository.unsuspendUser(registedUser.getUserId());
-        
-        // Assert
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
+        boolean result = userRepository.unsuspendUser(user.getUserId());
         assertFalse(result, "Unsuspend operation should return false for non-suspended user");
     }
     
@@ -176,41 +158,33 @@ public class UserRepositoryTest {
     
     @Test
     void testGetAllSuspendedUsers() {
-        // Arrange
-        Registered secondUser = new Registered("suspended2@example.com", "password", LocalDate.now(), "US");
-        userRepository.addUser(secondUser);
-        
-        userRepository.suspendUser(registedUser.getUserId(), LocalDate.now().plusDays(7));
-        userRepository.suspendUser(secondUser.getUserId(), null); // Permanent suspension
-        
-        // Act
+        Registered user1 = registedUser;
+        Registered user2 = new Registered("suspended2@example.com", "password", LocalDate.now(), "US");
+        // Mock both findByUserId and findRegisteredById for both users
+        Mockito.when(userJpaRepository.findByUserId(user1.getUserId())).thenReturn(Optional.of(user1));
+        Mockito.when(userJpaRepository.findByUserId(user2.getUserId())).thenReturn(Optional.of(user2));
+        Mockito.when(userJpaRepository.findRegisteredById(user1.getUserId())).thenReturn(Optional.of(user1));
+        Mockito.when(userJpaRepository.findRegisteredById(user2.getUserId())).thenReturn(Optional.of(user2));
+        userRepository.suspendUser(user1.getUserId(), LocalDate.now().plusDays(7));
+        userRepository.suspendUser(user2.getUserId(), null); // Permanent suspension
         List<Registered> suspendedUsers = userRepository.getAllSuspendedUsers();
-        
-        // Assert
         assertEquals(2, suspendedUsers.size(), "There should be 2 suspended users");
-        assertTrue(suspendedUsers.stream().anyMatch(u -> u.getUserId() == registedUser.getUserId()), "First user should be in suspended list");
-        assertTrue(suspendedUsers.stream().anyMatch(u -> u.getUserId() == secondUser.getUserId()), "Second user should be in suspended list");
+        assertTrue(suspendedUsers.stream().anyMatch(u -> u.getUserId() == user1.getUserId()), "First user should be in suspended list");
+        assertTrue(suspendedUsers.stream().anyMatch(u -> u.getUserId() == user2.getUserId()), "Second user should be in suspended list");
     }
     
     @Test
     void testCleanupExpiredSuspensions() {
-        // Arrange
         Registered user1 = new Registered("expired@example.com", "password", LocalDate.now(), "US");
         Registered user2 = new Registered("active@example.com", "password", LocalDate.now(), "US");
         Registered user3 = new Registered("permanent@example.com", "password", LocalDate.now(), "US");
-        
-        userRepository.addUser(user1);
-        userRepository.addUser(user2);
-        userRepository.addUser(user3);
-        
+        Mockito.when(userJpaRepository.findByUserId(user1.getUserId())).thenReturn(Optional.of(user1));
+        Mockito.when(userJpaRepository.findByUserId(user2.getUserId())).thenReturn(Optional.of(user2));
+        Mockito.when(userJpaRepository.findByUserId(user3.getUserId())).thenReturn(Optional.of(user3));
         userRepository.suspendUser(user1.getUserId(), LocalDate.now().minusDays(1)); // Expired
         userRepository.suspendUser(user2.getUserId(), LocalDate.now().plusDays(7)); // Active
         userRepository.suspendUser(user3.getUserId(), null); // Permanent
-        
-        // Act
         int removedCount = userRepository.cleanupExpiredSuspensions();
-        
-        // Assert
         assertEquals(1, removedCount, "Should remove 1 expired suspension");
         assertFalse(userRepository.isUserSuspended(user1.getUserId()), "Expired suspension should be removed");
         assertTrue(userRepository.isUserSuspended(user2.getUserId()), "Active suspension should remain");
@@ -219,33 +193,31 @@ public class UserRepositoryTest {
 
         @Test
     void testUserDoesNotExist_throwsException() {
-        int userId = 1;
-
-        // users map is empty => user doesn't exist
+        int userId = 9999;
+        Mockito.when(userJpaRepository.findByUserId(userId)).thenReturn(Optional.empty());
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             userRepository.getSuspensionEndDate(userId);
         });
-
         assertNotNull(exception, "Exception should not be null");
     }
 
     @Test
     void testUserNotSuspended_throwsException() {
-
-        // suspendedUsers map is empty => user exists but not suspended
+        Registered user = registedUser;
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userRepository.getSuspensionEndDate(registedUser.getUserId());
+            userRepository.getSuspensionEndDate(user.getUserId());
         });
-
         assertNotNull(exception, "Exception should not be null");
     }
 
     @Test
     void testUserSuspended_returnsEndDate() {
+        Registered user = registedUser;
         LocalDate endDate = LocalDate.now().plusDays(7);
-        userRepository.suspendUser(registedUser.getUserId(), endDate);
-
-        assertEquals(endDate, userRepository.getSuspensionEndDate(registedUser.getUserId()));
+        Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
+        userRepository.suspendUser(user.getUserId(), endDate);
+        assertEquals(endDate, userRepository.getSuspensionEndDate(user.getUserId()));
     }
 
 }

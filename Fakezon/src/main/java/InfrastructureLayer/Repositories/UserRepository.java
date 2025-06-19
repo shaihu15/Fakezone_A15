@@ -25,6 +25,7 @@ import DomainLayer.Model.RegisteredRole;
 import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
+import DomainLayer.Model.SuspendedUser;
 import DomainLayer.Model.User;
 
 @Repository
@@ -36,14 +37,14 @@ public class UserRepository implements IUserRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
     private Map<Integer, User> unsignedUsers; // Map to store unsigned (guest) users
-    private Map<Integer, LocalDate> suspendedUsers; // Map of userId to suspension end date (null if permanent)
+    private Set<SuspendedUser> suspendedUsers; // Set of suspended users
     private Set<Integer> systemAdmins; // Set of user IDs who are system administrators
 
     @Autowired
     public UserRepository(UserJpaRepository userJpaRepository) {
         this.userJpaRepository = userJpaRepository;
         this.unsignedUsers = new HashMap<>(); // Initialize the unsigned users map
-        this.suspendedUsers = new HashMap<>();
+        this.suspendedUsers = new HashSet<>();
         this.systemAdmins = new HashSet<>();
 
         //initializeTestData();
@@ -77,7 +78,7 @@ public class UserRepository implements IUserRepository {
             }
             userJpaRepository.deleteById(user.get().getUserId());
             // Also remove from suspended users if present
-            suspendedUsers.remove(user.get().getUserId());
+            removeSuspendedUser(user.get().getUserId());
         } else {
             throw new IllegalArgumentException("User not found");
         }
@@ -111,7 +112,7 @@ public class UserRepository implements IUserRepository {
         if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
-        suspendedUsers.put(userId, endOfSuspension);
+        addOrUpdateSuspendedUser(userId, endOfSuspension);
     }
 
     /**
@@ -125,7 +126,7 @@ public class UserRepository implements IUserRepository {
         if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
-        return suspendedUsers.remove(userId) != null;
+        return removeSuspendedUser(userId);
     }
 
     /**
@@ -139,17 +140,16 @@ public class UserRepository implements IUserRepository {
         if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
-        
-        LocalDate endDate = suspendedUsers.get(userId);
-        if (endDate == null && suspendedUsers.containsKey(userId)) {
+        SuspendedUser su = getSuspendedUser(userId);
+        if (su == null) return false;
+        LocalDate endDate = su.getSuspensionEndDate();
+        if (endDate == null) {
             // User is permanently suspended
             return true;
-        } else if (endDate != null) {
+        } else {
             // Check if suspension period has ended
             return endDate.isAfter(LocalDate.now()) || endDate.isEqual(LocalDate.now());
         }
-        
-        return false;
     }
 
     /**
@@ -163,11 +163,11 @@ public class UserRepository implements IUserRepository {
         if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
-        if (!suspendedUsers.containsKey(userId)) {
+        SuspendedUser su = getSuspendedUser(userId);
+        if (su == null) {
             throw new IllegalArgumentException("User with ID " + userId + " is not suspended.");
         }
-        
-        return suspendedUsers.get(userId);
+        return su.getSuspensionEndDate();
     }
 
     /**
@@ -177,16 +177,14 @@ public class UserRepository implements IUserRepository {
      */
     public List<Registered> getAllSuspendedUsers() {
         List<Registered> result = new ArrayList<>();
-        
-        for (Integer userId : suspendedUsers.keySet()) {
-            LocalDate endDate = suspendedUsers.get(userId);
+        for (SuspendedUser su : suspendedUsers) {
+            LocalDate endDate = su.getSuspensionEndDate();
             // Include users with permanent suspension or active temporary suspension
             if (endDate == null || endDate.isAfter(LocalDate.now()) || endDate.isEqual(LocalDate.now())) {
-                Optional<Registered> user = findById(userId);
+                Optional<Registered> user = findById(su.getUserId());
                 user.ifPresent(result::add);
             }
         }
-        
         return result;
     }
 
@@ -196,20 +194,17 @@ public class UserRepository implements IUserRepository {
      * @return The number of expired suspensions that were removed
      */
     public int cleanupExpiredSuspensions() {
-        List<Integer> expiredSuspensions = new ArrayList<>();
+        List<SuspendedUser> expiredSuspensions = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        
-        for (Map.Entry<Integer, LocalDate> entry : suspendedUsers.entrySet()) {
-            LocalDate endDate = entry.getValue();
+        for (SuspendedUser su : suspendedUsers) {
+            LocalDate endDate = su.getSuspensionEndDate();
             if (endDate != null && endDate.isBefore(today)) {
-                expiredSuspensions.add(entry.getKey());
+                expiredSuspensions.add(su);
             }
         }
-        
-        for (Integer userId : expiredSuspensions) {
-            suspendedUsers.remove(userId);
+        for (SuspendedUser su : expiredSuspensions) {
+            suspendedUsers.remove(su);
         }
-        
         return expiredSuspensions.size();
     }
 
@@ -407,6 +402,35 @@ public class UserRepository implements IUserRepository {
             unsignedUsers.put(user.getUserId(), user);
             return user;
         }
+    }
+
+    // Helper method to find a SuspendedUser by userId
+    private SuspendedUser getSuspendedUser(int userId) {
+        for (SuspendedUser su : suspendedUsers) {
+            if (su.getUserId() == userId) {
+                return su;
+            }
+        }
+        return null;
+    }
+
+    // Helper method to add or update a SuspendedUser
+    private void addOrUpdateSuspendedUser(int userId, LocalDate endOfSuspension) {
+        SuspendedUser existing = getSuspendedUser(userId);
+        if (existing != null) {
+            suspendedUsers.remove(existing);
+        }
+        suspendedUsers.add(new SuspendedUser(userId, endOfSuspension));
+    }
+
+    // Helper method to remove a SuspendedUser by userId
+    private boolean removeSuspendedUser(int userId) {
+        SuspendedUser existing = getSuspendedUser(userId);
+        if (existing != null) {
+            suspendedUsers.remove(existing);
+            return true;
+        }
+        return false;
     }
 
 }
