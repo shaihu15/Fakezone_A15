@@ -20,8 +20,7 @@ import org.slf4j.LoggerFactory;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
-@Transactional
+
 public class Guest_Login {
     //Use-case: 1.4 Guest Login
 
@@ -39,6 +38,7 @@ public class Guest_Login {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
         try {
             logger.info("Starting test setup");
             testHelper = new TestHelper(systemService);
