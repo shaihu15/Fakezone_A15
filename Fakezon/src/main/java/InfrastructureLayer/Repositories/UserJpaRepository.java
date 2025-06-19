@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserJpaRepository extends JpaRepository<User, Integer> {
+public interface UserJpaRepository extends JpaRepository<Registered, Integer> {
     
     @Query("SELECT r FROM Registered r WHERE r.email = :email")
     Optional<Registered> findRegisteredByEmail(@Param("email") String email);
@@ -22,9 +22,6 @@ public interface UserJpaRepository extends JpaRepository<User, Integer> {
     
     @Query("SELECT r FROM Registered r WHERE r.userId = :userId")
     Optional<Registered> findRegisteredById(@Param("userId") int userId);
-    
-    @Query("SELECT u FROM Registered u WHERE u.userId = :userId")
-    Optional<User> findByUserId(@Param("userId") int userId);
     
     @Query("SELECT r FROM Registered r WHERE r.email LIKE %:keyword% OR CAST(r.age AS string) LIKE %:keyword%")
     List<Registered> searchRegisteredUsers(@Param("keyword") String keyword);

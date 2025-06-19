@@ -45,15 +45,15 @@ public class UserPersistenceTest {
         // Create test registered users
         testRegistered1 = new Registered("test1@example.com", "password123", 
                                        LocalDate.of(1990, 5, 15), "US");
-        testRegistered1.setUserId(1001);
+        //testRegistered1.setUserId(1001);
 
         testRegistered2 = new Registered("test2@example.com", "password456", 
                                        LocalDate.of(1985, 8, 22), "CA");
-        testRegistered2.setUserId(1002);
+        //testRegistered2.setUserId(1002);
 
         // Create test guest users with explicit IDs
-        testGuest1 = new User(2001);
-        testGuest2 = new User(2002);
+        testGuest1 = new User();
+        testGuest2 = new User();
     }
 
     @Test

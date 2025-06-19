@@ -17,8 +17,8 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "userid")
     protected int userId;
 
     @Column(name = "is_logged_in")
