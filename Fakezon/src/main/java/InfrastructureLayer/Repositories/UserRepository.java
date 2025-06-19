@@ -438,4 +438,13 @@ public class UserRepository implements IUserRepository {
         return false;
     }
 
+    /**
+     * Get the next available userId from the registered_users table
+     * @return next available userId (max+1)
+     */
+    public int getNextAvailableUserId() {
+        Integer maxId = userJpaRepository.findMaxRegisteredUserId();
+        return (maxId != null ? maxId : 0) + 1;
+    }
+
 }

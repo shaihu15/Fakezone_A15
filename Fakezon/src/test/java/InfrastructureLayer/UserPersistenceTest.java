@@ -4,7 +4,6 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.User;
 import DomainLayer.Model.Registered;
 import InfrastructureLayer.Repositories.UserJpaRepository;
-import InfrastructureLayer.Repositories.UserRepositoryJpaImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

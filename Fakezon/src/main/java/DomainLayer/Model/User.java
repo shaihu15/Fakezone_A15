@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.persistence.*;
 
@@ -26,13 +27,13 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "cart_id", referencedColumnName = "id")
     protected Cart cart;
-    
-    // @Transient
-    // protected static final AtomicInteger idCounter = new AtomicInteger(0);
+
+    @Transient
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     // Default constructor with auto-generated ID (original behavior)
     public User() {
-        //this.userId = idCounter.incrementAndGet(); // auto-increment userID
+        this.userId = idCounter.incrementAndGet(); // auto-increment userID, always positive
         this.cart = new Cart();
         this.isLoggedIn = false;
     }
@@ -117,5 +118,9 @@ public class User {
     }
     public void addToBasketQuantity(int storeId, int productId, int quantity) {
         cart.addProductQuantity(storeId, productId, quantity);
+    }
+
+    public static void setIdCounter(int value) {
+        idCounter.set(value);
     }
 }

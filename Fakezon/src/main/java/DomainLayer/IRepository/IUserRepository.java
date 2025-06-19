@@ -175,4 +175,9 @@ public interface IUserRepository {
      */
     User save(User user);
 
+    /**
+     * Get the next available userId from the registered_users table
+     * @return next available userId (max+1)
+     */
+    int getNextAvailableUserId();
 }
