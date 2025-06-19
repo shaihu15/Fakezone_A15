@@ -2,15 +2,29 @@ package DomainLayer.Model;
 
 import java.util.HashMap;
 import java.util.Map;
+import jakarta.persistence.*;
 
-
+@Entity
+@Table(name = "baskets")
 public class Basket {
-    private int storeId;// maby just soreID?
-    private Map<Integer, Integer> productQuantities; // productID -> quantity
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private int storeId;
+
+    @ElementCollection
+    @CollectionTable(name = "basket_products", joinColumns = @JoinColumn(name = "basket_id"))
+    @MapKeyColumn(name = "product_id")
+    @Column(name = "quantity")
+    private Map<Integer, Integer> productQuantities = new HashMap<>();
+
+    public Basket() {
+        // JPA default constructor
+    }
 
     public Basket(int storeId) {
         this.storeId = storeId;
-        this.productQuantities = new HashMap<>();
     }
     public Basket(int storeId, Map<Integer, Integer> products) {
         this.storeId = storeId;

@@ -63,7 +63,7 @@ public class UserPersistenceTest {
         userRepository.addUser(testRegistered1);
 
         // Find by ID
-        Optional<Registered> found = userRepository.findById(testRegistered1.getUserId());
+        Optional<Registered> found = userRepository.findRegisteredById(testRegistered1.getUserId());
         assertTrue(found.isPresent(), "Registered user should be found by ID");
         assertEquals(testRegistered1.getEmail(), found.get().getEmail(), "Email should match");
         assertEquals(testRegistered1.getUserId(), found.get().getUserId(), "User ID should match");
@@ -126,14 +126,14 @@ public class UserPersistenceTest {
         userRepository.addUser(testRegistered1);
         
         // Verify user exists
-        assertTrue(userRepository.findById(testRegistered1.getUserId()).isPresent(), 
+        assertTrue(userRepository.findRegisteredById(testRegistered1.getUserId()).isPresent(), 
                   "User should exist before deletion");
 
         // Delete user
         userRepository.deleteByUserName(testRegistered1.getEmail());
 
         // Verify user is deleted
-        assertFalse(userRepository.findById(testRegistered1.getUserId()).isPresent(), 
+        assertFalse(userRepository.findRegisteredById(testRegistered1.getUserId()).isPresent(), 
                    "User should not exist after deletion");
     }
 

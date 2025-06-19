@@ -80,7 +80,7 @@ public class SystemServiceAdminTest {
         adminUser = new Registered("admin@example.com", "password", LocalDate.of(2000, 1, 1), "US");
         regularUser = new Registered("user@example.com", "password", LocalDate.of(2000, 1, 1), "US");
         suspendedUser = new Registered("suspended@example.com", "password", LocalDate.of(2000, 1, 1), "US");
-        
+
         // Common mock behaviors
         when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         when(mockUserService.isSystemAdmin(regularUser.getUserId())).thenReturn(false);
@@ -124,9 +124,13 @@ public class SystemServiceAdminTest {
     
     @Test
     void testAddSystemAdmin() {
+        // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
+        // No need to stub addSystemAdmin since it's void
+
         // Act
         Response<?> response = systemService.addSystemAdmin(adminUser.getUserId(), regularUser.getUserId());
-        
+
         // Assert
         assertTrue(response.isSuccess());
         verify(mockUserService).addSystemAdmin(regularUser.getUserId());
@@ -145,12 +149,17 @@ public class SystemServiceAdminTest {
     
     @Test
     void testRemoveSystemAdmin() {
+                    // Ensure unique user IDs for test logic
+                    adminUser.setUserId(1);
+                    regularUser.setUserId(2);
+                    suspendedUser.setUserId(3);
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         when(mockUserService.removeSystemAdmin(regularUser.getUserId())).thenReturn(true);
-        
+
         // Act
         Response<Boolean> response = systemService.removeSystemAdmin(adminUser.getUserId(), regularUser.getUserId());
-        
+
         // Assert
         assertTrue(response.isSuccess());
         assertTrue(response.getData());
@@ -170,9 +179,12 @@ public class SystemServiceAdminTest {
     
     @Test
     void testRemoveSystemAdminFailsWhenRemovingSelf() {
+        // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
+
         // Act
         Response<Boolean> response = systemService.removeSystemAdmin(adminUser.getUserId(), adminUser.getUserId());
-        
+
         // Assert
         assertFalse(response.isSuccess());
         assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
@@ -196,6 +208,7 @@ public class SystemServiceAdminTest {
     @Test
     void testGetAllSystemAdmins() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         List<Registered> admins = new ArrayList<>();
         admins.add(adminUser);
         when(mockUserService.getAllSystemAdmins()).thenReturn(admins);
@@ -223,11 +236,12 @@ public class SystemServiceAdminTest {
     @Test
     void testGetSystemAdminCount() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         when(mockUserService.getSystemAdminCount()).thenReturn(1);
-        
+
         // Act
         Response<Integer> response = systemService.getSystemAdminCount(adminUser.getUserId());
-        
+
         // Assert
         assertTrue(response.isSuccess());
         assertEquals(1, response.getData());
@@ -249,11 +263,13 @@ public class SystemServiceAdminTest {
     @Test
     void testSuspendUserTemporarily() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         LocalDate endDate = LocalDate.now().plusDays(7);
-        
+        // No need to stub suspendUser if it returns void
+
         // Act
         Response<?> response = systemService.suspendUser(adminUser.getUserId(), regularUser.getUserId(), endDate);
-        
+
         // Assert
         assertTrue(response.isSuccess());
         verify(mockUserService).suspendUser(adminUser.getUserId(), regularUser.getUserId(), endDate);
@@ -261,9 +277,13 @@ public class SystemServiceAdminTest {
     
     @Test
     void testSuspendUserPermanently() {
+        // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
+        // No need to stub suspendUser if it returns void
+
         // Act
         Response<?> response = systemService.suspendUser(adminUser.getUserId(), regularUser.getUserId(), null);
-        
+
         // Assert
         assertTrue(response.isSuccess());
         verify(mockUserService).suspendUser(adminUser.getUserId(), regularUser.getUserId(), null);
@@ -283,11 +303,12 @@ public class SystemServiceAdminTest {
     @Test
     void testUnsuspendUser() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         when(mockUserService.unsuspendUser(adminUser.getUserId(), suspendedUser.getUserId())).thenReturn(true);
-        
+
         // Act
         Response<Boolean> response = systemService.unsuspendUser(adminUser.getUserId(), suspendedUser.getUserId());
-        
+
         // Assert
         assertTrue(response.isSuccess());
         assertTrue(response.getData());
@@ -321,12 +342,13 @@ public class SystemServiceAdminTest {
     @Test
     void testGetSuspensionEndDate() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         LocalDate endDate = LocalDate.now().plusDays(7);
         when(mockUserService.getSuspensionEndDate(adminUser.getUserId(), suspendedUser.getUserId())).thenReturn(endDate);
-        
+
         // Act
         Response<LocalDate> response = systemService.getSuspensionEndDate(adminUser.getUserId(), suspendedUser.getUserId());
-        
+
         // Assert
         assertTrue(response.isSuccess());
         assertEquals(endDate, response.getData());
@@ -346,6 +368,7 @@ public class SystemServiceAdminTest {
     @Test
     void testGetAllSuspendedUsers() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         List<Registered> suspendedUsers = new ArrayList<>();
         suspendedUsers.add(suspendedUser);
         when(mockUserService.getAllSuspendedUsers(adminUser.getUserId())).thenReturn(suspendedUsers);
@@ -373,11 +396,12 @@ public class SystemServiceAdminTest {
     @Test
     void testCleanupExpiredSuspensions() {
         // Arrange
+        when(mockUserService.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         when(mockUserService.cleanupExpiredSuspensions(adminUser.getUserId())).thenReturn(2);
-        
+
         // Act
         Response<Integer> response = systemService.cleanupExpiredSuspensions(adminUser.getUserId());
-        
+
         // Assert
         assertTrue(response.isSuccess());
         assertEquals(2, response.getData());

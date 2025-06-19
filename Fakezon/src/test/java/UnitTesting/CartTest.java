@@ -12,6 +12,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CartTest {
 
+    private Basket getBasketByStoreId(Cart cart, int storeId) {
+        return cart.getBaskets().stream()
+            .filter(b -> b.getStoreID() == storeId)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private boolean hasBasketForStore(Cart cart, int storeId) {
+        return cart.getBaskets().stream().anyMatch(b -> b.getStoreID() == storeId);
+    }
+
     @Test
     void testConstructorAndGetBaskets() {
         Cart cart = new Cart();
@@ -25,17 +36,17 @@ class CartTest {
 
         // Add product to a new store (creates new Basket)
         cart.addProduct(1, 100, 2);
-        assertTrue(cart.getBaskets().containsKey(1));
-        assertEquals(2, cart.getBaskets().get(1).getProducts().get(100));
+        assertTrue(hasBasketForStore(cart, 1));
+        assertEquals(2, getBasketByStoreId(cart, 1).getProducts().get(100));
 
         // Add another product to the same store (existing Basket)
         cart.addProduct(1, 200, 3);
-        assertEquals(3, cart.getBaskets().get(1).getProducts().get(200));
+        assertEquals(3, getBasketByStoreId(cart, 1).getProducts().get(200));
 
         // Add product to a different store
         cart.addProduct(2, 300, 1);
-        assertTrue(cart.getBaskets().containsKey(2));
-        assertEquals(1, cart.getBaskets().get(2).getProducts().get(300));
+        assertTrue(hasBasketForStore(cart, 2));
+        assertEquals(1, getBasketByStoreId(cart, 2).getProducts().get(300));
     }
 
     @Test

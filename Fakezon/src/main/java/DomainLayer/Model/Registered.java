@@ -31,7 +31,7 @@ public class Registered extends User {
                     joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "store_id")
     @Column(name = "product_ids")
-    protected Map<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
+    protected Map<Integer, List<Integer>> productsPurchase = new HashMap<>(); // storeId -> List of productIDs
     
     @Transient
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
@@ -61,7 +61,7 @@ public class Registered extends User {
 
     // Default constructor for JPA
     protected Registered() {
-        super(true); // Use JPA constructor
+        super();
         initializeFields();
     }
 
@@ -70,7 +70,6 @@ public class Registered extends User {
         this.email = email;
         setPassword(password);
         this.roles = new HashMap<>();
-        this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new ConcurrentHashMap<>();
@@ -88,7 +87,6 @@ public class Registered extends User {
         this.email = email;
         setPassword(password);
         this.roles = new HashMap<>();
-        this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         messagesFromUser = new Stack<>();
         messagesFromStore = new HashMap<>();

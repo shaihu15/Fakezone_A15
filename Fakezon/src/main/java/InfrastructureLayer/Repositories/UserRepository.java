@@ -60,7 +60,7 @@ public class UserRepository implements IUserRepository {
     }
 
     @Override
-    public Optional<Registered> findById(int userID) {
+    public Optional<Registered> findRegisteredById(int userID) {
         return userJpaRepository.findRegisteredById(userID);
     }
 
@@ -97,8 +97,13 @@ public class UserRepository implements IUserRepository {
     @Override
     public Optional<User> findAllById(int userID) {
         // First check registered users
-        return userJpaRepository.findByUserId(userID);
-
+        if(userJpaRepository.findRegisteredById(userID).isPresent()){
+            return Optional.of(userJpaRepository.findRegisteredById(userID).get());
+        }
+        if(unsignedUsers.containsKey(userID)){
+            return Optional.of(unsignedUsers.get(userID));
+        }
+        return Optional.empty();
     }
 
     /**
@@ -181,7 +186,7 @@ public class UserRepository implements IUserRepository {
             LocalDate endDate = su.getSuspensionEndDate();
             // Include users with permanent suspension or active temporary suspension
             if (endDate == null || endDate.isAfter(LocalDate.now()) || endDate.isEqual(LocalDate.now())) {
-                Optional<Registered> user = findById(su.getUserId());
+                Optional<Registered> user = findRegisteredById(su.getUserId());
                 user.ifPresent(result::add);
             }
         }
@@ -258,7 +263,7 @@ public class UserRepository implements IUserRepository {
         List<Registered> result = new ArrayList<>();
         
         for (Integer adminId : systemAdmins) {
-            Optional<Registered> admin = findById(adminId);
+            Optional<Registered> admin = findRegisteredById(adminId);
             admin.ifPresent(result::add);
         }
         

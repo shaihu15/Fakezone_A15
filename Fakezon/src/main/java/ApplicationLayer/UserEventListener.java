@@ -45,7 +45,7 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleAssignmentEvent(AssignmentEvent event) {
-        Optional<Registered> user = userRepository.findById(event.getUserId());
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserId());
         if (user.isPresent()) {
             String msg = "Please approve or decline this role: " + event.getRoleName() + " for store " + event.getStoreId();
             user.get().addAssignmentMessage(
@@ -73,7 +73,7 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleResponseFromStore(ResponseFromStoreEvent event) {
-        Optional<Registered> user = userRepository.findById(event.getUserId());
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserId());
         user.ifPresent(registeredUser -> {
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), -1, event.getMessage(), null));
             if (registeredUser.isLoggedIn()) {
@@ -120,7 +120,7 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleApprovedBidOnAuctionEvent(AuctionApprovedBidEvent event) {
-        Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserIDHighestBid()); // Event targets the highest bidder
         user.ifPresent(registeredUser -> {
             String msg = "We are pleased to inform you that your bid has won the auction on product: " + event.getProductID() + ", at a price of: " + event.getCurrentHighestBid() + "! The product has been added to your shopping cart, please purchase it as soon as possible.";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
@@ -134,7 +134,7 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
-        Optional<Registered> user = userRepository.findById(event.getUserIDPrevHighestBid()); // Event targets the previously highest bidder
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserIDPrevHighestBid()); // Event targets the previously highest bidder
         user.ifPresent(registeredUser -> {
             String msg = "Your auction bid on product: " + event.getProductID() + " was rejected due to a higher bid of: " + event.getCurrentHighestBid() + ".";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
@@ -147,7 +147,7 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleDeclinedBidOnAuctionEvent(AuctionDeclinedBidEvent event) {
-        Optional<Registered> user = userRepository.findById(event.getUserIDHighestBid()); // Event targets the highest bidder whose bid was declined
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserIDHighestBid()); // Event targets the highest bidder whose bid was declined
         user.ifPresent(registeredUser -> {
             String msg = "We regret to inform you that the offer for product: " + event.getProductID() + " was declined because product is out of store";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null));
@@ -210,7 +210,7 @@ public class UserEventListener {
             }
         }
 
-        Optional<Registered> user = userRepository.findById(event.getUserId()); 
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserId()); 
         user.ifPresent(registeredUser -> {
             String msg = "We are pleased to inform you that your offer on product: " + event.getProductId() + ", has been approved at a price of: " + event.getOfferAmount() + "! The product has been added to your shopping cart, please purchase it as soon as possible.";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
@@ -238,7 +238,7 @@ public class UserEventListener {
                 }
             }
         }
-        Optional<Registered> user = userRepository.findById(event.getUserId()); 
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserId()); 
         user.ifPresent(registeredUser -> {
             String msg = "We regret to inform you that the offer for product: " + event.getProductId() + " was declined by the store.";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductId(), msg, null));
@@ -252,7 +252,7 @@ public class UserEventListener {
     @Async
     @EventListener
     public void handleCounterOfferEvent(CounterOfferEvent event){
-        Optional<Registered> user = userRepository.findById(event.getUserId()); 
+        Optional<Registered> user = userRepository.findRegisteredById(event.getUserId()); 
         user.ifPresent(registeredUser -> {
             String msg = "Store " + event.getStoreId() + "'s Owner sent you a Counter Offer for product " + event.getProductId() + ", with amount: $" + event.getOfferAmount();
             StoreMsg storeMsg = new StoreMsg(event.getStoreId(), event.getProductId(), msg, null);

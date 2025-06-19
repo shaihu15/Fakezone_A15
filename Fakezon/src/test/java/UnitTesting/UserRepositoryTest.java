@@ -52,7 +52,7 @@ public class UserRepositoryTest {
                .thenReturn(Optional.of(registedUser2));
         userRepository.addUser(registedUser2); // Should not throw
         verify(userJpaRepository).save(registedUser2);
-        Optional<Registered> retrievedUser2 = userRepository.findById(registedUser2.getUserId());
+        Optional<Registered> retrievedUser2 = userRepository.findRegisteredById(registedUser2.getUserId());
         assertTrue(retrievedUser2.isPresent(), "User should be added to the repository");
     }
 
@@ -60,7 +60,7 @@ public class UserRepositoryTest {
     void testFindById() {
         Registered user = registedUser;
         Mockito.when(userJpaRepository.findRegisteredById(user.getUserId())).thenReturn(Optional.of(user));
-        Optional<Registered> retrievedUser = userRepository.findById(user.getUserId());
+        Optional<Registered> retrievedUser = userRepository.findRegisteredById(user.getUserId());
         assertTrue(retrievedUser.isPresent(), "User should be found by ID");
         assertEquals(user.getUserId(), retrievedUser.get().getUserId(), "User ID should match");
     }
@@ -80,7 +80,7 @@ public class UserRepositoryTest {
         Mockito.when(userJpaRepository.findRegisteredByEmail(user.getEmail())).thenReturn(Optional.of(user));
         Mockito.when(userJpaRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user), Optional.empty());
         userRepository.deleteByUserName(user.getEmail());
-        Optional<Registered> deletedUser = userRepository.findById(user.getUserId());
+        Optional<Registered> deletedUser = userRepository.findRegisteredById(user.getUserId());
         assertFalse(deletedUser.isPresent(), "User should be deleted from the repository");
     }
 

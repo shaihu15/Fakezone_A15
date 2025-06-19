@@ -39,9 +39,9 @@ public class UserServiceAdminTest {
         suspendedUser = new Registered("suspended@example.com", "password", LocalDate.of(2000, 1, 1), "US");
         
         // Set up common mock behavior
-        when(mockUserRepository.findById(adminUser.getUserId())).thenReturn(Optional.of(adminUser));
-        when(mockUserRepository.findById(regularUser.getUserId())).thenReturn(Optional.of(regularUser));
-        when(mockUserRepository.findById(suspendedUser.getUserId())).thenReturn(Optional.of(suspendedUser));
+        when(mockUserRepository.findRegisteredById(adminUser.getUserId())).thenReturn(Optional.of(adminUser));
+        when(mockUserRepository.findRegisteredById(regularUser.getUserId())).thenReturn(Optional.of(regularUser));
+        when(mockUserRepository.findRegisteredById(suspendedUser.getUserId())).thenReturn(Optional.of(suspendedUser));
         when(mockUserRepository.isSystemAdmin(adminUser.getUserId())).thenReturn(true);
         when(mockUserRepository.isSystemAdmin(regularUser.getUserId())).thenReturn(false);
     }
@@ -61,7 +61,7 @@ public class UserServiceAdminTest {
     void testAddSystemAdminThrowsExceptionWhenUserNotFound() {
         // Arrange
         int nonExistentUserId = 999;
-        when(mockUserRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
+        when(mockUserRepository.findRegisteredById(nonExistentUserId)).thenReturn(Optional.empty());
         
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {

@@ -79,7 +79,7 @@ public class UserRepositoryJpaImpl implements IUserRepository {
     }
 
     @Override
-    public Optional<Registered> findById(int userID) {
+    public Optional<Registered> findRegisteredById(int userID) {
         return userJpaRepository.findRegisteredById(userID);
     }
 
@@ -135,7 +135,7 @@ public class UserRepositoryJpaImpl implements IUserRepository {
     public List<Registered> getAllSuspendedUsers() {
         List<Registered> result = new ArrayList<>();
         for (Integer userId : suspendedUsers) {
-            Optional<Registered> user = findById(userId);
+            Optional<Registered> user = findRegisteredById(userId);
             user.ifPresent(result::add);
         }
         return result;
@@ -176,7 +176,7 @@ public class UserRepositoryJpaImpl implements IUserRepository {
     public List<Registered> getAllSystemAdmins() {
         List<Registered> result = new ArrayList<>();
         for (Integer adminId : systemAdmins) {
-            Optional<Registered> admin = findById(adminId);
+            Optional<Registered> admin = findRegisteredById(adminId);
             admin.ifPresent(result::add);
         }
         return result;

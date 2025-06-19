@@ -20,7 +20,7 @@ public interface IUserRepository {
 
     void addUser(Registered user);
 
-    Optional<Registered> findById(int userID);
+    Optional<Registered> findRegisteredById(int userID);
 
     List<Registered> UsersWithRolesInStoreId(int storeID);
 
