@@ -9,11 +9,17 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
 import DomainLayer.Model.Registered;
+import InfrastructureLayer.Repositories.UserJpaRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import DomainLayer.Model.User;
+
+import com.fakezone.fakezone.FakezoneApplication;
+import org.springframework.boot.test.context.SpringBootTest;
 
 public class UserRepositoryTest {
 
@@ -24,23 +30,35 @@ public class UserRepositoryTest {
     LocalDate testDate = LocalDate.of(2000, 1, 1);
     private String testCountry = "IL";
     
+    @Mock
+    private UserJpaRepository userJpaRepository;
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this); // Initialize Mockito annotations
         registedUser = new Registered(testEmail,testPassword ,testDate,testCountry);
-        userRepository = new UserRepository(); // Initialize the repository before each test
-        userRepository.addUser(registedUser); // Add a test user to the repository
+
+        userRepository = new UserRepository(userJpaRepository); // Initialize the repository before each test
+       // userRepository.addUser(registedUser); // Add a test user to the repository
     }
 
     @Test
     void testAddUser() {
-     
+        String testEmail1 = "test1@gmail.com";
+
+        registedUser = new Registered(testEmail1,testPassword ,testDate,testCountry);
+
+        userRepository.addUser(registedUser); // Add a test user to the repository
+
         // Act
         System.out.println("Registered User ID: " + registedUser.getUserId());
 
         // Assert
         Optional<Registered> retrievedUser = userRepository.findById(registedUser.getUserId());
-        System.out.println("Retrieved User ID: " + retrievedUser.get().getUserId());
-
+        if(retrievedUser.isPresent()) {
+            System.out.println("Retrieved User ID: " + retrievedUser.get().getUserId());
+        } else {
+            System.out.println("User not found in repository.");
+        }
         assertTrue(retrievedUser.isPresent(), "User should be added to the repository");
         assertEquals("test@gmail.com", retrievedUser.get().getEmail(), "Email should match");
     }

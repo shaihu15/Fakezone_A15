@@ -13,7 +13,10 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IUserRepository;
@@ -23,20 +26,27 @@ import DomainLayer.Model.StoreFounder;
 import DomainLayer.Model.StoreManager;
 import DomainLayer.Model.StoreOwner;
 import DomainLayer.Model.User;
+
 @Repository
+@Primary
+@Transactional
 public class UserRepository implements IUserRepository {
+    private final UserJpaRepository userJpaRepository;
+
+
     private static final Logger logger = LoggerFactory.getLogger(UserRepository.class);
-    private Map<Integer, Registered> users;
     private Map<Integer, User> unsignedUsers; // Map to store unsigned (guest) users
     private Map<Integer, LocalDate> suspendedUsers; // Map of userId to suspension end date (null if permanent)
     private Set<Integer> systemAdmins; // Set of user IDs who are system administrators
 
-    public UserRepository() {
-        this.users = new HashMap<>();
+    @Autowired
+    public UserRepository(UserJpaRepository userJpaRepository) {
+        this.userJpaRepository = userJpaRepository;
         this.unsignedUsers = new HashMap<>(); // Initialize the unsigned users map
         this.suspendedUsers = new HashMap<>();
         this.systemAdmins = new HashSet<>();
 
+        //initializeTestData();
 
         // USED BY UI - PUT IN A COMMENT IF NOT NEEDED
         init();
@@ -44,26 +54,28 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public Optional<Registered> findByUserName(String email) {
-        return users.values().stream()
-                .filter(user -> user.getEmail().equals(email) && user instanceof Registered)
-                .findFirst();
+        return userJpaRepository.findRegisteredByEmail(email);
+
     }
 
     @Override
     public Optional<Registered> findById(int userID) {
-        return Optional.ofNullable(users.get(userID));
+        return userJpaRepository.findRegisteredById(userID);
     }
 
     @Override
     public List<Registered> findAll() {
-        return List.copyOf(users.values());
+        return userJpaRepository.findAllRegistered();
     }
 
     @Override
     public void deleteByUserName(String email) {
         Optional<Registered> user = findByUserName(email);
         if (user.isPresent()) {
-            users.remove(user.get().getUserId());
+            if(systemAdmins.contains(user.get().getUserId())) {
+                throw new IllegalArgumentException("User is a system admin and cannot be deleted");
+            }
+            userJpaRepository.deleteById(user.get().getUserId());
             // Also remove from suspended users if present
             suspendedUsers.remove(user.get().getUserId());
         } else {
@@ -74,21 +86,18 @@ public class UserRepository implements IUserRepository {
     @Override
     public void addUser(Registered user) {
         System.out.println("Adding user with ID: " + user.getUserId());
-        if (users.containsKey(user.getUserId())) {
+        if (userJpaRepository.findByUserId(user.getUserId()).isPresent()) {
             throw new IllegalArgumentException("User with ID " + user.getUserId() + " already exists.");
         }
         System.out.println("User with ID " + user.getUserId() + " does not exist in the repository. Proceeding to add.");
-        users.put(user.getUserId(), user);
+        userJpaRepository.save(user);
+        System.out.println("User with ID " + user.getUserId() + " has been added to the repository.");
     }
-
     @Override
     public Optional<User> findAllById(int userID) {
         // First check registered users
-        if (users.containsKey(userID)) {
-            return Optional.ofNullable(users.get(userID));
-        }
-        // Then check unsigned users
-        return Optional.ofNullable(unsignedUsers.get(userID));
+        return userJpaRepository.findByUserId(userID);
+
     }
 
     /**
@@ -99,7 +108,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist
      */
     public void suspendUser(int userId, LocalDate endOfSuspension) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         suspendedUsers.put(userId, endOfSuspension);
@@ -113,7 +122,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist
      */
     public boolean unsuspendUser(int userId) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         return suspendedUsers.remove(userId) != null;
@@ -127,7 +136,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist
      */
     public boolean isUserSuspended(int userId) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         
@@ -151,7 +160,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist or isn't suspended
      */
     public LocalDate getSuspensionEndDate(int userId) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         if (!suspendedUsers.containsKey(userId)) {
@@ -211,7 +220,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist
      */
     public void addSystemAdmin(int userId) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         systemAdmins.add(userId);
@@ -225,7 +234,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist
      */
     public boolean removeSystemAdmin(int userId) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         return systemAdmins.remove(userId);
@@ -239,7 +248,7 @@ public class UserRepository implements IUserRepository {
      * @throws IllegalArgumentException If the user doesn't exist
      */
     public boolean isSystemAdmin(int userId) {
-        if (!users.containsKey(userId)) {
+        if (!userJpaRepository.findByUserId(userId).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist.");
         }
         return systemAdmins.contains(userId);
@@ -278,7 +287,7 @@ public class UserRepository implements IUserRepository {
      */
     public void addUnsignedUser(User user) {
         int userId = user.getUserId();
-        if (unsignedUsers.containsKey(userId) || users.containsKey(userId)) {
+        if (unsignedUsers.containsKey(userId) || userJpaRepository.findByUserId(user.getUserId()).isPresent()) {
             throw new IllegalArgumentException("User with ID " + userId + " already exists.");
         }
         unsignedUsers.put(userId, user);
@@ -336,37 +345,37 @@ public class UserRepository implements IUserRepository {
     public void init(){
         logger.info("user repo init");
         //UID: 1001 founder of store 1001
-        users.put(1001, new Registered("testFounder1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1001));
-        this.findById(1001).get().addRole(1001, new StoreFounder());
+        // userJpaRepository.save(new Registered("testFounder1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1001));
+        // this.findById(1001).get().addRole(1001, new StoreFounder());
 
-        //UID: 1002 owner of store 1001
-        users.put(1002, new Registered("testOwner1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1002));
-        this.findById(1001).get().addRole(1001, new StoreOwner());
+        // //UID: 1002 owner of store 1001
+        // userJpaRepository.save(new Registered("testOwner1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1002));
+        // this.findById(1001).get().addRole(1001, new StoreOwner());
 
-        //UID: 1003 manager of store 1001
-        users.put(1003, new Registered("testManager1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1003));
-        this.findById(1001).get().addRole(1001, new StoreManager());
+        // //UID: 1003 manager of store 1001
+        // userJpaRepository.save(new Registered("testManager1001@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1003));
+        // this.findById(1001).get().addRole(1001, new StoreManager());
 
-        //UID: 1004 normal registered user
-        users.put(1004, new Registered("testNormalUser1004@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1004));
-        Registered uiUserNormal = this.findById(1004).get();
-        uiUserNormal.addToBasket(1001, 1001, 1);
-        uiUserNormal.addToBasket(1001, 1002, 2);
+        // //UID: 1004 normal registered user
+        // userJpaRepository.save(new Registered("testNormalUser1004@gmail.com", "a12345", LocalDate.of(1998, 10, 15), "IL", 1004));
+        // Registered uiUserNormal = this.findById(1004).get();
+        // uiUserNormal.addToBasket(1001, 1001, 1);
+        // uiUserNormal.addToBasket(1001, 1002, 2);
 
         systemAdmins.add(1001);
     }
 
     @Override
     public void clearAllData() {
-        users.clear();
-        
+        userJpaRepository.deleteAll();
+        suspendedUsers.clear();
+        systemAdmins.clear();        
     }
 
     @Override
     public List<Registered> UsersWithRolesInStoreId(int storeID) {
         List<Registered> rolesInStore = new ArrayList<>();
-        for (Registered user : users.values()) 
-        {
+        for (Registered user : userJpaRepository.findAllRegistered()) {
             if(user.getAllRoles().containsKey(storeID))
                 rolesInStore.add(user);
         }
@@ -375,7 +384,7 @@ public class UserRepository implements IUserRepository {
 
     @Override
     public boolean isUserRegistered(int userId) {
-        return users.containsKey(userId) && users.get(userId) instanceof Registered;
+        return userJpaRepository.findByUserId(userId).isPresent();
     }
 
     @Override
@@ -386,10 +395,10 @@ public class UserRepository implements IUserRepository {
         
         // Check if user exists in either map
         if (user instanceof Registered) {
-            if (!users.containsKey(user.getUserId())) {
+            if (!userJpaRepository.findByUserId(user.getUserId()).isPresent()) {
                 throw new IllegalArgumentException("Registered user with ID " + user.getUserId() + " does not exist.");
             }
-            users.put(user.getUserId(), (Registered) user);
+            userJpaRepository.save((Registered) user);
             return user;
         } else {
             if (!unsignedUsers.containsKey(user.getUserId())) {
