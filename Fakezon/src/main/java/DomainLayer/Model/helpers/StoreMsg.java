@@ -3,7 +3,25 @@ package DomainLayer.Model.helpers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "store_messages")
 public class StoreMsg {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("msgId")
+    int msgId;
+    
+    int userId;
+
     @JsonProperty("storeId")
     int storeId;
     @JsonProperty("productId")
@@ -16,11 +34,12 @@ public class StoreMsg {
     boolean isCounterOffer = false;
 
     @JsonCreator
-    public StoreMsg(int storeId, int productId, String msg, Integer offeredBy) {
+    public StoreMsg(int storeId, int productId, String msg, Integer offeredBy, int userId) {
         this.storeId = storeId;
         this.productId = productId;
         this.msg = msg;
         this.offeredBy = offeredBy;
+        this.userId = userId;
     }
     public int getStoreId() {
         return storeId;
@@ -30,6 +49,9 @@ public class StoreMsg {
     }
     public String getMessage() {
         return msg;
+    }
+    public int getMsgId() {
+        return msgId;
     }
     
     public Integer getOfferedBy(){

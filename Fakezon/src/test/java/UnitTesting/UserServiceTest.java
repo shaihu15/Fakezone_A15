@@ -181,7 +181,7 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Hello", null));
+        messages.put(1, new StoreMsg(1, -1, "Hello", null,userId));
         when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenReturn(messages);
 
@@ -240,7 +240,7 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Assignment message", null));
+        messages.put(1, new StoreMsg(1, -1, "Assignment message", null,userId));
         when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenReturn(messages);
 
@@ -300,7 +300,7 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Auction ended", null));
+        messages.put(1, new StoreMsg(1, -1, "Auction ended", null,userId));
         when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenReturn(messages);
 

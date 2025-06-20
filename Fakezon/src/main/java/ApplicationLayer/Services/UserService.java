@@ -347,6 +347,7 @@ public class UserService implements IUserService {
     @Override
     public Response<Map<Integer, StoreMsg>> getAllMessages(int userID) {
         Optional<Registered> Registered = userRepository.findRegisteredById(userID);
+
         if (Registered.isPresent()) {
 
             try {
