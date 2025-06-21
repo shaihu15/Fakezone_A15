@@ -13,11 +13,12 @@ import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.GenerationType;
 
 @MappedSuperclass
 public class User {
     @Id
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "userid")
     protected int userId;
 
@@ -28,12 +29,7 @@ public class User {
     @JoinColumn(name = "cart_id", referencedColumnName = "id")
     protected Cart cart;
 
-    @Transient
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
-
-    // Default constructor with auto-generated ID (original behavior)
     public User() {
-        this.userId = idCounter.incrementAndGet(); // auto-increment userID, always positive
         this.cart = new Cart();
         this.isLoggedIn = false;
     }
@@ -56,6 +52,7 @@ public class User {
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
+
     public Cart getCart() {
         return cart;
     }
@@ -120,7 +117,4 @@ public class User {
         cart.addProductQuantity(storeId, productId, quantity);
     }
 
-    public static void setIdCounter(int value) {
-        idCounter.set(value);
-    }
 }

@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private final AtomicInteger guestIdCounter = new AtomicInteger(-1);
+
     public UserService(IUserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -76,6 +78,9 @@ public class UserService implements IUserService {
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             user.saveCartOrderAndDeleteIt();
+            if (user instanceof Registered) {
+                userRepository.save((Registered) user);
+            }
             logger.info("User "+userId+" clear cart");
         } else {
             logger.warn("Clear cart failed: User with id {} not found", userId);
@@ -139,6 +144,7 @@ public class UserService implements IUserService {
         if (Registered.isPresent()) {
             try {
                 Registered.get().addRole(storeID, role);
+                userRepository.save(Registered.get());
                 logger.info("Role added to user: " + userID + " for store: " + storeID);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -157,6 +163,7 @@ public class UserService implements IUserService {
         if (Registered.isPresent()) {
             try {
                 Registered.get().removeRole(storeID);
+                userRepository.save(Registered.get());
                 logger.info("Role removed from user: " + userID + " for store: " + storeID);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -258,6 +265,7 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().sendMessageToStore(storeID, message);
+                userRepository.save(user.get());
                 logger.info("Message sent to store: " + storeID + " from user: " + userID);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -276,6 +284,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().addToBasket(storeId, productId, quantity);
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Product added to basket: " + productId+ " from store: " + storeId + " by user: "
                         + userId);
             } catch (Exception e) {
@@ -325,6 +336,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().saveCartOrderAndDeleteIt();
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Order saved for user: " + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -493,6 +507,7 @@ public class UserService implements IUserService {
             Registered user = optionalUser.get();
             boolean removed = user.removeMsgById(msgId);
             if (removed) {
+                userRepository.save(user);
                 logger.info("Message with ID " + msgId + " removed from user ID " + userId);
             } else {
                 logger.warn("Message with ID " + msgId + " not found for user ID " + userId);
@@ -677,17 +692,18 @@ public class UserService implements IUserService {
     public User createUnsignedUser() {
         try {
             User unsignedUser = new User();
+            unsignedUser.setUserId(guestIdCounter.getAndDecrement());
             userRepository.addUnsignedUser(unsignedUser);
             logger.info("Created unsigned user with ID: " + unsignedUser.getUserId());
             return unsignedUser;
-          } catch (IllegalArgumentException e) {
-        logger.error("Failed to add unsigned user: " + e.getMessage());
-        throw e;
-    } catch (Exception e) {
-        logger.error("Error during adding unsigned user: " + e.getMessage());
-        throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to add unsigned user: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error during adding unsigned user: " + e.getMessage());
+            throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
+        }
     }
-}
     
     /**
      * Find an unsigned user by ID
@@ -808,6 +824,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().setCart(validCart);
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Cart set for user: " + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -824,6 +843,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().removeFromBasket(storeId, productId);
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Cart for user: " + userId + " removed product " + productId + " from store " + storeId);
             } catch (Exception e) {
                 logger.error("Error during set cart: " + e.getMessage());
@@ -845,6 +867,7 @@ public class UserService implements IUserService {
         logger.info("Trying to remove assignment message");
         if(user.isPresent()){
             user.get().removeAssignmentMessage(storeId);
+            userRepository.save(user.get());
         }
         else{
             logger.error("User not found while removeAssignmentMessage");

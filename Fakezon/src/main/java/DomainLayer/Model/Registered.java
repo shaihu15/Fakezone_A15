@@ -52,19 +52,18 @@ public class Registered extends User {
     @ElementCollection
     @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
-    // private Map<Integer, StoreMsg> messagesFromStoreMap;//msgId -> StoreMsg
+
     @ElementCollection
     @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> assignmentMessages = new ArrayList<>();
-    // private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
+
     @ElementCollection
     @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
-    // private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
+
     @ElementCollection
     @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> offersMessages = new ArrayList<>();
-    // private Map<Integer, StoreMsg> offersMessages;//msgId -> StoreMsg
 
     // Static counter for generating unique message IDs in non-persisted environments
     private static final AtomicInteger messageIdCounter = new AtomicInteger(1);
