@@ -1,6 +1,5 @@
 package NewAcceptanceTesting.AT_User.AT_Guest;
 
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,25 +40,17 @@ import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Security.TokenService;
 
 import NewAcceptanceTesting.TestHelper;
+import com.fakezone.fakezone.FakezoneApplication;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest(classes = FakezoneApplication.class)
 public class Guest_User_Enters_The_System {
-    //Use-Case: 1.1 Guest user enters the system
+    // Use-Case: 1.1 Guest user enters the system
 
+    @Autowired
     private SystemService systemService;
-    private IStoreRepository storeRepository;
-    private IUserRepository userRepository;
-    private IProductRepository productRepository;
-    private IOrderRepository orderRepository;
-    private IDelivery   deliveryService;
-    private IAuthenticator authenticatorService;
-    private IPayment paymentService;
-    private ApplicationEventPublisher eventPublisher;
-    private INotificationWebSocketHandler notificationWebSocketHandler;
-    private IStoreService storeService;
-    private IProductService productService;
-    private IUserService userService;
-    private IOrderService orderService;
 
     private TestHelper testHelper;
 
@@ -70,20 +61,7 @@ public class Guest_User_Enters_The_System {
     @BeforeEach
     void setUp() {
 
-        storeRepository = new StoreRepository();
-        userRepository = new UserRepository();
-        productRepository = new ProductRepository();
-        orderRepository = new OrderRepository();
-        paymentService = new PaymentAdapter();
-        deliveryService = new DeliveryAdapter();
-        notificationWebSocketHandler = new NotificationWebSocketHandler();
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        orderService = new OrderService(orderRepository);
-        productService = new ProductService(productRepository);
-        authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService,
-        authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
+        systemService.clearAllData(); // should be removed when there's a DB and we exclude the tests!!!
         testHelper = new TestHelper(systemService);
     }
 
@@ -97,11 +75,11 @@ public class Guest_User_Enters_The_System {
         assertTrue(response.isSuccess(), "Guest user should be created successfully");
         assertEquals("Unsigned user created successfully", response.getMessage());
         assertNotNull(guestUserId, "Guest user ID should not be null");
-        assertEquals(-1, guestUserId );
+        assertEquals(-1, guestUserId);
 
         Response<UserDTO> response2 = systemService.createUnsignedUser();
         int guestUserId2 = response2.getData().getUserId();
-        assertEquals(-2, guestUserId2 );
+        assertEquals(-2, guestUserId2);
     }
 
 }

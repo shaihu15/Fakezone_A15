@@ -20,7 +20,7 @@ public interface IUserRepository {
 
     void addUser(Registered user);
 
-    Optional<Registered> findById(int userID);
+    Optional<Registered> findRegisteredById(int userID);
 
     List<Registered> UsersWithRolesInStoreId(int storeID);
 
@@ -175,4 +175,9 @@ public interface IUserRepository {
      */
     User save(User user);
 
+    /**
+     * Get the next available userId from the registered_users table
+     * @return next available userId (max+1)
+     */
+    int getNextAvailableUserId();
 }

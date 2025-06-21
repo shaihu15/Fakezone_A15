@@ -20,13 +20,19 @@ import ApplicationLayer.Interfaces.*;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Interfaces.*;
 import NewAcceptanceTesting.TestHelper;
+import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+
+import com.fakezone.fakezone.FakezoneApplication;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class StoreOwner_Add_product {
     //Use-case: 4.1 StoreOwner - Add a product
 
-    @Autowired
+     @Autowired
     private SystemService systemService;
 
     private TestHelper testHelper;
@@ -39,7 +45,10 @@ public class StoreOwner_Add_product {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
+        //Use-case: 4.1 StoreOwner - add a product
+
+        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
+
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();

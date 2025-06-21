@@ -5,15 +5,16 @@ import java.time.Period;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -27,84 +28,75 @@ import jakarta.persistence.*;
 @DiscriminatorValue("REGISTERED")
 public class Registered extends User {
     @ElementCollection
-    @CollectionTable(name = "user_product_purchases", 
-                    joinColumns = @JoinColumn(name = "user_id"))
+    @CollectionTable(name = "user_product_purchases", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "store_id")
     @Column(name = "product_ids")
-    protected Map<Integer, List<Integer>> productsPurchase; // storeId -> List of productIDs
-    
+    protected Map<Integer, List<Integer>> productsPurchase = new HashMap<>(); // storeId -> List of productIDs
+
     @Transient
     private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
 
     @Column(name = "email", unique = true, nullable = false)
     private String email;
-    
+
     @Column(name = "password", nullable = false)
     private String password;
-    
+
     @Column(name = "age")
     private int age;
-    
-    @Transient
-    private List<StoreMsg> messagesFromUser;
-    
-    @Transient
-    private Map<Integer, StoreMsg> messagesFromStore;//msgId -> StoreMsg
-    
-    @Transient
-    private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
-    @Transient
-    private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
-    @Transient
-    private Map<Integer, StoreMsg> offersMessages;//msgId -> StoreMsg
-    protected static final AtomicInteger MsgIdCounter = new AtomicInteger(0);
+
+    @ElementCollection
+    @CollectionTable(name = "user_messages_from_user", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> messagesFromUser = new ArrayList<>(); // List to allow multiple messages
+
+    @ElementCollection
+    @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
+
+    @ElementCollection
+    @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> assignmentMessages = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> offersMessages = new ArrayList<>();
+
+    // Static counter for generating unique message IDs in non-persisted environments
+    private static final AtomicInteger messageIdCounter = new AtomicInteger(1);
 
     // Default constructor for JPA
     protected Registered() {
-        super(true); // Use JPA constructor
+        super();
         initializeFields();
     }
 
-    public Registered(String email, String password, LocalDate dateOfBirth,String state) {
+    public Registered(String email, String password, LocalDate dateOfBirth, String state) {
         super(); // Use regular constructor with auto-generated ID
         this.email = email;
         setPassword(password);
         this.roles = new HashMap<>();
-        this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
-        messagesFromUser = new Stack<>();
-        messagesFromStore = new ConcurrentHashMap<>();
-        assignmentMessages = new ConcurrentHashMap<>();
-        offersMessages = new ConcurrentHashMap<>();
-        auctionEndedMessages = new ConcurrentHashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
     /**
      * **********DO NOT USE - JUST FOR UI PURPOSES**********
      **/
-    public Registered(String email, String password, LocalDate dateOfBirth,String state, int userId) {
+    public Registered(String email, String password, LocalDate dateOfBirth, String state, int userId) {
         super(userId);
         this.email = email;
         setPassword(password);
         this.roles = new HashMap<>();
-        this.isLoggedIn = false;
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
-        messagesFromUser = new Stack<>();
-        messagesFromStore = new HashMap<>();
-        assignmentMessages = new HashMap<>();
-        offersMessages = new HashMap<>();
-        auctionEndedMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
     private void initializeFields() {
         this.roles = new HashMap<>();
-        this.messagesFromUser = new Stack<>();
-        this.messagesFromStore = new HashMap<>();
-        this.assignmentMessages = new HashMap<>();
-        this.offersMessages = new HashMap<>();
-        this.auctionEndedMessages = new HashMap<>();
         this.productsPurchase = new HashMap<>();
     }
 
@@ -126,35 +118,66 @@ public class Registered extends User {
     }
 
     public void sendMessageToStore(int storeID, String message) {
-        messagesFromUser.add(new StoreMsg(storeID,-1, message, null));
-
+        StoreMsg storeMsg = new StoreMsg(storeID, -1, message, null, this.userId);
+        // Assign unique ID if not persisted
+        if (storeMsg.getMsgId() == 0) {
+            storeMsg.setMsgId(messageIdCounter.getAndIncrement());
+        }
+        messagesFromUser.add(storeMsg);
     }
 
     public int addMessageFromStore(StoreMsg message) {
-        int msgId = MsgIdCounter.getAndIncrement();
-        this.messagesFromStore.put(msgId, message);
-        return msgId;
+        // Ensure the message has the correct userId
+        message.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (message.getMsgId() == 0) {
+            message.setMsgId(messageIdCounter.getAndIncrement());
+        }
+        this.messagesFromStore.add(message);
+        return message.getMsgId();
     }
 
     public int addOfferMessage(StoreMsg message) {
-        int msgId = MsgIdCounter.getAndIncrement();
-        this.offersMessages.put(msgId, message);
-        return msgId;
+        // Ensure the message has the correct userId
+        message.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (message.getMsgId() == 0) {
+            message.setMsgId(messageIdCounter.getAndIncrement());
+        }
+        this.offersMessages.add(message);
+        return message.getMsgId();
     }
 
     public List<StoreMsg> getMessagesFromUser() {
-        return messagesFromUser;
+        return messagesFromUser.stream()
+                .map(msg -> new StoreMsg(msg.getStoreId(), msg.getProductId(), msg.getMessage(), msg.getOfferedBy(), this.userId))
+                .toList();
     }
 
     public Map<Integer, StoreMsg> getMessagesFromStore() {
-        return messagesFromStore;
+        Map<Integer, StoreMsg> result = new HashMap<>();
+        for (StoreMsg msg : messagesFromStore) {
+            result.put(msg.getMsgId(), msg);
+        }
+        return result;
     }
+
     public Map<Integer, StoreMsg> getAssignmentMessages() {
-        return assignmentMessages;
+        Map<Integer, StoreMsg> result = new HashMap<>();
+        for (StoreMsg msg : assignmentMessages) {
+            result.put(msg.getMsgId(), msg);
+        }
+        return result;
     }
+
     public Map<Integer, StoreMsg> getOffersMessages() {
-        return offersMessages;
+        Map<Integer, StoreMsg> result = new HashMap<>();
+        for (StoreMsg msg : offersMessages) {
+            result.put(msg.getMsgId(), msg);
+        }
+        return result;
     }
+
     public Map<Integer, StoreMsg> getAllMessages() {
         Map<Integer, StoreMsg> allMessages = new HashMap<>();
         allMessages.putAll(getMessagesFromStore());
@@ -222,14 +245,19 @@ public class Registered extends User {
     }
 
     public int addAssignmentMessage(StoreMsg msg) {
-        int msgId = MsgIdCounter.getAndIncrement();
-        this.assignmentMessages.put(msgId, msg);
-        return msgId;
+        // Ensure the message has the correct userId
+        msg.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (msg.getMsgId() == 0) {
+            msg.setMsgId(messageIdCounter.getAndIncrement());
+        }
+        this.assignmentMessages.add(msg);
+        return msg.getMsgId();
     }
 
     @Override
     public void saveCartOrderAndDeleteIt() {
-        Map<Integer,Map<Integer,Integer>> products = cart.getAllProducts();
+        Map<Integer, Map<Integer, Integer>> products = cart.getAllProducts();
         for (Map.Entry<Integer, Map<Integer, Integer>> entry : products.entrySet()) {
             int storeId = entry.getKey();
             Map<Integer, Integer> productQuantities = entry.getValue();
@@ -244,39 +272,62 @@ public class Registered extends User {
         this.cart.clear();
     }
 
-    public void removeAssignmentMessage(int storeId){
-        assignmentMessages.values().removeIf(msg -> msg.getStoreId() == storeId);
-    }
-
-    public boolean removeMsgById(int msgId) {
-        if (!messagesFromStore.containsKey(msgId) && !assignmentMessages.containsKey(msgId) && !offersMessages.containsKey(msgId)) {
-            return false; // Message ID not found
-        }
-        messagesFromStore.remove(msgId);
-        assignmentMessages.remove(msgId);
-        offersMessages.remove(msgId);
-        return true;
-    }
-
-    public int addAuctionEndedMessage(StoreMsg message) {
-        int msgId = MsgIdCounter.getAndIncrement();
-        this.auctionEndedMessages.put(msgId, message);
-        return msgId;
-    }
-
-    public Map<Integer, StoreMsg> getAuctionEndedMessages() {
-        return auctionEndedMessages;
-    }
-
-    public void removeOfferMessage(int storeId, int productId, int offeredBy){
-        for(Map.Entry<Integer, StoreMsg> entry : offersMessages.entrySet()){
-            StoreMsg msg = entry.getValue();
-            if(msg.getStoreId() == storeId && msg.getProductId() == productId && msg.getOfferedBy() == offeredBy){
-                offersMessages.remove(entry.getKey());
-                return;
+    public void removeAssignmentMessage(int storeId) {
+        for (StoreMsg msg : assignmentMessages) {
+            if (msg.getStoreId() == storeId) {
+                assignmentMessages.remove(msg);
             }
         }
     }
 
+    public boolean removeMsgById(int msgId) {
+        for (StoreMsg msg : messagesFromStore) {
+            if (msg.getMsgId() == msgId) {
+                messagesFromStore.remove(msg);
+                return true;
+            }
+        }
+        for (StoreMsg msg : assignmentMessages) {
+            if (msg.getMsgId() == msgId) {
+                assignmentMessages.remove(msg);
+                return true;
+            }
+        }
+        for (StoreMsg msg : offersMessages) {
+            if (msg.getMsgId() == msgId) {
+                offersMessages.remove(msg);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int addAuctionEndedMessage(StoreMsg message) {
+        // Ensure the message has the correct userId
+        message.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (message.getMsgId() == 0) {
+            message.setMsgId(messageIdCounter.getAndIncrement());
+        }
+        this.auctionEndedMessages.add(message);
+        return message.getMsgId();
+    }
+
+    public Map<Integer, StoreMsg> getAuctionEndedMessages() {
+        Map<Integer, StoreMsg> result = new HashMap<>();
+        for (StoreMsg msg : auctionEndedMessages) {
+            result.put(msg.getMsgId(), msg);
+        }
+        return result;
+    }
+
+    public void removeOfferMessage(int storeId, int productId, int offeredBy) {
+        for (StoreMsg entry : offersMessages) {
+            if (entry.getStoreId() == storeId && entry.getProductId() == productId && entry.getOfferedBy() == offeredBy) {
+                offersMessages.remove(entry);
+                return;
+            }
+        }
+    }
 
 }

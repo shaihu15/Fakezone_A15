@@ -58,7 +58,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(false); // Simulate user not logged in for message addition
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleAssignmentEvent(event);
@@ -87,13 +87,13 @@ public class UserEventListenerTest {
         // Corrected constructor usage: AssignmentEvent's constructor has no 'source' parameter.
         AssignmentEvent event = new AssignmentEvent(storeId, userId, roleName);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
 
         // Act
         userEventListener.handleAssignmentEvent(event);
 
         // Assert
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
         verifyNoMoreInteractions(userRepository); // Ensure no other methods were called on userRepository
     }
 
@@ -153,7 +153,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(false);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleResponseFromStore(event);
@@ -178,7 +178,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(true);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleResponseFromStore(event);
@@ -196,13 +196,13 @@ public class UserEventListenerTest {
         // Corrected constructor usage: ResponseFromStoreEvent's constructor has no 'source' parameter.
         ResponseFromStoreEvent event = new ResponseFromStoreEvent(storeId, userId,message);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
 
         // Act
         userEventListener.handleResponseFromStore(event);
 
         // Assert
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
         verifyNoMoreInteractions(userRepository);
     }
 
@@ -289,7 +289,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(false);
-        when(userRepository.findById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleApprovedBidOnAuctionEvent(event);
@@ -319,7 +319,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(true);
-        when(userRepository.findById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleApprovedBidOnAuctionEvent(event);
@@ -341,7 +341,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(false);
-        when(userRepository.findById(userIdPrevHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userIdPrevHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleAuctionGotHigherBidEvent(event);
@@ -367,7 +367,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(true);
-        when(userRepository.findById(userIdPrevHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userIdPrevHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleAuctionGotHigherBidEvent(event);
@@ -389,7 +389,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(false);
-        when(userRepository.findById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleDeclinedBidOnAuctionEvent(event);
@@ -416,7 +416,7 @@ public class UserEventListenerTest {
 
         Registered mockRegisteredUser = mock(Registered.class);
         when(mockRegisteredUser.isLoggedIn()).thenReturn(true);
-        when(userRepository.findById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
+        when(userRepository.findRegisteredById(userIdHighestBid)).thenReturn(Optional.of(mockRegisteredUser));
 
         // Act
         userEventListener.handleDeclinedBidOnAuctionEvent(event);

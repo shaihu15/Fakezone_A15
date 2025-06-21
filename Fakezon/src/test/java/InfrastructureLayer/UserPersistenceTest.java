@@ -4,7 +4,6 @@ import DomainLayer.IRepository.IUserRepository;
 import DomainLayer.Model.User;
 import DomainLayer.Model.Registered;
 import InfrastructureLayer.Repositories.UserJpaRepository;
-import InfrastructureLayer.Repositories.UserRepositoryJpaImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,15 +45,15 @@ public class UserPersistenceTest {
         // Create test registered users
         testRegistered1 = new Registered("test1@example.com", "password123", 
                                        LocalDate.of(1990, 5, 15), "US");
-        testRegistered1.setUserId(1001);
+        //testRegistered1.setUserId(1001);
 
         testRegistered2 = new Registered("test2@example.com", "password456", 
                                        LocalDate.of(1985, 8, 22), "CA");
-        testRegistered2.setUserId(1002);
+        //testRegistered2.setUserId(1002);
 
         // Create test guest users with explicit IDs
-        testGuest1 = new User(2001);
-        testGuest2 = new User(2002);
+        testGuest1 = new User();
+        testGuest2 = new User();
     }
 
     @Test
@@ -63,7 +62,7 @@ public class UserPersistenceTest {
         userRepository.addUser(testRegistered1);
 
         // Find by ID
-        Optional<Registered> found = userRepository.findById(testRegistered1.getUserId());
+        Optional<Registered> found = userRepository.findRegisteredById(testRegistered1.getUserId());
         assertTrue(found.isPresent(), "Registered user should be found by ID");
         assertEquals(testRegistered1.getEmail(), found.get().getEmail(), "Email should match");
         assertEquals(testRegistered1.getUserId(), found.get().getUserId(), "User ID should match");
@@ -126,14 +125,14 @@ public class UserPersistenceTest {
         userRepository.addUser(testRegistered1);
         
         // Verify user exists
-        assertTrue(userRepository.findById(testRegistered1.getUserId()).isPresent(), 
+        assertTrue(userRepository.findRegisteredById(testRegistered1.getUserId()).isPresent(), 
                   "User should exist before deletion");
 
         // Delete user
         userRepository.deleteByUserName(testRegistered1.getEmail());
 
         // Verify user is deleted
-        assertFalse(userRepository.findById(testRegistered1.getUserId()).isPresent(), 
+        assertFalse(userRepository.findRegisteredById(testRegistered1.getUserId()).isPresent(), 
                    "User should not exist after deletion");
     }
 

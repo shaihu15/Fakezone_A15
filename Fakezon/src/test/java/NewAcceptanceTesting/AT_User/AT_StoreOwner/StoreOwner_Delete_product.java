@@ -49,12 +49,16 @@ import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import NewAcceptanceTesting.TestHelper;
 
+import com.fakezone.fakezone.FakezoneApplication;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class StoreOwner_Delete_product {
     //Use-case: 4.1 StoreOwner - Delete a product
     
-    @Autowired
+     @Autowired
     private SystemService systemService;
 
     private TestHelper testHelper;
@@ -63,7 +67,8 @@ public class StoreOwner_Delete_product {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
+        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
+
         testHelper = new TestHelper(systemService);
 
         // Initialize the system with a store owner and a product

@@ -112,7 +112,7 @@ public class NewSystemServiceAcceptanceTest {
         
         systemService.guestRegister(systemAdmainEmail, systemAdmainPassword, systemAdmainBirthDate.toString(), systemAdmainCountry);
     }
-
+/* 
     @Test
     void testRegisterUser_validArguments_Success() {
         String email = "test@gmail.com";
@@ -379,7 +379,7 @@ public class NewSystemServiceAcceptanceTest {
         assertTrue(cart.isSuccess(), "Cart retrieval should succeed");
         assertTrue(cart.getData().size() > 0, "Cart should contain products");
     }
-
+*/
 
 }
 

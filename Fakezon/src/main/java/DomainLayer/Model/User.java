@@ -6,43 +6,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.persistence.*;
+
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 
-import jakarta.persistence.*;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.GenerationType;
 
-@Entity
-@Table(name = "users")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("GUEST")
+@MappedSuperclass
 public class User {
     @Id
-    @Column(name = "user_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "userid")
     protected int userId;
 
     @Column(name = "is_logged_in")
     protected boolean isLoggedIn;
 
-    @Transient
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cart_id", referencedColumnName = "id")
     protected Cart cart;
-    
-    @Transient
-    protected static final AtomicInteger idCounter = new AtomicInteger(0);
 
-    // Default constructor with auto-generated ID (original behavior)
     public User() {
-        this.userId = idCounter.incrementAndGet(); // auto-increment userID
         this.cart = new Cart();
         this.isLoggedIn = false;
     }
 
-    // JPA constructor for entity loading
-    protected User(boolean jpaConstructor) {
-        // This constructor is used by JPA frameworks
-        this.cart = new Cart();
-    }
+
 
     /**
      * **********DO NOT USE - JUST FOR UI PURPOSES**********
@@ -60,6 +52,7 @@ public class User {
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
+
     public Cart getCart() {
         return cart;
     }
@@ -124,11 +117,4 @@ public class User {
         cart.addProductQuantity(storeId, productId, quantity);
     }
 
-    // JPA lifecycle methods
-    @PostLoad
-    private void initializeCart() {
-        if (this.cart == null) {
-            this.cart = new Cart();
-        }
-    }
 }
