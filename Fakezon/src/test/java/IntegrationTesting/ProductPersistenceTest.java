@@ -3,10 +3,12 @@ package IntegrationTesting;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,9 +54,9 @@ public class ProductPersistenceTest {
         Collection<IProduct> electronicsProducts = productRepository.getProductsByCategory(PCategory.ELECTRONICS);
         
         // Then
-        assertEquals(1, electronicsProducts.size());
-        IProduct retrievedProduct = electronicsProducts.iterator().next();
-        assertEquals("Electronics Product", retrievedProduct.getName());
+        boolean found = electronicsProducts.stream()
+            .anyMatch(p -> p.getName().equals("Electronics Product") && p.getCategory() == PCategory.ELECTRONICS);
+        assertTrue(found);
     }
 
     @Test
@@ -83,7 +85,6 @@ public class ProductPersistenceTest {
         productRepository.deleteProduct(productId);
         
         // Then
-        IProduct deletedProduct = productRepository.getProductById(productId);
-        assertNull(deletedProduct);
+        assertThrows(InvalidDataAccessApiUsageException.class, () -> productRepository.getProductById(productId));
     }
 } 

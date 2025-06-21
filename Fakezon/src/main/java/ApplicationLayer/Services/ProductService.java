@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ApplicationLayer.DTO.ProductDTO;
@@ -22,8 +23,7 @@ public class ProductService implements IProductService {
     private final IProductRepository productRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-
-
+    @Autowired
     public ProductService(IProductRepository productRepository) {
         this.productRepository = productRepository; 
     }
@@ -160,7 +160,6 @@ public class ProductService implements IProductService {
             logger.info("Products with ids {} were added to store with id {}", productIds, storeId);
         }
     }
-
 
     @Override
     public List<ProductDTO> getProductsByCategory(PCategory category) {

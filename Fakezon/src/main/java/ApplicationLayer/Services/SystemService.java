@@ -59,6 +59,7 @@ import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import jakarta.transaction.Transactional;
 
 @Service
 public class SystemService implements ISystemService {
@@ -378,6 +379,7 @@ public class SystemService implements ISystemService {
         }
     }
 
+    //@Transactional
     @Override
     public Response<Boolean> updateProduct(int productId, String productName, String productDescription,
             Set<Integer> storesIds) {
@@ -391,6 +393,7 @@ public class SystemService implements ISystemService {
         }
     }
 
+    //@Transactional
     @Override
     public Response<Boolean> deleteProduct(int productId) {
         try {
@@ -454,6 +457,7 @@ public class SystemService implements ISystemService {
         }
     }
     //addProduct method should be with amount and store?
+    //@Transactional
     @Override
     public Response<Integer> addProduct(String productName, String productDescription, String category) {
         try {
@@ -699,6 +703,7 @@ public class SystemService implements ISystemService {
         }
     }
 
+    //@Transactional
     @Override
     public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName,
             String description, double basePrice, int quantity, String category) {

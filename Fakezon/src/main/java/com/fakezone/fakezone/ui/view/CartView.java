@@ -1,7 +1,5 @@
 package com.fakezone.fakezone.ui.view;
 
-import static org.mockito.Mockito.description;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
