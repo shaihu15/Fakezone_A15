@@ -19,6 +19,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -473,7 +474,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                 for (Map.Entry<Integer, StoreMsg> entry : msgs.entrySet()) {
                     Integer storeId = entry.getValue().getStoreId();
                     String messageText = entry.getValue().getMessage();
-
+                    StoreMsg msgObj = entry.getValue();
                     // Fetch store info
                     StoreDTO store = getStoreDTO(storeId, token);
                     String storeName = store.getName();
@@ -507,7 +508,14 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                     binButton.addClickListener(e -> {removeMessage(userId, entry.getKey(), token); updateMsgFromStores(userId, token);});
                     // Assemble card
                     messageCard.add(nameHeader, body, replyBtn, binButton);
-
+                    
+                    if (msgObj.isCounterOffer()) {
+                        Button accCounter = new Button("Accept");
+                        accCounter.addClickListener(e -> acceptCounterOffer(userId, msgObj.getStoreId() ,msgObj.getProductId(), token, entry.getKey()));
+                        Button decCounter = new Button("Decline");
+                        decCounter.addClickListener(e -> declineCounterOffer(userId, msgObj.getStoreId(), msgObj.getProductId(), token, entry.getKey()));
+                        messageCard.add(accCounter, decCounter);
+                    }
                     // Add to the main container
                     messagesFromStoreCard.add(messageCard);
                 }
@@ -598,23 +606,23 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
                     
                     int productId = entry.getValue().getProductId();
                     // Reply button stub
-                    Button accButton = new Button("Accept Bid");
+                    Button accButton = new Button("Accept");
                     accButton.addClickListener(evt -> {
                         acceptOffer(storeId, userId, productId, token, entry.getKey(), entry.getValue().getOfferedBy()); //user id = owner (this user), getOfferedBy = user that placed the offer
                     });
 
-                    Button decButton = new Button("Decline Bid");
+                    Button decButton = new Button("Decline");
                     decButton.addClickListener(evt -> {
                         declineOffer(storeId, userId, productId, token, entry.getKey(),  entry.getValue().getOfferedBy()); //user id = owner (this user), getOfferedBy = user that placed the offer
                     });
 
-                    Button counterBtn = new Button("Decline Bid");
+                    Button counterBtn = new Button("Counter Offer");
                     counterBtn.addClickListener(evt -> {
                         counterOfferDialog(storeId, userId, productId, token, entry.getKey(),entry.getValue().getOfferedBy()); // user id = owner (this user), getOfferedBy = user that placed the offer
                     });
 
                     // Assemble card
-                    messageCard.add(nameHeader, body, accButton, decButton);
+                    messageCard.add(nameHeader, body, accButton, decButton, counterBtn);
 
                     // Add to the main container
                     offerMessagesCard.add(messageCard);
@@ -689,7 +697,77 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void counterOfferDialog(int storeId, int ownerId, int productId, String token, int msgId, int userId){
-        
+        Dialog dialog = new Dialog();
+        NumberField offer = new NumberField("Enter Your Counter Offer");
+        dialog.add(offer);
+        Button send = new Button("Send");
+        send.addClickListener(e -> {if(offer.getValue() != null && offer.getValue() > 0){
+            dialog.close(); sendCounterOffer(storeId, ownerId, productId, token, msgId, userId, offer.getValue());
+        } });
+        dialog.add(send);
+        dialog.open();
     }
 
+    private void sendCounterOffer(int storeId, int ownerId, int productId, String token, int msgId, int userId, double offerAmount){
+        String url = backendUrl + "store/counterOffer/" + storeId + "/" + ownerId + "/" + userId + "/" + productId + "?offerAmount=" + offerAmount;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Counter Offer Submitted Successfully");
+            removeMessage(ownerId, msgId, token);
+            updateOfferMsgs(ownerId, token);
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void acceptCounterOffer(int userId, int storeId , int productId, String token, int msgId){
+        String url = backendUrl + "store/acceptCounterOffer/" + storeId + "/" + userId + "/" + productId ;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Counter Offer Accepted Successfully");
+            removeMessage(userId, msgId, token);
+            updateMsgFromStores(userId, token);
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private void declineCounterOffer(int userId, int storeId, int productId, String token, int msgId) {
+        String url = backendUrl + "store/declineCounterOffer/" + storeId + "/" + userId + "/" + productId;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Counter Offer Declined Successfully");
+            removeMessage(userId, msgId, token);
+            updateMsgFromStores(userId, token);
+        } else {
+            Notification.show(response.getMessage());
+        }
+    }
 }
