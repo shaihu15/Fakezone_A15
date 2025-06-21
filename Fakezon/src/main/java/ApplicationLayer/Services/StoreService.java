@@ -360,13 +360,13 @@ public class StoreService implements IStoreService {
 
     @Override
     public int addStore(int userId, String storeName) {
-        if (storeRepository.findByName(storeName) != null) {
-            logger.error("openStore - Store name already exists: " + storeName);
-            throw new IllegalArgumentException("Store name already exists");
-        }
         if (storeName == null || storeName.isEmpty()) {
             logger.error("openStore - Store name is empty: " + storeName);
             throw new IllegalArgumentException("Store name is empty");
+        }
+        if (storeRepository.findByName(storeName) != null) {
+            logger.error("openStore - Store name already exists: " + storeName);
+            throw new IllegalArgumentException("Store name already exists");
         }
         Store store = new Store(storeName, userId, publisher);
         int storeId = store.getId();
