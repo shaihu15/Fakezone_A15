@@ -45,26 +45,29 @@ public class Registered extends User {
     @Column(name = "age")
     private int age;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-@JoinColumn(name = "msgId") // foreign key column in store_messages table
-    private Set<StoreMsg> messagesFromUser = new HashSet<>(); // Set to avoid duplicates
+    @ElementCollection
+    @CollectionTable(name = "user_messages_from_user", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> messagesFromUser = new ArrayList<>(); // List to allow multiple messages
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-@JoinColumn(name = "msgId") // foreign key column in store_messages table
-    private Set<StoreMsg> messagesFromStore = new HashSet<>(); // Set to avoid duplicates
+    @ElementCollection
+    @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
     // private Map<Integer, StoreMsg> messagesFromStoreMap;//msgId -> StoreMsg
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-@JoinColumn(name = "msgId") // foreign key column in store_messages table
-    private Set<StoreMsg> assignmentMessages = new HashSet<>();
+    @ElementCollection
+    @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> assignmentMessages = new ArrayList<>();
     // private Map<Integer, StoreMsg> assignmentMessages;//msgId -> StoreMsg
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-@JoinColumn(name = "msgId") // foreign key column in store_messages table
-    private Set<StoreMsg> auctionEndedMessages = new HashSet<>();
+    @ElementCollection
+    @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
     // private Map<Integer, StoreMsg> auctionEndedMessages;//msgId -> StoreMsg
-@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-@JoinColumn(name = "msgId") // foreign key column in store_messages table
-    private Set<StoreMsg> offersMessages = new HashSet<>();
+    @ElementCollection
+    @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
+    private List<StoreMsg> offersMessages = new ArrayList<>();
     // private Map<Integer, StoreMsg> offersMessages;//msgId -> StoreMsg
+
+    // Static counter for generating unique message IDs in non-persisted environments
+    private static final AtomicInteger messageIdCounter = new AtomicInteger(1);
 
     // Default constructor for JPA
     protected Registered() {
@@ -116,16 +119,32 @@ public class Registered extends User {
     }
 
     public void sendMessageToStore(int storeID, String message) {
-        messagesFromUser.add(new StoreMsg(storeID, -1, message, null, this.userId));
-
+        StoreMsg storeMsg = new StoreMsg(storeID, -1, message, null, this.userId);
+        // Assign unique ID if not persisted
+        if (storeMsg.getMsgId() == 0) {
+            storeMsg.setMsgId(messageIdCounter.getAndIncrement());
+        }
+        messagesFromUser.add(storeMsg);
     }
 
     public int addMessageFromStore(StoreMsg message) {
+        // Ensure the message has the correct userId
+        message.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (message.getMsgId() == 0) {
+            message.setMsgId(messageIdCounter.getAndIncrement());
+        }
         this.messagesFromStore.add(message);
         return message.getMsgId();
     }
 
     public int addOfferMessage(StoreMsg message) {
+        // Ensure the message has the correct userId
+        message.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (message.getMsgId() == 0) {
+            message.setMsgId(messageIdCounter.getAndIncrement());
+        }
         this.offersMessages.add(message);
         return message.getMsgId();
     }
@@ -227,6 +246,12 @@ public class Registered extends User {
     }
 
     public int addAssignmentMessage(StoreMsg msg) {
+        // Ensure the message has the correct userId
+        msg.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (msg.getMsgId() == 0) {
+            msg.setMsgId(messageIdCounter.getAndIncrement());
+        }
         this.assignmentMessages.add(msg);
         return msg.getMsgId();
     }
@@ -279,6 +304,12 @@ public class Registered extends User {
     }
 
     public int addAuctionEndedMessage(StoreMsg message) {
+        // Ensure the message has the correct userId
+        message.setUserId(this.userId);
+        // Assign unique ID if not persisted
+        if (message.getMsgId() == 0) {
+            message.setMsgId(messageIdCounter.getAndIncrement());
+        }
         this.auctionEndedMessages.add(message);
         return message.getMsgId();
     }

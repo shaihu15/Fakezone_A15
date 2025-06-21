@@ -20,6 +20,7 @@ public class StoreMsg {
     @JsonProperty("msgId")
     int msgId;
     
+    @JsonProperty("userId")
     int userId;
 
     @JsonProperty("storeId")
@@ -41,6 +42,7 @@ public class StoreMsg {
         this.offeredBy = offeredBy;
         this.userId = userId;
     }
+    
     public int getStoreId() {
         return storeId;
     }
@@ -52,6 +54,18 @@ public class StoreMsg {
     }
     public int getMsgId() {
         return msgId;
+    }
+    
+    public void setMsgId(int msgId) {
+        this.msgId = msgId;
+    }
+    
+    public int getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
     
     public Integer getOfferedBy(){

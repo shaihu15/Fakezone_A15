@@ -48,10 +48,22 @@ public class UserRepositoryTest {
     @Test
     void testAddUser() {
         Registered registedUser2 = new Registered("test2@gmail.com", "password123", testDate, testCountry);
+        
+        // Initially, the user doesn't exist in the repository
+        Mockito.when(userJpaRepository.findRegisteredById(registedUser2.getUserId()))
+               .thenReturn(Optional.empty());
+        
+        // After saving, the user should exist
+        Mockito.when(userJpaRepository.save(registedUser2)).thenReturn(registedUser2);
+        
+        userRepository.addUser(registedUser2); // Should not throw
+        
+        verify(userJpaRepository).save(registedUser2);
+        
+        // Now mock that the user exists for the retrieval test
         Mockito.when(userJpaRepository.findRegisteredById(registedUser2.getUserId()))
                .thenReturn(Optional.of(registedUser2));
-        userRepository.addUser(registedUser2); // Should not throw
-        verify(userJpaRepository).save(registedUser2);
+        
         Optional<Registered> retrievedUser2 = userRepository.findRegisteredById(registedUser2.getUserId());
         assertTrue(retrievedUser2.isPresent(), "User should be added to the repository");
     }
