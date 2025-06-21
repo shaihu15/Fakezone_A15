@@ -49,7 +49,7 @@ import DomainLayer.Model.Registered;
 import DomainLayer.Model.Store;
 import DomainLayer.Model.StoreProduct;
 import InfrastructureLayer.ProductRepositoryImpl;
-import InfrastructureLayer.StoreRepositoryImpl;
+import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
