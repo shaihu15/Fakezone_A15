@@ -40,7 +40,6 @@ import DomainLayer.Model.helpers.UserMsg;
 
 import jakarta.persistence.*;
 
-import static org.mockito.ArgumentMatchers.*;
 
 import java.time.LocalDate;
 import java.util.concurrent.Executors;
@@ -68,7 +67,7 @@ public class Store implements IStore {
     @MapKeyColumn(name = "user_id")
     private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)//LAZY
     @JoinColumn(name = "owner_store_id")
     @MapKeyColumn(name = "product_id")
     private Map<Integer, StoreProduct> storeProducts; // HASH productID to store product
@@ -83,7 +82,8 @@ public class Store implements IStore {
     @Transient
     private HashMap<Integer, IDiscountPolicy> discountPolicies; // HASH policyID to discount policy
     
-    @ElementCollection
+    //@ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "store_owners", joinColumns = @JoinColumn(name = "store_id"))
     @Column(name = "owner_id")
     private List<Integer> storeOwners;

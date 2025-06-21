@@ -15,20 +15,21 @@ import jakarta.persistence.*;
 public class Product implements IProduct {
     
     @Id
+    @Column(name = "product_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
     
-    @Column(length = 1000)
+    @Column(name = "description", length = 1000)
     private String description;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "category", nullable = false)
     private PCategory category; 
     
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_stores", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "store_id")
     private Set<Integer> storesIds; // List of store IDs where the product is available
