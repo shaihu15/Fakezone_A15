@@ -1532,7 +1532,7 @@ public class Store implements IStore {
             }
         }
         finally{
-            rolesLock.lock();
+            rolesLock.unlock();
             offersLock.unlock();
             productsLock.unlock();
         }
@@ -1555,7 +1555,7 @@ public class Store implements IStore {
             handleOfferDone(offer);
         }
         finally{
-            rolesLock.lock();
+            rolesLock.unlock();
             offersLock.unlock();
             productsLock.unlock();
         }

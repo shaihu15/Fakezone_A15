@@ -315,12 +315,12 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
 
             // New fields for address details
             TextField streetAddress = new TextField("Street Address");
-            streetAddress.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            streetAddress.setAllowedCharPattern("[^*]"); // Restrict '*'
             TextField city = new TextField("City");
-            city.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            city.setAllowedCharPattern("[^*]"); // Restrict '*'
             ComboBox<String> countryComboBox = new ComboBox<>("Country");
             TextField zipCode = new TextField("Zip Code"); 
-            zipCode.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            zipCode.setAllowedCharPattern("[^*]"); // Restrict '*'
 
             List<String> countryNames = Arrays.stream(Locale.getISOCountries())
                 .map(code -> Locale.forLanguageTag("und-" + code).getDisplayCountry())
