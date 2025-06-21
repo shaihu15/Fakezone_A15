@@ -36,6 +36,11 @@ public class StoreRepository implements IStoreRepository {
     }
 
     @Override
+    public void save(Store store) {
+        storeJpaRepository.save(store);
+    }
+
+    @Override
     public void delete(int storeID) {
         if (storeJpaRepository.existsById(storeID)) {
             storeJpaRepository.deleteById(storeID);
