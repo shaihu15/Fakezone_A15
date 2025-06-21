@@ -67,6 +67,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.addStoreOwner(requesterId, newOwnerId);
+        storeRepository.save(store);
     }
 
     @Override
@@ -152,6 +153,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.closeStore(requesterId);
+        storeRepository.save(store);
         logger.info("Store closed: " + storeId + " by user: " + requesterId);
     }
 
@@ -163,6 +165,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.closeStoreByAdmin(adminId);
+        storeRepository.save(store);
         logger.info("Store closed by admin: " + storeId + " by admin: " + adminId);
     }
 
@@ -180,7 +183,9 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             logger.info("Store product added: " + productId + " to store: " + storeId + " by user: " + requesterId);
-            return store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
+            StoreProductDTO result = store.addStoreProduct(requesterId, productId, name, basePrice, quantity, category);
+            storeRepository.save(store);
+            return result;
         }
         catch (Exception e){
             logger.error("StoreService - failed to add store product " + e.getMessage());
@@ -199,6 +204,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.editStoreProduct(requesterId, productId, name, basePrice, quantity);
+            storeRepository.save(store);
         }
         catch (Exception e){
             logger.error("StoreService - failed to update store product " + e.getMessage());
@@ -216,6 +222,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeStoreProduct(requesterId, productId);
+            storeRepository.save(store);
         }
         catch (Exception e){
             logger.error("StoreService - failed to remove store product " + e.getMessage());
@@ -232,6 +239,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.addRating(userId, rating, comment);
+        storeRepository.save(store);
         logger.info("Store rating added: " + storeId + " by user: " + userId + " with rating: " + rating);
     }
 
@@ -243,6 +251,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.addStoreProductRating(userId, productId, rating, comment);
+        storeRepository.save(store);
         logger.info("Store product rating added: " + productId + " by user: " + userId + " with rating: " + rating);
     }
 
@@ -257,6 +266,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeStoreOwner(requesterId, ownerId);
+            storeRepository.save(store);
         } catch (Exception e) {
             logger.error("StoreService - failed to remove store owner " + e.getMessage());
             throw e;
@@ -285,6 +295,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.addStoreManager(requesterId, newManagerId, perms);
+            storeRepository.save(store);
         } catch (Exception e) {
             logger.error("Store Service - failed to add store manager " + e.getMessage());
             throw e;
@@ -303,6 +314,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.addManagerPermissions(requesterId, managerId, perms);
+            storeRepository.save(store);
         } catch (Exception e) {
             logger.error("Store Service - failed to add manager permissions: " + e.getMessage());
             throw e;
@@ -321,6 +333,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeManagerPermissions(requesterId, managerId, toRemove);
+            storeRepository.save(store);
         } catch (Exception e) {
             logger.error("Store Service - failed to remove  manager permissions: " + e.getMessage());
             throw e;
@@ -338,6 +351,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.removeStoreManager(requesterId, managerId);
+            storeRepository.save(store);
         } catch (Exception e) {
             logger.error("Store Service - failed to remove store manager");
             throw e;
@@ -371,6 +385,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.receivingMessage(userId, message);
+        storeRepository.save(store);
     }
 
     @Override
@@ -381,6 +396,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.sendMessage(managerId, userId, message);
+        storeRepository.save(store);
     }
 
     @Override
@@ -431,6 +447,7 @@ public class StoreService implements IStoreService {
         }
         try {
             store.addAuctionProduct(requesterId, productID, basePrice, MinutesToEnd);
+            storeRepository.save(store);
             logger.info("Auction product added to store: " + storeId + " by user: " + requesterId + " with product ID: "
                     + productID);
         } catch (IllegalArgumentException e) {
@@ -447,6 +464,7 @@ public class StoreService implements IStoreService {
         }
         try {
             if(store.addBidOnAuctionProduct(requesterId, productID, bid)){
+                storeRepository.save(store);
                 logger.info("Bid added to auction product in store: " + storeId + " by user: " + requesterId
                     + " with product ID: " + productID + " and bid: " + bid);
                 }
@@ -526,6 +544,7 @@ public class StoreService implements IStoreService {
         }
         try{
             isowner = store.acceptAssignment(userId);
+            storeRepository.save(store);
             logger.info("User " + userId + " accepted assignment to store " + storeId);
             return isowner;
         }
@@ -544,6 +563,7 @@ public class StoreService implements IStoreService {
         }
         try{
             store.declineAssignment(userId);
+            storeRepository.save(store);
             logger.info("User " + userId + " declined assignment to store " + storeId);
         }
         catch(Exception e){
@@ -640,7 +660,7 @@ public class StoreService implements IStoreService {
         uiStore.acceptAssignment(1003);
         uiStore.addStoreProduct(1001, 1001, "Product1001", 100.0, 10, PCategory.BOOKS);
         uiStore.addStoreProduct(1001, 1002, "Product1002", 200.0, 20, PCategory.MUSIC);
-        
+        storeRepository.save(uiStore);
     }
 
     @Override
@@ -656,6 +676,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             Map<StoreProductDTO, Boolean> storeProducts = store.decrementProductsInStore(userID, products);
+            storeRepository.save(store);
             result.put(toStoreDTO(store), storeProducts);
         }
         return result;
@@ -671,6 +692,7 @@ public class StoreService implements IStoreService {
                 throw new IllegalArgumentException("Store not found");
             }
             store.returnProductsToStore(userId, productsInStore);
+            storeRepository.save(store);
         }
     }
 
@@ -701,6 +723,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addSimpleDiscountWithProductsScope(requesterId, productIDs, percentage);
+                storeRepository.save(store);
                 logger.info("Simple discount with products scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add simple discount with products scope: " + e.getMessage());
@@ -718,6 +741,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addSimpleDiscountWithStoreScope(requesterId, percentage);
+                storeRepository.save(store);
                 logger.info("Simple discount with store scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add simple discount with store scope: " + e.getMessage());
@@ -736,6 +760,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addConditionDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("Condition discount with products scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add condition discount with products scope: " + e.getMessage());
@@ -753,6 +778,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addConditionDiscountWithStoreScope(requesterId, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("Condition discount with store scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add condition discount with store scope: " + e.getMessage());
@@ -770,6 +796,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addAndDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("AND discount with products scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add AND discount with products scope: " + e.getMessage());
@@ -787,6 +814,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addAndDiscountWithStoreScope(requesterId, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("AND discount with store scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add AND discount with store scope: " + e.getMessage());
@@ -804,6 +832,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addOrDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("OR discount with products scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add OR discount with products scope: " + e.getMessage());
@@ -821,6 +850,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addOrDiscountWithStoreScope(requesterId, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("OR discount with store scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add OR discount with store scope: " + e.getMessage());
@@ -838,6 +868,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addXorDiscountWithProductsScope(requesterId, productIDs, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("XOR discount with products scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add XOR discount with products scope: " + e.getMessage());
@@ -855,6 +886,7 @@ public class StoreService implements IStoreService {
                     throw new IllegalArgumentException("Store not found");
                 }
                 store.addXorDiscountWithStoreScope(requesterId, conditions, percentage);
+                storeRepository.save(store);
                 logger.info("XOR discount with store scope added to store: " + storeId + " by user: " + requesterId);
             } catch (Exception e) {
                 logger.error("StoreService - failed to add XOR discount with store scope: " + e.getMessage());
@@ -890,6 +922,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.openStore(userId);
+        storeRepository.save(store);
     }
 
     @Override
@@ -900,6 +933,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.placeOfferOnStoreProduct(userId, productId, offerAmount);
+        storeRepository.save(store);
     }
 
     @Override
@@ -910,6 +944,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.acceptOfferOnStoreProduct(ownerId, userId, productId);
+        storeRepository.save(store);
     }
 
     @Override
@@ -920,6 +955,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.declineOfferOnStoreProduct(ownerId, userId, productId);
+        storeRepository.save(store);
     }
 
     @Override
@@ -930,6 +966,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.counterOffer(ownerId, userId, productId, offerAmount);
+        storeRepository.save(store);
     }
 
     @Override
@@ -940,6 +977,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.acceptCounterOffer(userId, productId);
+        storeRepository.save(store);
     }
 
     @Override
@@ -950,6 +988,7 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         store.declineCounterOffer(userId, productId);
+        storeRepository.save(store);
     }
 
     @Override
