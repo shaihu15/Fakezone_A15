@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreManager;
@@ -67,17 +68,19 @@ public class RegisteredTest {
     void givenValidStoreID_whenAddRole_ThenRolesAreUpdated() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
+        when(role.getRoleName()).thenReturn(RoleName.STORE_MANAGER);
         registeredUser.addRole(storeID, role);
-        assertNotNull(registeredUser.getRoleByStoreID(storeID), "Role should be added successfully");
+        assertEquals(role.getRoleName(), registeredUser.getRoleByStoreID(storeID).getRoleName());
     }
 
     @Test
     void givenValidStoreID_whenRemoveRole_ShouldSucceed() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
+        when(role.getRoleName()).thenReturn(RoleName.STORE_MANAGER);
         registeredUser.addRole(storeID, role);
         registeredUser.removeRole(storeID);
-        assertNull(registeredUser.getRoleByStoreID(storeID), "Role should be removed successfully");
+        assertThrows(IllegalArgumentException.class, () -> registeredUser.getRoleByStoreID(storeID), "Role should be removed successfully");
     }
 
     @Test
@@ -94,8 +97,9 @@ public class RegisteredTest {
     void givenRoles_whenGetRoleByStoreID_returnRole() {
         int storeID = 1;
         StoreManager role = mock(StoreManager.class);
+        when(role.getRoleName()).thenReturn(RoleName.STORE_MANAGER);
         registeredUser.addRole(storeID, role);
-        assertEquals(role, registeredUser.getRoleByStoreID(storeID),
+        assertEquals(role.getRoleName(), registeredUser.getRoleByStoreID(storeID).getRoleName(),
                 "Should return the correct role for the given store ID");
     }
 
@@ -105,6 +109,8 @@ public class RegisteredTest {
         int storeID2 = 2;
         StoreManager role1 = mock(StoreManager.class);
         StoreOwner role2 = mock(StoreOwner.class);
+        when(role1.getRoleName()).thenReturn(RoleName.STORE_MANAGER);
+        when(role2.getRoleName()).thenReturn(RoleName.STORE_OWNER);
         registeredUser.addRole(storeID1, role1);
         registeredUser.addRole(storeID2, role2);
         assertEquals(2, registeredUser.getAllRoles().size(), "Should return all roles");
@@ -155,15 +161,17 @@ public class RegisteredTest {
     @Test
     public void testAddRoleAndGetRole() {
         IRegisteredRole role = mock(IRegisteredRole.class);
+        when(role.getRoleName()).thenReturn(RoleName.STORE_MANAGER);
         registeredUser.addRole(1, role);
-        assertEquals(role, registeredUser.getRoleByStoreID(1));
+        assertEquals(role.getRoleName(), registeredUser.getRoleByStoreID(1).getRoleName());
     }
-        @Test
+    @Test
     public void testRemoveRole() {
         IRegisteredRole role = mock(IRegisteredRole.class);
+        when(role.getRoleName()).thenReturn(RoleName.STORE_MANAGER);
         registeredUser.addRole(1, role);
         registeredUser.removeRole(1);
-        assertNull(registeredUser.getRoleByStoreID(1));
+        assertThrows(IllegalArgumentException.class, () -> registeredUser.getRoleByStoreID(1));
     }
 
     @Test
