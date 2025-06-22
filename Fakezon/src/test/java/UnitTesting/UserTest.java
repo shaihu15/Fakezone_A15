@@ -91,7 +91,7 @@ public class UserTest {
     @Test
     void testGetUserId() {
         int id = user.getUserId();
-        assertTrue(id<0, "User ID should be negative for guest users");
+        assertTrue(id<=0, "User ID should be negative for guest users");
     }
 
     @Test

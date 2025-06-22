@@ -18,8 +18,10 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.UserDTO;
+import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.helpers.StoreMsg;
+import DomainLayer.Model.helpers.UserRole;
 
 import jakarta.persistence.*;
 
@@ -33,8 +35,14 @@ public class Registered extends User {
     @Column(name = "product_ids")
     protected Map<Integer, List<Integer>> productsPurchase = new HashMap<>(); // storeId -> List of productIDs
 
-    @Transient
-    private HashMap<Integer, IRegisteredRole> roles; // storeID -> Role
+    @ElementCollection
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @AttributeOverrides({
+        @AttributeOverride(name = "userId", column = @Column(name = "user_id")),
+        @AttributeOverride(name = "storeId", column = @Column(name = "store_id")),
+        @AttributeOverride(name = "roleName", column = @Column(name = "role_name"))
+    })
+    private List<UserRole> userRoles = new ArrayList<>();
 
     @Column(name = "email", unique = true, nullable = false)
     private String email;
@@ -78,7 +86,6 @@ public class Registered extends User {
         super(); // Use regular constructor with auto-generated ID
         this.email = email;
         setPassword(password);
-        this.roles = new HashMap<>();
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         this.productsPurchase = new HashMap<>();
     }
@@ -90,14 +97,30 @@ public class Registered extends User {
         super(userId);
         this.email = email;
         setPassword(password);
-        this.roles = new HashMap<>();
         this.age = Period.between(dateOfBirth, LocalDate.now()).getYears();
         this.productsPurchase = new HashMap<>();
     }
 
     private void initializeFields() {
-        this.roles = new HashMap<>();
         this.productsPurchase = new HashMap<>();
+        this.userRoles = new ArrayList<>();
+    }
+
+    private IRegisteredRole createRoleFromName(RoleName roleName) {
+        switch (roleName) {
+            case STORE_FOUNDER:
+                return new StoreFounder();
+            case STORE_OWNER:
+                return new StoreOwner();
+            case STORE_MANAGER:
+                return new StoreManager();
+            case SYSTEM_ADMINISTRATOR:
+                return new SystemAdministrator();
+            case UNASSIGNED:
+                return new UnassignedRole();
+            default:
+                throw new IllegalArgumentException("Unknown role name: " + roleName);
+        }
     }
 
     public void setPassword(String rawPassword) {
@@ -192,14 +215,14 @@ public class Registered extends User {
         return true;
     }
 
-    public void addRole(int storeID, IRegisteredRole role) { // sytem admin (storeID = -1)or store owner
-        roles.put(storeID, role);
+    public void addRole(int storeID, IRegisteredRole role) { // system admin (storeID = -1) or store owner
+        // Persist to database
+        userRoles.add(new UserRole(storeID, role.getRoleName()));
     }
 
-    public void removeRole(int storeID) { // sytem admin (storeID = -1)or store owner
-        if (roles.containsKey(storeID)) {
-            roles.remove(storeID);
-        } else {
+    public void removeRole(int storeID) { // system admin (storeID = -1) or store owner
+        // Remove from database
+        if(!userRoles.removeIf(userRole -> userRole.getStoreId() == storeID)){
             throw new IllegalArgumentException("Role not found for the given store ID.");
         }
     }
@@ -220,11 +243,12 @@ public class Registered extends User {
     }
 
     public IRegisteredRole getRoleByStoreID(int storeID) {
-        return roles.get(storeID); // system admin (storeID = -1)or store owner
-    }
-
-    public HashMap<Integer, IRegisteredRole> getAllRoles() {
-        return roles; // system admin (storeID = -1)or store owner
+        for (UserRole userRole : userRoles) {
+            if (userRole.getStoreId() == storeID) {
+                return createRoleFromName(userRole.getRoleName());
+            }
+        }
+        throw new IllegalArgumentException("Role not found for the given store ID.");
     }
 
     public boolean isLoggedIn() {
@@ -328,6 +352,14 @@ public class Registered extends User {
                 return;
             }
         }
+    }
+
+    public HashMap<Integer, IRegisteredRole> getAllRoles() {
+        HashMap<Integer, IRegisteredRole> roles = new HashMap<>();
+        for (UserRole userRole : userRoles) {
+            roles.put(userRole.getStoreId(), createRoleFromName(userRole.getRoleName()));
+        }
+        return roles;
     }
 
 }

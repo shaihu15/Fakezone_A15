@@ -53,7 +53,9 @@ public class UserPersistenceTest {
 
         // Create test guest users with explicit IDs
         testGuest1 = new User();
+        testGuest1.setUserId(-1);
         testGuest2 = new User();
+        testGuest2.setUserId(-2);
     }
 
     @Test
