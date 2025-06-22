@@ -35,13 +35,8 @@ public class Registered extends User {
     @Column(name = "product_ids")
     protected Map<Integer, List<Integer>> productsPurchase = new HashMap<>(); // storeId -> List of productIDs
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @AttributeOverrides({
-        @AttributeOverride(name = "userId", column = @Column(name = "user_id")),
-        @AttributeOverride(name = "storeId", column = @Column(name = "store_id")),
-        @AttributeOverride(name = "roleName", column = @Column(name = "role_name"))
-    })
     private List<UserRole> userRoles = new ArrayList<>();
 
     @Column(name = "email", unique = true, nullable = false)
