@@ -21,9 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Main;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.ProductDTO;
@@ -34,17 +37,157 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import com.vaadin.flow.component.grid.Grid;
 
+// Custom class to represent a product-store combination for filtered results
+class FilteredProductResult {
+    private ProductDTO product;
+    private Set<Integer> matchingStoreIds;
+    
+    public FilteredProductResult(ProductDTO product, Set<Integer> matchingStoreIds) {
+        this.product = product;
+        this.matchingStoreIds = matchingStoreIds;
+    }
+    
+    public ProductDTO getProduct() { return product; }
+    public Set<Integer> getMatchingStoreIds() { return matchingStoreIds; }
+    
+    // Delegate methods for grid columns
+    public String getName() { return product.getName(); }
+    public PCategory getCategory() { return product.getCategory(); }
+    public String getDescription() { return product.getDescription(); }
+    public int getId() { return product.getId(); }
+}
+
 @Route(value = "search", layout = MainLayout.class)
 public class SearchResultsView extends VerticalLayout implements BeforeEnterObserver {
-    private Grid<ProductDTO> grid;
+    private Grid<FilteredProductResult> grid;
     private List<ProductDTO> allProducts;
+    private List<StoreProductDTO> storeProductData;
+    private Map<Integer, StoreDTO> storeData;
 
     public SearchResultsView() {
-        grid = new Grid<>(ProductDTO.class);
+        grid = new Grid<>(FilteredProductResult.class);
         add(grid);
         Button filterButton = new Button(VaadinIcon.FILTER.create());
         filterButton.addClickListener(e -> openFilterDialog());
         add(filterButton);
+    }
+
+    private void configureGrid() {
+        grid.removeAllColumns();
+        
+        // Add columns with auto-width
+        grid.addColumn(FilteredProductResult::getName)
+            .setHeader("Name")
+            .setAutoWidth(true);
+        
+        grid.addColumn(p -> p.getCategory().name())
+            .setHeader("Category")
+            .setAutoWidth(true);
+        
+        grid.addColumn(FilteredProductResult::getDescription)
+            .setHeader("Description")
+            .setAutoWidth(true);
+        
+        grid.addColumn(new ComponentRenderer<>(p -> getStoresSummaryComponent(p, storeProductData, storeData)))
+            .setHeader("Available in Stores")
+            .setAutoWidth(true);
+        
+        grid.addColumn(p -> getPrice(p, storeProductData))
+            .setHeader("Price")
+            .setAutoWidth(true);
+        
+        grid.addColumn(new ComponentRenderer<>(p -> {
+            Optional<StoreProductDTO> sp = storeProductData.stream()
+                .filter(dto -> dto.getProductId() == p.getId() && 
+                              p.getMatchingStoreIds().contains(dto.getStoreId()))
+                .findFirst();
+            return sp.map(dto -> createSimpleStarRating(dto.getAverageRating()))
+                     .orElse(new Span("N/A"));
+        }))
+            .setHeader("Product Rating")
+            .setAutoWidth(true);
+        
+        // Updated Store Rating column with clickable store names
+        grid.addColumn(new ComponentRenderer<>(p -> {
+            List<Integer> storeIds = new ArrayList<>(p.getMatchingStoreIds());
+            if (storeIds.isEmpty()) return new Span("N/A");
+            
+            Span container = new Span();
+            for (int i = 0; i < storeIds.size(); i++) {
+                Integer storeId = storeIds.get(i);
+                StoreDTO store = storeData.get(storeId);
+                if (store != null) {
+                    // Create clickable store name
+                    Anchor storeLink = new Anchor();
+                    storeLink.setText(store.getName());
+                    storeLink.getStyle().set("text-decoration", "none");
+                    storeLink.getStyle().set("color", "#1976d2");
+                    storeLink.getStyle().set("cursor", "pointer");
+                    
+                    storeLink.getElement().addEventListener("click", e -> {
+                        UI.getCurrent().navigate("store/" + storeId);
+                    });
+                    
+                    container.add(storeLink);
+                    container.add(new Span(" "));
+                    container.add(createSimpleStarRating(store.getAverageRating()));
+                    
+                    if (i < storeIds.size() - 1) {
+                        container.add(new Span(", "));
+                    }
+                }
+            }
+            return container;
+        }))
+            .setHeader("Store Rating")
+            .setAutoWidth(true);
+        
+        // Set the grid to use full width
+        grid.setWidthFull();
+    }
+
+    // Updated helper method to create simple star rating component (just rating + one star)
+    private Span createSimpleStarRating(double rating) {
+        Span container = new Span();
+        
+        // Add numeric rating
+        Span numericRating = new Span(String.format("%.1f", rating));
+        numericRating.getStyle().set("color", "black");
+        container.add(numericRating);
+        
+        // Add single yellow star
+        Span star = new Span(" ★");
+        star.getStyle().set("color", "#FFD700"); // Gold/Yellow
+        container.add(star);
+        
+        return container;
+    }
+
+    // Helper method to format rating as text with yellow star (for store summary)
+    private String formatRatingText(double rating) {
+        return String.format("%.1f ★", rating);
+    }
+
+    // Helper method to create full star rating for filter dialog (filled + empty stars)
+    private Span createFullStarRating(int rating) {
+        Span container = new Span();
+        
+        // Add filled stars (black)
+        for (int i = 0; i < rating; i++) {
+            Span filledStar = new Span("★");
+            filledStar.getStyle().set("color", "black");
+            container.add(filledStar);
+        }
+        
+        // Add empty stars (white with black outline)
+        for (int i = rating; i < 5; i++) {
+            Span emptyStar = new Span("☆");
+            emptyStar.getStyle().set("color", "white");
+            emptyStar.getStyle().set("text-shadow", "0 0 1px black");
+            container.add(emptyStar);
+        }
+        
+        return container;
     }
 
     private void openFilterDialog() {
@@ -56,10 +199,22 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
         NumberField maxPrice = new NumberField("Max Price");
 
         ComboBox<Integer> productRating = new ComboBox<>("Product Rating", List.of(1, 2, 3, 4, 5));
-        productRating.setItemLabelGenerator(r -> "★".repeat(r) + "☆".repeat(5 - r));
+        productRating.setRenderer(new ComponentRenderer<>(rating -> {
+            Span container = new Span();
+            container.add(new Span(rating + " "));
+            container.add(createFullStarRating(rating));
+            return container;
+        }));
+        productRating.setItemLabelGenerator(r -> r + " Stars and above");
 
         ComboBox<Integer> storeRating = new ComboBox<>("Store Rating", List.of(1, 2, 3, 4, 5));
-        storeRating.setItemLabelGenerator(r -> "★".repeat(r) + "☆".repeat(5 - r));
+        storeRating.setRenderer(new ComponentRenderer<>(rating -> {
+            Span container = new Span();
+            container.add(new Span(rating + " "));
+            container.add(createFullStarRating(rating));
+            return container;
+        }));
+        storeRating.setItemLabelGenerator(r -> r + " Stars and above");
 
         ComboBox<String> category = new ComboBox<>("Category");
         category.setItems(Arrays.stream(PCategory.values())
@@ -90,8 +245,8 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
 
-            List<ProductDTO> filtered = allProducts.stream()
-                .filter(product -> {
+            List<FilteredProductResult> filtered = allProducts.stream()
+                .map(product -> {
                     Set<Integer> matchingStores = product.getStoreIds().stream()
                         .filter(storeId -> {
                             try {
@@ -127,11 +282,12 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
                                 boolean priceOk = (min == null || dto.getBasePrice() >= min) &&
                                                 (max == null || dto.getBasePrice() <= max);
 
+                                // CHANGE 1: Product rating filter now works like store rating (>= selected rating)
                                 boolean productRatingOk = selectedProductRating == null ||
-                                                        Math.round(dto.getAverageRating()) == selectedProductRating;
+                                                        dto.getAverageRating() >= selectedProductRating;
 
                                 boolean storeRatingOk = selectedStoreRating == null ||
-                                                        Math.round(storeDTO.getAverageRating()) == selectedStoreRating;
+                                                        storeDTO.getAverageRating() >= selectedStoreRating;
 
                                 boolean categoryOk = selectedCategory == null ||
                                                     dto.getCategory().name().equalsIgnoreCase(selectedCategory);
@@ -143,8 +299,9 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
                             }
                         }).collect(Collectors.toSet());
 
-                    return !matchingStores.isEmpty();
+                    return matchingStores.isEmpty() ? null : new FilteredProductResult(product, matchingStores);
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
             grid.setItems(filtered);
@@ -187,18 +344,16 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
                 this.allProducts = products;
 
                 // Fetch additional data for rendering columns
-                List<StoreProductDTO> storeProductData = fetchStoreProductData(products, token);
-                Map<Integer, StoreDTO> storeData = fetchStoreData(storeProductData, token);
+                this.storeProductData = fetchStoreProductData(products, token);
+                this.storeData = fetchStoreData(storeProductData, token);
 
-                grid.removeAllColumns();
-                grid.setItems(products);
-                grid.addColumn(ProductDTO::getName).setHeader("Name");
-                grid.addColumn(p -> p.getCategory().name()).setHeader("Category");
-                grid.addColumn(ProductDTO::getDescription).setHeader("Description");
-                grid.addColumn(p -> getStoresSummary(p, storeProductData, storeData)).setHeader("Available in Stores");
-                grid.addColumn(p -> getPrice(p, storeProductData)).setHeader("Price");
-                grid.addColumn(p -> getProductRating(p, storeProductData)).setHeader("Product Rating");
-                grid.addColumn(p -> getStoreRating(p, storeProductData, storeData)).setHeader("Store Rating");
+                // Convert to FilteredProductResult with all stores initially
+                List<FilteredProductResult> results = products.stream()
+                    .map(p -> new FilteredProductResult(p, new HashSet<>(p.getStoreIds())))
+                    .collect(Collectors.toList());
+
+                grid.setItems(results);
+                configureGrid();
             } else {
                 Notification.show(response != null ? response.getMessage() : "Search failed.");
             }
@@ -239,18 +394,16 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
                 this.allProducts = products;
 
                 // Fetch additional data for rendering columns
-                List<StoreProductDTO> storeProductData = fetchStoreProductData(products, token);
-                Map<Integer, StoreDTO> storeData = fetchStoreData(storeProductData, token);
+                this.storeProductData = fetchStoreProductData(products, token);
+                this.storeData = fetchStoreData(storeProductData, token);
 
-                grid.removeAllColumns();
-                grid.setItems(products);
-                grid.addColumn(ProductDTO::getName).setHeader("Name");
-                grid.addColumn(p -> p.getCategory().name()).setHeader("Category");
-                grid.addColumn(ProductDTO::getDescription).setHeader("Description");
-                grid.addColumn(p -> getStoresSummary(p, storeProductData, storeData)).setHeader("Available in Stores");
-                grid.addColumn(p -> getPrice(p, storeProductData)).setHeader("Price");
-                grid.addColumn(p -> getProductRating(p, storeProductData)).setHeader("Product Rating");
-                grid.addColumn(p -> getStoreRating(p, storeProductData, storeData)).setHeader("Store Rating");
+                // Convert to FilteredProductResult with all stores initially
+                List<FilteredProductResult> results = products.stream()
+                    .map(p -> new FilteredProductResult(p, new HashSet<>(p.getStoreIds())))
+                    .collect(Collectors.toList());
+
+                grid.setItems(results);
+                configureGrid();
             } else {
                 Notification.show(response != null ? response.getMessage() : "Category search failed.");
             }
@@ -289,18 +442,16 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
                 this.allProducts = products;
 
                 // Fetch additional data for rendering columns
-                List<StoreProductDTO> storeProductData = fetchStoreProductData(products, token);
-                Map<Integer, StoreDTO> storeData = fetchStoreData(storeProductData, token);
+                this.storeProductData = fetchStoreProductData(products, token);
+                this.storeData = fetchStoreData(storeProductData, token);
 
-                grid.removeAllColumns();
-                grid.setItems(products);
-                grid.addColumn(ProductDTO::getName).setHeader("Name");
-                grid.addColumn(p -> p.getCategory().name()).setHeader("Category");
-                grid.addColumn(ProductDTO::getDescription).setHeader("Description");
-                grid.addColumn(p -> getStoresSummary(p, storeProductData, storeData)).setHeader("Available in Stores");
-                grid.addColumn(p -> getPrice(p, storeProductData)).setHeader("Price");
-                grid.addColumn(p -> getProductRating(p, storeProductData)).setHeader("Product Rating");
-                grid.addColumn(p -> getStoreRating(p, storeProductData, storeData)).setHeader("Store Rating");
+                // Convert to FilteredProductResult with all stores initially
+                List<FilteredProductResult> results = products.stream()
+                    .map(p -> new FilteredProductResult(p, new HashSet<>(p.getStoreIds())))
+                    .collect(Collectors.toList());
+
+                grid.setItems(results);
+                configureGrid();
             } else {
                 Notification.show(response != null ? response.getMessage() : "Product search failed.");
             }
@@ -369,54 +520,86 @@ public class SearchResultsView extends VerticalLayout implements BeforeEnterObse
         return storeData;
     }
 
-    // Updated getStoresSummary to use pre-fetched data
-    private String getStoresSummary(ProductDTO product, List<StoreProductDTO> storeProducts, Map<Integer, StoreDTO> storeData) {
-        StringBuilder sb = new StringBuilder();
-        for (Integer storeId : product.getStoreIds()) {
+    // Updated getStoresSummaryComponent with clickable store names
+    private Span getStoresSummaryComponent(FilteredProductResult result, List<StoreProductDTO> storeProducts, Map<Integer, StoreDTO> storeData) {
+        Span container = new Span();
+        List<Integer> storeIdsList = new ArrayList<>(result.getMatchingStoreIds());
+        
+        for (int i = 0; i < storeIdsList.size(); i++) {
+            Integer storeId = storeIdsList.get(i);
             StoreDTO store = storeData.get(storeId);
             StoreProductDTO sp = storeProducts.stream()
-                .filter(dto -> dto.getProductId() == product.getId() && dto.getStoreId() == storeId)
+                .filter(dto -> dto.getProductId() == result.getId() && dto.getStoreId() == storeId)
                 .findFirst()
                 .orElse(null);
 
             if (store != null && sp != null) {
-                sb.append(String.format("%s (₪%.2f, ⭐%.1f), ", store.getName(), sp.getBasePrice(), store.getAverageRating()));
+                // Create clickable store name
+                Anchor storeLink = new Anchor();
+                storeLink.setText(store.getName());
+                storeLink.getStyle().set("text-decoration", "none");
+                storeLink.getStyle().set("color", "#1976d2"); // Blue color for links
+                storeLink.getStyle().set("cursor", "pointer");
+                
+                // Add click listener to navigate to store page
+                storeLink.getElement().addEventListener("click", e -> {
+                    // Navigate to store page with store ID parameter
+                    UI.getCurrent().navigate("store/" + storeId);
+                });
+                
+                container.add(storeLink);
+                
+                // Add price and rating info
+                Span priceInfo = new Span(String.format(" (₪%.2f, ", sp.getBasePrice()));
+                container.add(priceInfo);
+                
+                // Add colored star rating
+                container.add(createSimpleStarRating(store.getAverageRating()));
+                
+                Span closingParen = new Span(")");
+                container.add(closingParen);
+                
+                // Add comma separator if not the last item
+                if (i < storeIdsList.size() - 1) {
+                    container.add(new Span(", "));
+                }
             }
         }
 
-        if (sb.length() > 0) {
-            sb.setLength(sb.length() - 2); // Remove trailing comma
-            return sb.toString();
+        if (container.getChildren().count() == 0) {
+            container.add(new Span("Not available"));
         }
-        return "Not available";
+        
+        return container;
     }
 
-    // Helper method for Price column
-    private String getPrice(ProductDTO product, List<StoreProductDTO> storeProducts) {
-        Optional<StoreProductDTO> sp = storeProducts.stream()
-            .filter(dto -> dto.getProductId() == product.getId())
-            .findFirst();
-        return sp.map(dto -> String.format("₪%.2f", dto.getBasePrice())).orElse("N/A");
-    }
-
-    // Helper method for Product Rating column
-    private String getProductRating(ProductDTO product, List<StoreProductDTO> storeProducts) {
-        Optional<StoreProductDTO> sp = storeProducts.stream()
-            .filter(dto -> dto.getProductId() == product.getId())
-            .findFirst();
-        return sp.map(dto -> String.format("%.1f", dto.getAverageRating())).orElse("N/A");
-    }
-
-    // Helper method for Store Rating column
-    private String getStoreRating(ProductDTO product, List<StoreProductDTO> storeProducts, Map<Integer, StoreDTO> storeData) {
-        List<Integer> storeIds = new ArrayList<>(product.getStoreIds());
-        if (storeIds.isEmpty()) return "N/A";
-        Optional<Double> rating = storeIds.stream()
-            .map(storeData::get)
-            .filter(Objects::nonNull)
-            .map(StoreDTO::getAverageRating)
-            .findFirst();
-        return rating.map(r -> String.format("%.1f", r)).orElse("N/A");
+    // Updated helper method for Price column - shows price with specific store names
+    private String getPrice(FilteredProductResult result, List<StoreProductDTO> storeProducts) {
+        List<StoreProductDTO> matchingProducts = storeProducts.stream()
+            .filter(dto -> dto.getProductId() == result.getId() && 
+                          result.getMatchingStoreIds().contains(dto.getStoreId()))
+            .collect(Collectors.toList());
+        
+        if (matchingProducts.isEmpty()) return "N/A";
+        
+        if (matchingProducts.size() == 1) {
+            StoreProductDTO product = matchingProducts.get(0);
+            StoreDTO store = storeData.get(product.getStoreId());
+            String storeName = store != null ? store.getName() : "Unknown Store";
+            return String.format("₪%.2f (%s)", product.getBasePrice(), storeName);
+        } else {
+            // Multiple stores - show each price with its store name
+            List<String> priceStoreList = matchingProducts.stream()
+                .map(sp -> {
+                    StoreDTO store = storeData.get(sp.getStoreId());
+                    String storeName = store != null ? store.getName() : "Unknown";
+                    return String.format("₪%.2f (%s)", sp.getBasePrice(), storeName);
+                })
+                .sorted() // Sort for consistent display
+                .collect(Collectors.toList());
+            
+            return String.join(", ", priceStoreList);
+        }
     }
 
     @Override
