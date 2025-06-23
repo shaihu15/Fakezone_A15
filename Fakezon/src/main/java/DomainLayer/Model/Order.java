@@ -2,6 +2,8 @@ package DomainLayer.Model;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Objects;
 
 import DomainLayer.Enums.OrderState;
@@ -70,6 +72,25 @@ public class Order implements IOrder{
         }
     }
     
+    public Order(int id, int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
+        this.orderId = id;
+        this.userId = userId;
+        this.storeId = storeId;
+        this.orderState = orderState;
+        this.products = products;
+        this.address = address;
+        this.paymentMethod = paymentMethod;
+        this.totalPrice = totalPrice;
+        this.paymentTransactionId = paymentTransactionId;
+        this.deliveryTransactionId = deliveryTransactionId;
+        // Set up bidirectional relationship
+        if (products != null) {
+            for (OrderedProduct product : products) {
+                product.setOrder(this);
+            }
+        }
+    }
+
     @Override
     public int getId() {
         return orderId;
