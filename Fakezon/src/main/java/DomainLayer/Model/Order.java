@@ -2,8 +2,6 @@ package DomainLayer.Model;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Objects;
 
 import DomainLayer.Enums.OrderState;
@@ -16,6 +14,7 @@ import jakarta.persistence.*;
 @Table(name = "orders")
 public class Order implements IOrder{
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
     private int orderId;
     
@@ -28,7 +27,7 @@ public class Order implements IOrder{
     @Column(name = "total_price", nullable = false)
     private double totalPrice;
     
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<OrderedProduct> products;
     
     @Enumerated(EnumType.STRING)
@@ -42,9 +41,6 @@ public class Order implements IOrder{
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
     
-    @Transient
-    private static AtomicInteger idCounter = new AtomicInteger(0);
-    
     @Column(name = "payment_transaction_id")
     private int paymentTransactionId;
     
@@ -57,7 +53,6 @@ public class Order implements IOrder{
     }
 
     public Order(int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
-        this.orderId = idCounter.incrementAndGet();
         this.storeId = storeId;
         this.userId = userId;
         this.orderState = orderState;
@@ -75,25 +70,6 @@ public class Order implements IOrder{
         }
     }
     
-    public Order(int id, int userId,int storeId, OrderState orderState, List<OrderedProduct> products, String address, PaymentMethod paymentMethod, double totalPrice, int paymentTransactionId, int deliveryTransactionId) {
-        this.orderId = id;
-        this.userId = userId;
-        this.storeId = storeId;
-        this.orderState = orderState;
-        this.products = products;
-        this.address = address;
-        this.paymentMethod = paymentMethod;
-        this.totalPrice = totalPrice;
-        this.paymentTransactionId = paymentTransactionId;
-        this.deliveryTransactionId = deliveryTransactionId;
-        // Set up bidirectional relationship
-        if (products != null) {
-            for (OrderedProduct product : products) {
-                product.setOrder(this);
-            }
-        }
-    }
-
     @Override
     public int getId() {
         return orderId;
