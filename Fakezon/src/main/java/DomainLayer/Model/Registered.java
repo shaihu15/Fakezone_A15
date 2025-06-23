@@ -29,7 +29,7 @@ import jakarta.persistence.*;
 @Table(name = "registered_users")
 @DiscriminatorValue("REGISTERED")
 public class Registered extends User {
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_product_purchases", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "store_id")
     @Column(name = "product_ids")
