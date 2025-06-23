@@ -163,18 +163,51 @@ public class DiscountPolicyIntegrationTest {
             Response<StoreProductDTO> product1Response = systemService.addProductToStore(storeId, ownerId, "Test Product 1", "Description 1", 
                 PRODUCT_PRICE_1, 100, "ELECTRONICS");
             assertTrue(product1Response.isSuccess(), "Product 1 creation failed: " + product1Response.getMessage());
-            productId1 = product1Response.getData().getProductId();
-
+            StoreProductDTO product1DTO = product1Response.getData();
+            
+            // Since productId might be 0, we need to get it a different way
+            // Let's get the store products and find our products by name
+            Response<StoreDTO> storeResponse2 = systemService.userAccessStore(storeId);
+            assertTrue(storeResponse2.isSuccess(), "Failed to get store info: " + storeResponse2.getMessage());
+            StoreDTO store = storeResponse2.getData();
+            
+            // Find products by name instead of relying on the DTO productId
+            for (StoreProductDTO sp : store.getStoreProducts()) {
+                if ("Test Product 1".equals(sp.getName())) {
+                    productId1 = sp.getProductId();
+                }
+            }
+            
             Response<StoreProductDTO> product2Response = systemService.addProductToStore(storeId, ownerId, "Test Product 2", "Description 2", 
                 PRODUCT_PRICE_2, 100, "ELECTRONICS");
             assertTrue(product2Response.isSuccess(), "Product 2 creation failed: " + product2Response.getMessage());
-            productId2 = product2Response.getData().getProductId();
+            
+            // Get updated store info
+            storeResponse2 = systemService.userAccessStore(storeId);
+            assertTrue(storeResponse2.isSuccess(), "Failed to get store info: " + storeResponse2.getMessage());
+            store = storeResponse2.getData();
+            
+            for (StoreProductDTO sp : store.getStoreProducts()) {
+                if ("Test Product 2".equals(sp.getName())) {
+                    productId2 = sp.getProductId();
+                }
+            }
 
             Response<StoreProductDTO> product3Response = systemService.addProductToStore(storeId, ownerId, "Test Product 3", "Description 3", 
                 PRODUCT_PRICE_3, 100, "ELECTRONICS");
             assertTrue(product3Response.isSuccess(), "Product 3 creation failed: " + product3Response.getMessage());
-            productId3 = product3Response.getData().getProductId();
-
+            
+            // Get updated store info
+            storeResponse2 = systemService.userAccessStore(storeId);
+            assertTrue(storeResponse2.isSuccess(), "Failed to get store info: " + storeResponse2.getMessage());
+            store = storeResponse2.getData();
+            
+            for (StoreProductDTO sp : store.getStoreProducts()) {
+                if ("Test Product 3".equals(sp.getName())) {
+                    productId3 = sp.getProductId();
+                }
+            }
+            
         } catch (Exception e) {
             fail("Failed to setup test data: " + e.getMessage());
         }
