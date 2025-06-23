@@ -20,6 +20,10 @@ public class Order implements IOrder{
     @Column(name = "order_id")
     private int orderId;
     
+    @Version
+    @Column(name = "version")
+    private Long version;
+    
     @Column(name = "user_id", nullable = false)
     private int userId;
     
