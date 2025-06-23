@@ -2,21 +2,13 @@ package DomainLayer.Model;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
-import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.UserDTO;
 import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
@@ -48,23 +40,23 @@ public class Registered extends User {
     @Column(name = "age")
     private int age;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_messages_from_user", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> messagesFromUser = new ArrayList<>(); // List to allow multiple messages
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> assignmentMessages = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> offersMessages = new ArrayList<>();
 

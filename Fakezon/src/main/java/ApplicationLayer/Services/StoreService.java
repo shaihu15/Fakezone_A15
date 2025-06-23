@@ -377,7 +377,6 @@ public class StoreService implements IStoreService {
         
         // Now get the ID after it's been persisted
         int storeId = store.getId();
-        System.out.println(" ------------------------------------------------------- ADDING STORE ID: " + storeId);
         logger.info("openStore - New store ID: " + storeId);
         logger.info("Store opened: " + storeName + " by user: " + userId);
         return storeId;

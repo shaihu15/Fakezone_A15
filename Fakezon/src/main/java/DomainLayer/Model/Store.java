@@ -55,6 +55,10 @@ public class Store implements IStore {
     @Column(name = "storeid")
     private int storeID;
     
+    @Version
+    @Column(name = "version")
+    private Long version;
+    
     @Column(nullable = false)
     private String name;
     
@@ -90,7 +94,7 @@ public class Store implements IStore {
     @Column(name = "owner_id")
     private List<Integer> storeOwners;
     
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "pending_owners", joinColumns = @JoinColumn(name = "store_id"))
     @MapKeyColumn(name = "appointee_id")
     @Column(name = "appointor_id")
