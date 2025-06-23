@@ -4,26 +4,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import ApplicationLayer.DTO.BasketDTO;
-import DomainLayer.Interfaces.IProduct;
-import DomainLayer.Model.StoreProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-import DomainLayer.Model.Cart;
 import ApplicationLayer.Interfaces.IOrderService;
 import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Interfaces.IOrder;
 import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Model.Basket;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.OrderedProduct;
 
@@ -32,7 +23,6 @@ public class OrderService implements IOrderService {
 
     private final IOrderRepository orderRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
-    protected static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public OrderService(IOrderRepository orderRepository) {
         this.orderRepository = orderRepository;
@@ -133,7 +123,7 @@ public class OrderService implements IOrderService {
                     orderedProducts.add(new OrderedProduct(storeProduct, quantity));
                 }
                 double price = prices.get(store.getStoreId());
-                Order order = new Order(idCounter.incrementAndGet(), userId, store.getStoreId(), OrderState.SHIPPED, orderedProducts, address, paymentMethod, price,paymentTransactionId,deliveryTransactionId);
+                Order order = new Order(userId, store.getStoreId(), OrderState.SHIPPED, orderedProducts, address, paymentMethod, price,paymentTransactionId,deliveryTransactionId);
                 orderRepository.addOrder(order);
             }
 
