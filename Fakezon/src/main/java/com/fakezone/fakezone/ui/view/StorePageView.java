@@ -497,10 +497,20 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
 
     
         card.add(new H5(ap.getCategory().toString()));
-        StoreProductDTO ratedProd = allProducts.stream().filter(sp -> sp.getProductId() == ap.getProductId()).toList().get(0);
-        if(ratedProd != null){
+        
+        // Find the corresponding StoreProduct for rating information
+        // Note: AuctionProduct.getProductId() returns the original StoreProduct's ID
+        List<StoreProductDTO> matchingProducts = allProducts.stream()
+            .filter(sp -> sp.getProductId() == ap.getProductId())
+            .toList();
+            
+        if (!matchingProducts.isEmpty()) {
+            StoreProductDTO ratedProd = matchingProducts.get(0);
             double rating = ratedProd.getAverageRating();
             card.add(new H5("Rating: " + rating));
+        } else {
+            // If no matching product found, show default rating message
+            card.add(new H5("Rating: Not available"));
         }
 
         Span price = new Span("Price: $" + String.format("%.2f", ap.getCurrentHighestBid()));

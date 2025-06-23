@@ -47,7 +47,7 @@ public class AuctionProductDTO {
     }
 
     public AuctionProductDTO(AuctionProduct auctionProduct) {
-        this.productId = auctionProduct.getSproductID();
+        this.productId = auctionProduct.getProductID(); // Use the original StoreProduct ID for matching
         this.name = auctionProduct.getName();
         this.basePrice = auctionProduct.getBasePrice();
         this.currentHighestBid = auctionProduct.getCurrentHighestBid();
