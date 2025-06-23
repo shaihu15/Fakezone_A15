@@ -2430,4 +2430,16 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
+    public Response<List<StoreDTO>> getAllStores() {
+        try {
+            List<StoreDTO> stores = storeService.getAllStores();
+            return new Response<>(stores, "Stores retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all stores: " + e.getMessage());
+            return new Response<>(null, "Error during getting all stores: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    
 }
