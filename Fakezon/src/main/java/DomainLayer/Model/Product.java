@@ -1,9 +1,7 @@
 package DomainLayer.Model;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Locale.Category;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
@@ -15,10 +13,10 @@ import jakarta.persistence.*;
 public class Product implements IProduct {
     
     @Id
-    @Column(name = "product_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_id")
     private int id;
-    
+
     @Column(name = "name", nullable = false)
     private String name;
     
@@ -33,7 +31,7 @@ public class Product implements IProduct {
     @CollectionTable(name = "product_stores", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "store_id")
     private Set<Integer> storesIds; // List of store IDs where the product is available
-
+    
     // Default constructor for JPA
     public Product() {
         this.storesIds = new HashSet<>();
@@ -44,7 +42,7 @@ public class Product implements IProduct {
         this.name = name;
         this.description = description;
         this.category = category;
-        
+
     }
 
     public Product(int id, String name, String description,PCategory category, Set<Integer> storesIds) {

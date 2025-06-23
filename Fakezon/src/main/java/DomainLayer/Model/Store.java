@@ -51,7 +51,13 @@ import java.util.concurrent.TimeUnit;
 public class Store implements IStore {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "storeid")
     private int storeID;
+    
+    @Version
+    @Column(name = "version")
+    private Long version;
     
     @Column(nullable = false)
     private String name;
@@ -62,7 +68,7 @@ public class Store implements IStore {
     @Column(nullable = false)
     private int storeFounderID; // store founder ID
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "store_id")
     @MapKeyColumn(name = "user_id")
     private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
@@ -88,7 +94,7 @@ public class Store implements IStore {
     @Column(name = "owner_id")
     private List<Integer> storeOwners;
     
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "pending_owners", joinColumns = @JoinColumn(name = "store_id"))
     @MapKeyColumn(name = "appointee_id")
     @Column(name = "appointor_id")
@@ -109,10 +115,7 @@ public class Store implements IStore {
 
     @Transient
     private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
-    
-    @Transient
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
-    
+        
     @Transient
     private static final AtomicInteger policyIDCounter = new AtomicInteger(0);
     
@@ -154,7 +157,6 @@ public class Store implements IStore {
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
         this.name = name;
-        this.storeID = idCounter.incrementAndGet();
         this.publisher = publisher;
         initializeCollections();
     }

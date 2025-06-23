@@ -13,7 +13,7 @@ public class Basket {
 
     private int storeId;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "basket_products", joinColumns = @JoinColumn(name = "basket_id"))
     @MapKeyColumn(name = "product_id")
     @Column(name = "quantity")

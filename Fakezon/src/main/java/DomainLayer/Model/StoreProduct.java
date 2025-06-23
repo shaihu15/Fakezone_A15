@@ -33,7 +33,7 @@ public class StoreProduct {
     @Column(nullable = false)
     private PCategory category;
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "store_product_id")
     @MapKeyColumn(name = "user_id")
     private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating

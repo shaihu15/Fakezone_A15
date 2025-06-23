@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collection;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,35 +16,43 @@ import DomainLayer.Model.Store;
 
 @SpringBootTest(classes = com.fakezone.fakezone.FakezoneApplication.class)
 @ActiveProfiles("test")
-@Transactional
 public class StorePersistenceTest {
 
     @Autowired
     private IStoreRepository storeRepository;
 
+    @BeforeEach
+    void setUp() {
+        // Clear data before each test to ensure isolation
+        storeRepository.clearAllData();
+    }
+
     @Test
+    @Transactional
     public void testStoreCreationAndRetrieval() {
-        // Create a test store
-        Store testStore = new Store("Test Electronics Store", 123, null, 1001);
+        // Create a test store without hard-coding ID
+        Store testStore = new Store("Test Electronics Store", 123, null);
         
-        // Save the store
+        // Save the store and get the generated ID
         storeRepository.addStore(testStore);
+        int generatedId = testStore.getId();
 
         // Retrieve the store by ID
-        Store retrievedStore = storeRepository.findById(1001);
+        Store retrievedStore = storeRepository.findById(generatedId);
         
         assertNotNull(retrievedStore, "Store should be retrievable by ID");
         assertEquals("Test Electronics Store", retrievedStore.getName(), "Store name should match");
         assertEquals(123, retrievedStore.getStoreFounderID(), "Store founder ID should match");
-        assertEquals(1001, retrievedStore.getId(), "Store ID should match");
+        assertEquals(generatedId, retrievedStore.getId(), "Store ID should match");
         assertTrue(retrievedStore.isOpen(), "Store should be open by default");
     }
 
     @Test
+    @Transactional
     public void testStoreSearchByName() {
-        // Create test stores
-        Store store1 = new Store("Electronics Hub", 456, null, 1002);
-        Store store2 = new Store("Fashion Store", 789, null, 1003);
+        // Create test stores without hard-coding IDs
+        Store store1 = new Store("Electronics Hub", 456, null);
+        Store store2 = new Store("Fashion Store", 789, null);
         
         storeRepository.addStore(store1);
         storeRepository.addStore(store2);
@@ -56,14 +65,14 @@ public class StorePersistenceTest {
     }
 
     @Test
+    @Transactional
     public void testGetAllStores() {
-        // Clear existing data for clean test
-        storeRepository.clearAllData();
-
-        // Create multiple test stores
-        Store store1 = new Store("Store One", 111, null, 1004);
-        Store store2 = new Store("Store Two", 222, null, 1005);
-        Store store3 = new Store("Store Three", 333, null, 1006);
+        // Clear existing data for clean test (already done in setUp)
+        
+        // Create multiple test stores without hard-coding IDs
+        Store store1 = new Store("Store One", 111, null);
+        Store store2 = new Store("Store Two", 222, null);
+        Store store3 = new Store("Store Three", 333, null);
         
         storeRepository.addStore(store1);
         storeRepository.addStore(store2);
@@ -85,27 +94,30 @@ public class StorePersistenceTest {
     }
 
     @Test
+    @Transactional
     public void testStoreDelete() {
-        // Create a test store
-        Store testStore = new Store("Temporary Store", 999, null, 1007);
+        // Create a test store without hard-coding ID
+        Store testStore = new Store("Temporary Store", 999, null);
         storeRepository.addStore(testStore);
+        int storeId = testStore.getId();
 
         // Verify store exists
-        Store foundStore = storeRepository.findById(1007);
+        Store foundStore = storeRepository.findById(storeId);
         assertNotNull(foundStore, "Store should exist before deletion");
 
         // Delete the store
-        storeRepository.delete(1007);
+        storeRepository.delete(storeId);
 
         // Verify store is deleted
-        Store deletedStore = storeRepository.findById(1007);
+        Store deletedStore = storeRepository.findById(storeId);
         assertNull(deletedStore, "Store should be null after deletion");
     }
 
     @Test
+    @Transactional
     public void testStoreWithRatings() {
-        // Create a store
-        Store testStore = new Store("Rated Store", 555, null, 1008);
+        // Create a store without hard-coding ID
+        Store testStore = new Store("Rated Store", 555, null);
         
         // Add some ratings
         testStore.addRating(101, 4.5, "Great store!");
@@ -113,9 +125,10 @@ public class StorePersistenceTest {
         
         // Save the store
         storeRepository.addStore(testStore);
+        int storeId = testStore.getId();
 
         // Retrieve and verify
-        Store retrievedStore = storeRepository.findById(1008);
+        Store retrievedStore = storeRepository.findById(storeId);
         assertNotNull(retrievedStore, "Store should be retrievable");
         
         // Note: Ratings might need to be loaded lazily depending on fetch type
