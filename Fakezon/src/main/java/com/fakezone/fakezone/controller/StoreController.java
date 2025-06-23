@@ -1033,5 +1033,4 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
         }
     }
 
-
 }
