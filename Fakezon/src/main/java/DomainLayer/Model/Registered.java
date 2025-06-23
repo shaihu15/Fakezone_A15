@@ -21,13 +21,13 @@ import jakarta.persistence.*;
 @Table(name = "registered_users")
 @DiscriminatorValue("REGISTERED")
 public class Registered extends User {
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_product_purchases", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "store_id")
     @Column(name = "product_ids")
     protected Map<Integer, List<Integer>> productsPurchase = new HashMap<>(); // storeId -> List of productIDs
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     private List<UserRole> userRoles = new ArrayList<>();
 
@@ -40,23 +40,23 @@ public class Registered extends User {
     @Column(name = "age")
     private int age;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_messages_from_user", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> messagesFromUser = new ArrayList<>(); // List to allow multiple messages
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> assignmentMessages = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
     private List<StoreMsg> offersMessages = new ArrayList<>();
 

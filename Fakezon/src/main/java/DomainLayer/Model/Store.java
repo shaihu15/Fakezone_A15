@@ -68,12 +68,12 @@ public class Store implements IStore {
     @Column(nullable = false)
     private int storeFounderID; // store founder ID
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")
     @MapKeyColumn(name = "user_id")
     private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)//LAZY
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)//LAZY
     @JoinColumn(name = "owner_store_id")
     @MapKeyColumn(name = "product_id")
     private Map<Integer, StoreProduct> storeProducts; // HASH productID to store product
@@ -89,12 +89,12 @@ public class Store implements IStore {
     private HashMap<Integer, IDiscountPolicy> discountPolicies; // HASH policyID to discount policy
     
     //@ElementCollection
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "store_owners", joinColumns = @JoinColumn(name = "store_id"))
     @Column(name = "owner_id")
     private List<Integer> storeOwners;
     
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "pending_owners", joinColumns = @JoinColumn(name = "store_id"))
     @MapKeyColumn(name = "appointee_id")
     @Column(name = "appointor_id")
