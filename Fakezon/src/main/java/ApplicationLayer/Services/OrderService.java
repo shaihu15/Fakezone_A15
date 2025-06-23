@@ -113,15 +113,18 @@ public class OrderService implements IOrderService {
     @Override
     public void addOrderCart(Map<StoreDTO, Map<StoreProductDTO,Boolean>> cart,Map<Integer,Double> prices, int userId, String address, PaymentMethod paymentMethod, int paymentTransactionId, int deliveryTransactionId) {
         try {
-            List<OrderedProduct> orderedProducts = new ArrayList<>();
             for (Map.Entry<StoreDTO, Map<StoreProductDTO,Boolean>> entry : cart.entrySet()) {
                 StoreDTO store = entry.getKey();
                 Map<StoreProductDTO,Boolean> products = entry.getValue();
+                
+                // Create a new list of OrderedProducts for each order
+                List<OrderedProduct> orderedProducts = new ArrayList<>();
                 for (Map.Entry<StoreProductDTO,Boolean> productEntry : products.entrySet()) {
                     StoreProductDTO storeProduct = productEntry.getKey();
                     int quantity = storeProduct.getQuantity();
                     orderedProducts.add(new OrderedProduct(storeProduct, quantity));
                 }
+                
                 double price = prices.get(store.getStoreId());
                 Order order = new Order(userId, store.getStoreId(), OrderState.SHIPPED, orderedProducts, address, paymentMethod, price,paymentTransactionId,deliveryTransactionId);
                 orderRepository.addOrder(order);
