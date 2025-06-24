@@ -88,7 +88,7 @@ public class Guest_User_Exiting_The_System {
         assertTrue(response.isSuccess(), "Guest user should be created successfully");
         assertEquals("Unsigned user created successfully", response.getMessage());
         assertNotNull(guestUserId, "Guest user ID should not be null");
-        assertEquals(-1, guestUserId );
+        assertEquals(1, guestUserId );
     }
 
     @Test

@@ -240,7 +240,10 @@ public class SystemService implements ISystemService {
     public Response<StoreDTO> userAccessStore(int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId);
-            
+            if (!this.storeService.isStoreOpen(storeId)) {
+                logger.error("System Service - Store is closed: " + storeId);
+                return new Response<StoreDTO>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
+            }
             StoreDTO s = this.storeService.viewStore(storeId);
 
             return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);

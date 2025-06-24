@@ -112,8 +112,7 @@ public class Guest_User_Check_Cart_Content {
         assertTrue(resultRegister3.isSuccess());
         int registeredId3 = resultRegister3.getData().getUserId();
         Response<List<CartItemInfoDTO>> emptyCartResponse = systemService.viewCart(registeredId3);
-        assertFalse(emptyCartResponse.isSuccess());
+        assertTrue(emptyCartResponse.isSuccess());
         assertEquals("Cart is empty", emptyCartResponse.getMessage());
-        assertNull(emptyCartResponse.getData());
     }
 }

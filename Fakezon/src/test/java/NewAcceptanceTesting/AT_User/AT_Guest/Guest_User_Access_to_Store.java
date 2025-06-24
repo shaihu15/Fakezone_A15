@@ -51,7 +51,7 @@ public class Guest_User_Access_to_Store {
 
     @Test
     void testGuestUserAccessStore_StoreIsClose_Fail() {
-        systemService.closeStoreByFounder(userId, storeId);
+        systemService.closeStoreByFounder(storeId, userId);
         //the store is closed
          
         Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(storeId); 
