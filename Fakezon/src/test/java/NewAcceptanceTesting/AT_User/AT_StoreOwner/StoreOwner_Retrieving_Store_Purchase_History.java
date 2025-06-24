@@ -16,6 +16,7 @@ import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
@@ -113,7 +114,7 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
         // Check if the purchase history contains the expected product
         boolean foundProduct = false;
         for (OrderDTO order : purchaseHistoryRes.getData()) {
-            for (ProductDTO product : order.getProducts()) {
+            for (OrderedProductDTO product : order.getProducts()) {
                 if (product.getName().equals("Test Product")) {
                     foundProduct = true;
                     break;
