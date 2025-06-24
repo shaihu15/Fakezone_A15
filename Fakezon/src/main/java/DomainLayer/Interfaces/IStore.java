@@ -25,6 +25,7 @@ import DomainLayer.Model.StoreProduct;
 import  DomainLayer.Model.StoreRating;
 import DomainLayer.Model.User;
 import DomainLayer.Model.helpers.UserMsg;
+import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Interfaces.IDiscountPolicy;
 public interface IStore {
     String getName();

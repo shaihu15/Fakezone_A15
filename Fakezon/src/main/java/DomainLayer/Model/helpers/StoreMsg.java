@@ -43,6 +43,10 @@ public class StoreMsg {
         this.userId = userId;
     }
     
+    // Default constructor for JPA
+    public StoreMsg() {
+    }
+    
     public int getStoreId() {
         return storeId;
     }

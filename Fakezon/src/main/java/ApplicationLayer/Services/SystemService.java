@@ -1937,10 +1937,11 @@ public class SystemService implements ISystemService {
     @Override
     @Transactional
     public void clearAllData() {
-        storeService.clearAllData();
-        userService.clearAllData();
+        // Delete dependent entities first, then stores
         orderService.clearAllData();
         productService.clearAllData();
+        userService.clearAllData();
+        storeService.clearAllData();
     }
     
     @Override

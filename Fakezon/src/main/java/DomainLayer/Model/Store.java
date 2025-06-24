@@ -35,6 +35,7 @@ import DomainLayer.Model.helpers.OfferEvents.OfferReceivedEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
+import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.Tree;
 import DomainLayer.Model.helpers.UserMsg;
 
@@ -104,17 +105,17 @@ public class Store implements IStore {
     @Transient
     private HashMap<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
     
-    @Transient
-    private Tree rolesTree;
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id")
+    private List<UserMsg> messagesFromUsersList; // List for persistence
     
-    @Transient
-    private Map<Integer, UserMsg> messagesFromUsers; // HASH msgId to message
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id")
+    @CollectionTable(name = "store_sent_messages", joinColumns = @JoinColumn(name = "store_id"))
+    private List<StoreMsg> messagesFromStoreList; // List for persistence
     
     @Transient
     protected static final AtomicInteger UserMsgIdCounter = new AtomicInteger(0);
-
-    @Transient
-    private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
         
     @Transient
     private static final AtomicInteger policyIDCounter = new AtomicInteger(0);
@@ -149,6 +150,9 @@ public class Store implements IStore {
     @Transient
     private HashMap<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept
 
+    @Transient
+    private Tree rolesTree;
+    
     // Default constructor for JPA
     public Store() {
         initializeTransientFields();
@@ -184,8 +188,8 @@ public class Store implements IStore {
         this.storeOwners.add(storeFounderID);
         this.pendingOwners = new HashMap<>(); // appointee : appointor
         this.storeManagers = new HashMap<>(); // HASH userID to store manager
-        this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
-        this.messagesFromStore = new Stack<>();
+        this.messagesFromUsersList = new ArrayList<>();
+        this.messagesFromStoreList = new ArrayList<>();
         this.pendingManagersPerms = new HashMap<>();
         this.pendingManagers = new HashMap<>();
         this.offersOnProducts = new HashMap<>();
@@ -197,8 +201,8 @@ public class Store implements IStore {
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
         this.storeManagers = new HashMap<>();
-        this.messagesFromUsers = new HashMap<>();
-        this.messagesFromStore = new Stack<>();
+        this.messagesFromUsersList = new ArrayList<>();
+        this.messagesFromStoreList = new ArrayList<>();
         this.pendingManagersPerms = new HashMap<>();
         this.pendingManagers = new HashMap<>();
         this.offersOnProducts = new HashMap<>();
@@ -686,7 +690,9 @@ public class Store implements IStore {
     @Override
     public void receivingMessage(int userID, String message) {
         int msgId = UserMsgIdCounter.incrementAndGet();
-        messagesFromUsers.put(msgId, new UserMsg(userID, message));
+        UserMsg userMsg = new UserMsg(userID, message);
+        userMsg.setMsgId(msgId);
+        messagesFromUsersList.add(userMsg);
     }
 
     @Override
@@ -695,7 +701,8 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                messagesFromStore.push(new SimpleEntry<>(userID, message));
+                StoreMsg storeMsg = new StoreMsg(this.storeID, -1, message, null, userID);
+                messagesFromStoreList.add(storeMsg);
                 this.publisher.publishEvent(new ResponseFromStoreEvent(this.storeID, userID, message));
 
             } else {
@@ -718,7 +725,11 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                return messagesFromUsers;
+                Map<Integer, UserMsg> map = new HashMap<>();
+                for (UserMsg msg : messagesFromUsersList) {
+                    map.put(msg.getMsgId(), msg);
+                }
+                return map;
             } else {
                 throw new IllegalArgumentException(
                         "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
@@ -739,7 +750,12 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                return messagesFromStore;
+                Stack<SimpleEntry<Integer, String>> stack = new Stack<>();
+                for (int i = messagesFromStoreList.size() - 1; i >= 0; i--) {
+                    StoreMsg msg = messagesFromStoreList.get(i);
+                    stack.push(new SimpleEntry<>(msg.getUserId(), msg.getMessage()));
+                }
+                return stack;
             } else {
                 throw new IllegalArgumentException(
                         "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
