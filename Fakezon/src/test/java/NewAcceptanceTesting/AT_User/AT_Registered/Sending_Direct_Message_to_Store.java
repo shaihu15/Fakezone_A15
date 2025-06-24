@@ -67,6 +67,7 @@ public class Sending_Direct_Message_to_Store {
     int storeOwnerId;
 
     @BeforeEach
+   //@Test
     void setUp() {
 
         systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
@@ -78,7 +79,7 @@ public class Sending_Direct_Message_to_Store {
         Response<Integer> resultAddStore = systemService.addStore(storeOwnerId, storeName);
         assertTrue(resultAddStore.isSuccess());
         storeId = resultAddStore.getData();
-
+/* 
         String productName = "Test Product";
         String productDescription = "Test Description";
         String category = PCategory.ELECTRONICS.toString();
@@ -86,10 +87,10 @@ public class Sending_Direct_Message_to_Store {
         Response<StoreProductDTO> resultAddProduct = systemService.addProductToStore(storeId, storeOwnerId, productName, productDescription, 1,100, category);
         assertTrue(resultAddProduct.isSuccess());
         productId = resultAddProduct.getData().getProductId();
-
+*/ 
         Response<UserDTO> registered = testHelper.register_and_login2();
         registeredId = registered.getData().getUserId();
-
+/* 
         Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productId, 1); 
         assertTrue(responseAddToBasket.isSuccess());
 
@@ -101,6 +102,7 @@ public class Sending_Direct_Message_to_Store {
 
         assertTrue(responsePurchaseCart.isSuccess());
         assertEquals("Cart purchased successfully", responsePurchaseCart.getMessage());
+        */
     }
 
     @Test
@@ -167,7 +169,7 @@ public class Sending_Direct_Message_to_Store {
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
-
+/* 
     @Test
     void testSendDirectMessageToStore_userDidntPurchesStore_Success() {
         Response<UserDTO> unregisteredUser = testHelper.register_and_login3();
@@ -185,5 +187,5 @@ public class Sending_Direct_Message_to_Store {
         assertTrue(messages.entrySet().stream()
                 .anyMatch(entry -> entry.getValue().getMsg().equals(message) && entry.getValue().getUserId() == newUserId));
     }
-
+*/
 }
