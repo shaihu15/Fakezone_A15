@@ -1,6 +1,7 @@
 package UnitTesting;
 
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.Enums.PCategory;
 
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class OrderDTOTest {
 
     private OrderDTO orderDTO;
-    private Collection<ProductDTO> products;
+    private Collection<OrderedProductDTO> products;
 
     @BeforeEach
     void setUp() {
@@ -27,10 +28,10 @@ public class OrderDTOTest {
         storeId1.add(1);
         Set<Integer> storeId2 = new HashSet<>();
         storeId2.add(2);
-        products.add(new ProductDTO("Product 1", "Product 1 desc",1, PCategory.AUTOMOTIVE, storeId1));
-        products.add(new ProductDTO("Product 2", "Product 2 desc",1, PCategory.AUTOMOTIVE, storeId2));  
+        products.add(new OrderedProductDTO(1, "Product 1", 10, 10));
+        products.add(new OrderedProductDTO(2, "Product 2", 20, 20));  
 
-        orderDTO = new OrderDTO(1001, 2001, 3001, products, "Pending", "123 Test Street", "Credit Card");
+        orderDTO = new OrderDTO(1001, 2001, 3001, products, "Pending", "123 Test Street", "Credit Card", 0);
     }
 
     @Test
@@ -62,7 +63,7 @@ public class OrderDTOTest {
 
     @Test
     void getProducts_ShouldReturnCorrectProducts() {
-        Collection<ProductDTO> retrievedProducts = orderDTO.getProducts();
+        Collection<OrderedProductDTO> retrievedProducts = orderDTO.getProducts();
         assertEquals(2, retrievedProducts.size(), "Products size should match");
     }
 

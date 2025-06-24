@@ -12,7 +12,9 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -28,6 +30,8 @@ import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
+import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Request;
@@ -50,6 +54,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
     private VerticalLayout messagesFromStoreCard;
     private VerticalLayout offerMessagesCard;
     private Button openStoreButton; // Also declare button as instance variable
+    private VerticalLayout ordersCard;
 
     private static final Set<String> OWNERSHIP_ROLES = Set.of(
         RoleName.STORE_FOUNDER.name(),
@@ -77,9 +82,10 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         messagesFromStoreCard = createCardLayout("Messages From Stores");
         offerMessagesCard = createCardLayout("Auction Messages");
         openStoreButton = new Button("Open a Store"); // Listener will be set in beforeEnter
+        ordersCard = createCardLayout("Orders");
 
         // Add them to the view initially. Their content will be updated in beforeEnter.
-        add(openStoreButton, ownedStoresCard, managedStoresCard, pendingAssignmentsCard, messagesFromStoreCard, offerMessagesCard);
+        add(openStoreButton, ownedStoresCard, managedStoresCard, pendingAssignmentsCard, messagesFromStoreCard, offerMessagesCard, ordersCard);
     }
 
     // Helper method to create a card layout with common styling
@@ -127,6 +133,7 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
         refreshPendingAssignments(userId, tokenValue); // This already clears its content
         updateMsgFromStores(userId, tokenValue);
         updateOfferMsgs(userId, tokenValue);
+        showOrders(userId, tokenValue);
     }
 
     private void updateOwnedStores(int userId, String token) {
@@ -768,6 +775,76 @@ public class UserView extends VerticalLayout implements BeforeEnterObserver {
             updateMsgFromStores(userId, token);
         } else {
             Notification.show(response.getMessage());
+        }
+    }
+
+    private void showOrders(int userId, String token){
+        List<OrderDTO> orders = getOrders(userId, token);
+        if (orders == null || orders.isEmpty()) {
+            ordersCard.add(new Span("You have no orders."));
+            return;
+        }
+        for (OrderDTO order : orders) {
+            ordersCard.add(createOrderCard(order));
+        }
+    }
+
+     private Component createOrderCard(OrderDTO order) {
+        VerticalLayout card = new VerticalLayout();
+        card.getStyle()
+            .set("border", "1px solid #ccc")
+            .set("padding", "1em")
+            .set("border-radius", "8px")
+            .set("box-shadow", "2px 2px 5px rgba(0,0,0,0.1)");
+
+        card.add(new H3("Order #" + order.getOrderId()));
+
+        HorizontalLayout info = new HorizontalLayout();
+        info.setSpacing(true);
+        info.add(
+            new H5("Store ID: " + order.getStoreId()),
+            new H5("State: " + order.getOrderState()),
+            new H5("Payment: " + order.getPaymentMethod()),
+            new H5("Total Price: " + order.getTotalPrice())
+        );
+        card.add(info);
+
+        card.add(new H5("Delivery Address: " + order.getAddress()));
+
+        // Products list
+        VerticalLayout productsLayout = new VerticalLayout();
+        productsLayout.add(new H5("Products:"));
+        for (OrderedProductDTO product : order.getProducts()) {
+            // Adjust getName/getQuantity to match your ProductDTO
+            String productLine = String.format("%s x %d", product.getName(), product.getQuantity());
+            productsLayout.add(new Span(productLine));
+        }
+        card.add(productsLayout);
+
+        return card;
+    }
+
+    private List<OrderDTO> getOrders(int userId, String token){
+        String url = backendUrl + "order/getOrdersByUserId/" + userId;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<List<OrderDTO>>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<Response<List<OrderDTO>>>() {
+                });
+        Response<List<OrderDTO>> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            List<OrderDTO> orders = response.getData();
+            if(orders == null){
+                return new ArrayList<>();
+            }
+            return orders;
+        } else {
+            Notification.show(response.getMessage());
+            return new ArrayList<>();
         }
     }
 }

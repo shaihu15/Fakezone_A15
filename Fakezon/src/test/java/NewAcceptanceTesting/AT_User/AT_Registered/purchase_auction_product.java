@@ -145,7 +145,7 @@ public class purchase_auction_product {
         assertFalse(buyer2Orders.getData().isEmpty(), "Buyer2's order list should not be empty");
         OrderDTO order = buyer2Orders.getData().get(0);
         order.getProducts().forEach(product -> {
-        assertTrue(product.getId() == auctionProductId, "Order should contain the auction product");
+        assertTrue(product.getProductId() == auctionProductId, "Order should contain the auction product");
         });
         assertEquals(storeId, order.getStoreId(), "Order should be from the correct store");
 }

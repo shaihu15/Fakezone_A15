@@ -13,7 +13,7 @@ import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
@@ -134,8 +134,8 @@ public class OrderRetrievalIntegrationTest {
             assertEquals(userId, order.getUserId(), "Order should belong to test user");
             assertEquals(storeId, order.getStoreId(), "Order should be from test store");
             assertEquals(1, order.getProducts().size(), "Order should contain one product");
-            ProductDTO product = order.getProducts().iterator().next();
-            assertEquals(productId1, product.getId(), "Order should contain product 1");
+            OrderedProductDTO product = order.getProducts().iterator().next();
+            assertEquals(productId1, product.getProductId(), "Order should contain product 1");
             
             System.out.println("✓ Single order test passed:");
             System.out.println("  Order ID: " + order.getOrderId());
@@ -177,14 +177,14 @@ public class OrderRetrievalIntegrationTest {
             // Verify first order
             OrderDTO order1 = response.getData().get(0);
             assertEquals(1, order1.getProducts().size(), "First order should contain one product");
-            ProductDTO product1 = order1.getProducts().iterator().next();
-            assertEquals(productId1, product1.getId(), "First order should contain product 1");
+            OrderedProductDTO product1 = order1.getProducts().iterator().next();
+            assertEquals(productId1, product1.getProductId(), "First order should contain product 1");
             assertEquals(storeId, order1.getStoreId(), "First order should be from test store");
             // Verify second order
             OrderDTO order2 = response.getData().get(1);
             assertEquals(1, order2.getProducts().size(), "Second order should contain one product");
-            ProductDTO product2 = order2.getProducts().iterator().next();
-            assertEquals(productId2, product2.getId(), "Second order should contain product 2");
+            OrderedProductDTO product2 = order2.getProducts().iterator().next();
+            assertEquals(productId2, product2.getProductId(), "Second order should contain product 2");
             assertEquals(storeId, order2.getStoreId(), "Second order should be from test store");
 
             System.out.println("✓ Multiple orders test passed:");

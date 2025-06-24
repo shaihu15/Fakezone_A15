@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -48,6 +49,7 @@ import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Offer;
+import DomainLayer.Model.OrderedProduct;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
@@ -1112,13 +1114,12 @@ public class SystemService implements ISystemService {
     }
 
     public OrderDTO createOrderDTO(IOrder order) {
-        List<ProductDTO> productDTOS = new ArrayList<>();
-        for (int productId : order.getProductIds()) {
-            ProductDTO productDTO = this.productService.viewProduct(productId);
-            productDTOS.add(productDTO);
+        List<OrderedProductDTO> productDTOS = new ArrayList<>();
+        for (OrderedProduct prod : order.getProducts()) {
+            productDTOS.add(new OrderedProductDTO(prod.getProductId(), prod.getName(), prod.getPrice(), prod.getQuantity()));
         }
         return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), productDTOS,
-                order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
+                order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString(), order.getTotalPrice());
 
     }
 
