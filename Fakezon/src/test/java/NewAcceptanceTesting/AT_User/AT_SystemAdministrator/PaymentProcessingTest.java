@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
@@ -110,7 +111,22 @@ public class PaymentProcessingTest {
         Response<StoreProductDTO> productResponse = testHelper.addProductToStore(storeId, userId);
         assertNotNull(productResponse, "Adding product to store failed");
         assertTrue(productResponse.isSuccess(), "Adding product to store was not successful");
-        productId = productResponse.getData().getProductId();
+        
+        // Since productId might be 0 in tests, we need to get it a different way
+        // Let's get the store products and find our products by name
+        Response<StoreDTO> storeInfoResponse = systemService.userAccessStore(storeId);
+        assertTrue(storeInfoResponse.isSuccess(), "Failed to get store info: " + storeInfoResponse.getMessage());
+        StoreDTO store = storeInfoResponse.getData();
+        
+        // Find product by name instead of relying on the DTO productId
+        for (StoreProductDTO sp : store.getStoreProducts()) {
+            if ("Test Product".equals(sp.getName())) {
+                productId = sp.getProductId();
+                break;
+            }
+        }
+        
+        assertTrue(productId > 0, "Failed to find product ID for 'Test Product'");
     }
 
     @Test
