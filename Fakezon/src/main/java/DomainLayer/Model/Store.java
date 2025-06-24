@@ -146,8 +146,11 @@ public class Store implements IStore {
     @Transient
     private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
     
-    @Transient
-    private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "pending_managers", joinColumns = @JoinColumn(name = "store_id"))
+    @MapKeyColumn(name = "appointee_id")
+    @Column(name = "appointor_id")
+    private Map<Integer, Integer> pendingManagers; // appointee : appointor
     
     @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -195,7 +198,6 @@ public class Store implements IStore {
         this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
         this.messagesFromStore = new Stack<>();
         this.pendingManagersPerms = new HashMap<>();
-        this.pendingManagers = new HashMap<>();
         this.offersOnProducts = new HashMap<>();
         this.pendingOffers = new HashMap<>();
     }
@@ -207,7 +209,6 @@ public class Store implements IStore {
         this.messagesFromUsers = new HashMap<>();
         this.messagesFromStore = new Stack<>();
         this.pendingManagersPerms = new HashMap<>();
-        this.pendingManagers = new HashMap<>();
         this.offersOnProducts = new HashMap<>();
         this.pendingOffers = new HashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
