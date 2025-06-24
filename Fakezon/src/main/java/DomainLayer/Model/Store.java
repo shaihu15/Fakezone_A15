@@ -102,8 +102,15 @@ public class Store implements IStore {
     private Map<Integer, Integer> pendingOwners; // appointee : appointor
     
     // Store managers permissions - simplified for now
-    @Transient
-    private HashMap<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+        name = "store_manager_permissions",
+        joinColumns = @JoinColumn(name = "store_id")
+    )
+    @MapKeyColumn(name = "user_id")
+    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    private Map<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
     
     @Transient
     private Tree rolesTree;
@@ -184,7 +191,6 @@ public class Store implements IStore {
         this.rolesTree = new Tree(storeFounderID); // founder = root
         this.storeOwners.add(storeFounderID);
         this.pendingOwners = new HashMap<>(); // appointee : appointor
-        this.storeManagers = new HashMap<>(); // HASH userID to store manager
         this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
         this.messagesFromStore = new Stack<>();
         this.pendingManagersPerms = new HashMap<>();
@@ -197,7 +203,6 @@ public class Store implements IStore {
         this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
-        this.storeManagers = new HashMap<>();
         this.messagesFromUsers = new HashMap<>();
         this.messagesFromStore = new Stack<>();
         this.pendingManagersPerms = new HashMap<>();
@@ -670,6 +675,7 @@ public class Store implements IStore {
     }
 
     private void handleRecivedHigherBid(int prevHigherBid, int auctionProductID) {
+        System.out.println("handleRecivedHigherBid Triggered");
         if (auctionProducts.containsKey(auctionProductID)) {
             AuctionProduct auctionProduct = auctionProducts.get(auctionProductID);
             // Use the original product ID for the event
@@ -680,10 +686,12 @@ public class Store implements IStore {
     }
 
     private void handleAuctionEnd(int productID) {
+        System.out.println("handleAuctionEnd Triggered");
         productsLock.lock();
-        try{
+        try{    
 
             if (auctionProducts.containsKey(productID)) {
+                System.out.println("Auction product found - " + productID);
                 AuctionProduct auctionProduct = auctionProducts.get(productID);
                     if (auctionProduct.getUserIDHighestBid() != -1) // if there was a bid
                     {
