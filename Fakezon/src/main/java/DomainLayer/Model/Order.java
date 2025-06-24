@@ -33,7 +33,7 @@ public class Order implements IOrder{
     @Column(name = "total_price", nullable = false)
     private double totalPrice;
     
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderedProduct> products;
     
     @Enumerated(EnumType.STRING)

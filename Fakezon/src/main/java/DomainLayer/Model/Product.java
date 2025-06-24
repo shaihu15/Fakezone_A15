@@ -27,7 +27,7 @@ public class Product implements IProduct {
     @Column(name = "category", nullable = false)
     private PCategory category; 
     
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "product_stores", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "store_id")
     private Set<Integer> storesIds; // List of store IDs where the product is available
