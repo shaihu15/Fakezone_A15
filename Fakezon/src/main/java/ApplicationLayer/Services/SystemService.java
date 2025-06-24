@@ -971,6 +971,7 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
         try {
+            prices = this.storeService.calcAmount(userId, cart, dob);
             validCartDTO = this.storeService.decrementProductsInStores(userId, cart.getAllProducts());
         } catch (Exception e) {
             logger.error("System Service - Error during purchase cart - decrementProductsInStores: " + e.getMessage());
@@ -993,10 +994,8 @@ public class SystemService implements ISystemService {
         }
         //if payment/delivery won't work
         userService.setCart(userId, validCart);
-
-        prices = this.storeService.calcAmount(userId, cart, dob);
         totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
-        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
+        logger.info("System Service - User " + userId + " cart price: " + totalPrice);
         int paymentTransactionId = -1;
         try {
             paymentTransactionId = this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice,userId);
