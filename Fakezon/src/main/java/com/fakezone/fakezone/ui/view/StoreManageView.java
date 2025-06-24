@@ -1337,6 +1337,9 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                 meta.add(new Div(new H3("Payment: "), new Div(order.getPaymentMethod())));
                 meta.add(new Div(new H3("Store ID: "), new Div(String.valueOf(order.getStoreId()))));
                 meta.add(new Div(new H3("User ID: "), new Div(String.valueOf(order.getUserId()))));
+                double totalPrice = order.getTotalPrice();
+                String formattedPrice = String.format("%.2f", totalPrice);
+                meta.add(new Div(new H3("Total Price: "), new Div(formattedPrice)));
                 detailsLayout.add(meta);
 
                 // Products grid
