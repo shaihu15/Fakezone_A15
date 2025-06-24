@@ -703,6 +703,7 @@ public class SystemService implements ISystemService {
     public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName,
             String description, double basePrice, int quantity, String category) {
         String name = null;
+        boolean existingProduct = false; // used to check if the product already exists in the store
         int productId;
         PCategory categoryEnum = null;
         boolean isNewProd = false; //used for reverting if the operation fails
@@ -730,6 +731,9 @@ public class SystemService implements ISystemService {
                 if (prod.getName().equals(productName)) {
                     product = prod;
                     description = prod.getDescription();
+                    if(!product.getStoreIds().contains(storeId)){
+                          existingProduct = true;
+                        }
                     break;
                 }
             }
@@ -742,7 +746,14 @@ public class SystemService implements ISystemService {
                 isNewProd = true;
                 productId = productService.addProduct(productName, description, categoryEnum);
                 productService.addProductsToStore(storeId, List.of(productId));
-            } else {
+            }
+            else if(existingProduct){
+                productId =product.getId();
+                Set<Integer> storeIds = new HashSet<>();
+                storeIds.add(storeId);
+                productService.updateProduct(productId, productName, description, storeIds);
+            }
+             else {
                 productId = product.getId();
                 if (!product.getDescription().equals(description)
                         || !product.getCategory().toString().equals(category)) {
@@ -2419,4 +2430,16 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
+    public Response<List<StoreDTO>> getAllStores() {
+        try {
+            List<StoreDTO> stores = storeService.getAllStores();
+            return new Response<>(stores, "Stores retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all stores: " + e.getMessage());
+            return new Response<>(null, "Error during getting all stores: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    
 }

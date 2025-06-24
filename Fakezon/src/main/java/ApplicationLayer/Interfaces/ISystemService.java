@@ -74,6 +74,8 @@ public interface ISystemService {
 
     Response<List<ProductDTO>> searchProductsByName(String productName);
 
+    Response<List<StoreDTO>> getAllStores();
+
     Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId,
             List<StoreManagerPermission> perms);
 

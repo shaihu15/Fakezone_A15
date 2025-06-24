@@ -389,6 +389,88 @@ class SystemServiceTest {
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
     }
 
+    @Test
+    void testAddProductToStore_ExistingProductNotInStore() {
+        int storeId = 1, requesterId = 2;
+        String productName = "prod";
+        String description = "desc";
+        double basePrice = 10.0;
+        int quantity = 5;
+        String category = "ELECTRONICS";
+        int productId = 10;
+        ProductDTO existingProduct = mock(ProductDTO.class);
+        when(existingProduct.getName()).thenReturn(productName);
+        when(existingProduct.getDescription()).thenReturn(description);
+        when(existingProduct.getStoreIds()).thenReturn(new HashSet<>()); // not in store
+        when(existingProduct.getId()).thenReturn(productId);
+        when(productService.getAllProducts()).thenReturn(List.of(existingProduct));
+        when(storeService.isStoreOpen(storeId)).thenReturn(true);
+        when(storeService.getStoreOwners(storeId, requesterId)).thenReturn(List.of(requesterId));
+        when(storeService.addProductToStore(eq(storeId), eq(requesterId), eq(productId), eq(productName), eq(basePrice), eq(quantity), any())).thenReturn(mock(StoreProductDTO.class));
+        doNothing().when(productService).updateProduct(eq(productId), eq(productName), eq(description), any());
+
+        Response<StoreProductDTO> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
+
+        assertTrue(response.isSuccess());
+        assertEquals("Product added to store successfully", response.getMessage());
+    }
+
+    @Test
+    void testAddProductToStore_ExistingProductInStore() {
+        int storeId = 1, requesterId = 2;
+        String productName = "prod";
+        String description = "desc";
+        double basePrice = 10.0;
+        int quantity = 5;
+        String category = "ELECTRONICS";
+        int productId = 10;
+        ProductDTO existingProduct = mock(ProductDTO.class);
+        when(existingProduct.getName()).thenReturn(productName);
+        when(existingProduct.getDescription()).thenReturn(description);
+        Set<Integer> storeIds = new HashSet<>();
+        storeIds.add(storeId);
+        when(existingProduct.getStoreIds()).thenReturn(storeIds); // already in store
+        when(existingProduct.getId()).thenReturn(productId);
+        when(existingProduct.getCategory()).thenReturn(PCategory.ELECTRONICS);
+        when(productService.getAllProducts()).thenReturn(List.of(existingProduct));
+        when(storeService.isStoreOpen(storeId)).thenReturn(true);
+        when(storeService.getStoreOwners(storeId, requesterId)).thenReturn(List.of(requesterId));
+        when(storeService.addProductToStore(eq(storeId), eq(requesterId), eq(productId), eq(productName), eq(basePrice), eq(quantity), any())).thenReturn(mock(StoreProductDTO.class));
+
+        Response<StoreProductDTO> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
+
+        assertTrue(response.isSuccess());
+        assertEquals("Product added to store successfully", response.getMessage());
+    }
+
+    @Test
+    void testAddProductToStore_ExistingProductMismatchedDescriptionOrCategory() {
+        int storeId = 1, requesterId = 2;
+        String productName = "prod";
+        String description = "desc";
+        double basePrice = 10.0;
+        int quantity = 5;
+        String category = "ELECTRONICS";
+        int productId = 10;
+        ProductDTO existingProduct = mock(ProductDTO.class);
+        when(existingProduct.getName()).thenReturn(productName);
+        when(existingProduct.getDescription()).thenReturn("otherdesc"); // mismatch
+        Set<Integer> storeIds = new HashSet<>();
+        storeIds.add(storeId);
+        when(existingProduct.getStoreIds()).thenReturn(storeIds);
+        when(existingProduct.getId()).thenReturn(productId);
+        when(existingProduct.getCategory()).thenReturn(PCategory.FOOD); // mismatch
+        when(productService.getAllProducts()).thenReturn(List.of(existingProduct));
+        when(storeService.isStoreOpen(storeId)).thenReturn(true);
+        when(storeService.getStoreOwners(storeId, requesterId)).thenReturn(List.of(requesterId));
+
+        Response<StoreProductDTO> response = systemService.addProductToStore(storeId, requesterId, productName, description, basePrice, quantity, category);
+
+        assertFalse(response.isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+        assertTrue(response.getMessage().contains("Product description/category is different"));
+    }
+
     // sendMessageToStore
     @Test
     void testSendMessageToStore_Success() {
@@ -1591,6 +1673,30 @@ class SystemServiceTest {
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
     }
 
+    @Test
+    void testGetAllStores_Success() {
+        StoreDTO store1 = mock(StoreDTO.class);
+        StoreDTO store2 = mock(StoreDTO.class);
+        when(storeService.getAllStores()).thenReturn(List.of(store1, store2));
+
+        Response<List<StoreDTO>> response = systemService.getAllStores();
+
+        assertTrue(response.isSuccess());
+        assertEquals(2, response.getData().size());
+        assertEquals("Stores retrieved successfully", response.getMessage());
+    }
+
+    @Test
+    void testGetAllStores_Exception() {
+        when(storeService.getAllStores()).thenThrow(new RuntimeException("fail"));
+
+        Response<List<StoreDTO>> response = systemService.getAllStores();
+
+        assertFalse(response.isSuccess());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("Error during getting all stores: fail"));
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
+    }
 
 }
 

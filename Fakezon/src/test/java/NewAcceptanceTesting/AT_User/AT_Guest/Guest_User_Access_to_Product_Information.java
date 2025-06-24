@@ -82,7 +82,7 @@ public class Guest_User_Access_to_Product_Information {
     //add test for closed store
     @Test
     void testGuestUserAccessToProductInformation_StoreIsClosed_Fail() {
-        systemService.closeStoreByFounder(userId, storeId);
+        systemService.closeStoreByFounder(storeId, userId);
         // The store is closed
 
         Response<StoreProductDTO> productResponse = systemService.getProductFromStore(productId, storeId);
