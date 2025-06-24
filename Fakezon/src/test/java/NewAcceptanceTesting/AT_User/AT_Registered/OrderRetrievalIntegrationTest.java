@@ -21,6 +21,7 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
 import DomainLayer.Enums.PaymentMethod;
 import ApplicationLayer.Services.SystemService;
+import ApplicationLayer.DTO.StoreDTO;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
@@ -85,12 +86,25 @@ public class OrderRetrievalIntegrationTest {
             Response<StoreProductDTO> product1Response = systemService.addProductToStore(storeId, ownerId, "Test Product 1", "Description 1", 
                 PRODUCT_PRICE_1, 100, "ELECTRONICS");
             assertTrue(product1Response.isSuccess(), "Product 1 creation failed: " + product1Response.getMessage());
-            productId1 = product1Response.getData().getProductId();
-
+            
             Response<StoreProductDTO> product2Response = systemService.addProductToStore(storeId, ownerId, "Test Product 2", "Description 2", 
                 PRODUCT_PRICE_2, 100, "ELECTRONICS");
             assertTrue(product2Response.isSuccess(), "Product 2 creation failed: " + product2Response.getMessage());
-            productId2 = product2Response.getData().getProductId();
+            
+            // Since productId might be 0 in tests, we need to get it a different way
+            // Let's get the store products and find our products by name
+            Response<StoreDTO> storeInfoResponse = systemService.userAccessStore(storeId);
+            assertTrue(storeInfoResponse.isSuccess(), "Failed to get store info: " + storeInfoResponse.getMessage());
+            StoreDTO store = storeInfoResponse.getData();
+            
+            // Find products by name instead of relying on the DTO productId
+            for (StoreProductDTO sp : store.getStoreProducts()) {
+                if ("Test Product 1".equals(sp.getName())) {
+                    productId1 = sp.getProductId();
+                } else if ("Test Product 2".equals(sp.getName())) {
+                    productId2 = sp.getProductId();
+                }
+            }
 
         } catch (Exception e) {
             fail("Failed to setup test data: " + e.getMessage());
@@ -117,7 +131,8 @@ public class OrderRetrievalIntegrationTest {
     void testGetOrdersByUser_WithSingleOrder() {
         try {
             // Add product to cart and purchase
-            systemService.addToBasket(userId, productId1, storeId, 1);
+            Response<Void> addToBasketResponse = systemService.addToBasket(userId, productId1, storeId, 1);
+            assertTrue(addToBasketResponse.isSuccess(), "Add to basket failed: " + addToBasketResponse.getMessage());
             
             Response<String> purchaseResponse = systemService.purchaseCart(
                 userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
@@ -153,22 +168,26 @@ public class OrderRetrievalIntegrationTest {
     void testGetOrdersByUser_WithMultipleOrders() {
         try {
             // First purchase
-            systemService.addToBasket(userId, productId1, storeId, 1);
+            Response<Void> addToBasket1Response = systemService.addToBasket(userId, productId1, storeId, 1);
+            assertTrue(addToBasket1Response.isSuccess(), "First add to basket failed: " + addToBasket1Response.getMessage());
+            
             Response<String> purchase1Response = systemService.purchaseCart(
                 userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
                 "Standard", "123456789", "Test User", "12/25", "123",
                 "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
             );
-            assertTrue(purchase1Response.isSuccess(), "First purchase failed");
+            assertTrue(purchase1Response.isSuccess(), "First purchase failed: " + purchase1Response.getMessage());
 
             // Second purchase
-            systemService.addToBasket(userId, productId2, storeId, 2);
+            Response<Void> addToBasket2Response = systemService.addToBasket(userId, productId2, storeId, 2);
+            assertTrue(addToBasket2Response.isSuccess(), "Second add to basket failed: " + addToBasket2Response.getMessage());
+            
             Response<String> purchase2Response = systemService.purchaseCart(
                 userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
                 "Standard", "123456789", "Test User", "12/25", "123",
                 "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
             );
-            assertTrue(purchase2Response.isSuccess(), "Second purchase failed");
+            assertTrue(purchase2Response.isSuccess(), "Second purchase failed: " + purchase2Response.getMessage());
 
             // Get orders
             Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
