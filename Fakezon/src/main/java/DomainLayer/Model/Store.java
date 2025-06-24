@@ -112,7 +112,8 @@ public class Store implements IStore {
     @Enumerated(EnumType.STRING)
     private Map<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
     
-    @Transient
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "roles_tree_id")
     private Tree rolesTree;
     
     @Transient
@@ -211,7 +212,8 @@ public class Store implements IStore {
         this.pendingOffers = new HashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         this.publisher = null; // Will be injected/set when needed
-        if (storeFounderID != 0) {
+        // rolesTree is now persistent and handled by JPA
+        if (rolesTree == null && storeFounderID != 0) {
             this.rolesTree = new Tree(storeFounderID);
         }
     }
