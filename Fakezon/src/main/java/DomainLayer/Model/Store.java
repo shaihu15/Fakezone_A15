@@ -1282,28 +1282,23 @@ public class Store implements IStore {
                                     + " is not valid for the current basket.");
                 }
             }
+            int reducedQuantity = 0;
             if (auctionProducts.containsKey(productId)) {
                 AuctionProduct auctionProduct = auctionProducts.get(productId);
                 if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone()) {
                     amount += auctionProduct.getCurrentHighestBid();
-                    amount += auctionProduct.getBasePrice() * (quantity - 1); 
+                    reducedQuantity++;
+                    logger.info("Calculated auction product finished");
                 }
-                else{
-                    amount += auctionProduct.getBasePrice() * quantity;
-                }
-                
-            } else {
-                Offer offer = getUserOfferOnStoreProduct(userId, productId);
-                if(offer != null && offer.getUserId() == userId && offer.isApproved() && offer.isHandled()){
-                    amount += offer.getOfferAmount();
-                    if(quantity > 1){
-                        amount += product.getBasePrice() * (quantity - 1);
-                    }
-                }
-                else{
-                    amount += product.getBasePrice() * quantity;
-                }
+            } 
+            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            if(offer != null && offer.getUserId() == userId && offer.isApproved() && offer.isHandled()){
+                amount += offer.getOfferAmount();
+                reducedQuantity++;
+                logger.info("Calculated offer product finished");
             }
+            logger.info("Calculating remaining products (quantity left: " + (quantity - reducedQuantity) + ")");
+            amount += product.getBasePrice() * (quantity - reducedQuantity);
         }
         double totalDiscount = discountPolicies.values().stream()
         .mapToDouble(d -> d.apply(cart)).sum();
