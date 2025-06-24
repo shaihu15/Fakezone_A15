@@ -341,6 +341,11 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
             dialog.add(totalBox);
             Button confirmPurchase = new Button("Confirm Purchase");
             confirmPurchase.addClickListener(e ->{
+                                if(exp.isEmpty() || exp.getValue().isBefore(LocalDate.now())){
+                                    exp.focus();
+                                    Notification.show("Please Enter a Valid Exp Date").setPosition(Notification.Position.MIDDLE);
+                                    return;
+                                }
                                 if(!paymentMethodComboBox.isEmpty() && !deliveryMethod.isEmpty() && !cardNumber.isEmpty() &&
                                    !cardHolder.isEmpty() && !exp.isEmpty() && !cvv.isEmpty() && !streetAddress.isEmpty() && 
                                    !city.isEmpty() && !zipCode.isEmpty() && !countryComboBox.isEmpty() && !packageDetails.isEmpty()){
