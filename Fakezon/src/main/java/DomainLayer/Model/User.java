@@ -53,7 +53,7 @@ public class User {
     }
 
     public void addToBasket(int storeId, int productId, int quantity) {
-        cart.addProduct(storeId, productId, quantity);
+        cart.addProductQuantity(storeId, productId, quantity);
     }
 
     public Basket getBasket(int storeId) {
