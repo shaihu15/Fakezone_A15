@@ -158,12 +158,16 @@ public class Store implements IStore {
     @JoinColumn(name = "store_id")
     private List<Offer> allOffers = new ArrayList<>(); // All offers for this store
     
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "pending_store_id")
+    private List<Offer> allPendingOffers = new ArrayList<>(); // All pending counter offers for this store
+    
     @Transient
     private Map<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited (derived from allOffers) 
     @Transient
     private final ReentrantLock offersLock = new ReentrantLock();
     @Transient
-    private HashMap<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept
+    private Map<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept (derived from allPendingOffers)
 
     // Default constructor for JPA
     public Store() {
@@ -206,8 +210,9 @@ public class Store implements IStore {
         this.messagesFromStore = new Stack<>();
         this.pendingManagersPerms = new HashMap<>();
         this.allOffers = new ArrayList<>();
+        this.allPendingOffers = new ArrayList<>();
         rebuildOffersOnProductsMap();
-        this.pendingOffers = new HashMap<>();
+        rebuildPendingOffersMap();
     }
 
     private void initializeTransientFields() {
@@ -222,7 +227,7 @@ public class Store implements IStore {
             this.pendingManagers = new HashMap<>();
         }
         rebuildOffersOnProductsMap(); // Build from persistent allOffers
-        this.pendingOffers = new HashMap<>();
+        rebuildPendingOffersMap(); // Build from persistent allPendingOffers
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         this.publisher = null; // Will be injected/set when needed
         // rolesTree is now persistent and handled by JPA
@@ -238,6 +243,17 @@ public class Store implements IStore {
             for (Offer offer : allOffers) {
                 int userId = offer.getUserId();
                 offersOnProducts.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+            }
+        }
+    }
+    
+    // Rebuild the pendingOffers map from the persistent allPendingOffers list
+    private void rebuildPendingOffersMap() {
+        this.pendingOffers = new HashMap<>();
+        if (allPendingOffers != null) {
+            for (Offer offer : allPendingOffers) {
+                int userId = offer.getUserId();
+                pendingOffers.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
             }
         }
     }
@@ -1825,6 +1841,7 @@ public class Store implements IStore {
             }
             pendingUserOffers.add(counterOffer);
             pendingOffers.put(userId, pendingUserOffers);
+            allPendingOffers.add(counterOffer); // Also add to persistent list
             this.publisher.publishEvent(new CounterOfferEvent(storeID, productId, userId, offerAmount));
         }
         finally{
@@ -1893,6 +1910,7 @@ public class Store implements IStore {
             if(offers == null || offers.isEmpty()){
                 pendingOffers.remove(offer.getUserId());
             }
+            allPendingOffers.remove(offer); // Also remove from persistent list
         }
         finally{
             offersLock.unlock();
@@ -1915,5 +1933,15 @@ public class Store implements IStore {
     public void setAllOffers(List<Offer> allOffers) {
         this.allOffers = allOffers;
         rebuildOffersOnProductsMap(); // Rebuild the transient map when setting persistent list
+    }
+    
+    // Getter for persistent pending offers list
+    public List<Offer> getAllPendingOffers() {
+        return allPendingOffers;
+    }
+    
+    public void setAllPendingOffers(List<Offer> allPendingOffers) {
+        this.allPendingOffers = allPendingOffers;
+        rebuildPendingOffersMap(); // Rebuild the transient map when setting persistent list
     }
 }
