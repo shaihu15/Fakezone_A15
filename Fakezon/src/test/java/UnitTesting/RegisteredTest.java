@@ -142,22 +142,7 @@ public class RegisteredTest {
     }
 
 
-    @Test
-    void givenValidMessageFromUser_whenGetMessagesFromUser_returnTrue() {
-        int storeID = 1;
-        String message = "Hello, this is a test message.";
-        registeredUser.sendMessageToStore(storeID, message);
-        assertEquals(message, registeredUser.getMessagesFromUser().get(0).getMessage(),
-                "Message should be received successfully");
-    }
 
-
-    @Test
-    public void testSendMessageToStore_Success() {
-        registeredUser.sendMessageToStore(1, "Hello Store!");
-        List<StoreMsg> messages = registeredUser.getMessagesFromUser();
-        assertEquals("Hello Store!", messages.get(0).getMessage());
-    }
     @Test
     public void testAddRoleAndGetRole() {
         IRegisteredRole role = mock(IRegisteredRole.class);

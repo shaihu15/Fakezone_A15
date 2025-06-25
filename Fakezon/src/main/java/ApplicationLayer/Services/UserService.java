@@ -263,15 +263,8 @@ public class UserService implements IUserService {
     public void sendMessageToStore(int userID, int storeID, String message) {
         Optional<Registered> user = userRepository.findRegisteredById(userID);
         if (user.isPresent()) {
-            try {
-                user.get().sendMessageToStore(storeID, message);
-                userRepository.save(user.get());
-                logger.info("Message sent to store: " + storeID + " from user: " + userID);
-            } catch (Exception e) {
-                // Handle exception if needed
-                logger.error("Error during send message: " + e.getMessage());
-                System.out.println("Error during send message: " + e.getMessage());
-            }
+                logger.info("User: " + userID + " is registered");
+                return;
         } else {
             logger.error("User not found: " + userID);
             throw new IllegalArgumentException("User not found");
@@ -899,5 +892,4 @@ public class UserService implements IUserService {
             return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
-
 }

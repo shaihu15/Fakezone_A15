@@ -14,7 +14,6 @@ import DomainLayer.Enums.RoleName;
 import DomainLayer.IRepository.IRegisteredRole;
 import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.UserRole;
-
 import jakarta.persistence.*;
 
 @Entity
@@ -40,28 +39,37 @@ public class Registered extends User {
     @Column(name = "age")
     private int age;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_messages_from_user", joinColumns = @JoinColumn(name = "user_id"))
-    private List<StoreMsg> messagesFromUser = new ArrayList<>(); // List to allow multiple messages
-
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_messages_from_store",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_assignment_messages",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> assignmentMessages = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_auction_ended_messages",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_offers_messages",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> offersMessages = new ArrayList<>();
-
-    // Static counter for generating unique message IDs in non-persisted environments
-    private static final AtomicInteger messageIdCounter = new AtomicInteger(1);
 
     // Default constructor for JPA
     protected Registered() {
@@ -127,42 +135,16 @@ public class Registered extends User {
         return true;
     }
 
-    public void sendMessageToStore(int storeID, String message) {
-        StoreMsg storeMsg = new StoreMsg(storeID, -1, message, null, this.userId);
-        // Assign unique ID if not persisted
-        if (storeMsg.getMsgId() == 0) {
-            storeMsg.setMsgId(messageIdCounter.getAndIncrement());
-        }
-        messagesFromUser.add(storeMsg);
-    }
-
     public int addMessageFromStore(StoreMsg message) {
-        // Ensure the message has the correct userId
-        message.setUserId(this.userId);
-        // Assign unique ID if not persisted
-        if (message.getMsgId() == 0) {
-            message.setMsgId(messageIdCounter.getAndIncrement());
-        }
         this.messagesFromStore.add(message);
         return message.getMsgId();
     }
 
     public int addOfferMessage(StoreMsg message) {
-        // Ensure the message has the correct userId
-        message.setUserId(this.userId);
-        // Assign unique ID if not persisted
-        if (message.getMsgId() == 0) {
-            message.setMsgId(messageIdCounter.getAndIncrement());
-        }
         this.offersMessages.add(message);
         return message.getMsgId();
     }
 
-    public List<StoreMsg> getMessagesFromUser() {
-        return messagesFromUser.stream()
-                .map(msg -> new StoreMsg(msg.getStoreId(), msg.getProductId(), msg.getMessage(), msg.getOfferedBy(), this.userId))
-                .toList();
-    }
 
     public Map<Integer, StoreMsg> getMessagesFromStore() {
         Map<Integer, StoreMsg> result = new HashMap<>();
@@ -256,12 +238,6 @@ public class Registered extends User {
     }
 
     public int addAssignmentMessage(StoreMsg msg) {
-        // Ensure the message has the correct userId
-        msg.setUserId(this.userId);
-        // Assign unique ID if not persisted
-        if (msg.getMsgId() == 0) {
-            msg.setMsgId(messageIdCounter.getAndIncrement());
-        }
         this.assignmentMessages.add(msg);
         return msg.getMsgId();
     }
@@ -316,10 +292,6 @@ public class Registered extends User {
     public int addAuctionEndedMessage(StoreMsg message) {
         // Ensure the message has the correct userId
         message.setUserId(this.userId);
-        // Assign unique ID if not persisted
-        if (message.getMsgId() == 0) {
-            message.setMsgId(messageIdCounter.getAndIncrement());
-        }
         this.auctionEndedMessages.add(message);
         return message.getMsgId();
     }

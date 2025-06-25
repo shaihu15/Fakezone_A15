@@ -411,7 +411,6 @@ public class UserServiceTest {
     
         userService.sendMessageToStore(userId, storeId, message);
     
-        verify(mockUser, times(1)).sendMessageToStore(storeId, message);
         verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
