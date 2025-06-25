@@ -39,20 +39,36 @@ public class Registered extends User {
     @Column(name = "age")
     private int age;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_messages_from_store", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_messages_from_store",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_assignment_messages", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_assignment_messages",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> assignmentMessages = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_auction_ended_messages", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_auction_ended_messages",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "user_offers_messages", joinColumns = @JoinColumn(name = "user_id"))
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "registered_offers_messages",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "msg_id")
+    )
     private List<StoreMsg> offersMessages = new ArrayList<>();
 
     // Default constructor for JPA

@@ -892,5 +892,4 @@ public class UserService implements IUserService {
             return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
-
 }

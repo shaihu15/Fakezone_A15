@@ -19,7 +19,7 @@ import jakarta.persistence.GenerationType;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "userid")
+    @Column(name = "user_id")
     protected int userId;
 
     @Column(name = "is_logged_in")

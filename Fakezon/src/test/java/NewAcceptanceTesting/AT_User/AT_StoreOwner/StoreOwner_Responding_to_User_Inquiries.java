@@ -31,8 +31,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
     private int customerId;
     private int storeId;
 
-    //@BeforeEach
-    @Test
+    @BeforeEach
     void setUp() {
         systemService.clearAllData();
         testHelper = new TestHelper(systemService);
@@ -56,12 +55,6 @@ public class StoreOwner_Responding_to_User_Inquiries {
         Response<Void> sendMsgResp = systemService.sendMessageToStore(customerId, storeId, "Is this product vegan?");
         assertTrue(sendMsgResp.isSuccess());
 
-        // for debugging
-        Response<Void> sendMsgRespTest = systemService.sendMessageToStore(customerId, storeId, "sendMessageToStore");
-        assertTrue(sendMsgRespTest.isSuccess());
-
-        Response<Void> sendMsgRespTest2 = systemService.sendMessageToUser(storeOwnerId, storeId, customerId, "sendMessageToUser");
-        assertTrue(sendMsgRespTest2.isSuccess());
     }
 
     @Test
@@ -73,7 +66,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
         assertTrue(replyResp.isSuccess());
         assertEquals("Message sent successfully", replyResp.getMessage());
 
-        TimeUnit.SECONDS.sleep(10); // Small buffer
+        TimeUnit.SECONDS.sleep(2); // Small buffer
         // Simulate customer checking messages
         Response<Map<Integer, StoreMsg>> inboxResp = systemService.getAllMessages(customerId);
         assertTrue(inboxResp.isSuccess());

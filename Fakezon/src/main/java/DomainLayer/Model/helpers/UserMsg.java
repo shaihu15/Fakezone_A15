@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 
 @Entity
-@Table(name = "user_messages")
+@Table(name = "user_messages_to_store")
 public class UserMsg {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
