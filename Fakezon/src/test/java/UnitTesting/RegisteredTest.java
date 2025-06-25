@@ -202,6 +202,7 @@ public class RegisteredTest {
         int storeID = 3;
         String message = "Assignment!";
         StoreMsg storeMsg = new StoreMsg(storeID, -1, message, null, userID);
+        storeMsg.setMsgId(1); // Set unique msgId for testing
         int messageId = registeredUser.addAssignmentMessage(storeMsg);
         assertEquals(message, registeredUser.getAssignmentMessages().get(messageId).getMessage());
     }
@@ -212,12 +213,14 @@ public class RegisteredTest {
         StoreMsg storeMsg1 = new StoreMsg(storeID1, -1, "store", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(storeID2, -1, "assign", null, userID);
         StoreMsg storeMsg3 = new StoreMsg(storeID3, -1, "auction", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
+        storeMsg3.setMsgId(3);
         int messageId1 = registeredUser.addMessageFromStore(storeMsg1);
         int messageId2 = registeredUser.addAssignmentMessage(storeMsg2);
         int messageId3 = registeredUser.addOfferMessage(storeMsg3);
         Map<Integer, StoreMsg> all = registeredUser.getAllMessages();
-
         assertEquals("store", all.get(messageId1).getMessage());
         assertEquals("assign", all.get(messageId2).getMessage());
         assertEquals("auction", all.get(messageId3).getMessage());
@@ -231,10 +234,11 @@ public class RegisteredTest {
     void testAddMultipleMessagesFromStore() {
         StoreMsg storeMsg1 = new StoreMsg(1, -1, "msg1", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(2, -1, "msg2", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
         int messageId1 = registeredUser.addMessageFromStore(storeMsg1);
         int messageId2 = registeredUser.addMessageFromStore(storeMsg2);
-        
         Map<Integer, StoreMsg> messages = registeredUser.getMessagesFromStore();
         assertEquals("msg1", messages.get(messageId1).getMessage());
         assertEquals("msg2", messages.get(messageId2).getMessage());
@@ -244,7 +248,9 @@ public class RegisteredTest {
     void testAddMultipleAuctionEndedMessages() {
         StoreMsg storeMsg1 = new StoreMsg(1, -1, "auction1", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(2, -1, "auction2", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
         int messageId1 = registeredUser.addOfferMessage(storeMsg1);
         int messageId2 = registeredUser.addOfferMessage(storeMsg2);
         Map<Integer, StoreMsg> messages = registeredUser.getOffersMessages();
@@ -255,7 +261,9 @@ public class RegisteredTest {
     void testGetMessagesFromStore() {
         StoreMsg storeMsg1 = new StoreMsg(1, -1, "store1", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(2, -1, "store2", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
         int messageId1 = registeredUser.addMessageFromStore(storeMsg1);
         int messageId2 = registeredUser.addMessageFromStore(storeMsg2);
         Map<Integer, StoreMsg> messages = registeredUser.getMessagesFromStore();
@@ -268,7 +276,9 @@ public class RegisteredTest {
     void testGetAssignmentMessages() {
         StoreMsg storeMsg1 = new StoreMsg(10, -1, "assign1", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(20, -1, "assign2", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
         int messageId1 = registeredUser.addAssignmentMessage(storeMsg1);
         int messageId2 = registeredUser.addAssignmentMessage(storeMsg2);
         Map<Integer, StoreMsg> messages = registeredUser.getAssignmentMessages();
@@ -281,7 +291,9 @@ public class RegisteredTest {
     void testGetAuctionEndedMessages() {
         StoreMsg storeMsg1 = new StoreMsg(100, -1, "auction1", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(200, -1, "auction2", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
         int messageId1 = registeredUser.addOfferMessage(storeMsg1);
         int messageId2 = registeredUser.addOfferMessage(storeMsg2);
         Map<Integer, StoreMsg> messages = registeredUser.getOffersMessages();
@@ -295,7 +307,10 @@ public class RegisteredTest {
         StoreMsg storeMsg1 = new StoreMsg(1, -1, "storeMsg", null, userID);
         StoreMsg storeMsg2 = new StoreMsg(2, -1, "assignMsg", null, userID);
         StoreMsg storeMsg3 = new StoreMsg(3, -1, "auctionMsg", null, userID);
-        
+        // Set unique msgIds for testing
+        storeMsg1.setMsgId(1);
+        storeMsg2.setMsgId(2);
+        storeMsg3.setMsgId(3);
         int messageId1 = registeredUser.addMessageFromStore(storeMsg1);
         int messageId2 = registeredUser.addAssignmentMessage(storeMsg2);
         int messageId3 = registeredUser.addOfferMessage(storeMsg3);
