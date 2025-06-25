@@ -10,70 +10,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.DTO.StoreDTO;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
 import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
 import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
 import com.fakezone.fakezone.FakezoneApplication;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
-@Transactional
 public class PaymentProcessingTest {
-
+    @Autowired
     private SystemService systemService;
-    
-    @Autowired
-    private IStoreRepository storeRepository;
-    
-    @Autowired
-    private IUserRepository userRepository;
-    
-    @Autowired
-    private IProductRepository productRepository;
-    
-    @Autowired
-    private IOrderRepository orderRepository;
-    
-    private IDelivery deliveryService;
-    private IAuthenticator authenticatorService;
-    private IPayment paymentService;
-    private ApplicationEventPublisher eventPublisher;
-    private IStoreService storeService;
-    private IProductService productService;
-    private IUserService userService;
-    private IOrderService orderService;
-    private INotificationWebSocketHandler notificationWebSocketHandler;
+
     private TestHelper testHelper;
 
     int storeId;
@@ -83,18 +33,7 @@ public class PaymentProcessingTest {
     @BeforeEach
     void setUp() {
         // Repositories are now injected by Spring
-        paymentService = new PaymentAdapter();
-        deliveryService = new DeliveryAdapter();
-
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        orderService = new OrderService(orderRepository);
-        productService = new ProductService(productRepository);
-        authenticatorService = new AuthenticatorAdapter(userService);
-
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService,
-                authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
-        testHelper = new TestHelper(systemService);
+        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         // Register and login a user

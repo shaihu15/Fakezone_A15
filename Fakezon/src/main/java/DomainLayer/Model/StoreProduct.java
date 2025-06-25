@@ -34,7 +34,7 @@ public class StoreProduct {
     private int quantity;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "category", nullable = false)
     private PCategory category;
     
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

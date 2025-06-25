@@ -59,10 +59,17 @@ public class StoreService implements IStoreService {
         // init();
     }
 
+    private void setPublisher(Store store) {
+        if (store != null) {
+            store.setPublisher(this.publisher);
+        }
+    }
+
     // should store service catch the errors? who's printing to console??
     @Override
     public void addStoreOwner(int storeId, int requesterId, int newOwnerId) {
         Store store = storeRepository.findById(storeId);
+        setPublisher(store);
         if (store == null) {
             logger.error("addStoreOwner - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
@@ -74,6 +81,7 @@ public class StoreService implements IStoreService {
     @Override
     public List<Integer> getStoreOwners(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
+        setPublisher(store);
         if (store == null) {
             throw new IllegalArgumentException("Store not found");
         }
@@ -83,6 +91,7 @@ public class StoreService implements IStoreService {
     @Override
     public HashMap<Integer, List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
+        setPublisher(store);
         if (store == null) {
             logger.error("getStoreManagers - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
@@ -121,6 +130,7 @@ public class StoreService implements IStoreService {
     @Override
     public StoreDTO viewStore(int storeId) {
         Store store = storeRepository.findById(storeId);
+        setPublisher(store);
         if (store == null) {
             logger.error("viewStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
@@ -150,6 +160,7 @@ public class StoreService implements IStoreService {
     @Override
     public void closeStore(int storeId, int requesterId) {
         Store store = storeRepository.findById(storeId);
+        setPublisher(store);
         if (store == null) {
             logger.error("closeStore - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
@@ -162,6 +173,7 @@ public class StoreService implements IStoreService {
     @Override
     public void closeStoreByAdmin(int storeId, int adminId) {
         Store store = storeRepository.findById(storeId);
+        setPublisher(store);
         if (store == null) {
             logger.error("closeStoreByAdmin - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
@@ -182,6 +194,7 @@ public class StoreService implements IStoreService {
             logger.info("Store Service - User " + requesterId + " trying to add store product " + productId
                     + " to store " + storeId);
             Store store = storeRepository.findById(storeId);
+            setPublisher(store);
             if (store == null) {
                 logger.error("Store Service - addProductToStore - Store not found: " + storeId);
                 throw new IllegalArgumentException("Store not found");
@@ -400,8 +413,8 @@ public class StoreService implements IStoreService {
             logger.error("sendMessage - Store not found: " + storeId);
             throw new IllegalArgumentException("Store not found");
         }
+        setPublisher(store);
         store.sendMessage(managerId, userId, message);
-        storeRepository.save(store);
     }
 
     @Override
@@ -412,21 +425,6 @@ public class StoreService implements IStoreService {
             throw new IllegalArgumentException("Store not found");
         }
         return store.isOpen();
-    }
-
-    @Override
-    public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId) {
-        Store store = storeRepository.findById(storeId);
-        if (store == null) {
-            logger.error("getMessagesFromStore - Store not found: " + storeId);
-            throw new IllegalArgumentException("Store not found");
-        }
-        try {
-            return store.getMessagesFromStore(managerId);
-        } catch (IllegalArgumentException e) {
-            logger.error("getMessagesFromStore - Manager not found: " + managerId);
-            throw new IllegalArgumentException("Manager not found");
-        }
     }
 
     @Override

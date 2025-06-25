@@ -46,9 +46,13 @@ public class RemoveAssignmentMessageTest {
 
     @Test
     void testRemoveAssignmentMessage_MultipleKeepsOthers() {
-        // Add two messages
-        int msgId1 = registered.addAssignmentMessage(new StoreMsg(1, -1, "first", null, userId));
-        int msgId2 = registered.addAssignmentMessage(new StoreMsg(2, -1, "second", null, userId));
+        // Add two messages with unique msgIds
+        StoreMsg msg1 = new StoreMsg(1, -1, "first", null, userId);
+        msg1.setMsgId(101); // manually assign unique msgId
+        StoreMsg msg2 = new StoreMsg(2, -1, "second", null, userId);
+        msg2.setMsgId(102); // manually assign unique msgId
+        int msgId1 = registered.addAssignmentMessage(msg1);
+        int msgId2 = registered.addAssignmentMessage(msg2);
 
         // Remove one
         registered.removeMsgById(msgId1);

@@ -16,76 +16,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.ApplicationEventPublisher;
+
+import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
 import ApplicationLayer.Response;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
 import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
-import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Enums.StoreManagerPermission;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
-import DomainLayer.Model.Product;
-import DomainLayer.Model.Registered;
-import DomainLayer.Model.Store;
-import DomainLayer.Model.StoreProduct;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.UserRepository;
 
-@SpringBootTest(classes = com.fakezone.fakezone.FakezoneApplication.class)
-@ActiveProfiles("test")
+
+@SpringBootTest(classes = FakezoneApplication.class)
 @Transactional
 public class DiscountPolicyIntegrationTest {
 
+    @Autowired
     private SystemService systemService;
-    private IStoreService storeService;
-    private IUserService userService;
-    private IProductService productService;
-    private IOrderService orderService;
-    
-    // Repositories - Injected by Spring
-    @Autowired
-    private IStoreRepository storeRepository;
-    
-    @Autowired  
-    private IProductRepository productRepository;
-    
-    @Autowired
-    private IUserRepository userRepository;
-    
-    @Autowired
-    private IOrderRepository orderRepository;
-    
-    // Services
-    private IDelivery deliveryService;
-    private IAuthenticator authenticatorService;
-    private IPayment paymentService;
-    private ApplicationEventPublisher eventPublisher;
-    private INotificationWebSocketHandler notificationHandler;
+
 
     // Test data - will be populated from actual registration/login
     private int storeId;
@@ -105,25 +54,8 @@ public class DiscountPolicyIntegrationTest {
         // Note: storeRepository and productRepository are now injected by Spring via @Autowired
         
         // Initialize services
-        eventPublisher = mock(ApplicationEventPublisher.class);
-        notificationHandler = new NotificationWebSocketHandler();
         
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        productService = new ProductService(productRepository);
-        orderService = new OrderService(orderRepository);
-        
-        // Initialize real services
-        deliveryService = new DeliveryAdapter();
-        authenticatorService = new AuthenticatorAdapter(userService);
-        paymentService = new PaymentAdapter();
-        
-        systemService = new SystemService(
-            storeService, userService, productService, orderService,
-            deliveryService, authenticatorService, paymentService,
-            eventPublisher, notificationHandler
-        );
-
+        systemService.clearAllData(); // Clear previous data before each test
         setupTestData();
     }
 
@@ -234,11 +166,10 @@ public class DiscountPolicyIntegrationTest {
             double expectedDiscount = originalPrice * (discountPercentage / 100); // 200 * 0.25 = 50
             double expectedFinalPrice = originalPrice - expectedDiscount; // 200 - 50 = 150
 
-            // Get cart and verify discount is applied
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            // Get cart final price using systemService
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
             
             assertEquals(expectedFinalPrice, actualPrice, 0.01, 
                 "Price should be reduced by 25% discount. Expected: " + expectedFinalPrice + ", Actual: " + actualPrice);
@@ -271,9 +202,9 @@ public class DiscountPolicyIntegrationTest {
             double expectedDiscount = originalPrice * (discountPercentage / 100); // 200 * 0.15 = 30
             double expectedFinalPrice = originalPrice - expectedDiscount; // 200 - 30 = 170
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             assertEquals(expectedFinalPrice, actualPrice, 0.01,
                 "Store-wide discount should reduce total price by 15%. Expected: " + expectedFinalPrice + ", Actual: " + actualPrice);
@@ -305,9 +236,9 @@ public class DiscountPolicyIntegrationTest {
             systemService.addToBasket(userId, productId1, storeId, 1); // $100, should get both discounts
             systemService.addToBasket(userId, productId2, storeId, 1); // $50, should only get store discount
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             // Expected calculation:
             // Product 1: $100 - 20% (product discount) - 10% (store discount) = $100 - $20 - $10 = $70
@@ -346,9 +277,9 @@ public class DiscountPolicyIntegrationTest {
             systemService.addToBasket(userId, productId1, storeId, 1); // $100 - should get discount
             systemService.addToBasket(userId, productId2, storeId, 1); // $50 - condition met
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             // Expected: Product 1 gets 30% discount = $100 - $30 = $70, Product 2 stays $50 = $120 total
             double expectedPrice = 120.0;
@@ -371,17 +302,18 @@ public class DiscountPolicyIntegrationTest {
         try {
             // Create a condition: cart total must be over $300
             List<Predicate<Cart>> conditions = Arrays.asList(
-                cart -> cart.getAllProducts().values().stream()
-                    .flatMap(basket -> basket.entrySet().stream())
-                    .mapToDouble(entry -> {
-                        try {
-                            StoreProductDTO product = storeService.getProductFromStore(entry.getKey(), storeId);
-                            return product.getBasePrice() * entry.getValue();
-                        } catch (Exception e) {
-                            return 0.0;
+                cart -> {
+                    double sum = 0.0;
+                    for (Map.Entry<Integer, Map<Integer, Integer>> storeEntry : cart.getAllProducts().entrySet()) {
+                        for (Map.Entry<Integer, Integer> prodEntry : storeEntry.getValue().entrySet()) {
+                            Response<StoreProductDTO> productResp = systemService.getProductFromStore(prodEntry.getKey(), storeEntry.getKey());
+                            assertTrue(productResp.isSuccess());
+                            StoreProductDTO product = productResp.getData();
+                            sum += product.getBasePrice() * prodEntry.getValue();
                         }
-                    })
-                    .sum() > 300.0
+                    }
+                    return sum > 300.0;
+                }
             );
 
             Response<Void> discountResponse = systemService.addConditionDiscountWithStoreScope(
@@ -393,9 +325,9 @@ public class DiscountPolicyIntegrationTest {
             systemService.addToBasket(userId, productId2, storeId, 1); // $50
             // Total: $150 - condition not met (needs > $300)
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             // Expected: No discount applied, original price $150
             double expectedPrice = 150.0;
@@ -422,9 +354,9 @@ public class DiscountPolicyIntegrationTest {
 
             systemService.addToBasket(userId, productId1, storeId, 1);
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             assertEquals(PRODUCT_PRICE_1, actualPrice, 0.01,
                 "0% discount should not change price");
@@ -446,9 +378,9 @@ public class DiscountPolicyIntegrationTest {
 
             systemService.addToBasket(userId, productId1, storeId, 1);
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             assertEquals(0.0, actualPrice, 0.01,
                 "100% discount should make price $0");
@@ -472,9 +404,9 @@ public class DiscountPolicyIntegrationTest {
             int quantity = 5;
             systemService.addToBasket(userId, productId1, storeId, quantity);
 
-            Cart userCart = userService.getUserCart(userId);
-            Map<Integer, Double> storeAmounts = storeService.calcAmount(userId, userCart, USER_DOB);
-            double actualPrice = storeAmounts.values().stream().mapToDouble(Double::doubleValue).sum();
+            Response<Double> finalPriceResponse = systemService.getCartFinalPrice(userId, USER_DOB);
+            assertTrue(finalPriceResponse.isSuccess(), "Failed to get cart final price: " + finalPriceResponse.getMessage());
+            double actualPrice = finalPriceResponse.getData();
 
             double originalPrice = PRODUCT_PRICE_1 * quantity; // $100 * 5 = $500
             double expectedDiscount = originalPrice * 0.20; // $500 * 0.20 = $100

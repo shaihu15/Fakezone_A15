@@ -3,6 +3,7 @@ package DomainLayer.Model.helpers;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -12,7 +13,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "store_messages")
+@Table(name = "store_messages_to_user")
 public class StoreMsg {
 
     @Id
@@ -20,7 +21,8 @@ public class StoreMsg {
     @JsonProperty("msgId")
     int msgId;
     
-    @JsonProperty("userId")
+    @Column(name = "user_id")
+    @JsonProperty("userid")
     int userId;
 
     @JsonProperty("storeId")
@@ -41,6 +43,10 @@ public class StoreMsg {
         this.msg = msg;
         this.offeredBy = offeredBy;
         this.userId = userId;
+    }
+    
+    // Default constructor for JPA
+    public StoreMsg() {
     }
     
     public int getStoreId() {
