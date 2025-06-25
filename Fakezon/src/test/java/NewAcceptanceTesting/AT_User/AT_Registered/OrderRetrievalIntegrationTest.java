@@ -25,8 +25,6 @@ import ApplicationLayer.DTO.StoreDTO;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
-@Transactional
 public class OrderRetrievalIntegrationTest {
 
     @Autowired
