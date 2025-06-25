@@ -3,6 +3,8 @@ package NewAcceptanceTesting.AT_User.AT_Guest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,7 +34,6 @@ public class Save_Products_in_Purchase_Basket {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister1 = testHelper.register_and_login();
@@ -62,6 +63,19 @@ public class Save_Products_in_Purchase_Basket {
         guestId = guestResponse.getData().getUserId();
 
     }
+    @AfterEach
+    void tearDown() {
+        Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, StoreFounderId, productIdInt);
+        assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        Response<Boolean> deleteResponse = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
+        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+    }
+
+
     @Test
     void testProductAddition_GuestUser_Success() {
         Response<Void> response = systemService.addToBasket(guestId, productIdInt, storeId,1); 

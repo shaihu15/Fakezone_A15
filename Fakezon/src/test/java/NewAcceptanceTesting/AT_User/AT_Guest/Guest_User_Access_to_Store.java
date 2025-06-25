@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,21 +27,31 @@ public class Guest_User_Access_to_Store {
 
     int storeId;
     int userId;
+    String username;
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
+
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister = testHelper.register_and_login();
         assertTrue(resultRegister.isSuccess());
         userId = resultRegister.getData().getUserId();
+        username = resultRegister.getData().getUserEmail();
         // StoreFounder is registered and logged in
 
         Response<Integer> resultAddStore = testHelper.openStore(userId);
         assertTrue(resultAddStore.isSuccess());
         // StoreFounder opened a store
         storeId = resultAddStore.getData();
+    }
+
+    @AfterEach
+    void tearDown() {
+        Response<Boolean> deleteResponse = systemService.deleteUser(username);
+        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
     }
                     
     @Test

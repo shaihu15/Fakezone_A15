@@ -6,6 +6,7 @@ import java.util.AbstractMap;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,18 +37,19 @@ public class OrderRetrievalIntegrationTest {
     private final double PRODUCT_PRICE_1 = 100.0;
     private final double PRODUCT_PRICE_2 = 50.0;
     private final LocalDate USER_DOB = LocalDate.of(1990, 1, 1);
+    private String ownerName;
+    private static int counter = 0;
 
     @BeforeEach
     void setUp() {
         // Initialize repositories
-        
-        systemService.clearAllData();
 
         setupTestData();
     }
 
     private void setupTestData() {
         try {
+            counter++;
             // Register and login owner
             String ownerEmail = "owner@test.com";
             String ownerPassword = "StrongPass123";
@@ -60,6 +62,7 @@ public class OrderRetrievalIntegrationTest {
             Response<AbstractMap.SimpleEntry<UserDTO, String>> ownerLoginResponse = systemService.login(ownerEmail, ownerPassword);
             assertTrue(ownerLoginResponse.isSuccess(), "Owner login failed: " + ownerLoginResponse.getMessage());
             ownerId = ownerLoginResponse.getData().getKey().getUserId();
+            ownerName = ownerLoginResponse.getData().getKey().getUserEmail();
 
             // Register and login regular user
             String userEmail = "user@test.com";
@@ -74,7 +77,7 @@ public class OrderRetrievalIntegrationTest {
             userId = userLoginResponse.getData().getKey().getUserId();
 
             // Create store
-            Response<Integer> storeResponse = systemService.addStore(ownerId, "Test Store");
+            Response<Integer> storeResponse = systemService.addStore(ownerId, "Test Store"+String.valueOf(counter));
             assertTrue(storeResponse.isSuccess(), "Store creation failed: " + storeResponse.getMessage());
             storeId = storeResponse.getData();
 
@@ -91,6 +94,33 @@ public class OrderRetrievalIntegrationTest {
 
         } catch (Exception e) {
             fail("Failed to setup test data: " + e.getMessage());
+        }
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            // Remove products
+            Response<Void> removeProduct1Response = systemService.removeProductFromStore(storeId, ownerId, productId1);
+            assertTrue(removeProduct1Response.isSuccess(), "Failed to remove product 1: " + removeProduct1Response.getMessage());
+
+            Response<Void> removeProduct2Response = systemService.removeProductFromStore(storeId, ownerId, productId2);
+            assertTrue(removeProduct2Response.isSuccess(), "Failed to remove product 2: " + removeProduct2Response.getMessage());
+
+            // Close store
+            Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, ownerId);
+            assertTrue(closeStoreResponse.isSuccess(), "Failed to close store: " + closeStoreResponse.getMessage());
+
+            // Delete users
+            Response<Boolean> deleteUserResponse = systemService.deleteUser(ownerName);
+            assertTrue(deleteUserResponse.isSuccess(), "Failed to delete owner user: " + deleteUserResponse.getMessage());
+
+            Response<Boolean> deleteUserResponse1 = systemService.deleteUser("user@test.com");
+            assertTrue(deleteUserResponse1.isSuccess(), "Failed to delete owner user: " + deleteUserResponse.getMessage());
+
+
+        } catch (Exception e) {
+            fail("Failed to tear down test data: " + e.getMessage());
         }
     }
 
