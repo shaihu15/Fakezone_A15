@@ -50,8 +50,6 @@ public interface IStore {
 
     void sendMessage(int managerId, int userID, String message);
 
-    Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId);
-
     Map<Integer, StoreProduct> getStoreProducts();
 
     Map<Integer, StoreRating> getRatings();

@@ -79,30 +79,10 @@ public class Sending_Direct_Message_to_Store {
         Response<Integer> resultAddStore = systemService.addStore(storeOwnerId, storeName);
         assertTrue(resultAddStore.isSuccess());
         storeId = resultAddStore.getData();
-/* 
-        String productName = "Test Product";
-        String productDescription = "Test Description";
-        String category = PCategory.ELECTRONICS.toString();
 
-        Response<StoreProductDTO> resultAddProduct = systemService.addProductToStore(storeId, storeOwnerId, productName, productDescription, 1,100, category);
-        assertTrue(resultAddProduct.isSuccess());
-        productId = resultAddProduct.getData().getProductId();
-*/ 
         Response<UserDTO> registered = testHelper.register_and_login2();
         registeredId = registered.getData().getUserId();
-/* 
-        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productId, 1); 
-        assertTrue(responseAddToBasket.isSuccess());
 
-        Response<String> responsePurchaseCart = systemService.purchaseCart
-                    (registeredId, testHelper.validCountry(), LocalDate.now(), PaymentMethod.CREDIT_CARD,
-                    "deliveryMethod","1234567890123456","cardHolder", 
-                    "12/25", "123", "123 Main St* City* Country* 0000","Recipient",
-                     "Package details");
-
-        assertTrue(responsePurchaseCart.isSuccess());
-        assertEquals("Cart purchased successfully", responsePurchaseCart.getMessage());
-        */
     }
 
     @Test

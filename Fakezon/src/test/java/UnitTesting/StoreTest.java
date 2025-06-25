@@ -149,23 +149,37 @@ public class StoreTest {
         String message = "Hello, this is a test message.";
         store.sendMessage(founderId, userId, message);
 
-        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(),
-                "Message should be sent successfully");
+        // Verify that the publisher published the correct event
+        org.mockito.Mockito.verify(publisher).publishEvent(
+            org.mockito.Mockito.argThat((Object event) -> {
+                if (!(event instanceof DomainLayer.Model.helpers.ResponseFromStoreEvent)) return false;
+                DomainLayer.Model.helpers.ResponseFromStoreEvent resp = (DomainLayer.Model.helpers.ResponseFromStoreEvent) event;
+                return resp.getStoreId() == store.getId() &&
+                       resp.getUserId() == userId &&
+                       resp.getMessage().equals(message);
+            })
+        );
     }
 
     @Test
     void sendMessageToUser_ValidManagerPermission_ShouldSucceed() {
         int userId = 1;
         int managerId = 2;
-        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY)); // Assuming null
-                                                                                                     // permissions for
-                                                                                                     // simplicity
+        store.addStoreManager(founderId, managerId, List.of(StoreManagerPermission.REQUESTS_REPLY));
         String message = "Hello, this is a test message.";
         store.acceptAssignment(managerId);
         store.sendMessage(managerId, userId, message);
 
-        assertEquals(message, store.getMessagesFromStore(founderId).peek().getValue(),
-                "Message should be sent successfully");
+        // Verify that the publisher published the correct event
+        org.mockito.Mockito.verify(publisher).publishEvent(
+            org.mockito.Mockito.argThat((Object event) -> {
+                if (!(event instanceof DomainLayer.Model.helpers.ResponseFromStoreEvent)) return false;
+                DomainLayer.Model.helpers.ResponseFromStoreEvent resp = (DomainLayer.Model.helpers.ResponseFromStoreEvent) event;
+                return resp.getStoreId() == store.getId() &&
+                       resp.getUserId() == userId &&
+                       resp.getMessage().equals(message);
+            })
+        );
     }
 
     @Test
@@ -193,9 +207,6 @@ public class StoreTest {
                 IllegalArgumentException.class,
                 () -> store.sendMessage(invalidOwnerId, userId, message),
                 "Expected sendMessage to throw if the owner is invalid");
-
-        assertTrue(store.getMessagesFromStore(founderId).isEmpty(),
-                "No message should be sent if the owner is invalid");
     }
 
     @Test
@@ -571,8 +582,18 @@ public class StoreTest {
     @Test
     void testGetMessagesFromStore() {
         int userId = 1;
-        store.sendMessage(founderId, userId, "msg");
-        assertFalse(store.getMessagesFromStore(founderId).isEmpty());
+        String message = "msg";
+        store.sendMessage(founderId, userId, message);
+        // Verify that the publisher published the correct event
+        org.mockito.Mockito.verify(publisher).publishEvent(
+            org.mockito.Mockito.argThat((Object event) -> {
+                if (!(event instanceof DomainLayer.Model.helpers.ResponseFromStoreEvent)) return false;
+                DomainLayer.Model.helpers.ResponseFromStoreEvent resp = (DomainLayer.Model.helpers.ResponseFromStoreEvent) event;
+                return resp.getStoreId() == store.getId() &&
+                       resp.getUserId() == userId &&
+                       resp.getMessage().equals(message);
+            })
+        );
     }
 
     @Test
