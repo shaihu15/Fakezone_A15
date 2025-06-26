@@ -260,11 +260,7 @@ public class Registered extends User {
     }
 
     public void removeAssignmentMessage(int storeId) {
-        for (StoreMsg msg : assignmentMessages) {
-            if (msg.getStoreId() == storeId) {
-                assignmentMessages.remove(msg);
-            }
-        }
+        assignmentMessages.removeIf(msg -> msg.getStoreId() == storeId);
     }
 
     public boolean removeMsgById(int msgId) {

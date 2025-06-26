@@ -1,11 +1,9 @@
 package DomainLayer.Model;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
@@ -36,7 +34,6 @@ import DomainLayer.Model.helpers.OfferEvents.OfferReceivedEvent;
 import DomainLayer.Model.helpers.ClosingStoreEvent;
 import DomainLayer.Model.helpers.Node;
 import DomainLayer.Model.helpers.ResponseFromStoreEvent;
-import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Model.helpers.Tree;
 import DomainLayer.Model.helpers.UserMsg;
 
@@ -141,8 +138,15 @@ public class Store implements IStore {
     @Transient
     private final ReentrantLock ratingLock = new ReentrantLock();
     
-    @Transient
-    private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+        name = "pending_manager_permissions",
+        joinColumns = @JoinColumn(name = "store_id")
+    )
+    @MapKeyColumn(name = "user_id")
+    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    private Map<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
     
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "pending_managers", joinColumns = @JoinColumn(name = "store_id"))
@@ -205,8 +209,10 @@ public class Store implements IStore {
         if (this.pendingManagers == null) {
             this.pendingManagers = new HashMap<>();
         }
+        if (this.pendingManagersPerms == null) {
+            this.pendingManagersPerms = new HashMap<>();
+        }
         this.messagesFromUsers = new ArrayList<>();
-        this.pendingManagersPerms = new HashMap<>();
         this.allOffers = new ArrayList<>();
         this.allPendingOffers = new ArrayList<>();
         rebuildOffersOnProductsMap();
@@ -219,10 +225,12 @@ public class Store implements IStore {
         this.discountPolicies = new HashMap<>();
         this.storeManagers = new HashMap<>();
         this.messagesFromUsers = new ArrayList<>();
-        this.pendingManagersPerms = new HashMap<>();
-        // Ensure pendingManagers is initialized (it's now persistent but may be null on first load)
+        // Ensure pendingManagers and pendingManagersPerms are initialized (they're now persistent but may be null on first load)
         if (this.pendingManagers == null) {
             this.pendingManagers = new HashMap<>();
+        }
+        if (this.pendingManagersPerms == null) {
+            this.pendingManagersPerms = new HashMap<>();
         }
         rebuildOffersOnProductsMap(); // Build from persistent allOffers
         rebuildPendingOffersMap(); // Build from persistent allPendingOffers
@@ -729,15 +737,14 @@ public class Store implements IStore {
     }
 
     private void handleAuctionEnd(int productID) {
-        System.out.println("handleAuctionEnd Triggered!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111111111111111111111111111111111111111111111111");
-        System.out.println("2222222222222222222222222222222222222222222222222222222222222222");
+        System.out.println("handleAuctionEnd Triggered");
+        
         productsLock.lock();
         try{    
 
             if (auctionProducts.containsKey(productID)) {
-                System.out.println("Auction product found - " + productID);
+                
                 if (this.publisher != null) {
-                    System.out.println("Publisher is not null!!!!!!!!!!!!!!!1");
                     AuctionProduct auctionProduct = auctionProducts.get(productID);
                     System.out.println("current bid "+auctionProduct.getCurrentHighestBid());
                     System.out.println("product id  "+auctionProduct.getProductID());
@@ -1053,7 +1060,7 @@ public class Store implements IStore {
         }
         List<StoreManagerPermission> perms = pendingManagersPerms.remove(appointee);
         pendingManagers.remove(appointee);
-        if (perms.isEmpty())
+        if (perms == null || perms.isEmpty())
             throw new IllegalArgumentException("Permissions can not be empty"); // shouldn't happen
         storeManagers.put(appointee, perms);
         rolesTree.addNode(appointor, appointee);

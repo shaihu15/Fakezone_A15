@@ -301,6 +301,7 @@ public class StoreService implements IStoreService {
     }
 
     @Override
+    @Transactional
     public void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms) {
         try {
             logger.info("Store Service - User " + requesterId + " trying to add store manager " + newManagerId
@@ -552,6 +553,7 @@ public class StoreService implements IStoreService {
         return store.canViewOrders(userId);
     }
 
+    @Transactional
     public boolean acceptAssignment(int storeId, int userId) {
         Store store = storeRepository.findById(storeId);
         boolean isowner;
