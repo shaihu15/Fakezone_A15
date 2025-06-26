@@ -18,7 +18,7 @@ import java.util.Locale.Category;
 public class StoreProduct {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private int SproductID;
     
     @Column(nullable = false)

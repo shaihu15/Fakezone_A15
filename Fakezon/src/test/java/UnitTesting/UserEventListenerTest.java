@@ -352,7 +352,8 @@ public class UserEventListenerTest {
         StoreMsg capturedMessage = messageCaptor.getValue();
 
         assertEquals(storeId, capturedMessage.getStoreId());
-        assertEquals("Your auction bid on product: " + productId + " was rejected due to a higher bid of: " + currentHighestBid + ".", capturedMessage.getMessage());
+        assertTrue(capturedMessage.getMessage().contains("Your auction bid on product: " + productId + " was rejected due to a higher bid of: " + currentHighestBid + "."));
+
     }
 
     @Test

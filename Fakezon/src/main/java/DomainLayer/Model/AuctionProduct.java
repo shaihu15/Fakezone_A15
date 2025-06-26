@@ -46,7 +46,7 @@ public class AuctionProduct extends StoreProduct {
         // In unit tests (non-JPA), the ID will be 0, so we'll set it later in the Store class
         // In production (JPA), use the StoreProduct's auto-generated ID
         this.productID = storeProduct.getSproductID();
-        this.userIDHighestBid = -1;// -1 means no bids yet
+        //this.userIDHighestBid = -1;// -1 means no bids yet
         this.isDone = false;
         this.auctionStoreId = storeProduct.getStoreId();
     }
@@ -64,6 +64,9 @@ public class AuctionProduct extends StoreProduct {
         return productID;
     }
     public int getUserIDHighestBid() {
+        if (userIDHighestBid < 1) {
+            return -1; // No bids yet, return -1
+        }
         return userIDHighestBid;
     }
     //if userID did a higher bid it return the previous userIDHighestBid or -1 if he is the first
@@ -71,7 +74,7 @@ public class AuctionProduct extends StoreProduct {
     public synchronized int addBid( int userID,double bidAmount) {
         int prev = userID;
         if (bidAmount > currentHighestBid) {
-            prev = userIDHighestBid;
+            prev = getUserIDHighestBid();
             currentHighestBid = bidAmount;
             userIDHighestBid = userID;
         }
