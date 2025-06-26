@@ -39,7 +39,7 @@ public class Registered extends User {
     @Column(name = "age")
     private int age;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
         name = "registered_messages_from_store",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -47,7 +47,7 @@ public class Registered extends User {
     )
     private List<StoreMsg> messagesFromStore = new ArrayList<>(); // List to allow multiple messages
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
         name = "registered_assignment_messages",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -55,7 +55,7 @@ public class Registered extends User {
     )
     private List<StoreMsg> assignmentMessages = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
         name = "registered_auction_ended_messages",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -63,7 +63,7 @@ public class Registered extends User {
     )
     private List<StoreMsg> auctionEndedMessages = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(
         name = "registered_offers_messages",
         joinColumns = @JoinColumn(name = "user_id"),
