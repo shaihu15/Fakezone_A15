@@ -84,6 +84,14 @@ public class StoreOwner_Owner_Appointment {
         assertTrue(response.isSuccess());
         assertEquals("Store owner added successfully", response.getMessage());
 
+        // Wait for the assignment message to be created (same as in @BeforeEach)
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            fail("Sleep was interrupted");
+        }
+
         Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(ManagerUserId);
         assertTrue(assignmentMessagesRes.isSuccess());
         assertTrue(assignmentMessagesRes.getData().size() > 0);
@@ -189,8 +197,8 @@ public class StoreOwner_Owner_Appointment {
 
         Response<Void> response = systemService.addStoreOwner(storeId, OwnerUserId, invalidUserId);
         assertFalse(response.isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        assertTrue(response.getMessage().contains("Error during adding store owner"));
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+        assertEquals("User is not registered", response.getMessage());
     }
 
     @Test

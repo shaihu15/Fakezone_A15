@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +71,10 @@ public class Closing_Store {
         paymentService = new PaymentAdapter();
         deliveryService = new DeliveryAdapter();
 
+        // Mock eventPublisher and notificationWebSocketHandler to avoid NullPointerException
+        eventPublisher = mock(ApplicationEventPublisher.class);
+        notificationWebSocketHandler = mock(INotificationWebSocketHandler.class);
+
         storeService = new StoreService(storeRepository, eventPublisher);
         userService = new UserService(userRepository);
         orderService = new OrderService(orderRepository);
@@ -96,7 +100,7 @@ public class Closing_Store {
 
         Response<String> result2 = systemService.closeStoreByFounder(storeId, userId);
         assertFalse(result2.isSuccess());
-        assertEquals("Error during closing store: Store: 1 is already closed", result2.getMessage());
+        assertEquals("Error during closing store: Store: " + storeId + " is already closed", result2.getMessage());
     }
 
     @Test
@@ -128,6 +132,7 @@ public class Closing_Store {
         // Use the pre-configured admin user (ID: 1001)
         int adminId = 1001;
         
+        systemService.login("testFounder1001@gmail.com", "a12345"); // Login the admin
         Response<String> result = systemService.closeStoreByAdmin(storeId, adminId);
         assertTrue(result.isSuccess());
         assertEquals("Store closed successfully by admin", result.getMessage());
@@ -136,6 +141,7 @@ public class Closing_Store {
         Response<String> result2 = systemService.closeStoreByAdmin(storeId, adminId);
         assertFalse(result2.isSuccess());
         assertEquals("Error during closing store by admin: Store: " + storeId + " is already closed", result2.getMessage());
+        systemService.userLogout(adminId); // Logout the admin after test
     }
 
     @Test
@@ -143,9 +149,11 @@ public class Closing_Store {
         // Use the pre-configured admin user (ID: 1001)
         int adminId = 1001;
         
+        systemService.login("testFounder1001@gmail.com", "a12345"); // Login the admin
         Response<String> result = systemService.closeStoreByAdmin(-1, adminId);
         assertFalse(result.isSuccess());
         assertEquals("Error during closing store by admin: Store not found", result.getMessage());
+        systemService.userLogout(adminId); // Logout the admin after test
     }
 
     @Test
@@ -184,6 +192,7 @@ public class Closing_Store {
         // Use the pre-configured admin user (ID: 1001)
         int adminId = 1001;
         
+        systemService.login("testFounder1001@gmail.com", "a12345"); // Login the admin
         // Close store first time
         Response<String> result1 = systemService.closeStoreByAdmin(storeId, adminId);
         assertTrue(result1.isSuccess());
@@ -192,6 +201,7 @@ public class Closing_Store {
         Response<String> result2 = systemService.closeStoreByAdmin(storeId, adminId);
         assertFalse(result2.isSuccess());
         assertEquals("Error during closing store by admin: Store: " + storeId + " is already closed", result2.getMessage());
+        systemService.userLogout(adminId); // Logout the admin after test
     }
 
     @Test
@@ -206,10 +216,12 @@ public class Closing_Store {
         // Use the pre-configured admin user (ID: 1001)
         int adminId = 1001;
         
+        systemService.login("testFounder1001@gmail.com", "a12345"); // Login the admin
         // Admin should be able to close any store, not just their own
         Response<String> result = systemService.closeStoreByAdmin(otherStoreId, adminId);
         assertTrue(result.isSuccess());
         assertEquals("Store closed successfully by admin", result.getMessage());
+        systemService.userLogout(adminId); // Logout the admin after test
     }
 
     @Test
