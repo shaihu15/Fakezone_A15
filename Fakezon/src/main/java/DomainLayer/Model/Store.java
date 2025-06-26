@@ -26,6 +26,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionSaveEvent;
 import DomainLayer.Model.helpers.OfferEvents.CounterOfferDeclineEvent;
 import DomainLayer.Model.helpers.OfferEvents.CounterOfferEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedByAll;
@@ -615,6 +616,7 @@ public class Store implements IStore {
 
     @Override
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd) {
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         rolesLock.lock();
         productsLock.lock();
         try {
@@ -656,6 +658,8 @@ public class Store implements IStore {
                 // In production (JPA), use the auto-generated ID
                 int auctionMapKey = auctionProduct.getSproductID() == 0 ? productID : auctionProduct.getSproductID();
                 auctionProducts.put(auctionMapKey, auctionProduct);
+                System.out.println("Auction product added with ID: " + auctionMapKey);
+                
                 scheduler.schedule(() -> {
                     handleAuctionEnd(auctionMapKey);
                 }, MinutesToEnd, TimeUnit.MINUTES);
@@ -725,7 +729,8 @@ public class Store implements IStore {
     }
 
     private void handleAuctionEnd(int productID) {
-        System.out.println("handleAuctionEnd Triggered");
+        System.out.println("handleAuctionEnd Triggered!!!!!!!!!!!!!!!!!!!!!!!!!!111111111111111111111111111111111111111111111111111111111111111");
+        System.out.println("2222222222222222222222222222222222222222222222222222222222222222");
         productsLock.lock();
         try{    
 
@@ -734,6 +739,10 @@ public class Store implements IStore {
                 if (this.publisher != null) {
                     System.out.println("Publisher is not null!!!!!!!!!!!!!!!1");
                     AuctionProduct auctionProduct = auctionProducts.get(productID);
+                    System.out.println("current bid "+auctionProduct.getCurrentHighestBid());
+                    System.out.println("product id  "+auctionProduct.getProductID());
+                    int currentHighestBidUserId = auctionProduct.getUserIDHighestBid();
+                    System.out.println("user with id: "+ currentHighestBidUserId + " has the highest bid");
                     System.out.println("Auction product found - " + auctionProduct.getUserIDHighestBid());
                     if (auctionProduct.getUserIDHighestBid() != -1) // if there was a bid
                     {
@@ -760,6 +769,7 @@ public class Store implements IStore {
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, no bids were placed"));
                     }
                     auctionProduct.setIsDone(true);
+                    this.publisher.publishEvent(new AuctionSaveEvent(storeID));
                 }
             } else {
                 throw new IllegalArgumentException(
