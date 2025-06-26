@@ -291,7 +291,6 @@ public class Registered extends User {
 
     public int addAuctionEndedMessage(StoreMsg message) {
         // Ensure the message has the correct userId
-        message.setUserId(this.userId);
         this.auctionEndedMessages.add(message);
         return message.getMsgId();
     }

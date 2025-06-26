@@ -731,7 +731,10 @@ public class Store implements IStore {
 
             if (auctionProducts.containsKey(productID)) {
                 System.out.println("Auction product found - " + productID);
-                AuctionProduct auctionProduct = auctionProducts.get(productID);
+                if (this.publisher != null) {
+                    System.out.println("Publisher is not null!!!!!!!!!!!!!!!1");
+                    AuctionProduct auctionProduct = auctionProducts.get(productID);
+                    System.out.println("Auction product found - " + auctionProduct.getUserIDHighestBid());
                     if (auctionProduct.getUserIDHighestBid() != -1) // if there was a bid
                     {
                         if(auctionProduct.getQuantity() > 0){ //if there is stock
@@ -757,12 +760,14 @@ public class Store implements IStore {
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, no bids were placed"));
                     }
                     auctionProduct.setIsDone(true);
-                
+                }
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " is not an auction product in store ID: " + storeID);
             }
+
         }
+
         catch(Exception e){
             throw e;
         }
