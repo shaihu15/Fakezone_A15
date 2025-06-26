@@ -9,6 +9,7 @@ import DomainLayer.Model.Store;
 import DomainLayer.Model.helpers.AssignmentEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionSaveEvent;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+import jakarta.transaction.Transactional;
 
 @Component
 public class StoreEventListener {
@@ -23,6 +24,7 @@ public class StoreEventListener {
 
     @Async
     @EventListener
+    @Transactional
     public void handleSaveAuction(AuctionSaveEvent event) {
         Store store = storeRepository.findById(event.getStoreId());
         if (store == null) {
