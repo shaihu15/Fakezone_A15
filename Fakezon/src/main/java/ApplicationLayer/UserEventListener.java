@@ -25,6 +25,7 @@ import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ public class UserEventListener {
 
     @Async
     @EventListener
+    @Transactional
     public void handleAssignmentEvent(AssignmentEvent event) {
         Optional<Registered> user = userRepository.findRegisteredById(event.getUserId());
         if (user.isPresent()) {
@@ -142,7 +144,7 @@ public class UserEventListener {
     public void handleAuctionGotHigherBidEvent(AuctionGotHigherBidEvent event) {
         Optional<Registered> user = userRepository.findRegisteredById(event.getUserIDPrevHighestBid()); // Event targets the previously highest bidder
         user.ifPresent(registeredUser -> {
-            String msg = "Your auction bid on product: " + event.getProductID() + " was rejected due to a higher bid of: " + event.getCurrentHighestBid() + ".";
+            String msg = "Your auction bid on product: " + event.getProductID() + " was rejected due to a higher bid of: " + event.getCurrentHighestBid() + " by user " + event.getUserIDPrevHighestBid() + ".";
             registeredUser.addMessageFromStore(new StoreMsg(event.getStoreId(), event.getProductID(), msg, null, registeredUser.getUserId()));
             userRepository.save(registeredUser);
             if (registeredUser.isLoggedIn()) {
