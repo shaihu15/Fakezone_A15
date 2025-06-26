@@ -1109,6 +1109,7 @@ public class SystemService implements ISystemService {
 
             // 2. Create a list to store products with their ratings
             List<StoreProductDTO> ratedProducts = new ArrayList<>();
+            List<StoreProductDTO> nonRatedProducts = new ArrayList<>();
 
             // 3. For each product, get its StoreProductDTO from each store it's in
             for (ProductDTO product : allProducts) {
@@ -1118,6 +1119,8 @@ public class SystemService implements ISystemService {
                         // Only add products that have ratings
                         if (!Double.isNaN(storeProduct.getAverageRating())) {
                             ratedProducts.add(storeProduct);
+                        } else {
+                            nonRatedProducts.add(storeProduct);
                         }
                     } catch (Exception e) {
                         // Skip if product not found in store or other errors
@@ -1129,7 +1132,13 @@ public class SystemService implements ISystemService {
 
             // 4. Sort products by average rating (highest first)
             ratedProducts.sort((p1, p2) -> Double.compare(p2.getAverageRating(), p1.getAverageRating()));
-
+            int nonRatedToAdd = limit - ratedProducts.size();
+            // If there are fewer rated products than the limit, add non-rated products
+            if (nonRatedToAdd > 0) {
+                for (int i = 0; i < nonRatedToAdd && i < nonRatedProducts.size(); i++) {
+                    ratedProducts.add(nonRatedProducts.get(i));
+                }
+            }
             // 5. Return top 'limit' products (or all if there are fewer than 'limit')
             int resultSize = Math.min(limit, ratedProducts.size());
             List<StoreProductDTO> topRatedProducts = ratedProducts.subList(0, resultSize);

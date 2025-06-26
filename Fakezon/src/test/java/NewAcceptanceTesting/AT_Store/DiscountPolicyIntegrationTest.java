@@ -29,7 +29,6 @@ import DomainLayer.Model.Cart;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@Transactional
 public class DiscountPolicyIntegrationTest {
 
     @Autowired

@@ -260,7 +260,7 @@ public class SystemServiceAcceptanceTest {
         
         // Assert
         assertTrue(response.isSuccess());
-        assertEquals(0, response.getData().size()); // No products with valid ratings
+        assertEquals(1, response.getData().size()); // No products with valid ratings
         verify(productService, times(1)).getAllProducts();
     }
 
