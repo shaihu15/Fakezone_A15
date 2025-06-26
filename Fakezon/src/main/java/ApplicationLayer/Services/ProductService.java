@@ -31,13 +31,10 @@ public class ProductService implements IProductService {
     @Override
     public int addProduct(String productName, String productDescription,PCategory category) {
         try {
-            
-            IProduct productToAdd = new Product(productName, productDescription,category);
-            productRepository.addProduct(productToAdd);
-            return productToAdd.getId();
-            
-
-        }catch (Exception e) {
+            Product productToAdd = new Product(productName, productDescription, category);
+            Product savedProduct = productRepository.addProduct(productToAdd);
+            return savedProduct.getId();
+        } catch (Exception e) {
             logger.error("An error occurred while adding the product: {}", e.getMessage(), e);
             throw e;
         }

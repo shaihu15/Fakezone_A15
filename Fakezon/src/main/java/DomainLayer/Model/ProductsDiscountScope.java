@@ -8,9 +8,9 @@ import java.util.Map;
 public class ProductsDiscountScope implements IDiscountScope {
     private List<Integer> productIds;
     private int storeId;
-    private Map<Integer, StoreProduct> storeProducts;
+    private Map<StoreProductKey, StoreProduct> storeProducts;
     
-    public ProductsDiscountScope(List<Integer> productIds, int storeId, Map<Integer, StoreProduct> storeProducts) {
+    public ProductsDiscountScope(List<Integer> productIds, int storeId, Map<StoreProductKey, StoreProduct> storeProducts) {
         this.productIds = productIds;
         this.storeId = storeId;
         this.storeProducts = storeProducts;
@@ -41,7 +41,7 @@ public class ProductsDiscountScope implements IDiscountScope {
                     
                     // Check if this product is in the eligible products list
                     if (productIds.contains(productId)) {
-                        eligibleAmount += quantity * storeProducts.get(productId).getBasePrice();
+                        eligibleAmount += quantity * storeProducts.get(new StoreProductKey(storeId, productId)).getBasePrice();
                     }
                 }
             }

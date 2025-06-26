@@ -40,9 +40,9 @@ public class ProductRepository implements IProductRepository {
     }
 
     @Override
-    public void addProduct(IProduct product) {
+    public Product addProduct(IProduct product) {
         if (product instanceof Product) {
-            productJpaRepository.save((Product) product);
+            return productJpaRepository.save((Product) product);
         } else {
             throw new IllegalArgumentException("Product must be an instance of Product class");
         }
@@ -120,13 +120,13 @@ public class ProductRepository implements IProductRepository {
         .map(product -> (IProduct) product)
         .toList();
     }
-    private void init(){
-        logger.info("product repo init");
-        productJpaRepository.save(new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
-        productJpaRepository.save(new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
-        productJpaRepository.findById(1001).orElse(null).addStore(1001);
-        productJpaRepository.findById(1002).orElse(null).addStore(1001);
-    }
+    // private void init(){
+    //     logger.info("product repo init");
+    //     productJpaRepository.save(new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
+    //     productJpaRepository.save(new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
+    //     productJpaRepository.findById(1001).orElse(null).addStore(1001);
+    //     productJpaRepository.findById(1002).orElse(null).addStore(1001);
+    // }
 
     @Override
     public void clearAllData() {

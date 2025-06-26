@@ -27,6 +27,7 @@ import DomainLayer.Model.User;
 import DomainLayer.Model.helpers.UserMsg;
 import DomainLayer.Model.helpers.StoreMsg;
 import DomainLayer.Interfaces.IDiscountPolicy;
+import DomainLayer.Model.StoreProductKey;
 public interface IStore {
     String getName();
 
@@ -50,7 +51,7 @@ public interface IStore {
 
     void sendMessage(int managerId, int userID, String message);
 
-    Map<Integer, StoreProduct> getStoreProducts();
+    Map<StoreProductKey, StoreProduct> getStoreProducts();
 
     Map<Integer, StoreRating> getRatings();
 

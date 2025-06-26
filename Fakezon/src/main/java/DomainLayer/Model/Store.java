@@ -74,8 +74,8 @@ public class Store implements IStore {
     
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)//LAZY
     @JoinColumn(name = "owner_store_id")
-    @MapKey(name = "SproductID")
-    private Map<Integer, StoreProduct> storeProducts; // HASH productID to store product
+    @MapKeyClass(StoreProductKey.class)
+    private Map<StoreProductKey, StoreProduct> storeProducts; // HASH (storeId, sproductId) to store product
     
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "auction_store_id")
@@ -291,8 +291,8 @@ public class Store implements IStore {
     public void addStoreProductRating(int userID, int productID, double rating, String comment) {
         productsLock.lock();
         try{
-            if (storeProducts.containsKey(productID)) {
-                storeProducts.get(productID).addRating(userID, rating, comment);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                storeProducts.get(new StoreProductKey(storeID, productID)).addRating(userID, rating, comment);
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
@@ -341,7 +341,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
             }
-            if (storeProducts.containsKey(productID)) {
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is already in store " + storeID);
             }
             if (quantity <= 0) {
@@ -353,19 +353,23 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-           
-            // Create StoreProduct without ID - let JPA generate it
-            StoreProduct storeProduct = new StoreProduct();
-            storeProduct.setStoreId(storeID);
-            storeProduct.setName(name);
-            storeProduct.setBasePrice(basePrice);
-            storeProduct.setQuantity(quantity);
-            storeProduct.setCategory(category);
+            //public StoreProduct(int SproductID, int storeId,String name, double basePrice, int quantity,PCategory category) {
+
+            StoreProduct storeProduct = new StoreProduct(productID, storeID, name, basePrice, quantity, category);
+
+            // // Create StoreProduct without ID - let JPA generate it
+            // StoreProduct storeProduct = new StoreProduct();
+            // storeProduct.setStoreId(storeID);
+            // storeProduct.setName(name);
+            // storeProduct.setBasePrice(basePrice);
+            // storeProduct.setQuantity(quantity);
+            // storeProduct.setCategory(category);
             
             // In unit tests (non-JPA), the auto-generated ID will be 0, so use the productID parameter
             // In production (JPA), use the auto-generated ID
-            int mapKey = storeProduct.getSproductID() == 0 ? productID : storeProduct.getSproductID();
-            storeProducts.put(mapKey, storeProduct);
+            //int mapKey = storeProduct.getSproductID() == 0 ? productID : storeProduct.getSproductID();
+            //storeProducts.put(mapKey, storeProduct);
+            storeProducts.put(new StoreProductKey(storeID, productID), storeProduct);
             return new StoreProductDTO(storeProduct); //returns the productDTO
         }
         catch(Exception e){
@@ -386,7 +390,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
             }
-            if (!storeProducts.containsKey(productID)) {
+            if (!storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
             }
             if (basePrice <= 0) {
@@ -395,7 +399,7 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-            StoreProduct storeProduct = storeProducts.get(productID);
+            StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productID));
             storeProduct.setQuantity(quantity);
             storeProduct.setBasePrice(basePrice);
         }
@@ -417,7 +421,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
             }
-            if (!storeProducts.containsKey(productID)) {
+            if (!storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
             }
 
@@ -429,7 +433,7 @@ public class Store implements IStore {
             if (auctionToRemove != null) {
                 auctionProducts.remove(auctionToRemove.getSproductID());
             }
-            storeProducts.remove(productID);
+            storeProducts.remove(new StoreProductKey(storeID, productID));
         }
         catch(Exception e){
             throw e;
@@ -632,8 +636,8 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
             }
-            if (storeProducts.containsKey(productID)) {
-                StoreProduct storeProduct = storeProducts.get(productID);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productID));
                 if (storeProduct.getQuantity() <= 0) {
                     throw new IllegalArgumentException(
                             "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
@@ -847,7 +851,7 @@ public class Store implements IStore {
     }
 
     @Override
-    public Map<Integer, StoreProduct> getStoreProducts() {
+    public Map<StoreProductKey, StoreProduct> getStoreProducts() {
         return storeProducts;
     }
 
@@ -1241,8 +1245,8 @@ public class Store implements IStore {
     public ProductRating getStoreProductRating(int userID, int productID) {
         productsLock.lock();
         try {
-            if (storeProducts.containsKey(productID)) {
-                ProductRating rating = storeProducts.get(productID).getRatingByUser(userID);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                ProductRating rating = storeProducts.get(new StoreProductKey(storeID, productID)).getRatingByUser(userID);
                 return rating;
             } else {
                 throw new IllegalArgumentException(
@@ -1294,8 +1298,8 @@ public class Store implements IStore {
     public StoreProduct getStoreProduct(int productID) {
         productsLock.lock();
         try {
-            if (storeProducts.containsKey(productID)) {
-                StoreProduct prod =  storeProducts.get(productID);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                StoreProduct prod =  storeProducts.get(new StoreProductKey(storeID, productID));
                 return prod;
             } else {
                 throw new IllegalArgumentException(
@@ -1439,11 +1443,11 @@ public class Store implements IStore {
         for (Map.Entry<Integer, Integer> entry : productToBuy.entrySet()) {
             int productId = entry.getKey();
             int quantity = entry.getValue();
-            if (!storeProducts.containsKey(productId)) {
+            if (!storeProducts.containsKey(new StoreProductKey(storeID, productId))) {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productId + " does not exist in store ID: " + storeID);
             }
-            StoreProduct product = storeProducts.get(productId);
+            StoreProduct product = storeProducts.get(new StoreProductKey(storeID, productId));
             products.put(product, quantity);
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
@@ -1537,8 +1541,8 @@ public class Store implements IStore {
             for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
                 int productId = entry.getKey();
                 int quantity = entry.getValue();
-                if (storeProducts.containsKey(productId)) {
-                    StoreProduct storeProduct = storeProducts.get(productId);
+                if (storeProducts.containsKey(new StoreProductKey(storeID, productId))) {
+                    StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productId));
                     int newQuantity = Math.min(quantity, storeProduct.getQuantity());
                     if (quantity == newQuantity) {
                         productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
@@ -1562,7 +1566,7 @@ public class Store implements IStore {
             for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
                 int productId = entry.getKey();
                 int quantity = entry.getValue();
-                StoreProduct storeProduct = storeProducts.get(productId);
+                StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productId));
                 if (storeProduct == null) {
                     throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
                             + storeID);
@@ -1580,7 +1584,7 @@ public class Store implements IStore {
                             throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
                         }
                         auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
-                        auctionProducts.remove(auctionProduct.getSproductID()); // Remove using auction product's auto-generated ID
+                        auctionProducts.remove(new StoreProductKey(storeID, productId)); // Remove using auction product's auto-generated ID
                     }
                 }
                 Offer offer = getUserOfferOnStoreProduct(userId, productId);
@@ -1613,8 +1617,8 @@ public class Store implements IStore {
             for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
                 int productId = entry.getKey();
                 int quantity = entry.getValue();
-                if (storeProducts.containsKey(productId)) {
-                    StoreProduct storeProduct = storeProducts.get(productId);
+                if (storeProducts.containsKey(new StoreProductKey(storeID, productId))) {
+                    StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productId));
                     storeProduct.incrementProductQuantity(quantity);
                 }
             }
@@ -1661,10 +1665,10 @@ public class Store implements IStore {
         productsLock.lock();
         offersLock.lock();
         try{
-            if(!storeProducts.containsKey(productId)){
+            if(!storeProducts.containsKey(new StoreProductKey(storeID, productId))){
                 throw new IllegalArgumentException("Store Product " + productId + " Does Not Exist in Store " + storeID);
             }
-            if(storeProducts.get(productId).getQuantity() < 1){
+            if(storeProducts.get(new StoreProductKey(storeID, productId)).getQuantity() < 1){
                 throw new IllegalArgumentException("Product " + productId + " is out of stock");
             }
             if(offerAmount < 1){
