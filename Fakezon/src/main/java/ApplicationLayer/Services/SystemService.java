@@ -395,6 +395,17 @@ public class SystemService implements ISystemService {
             return new Response<>(false, "Error during updating product", false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
+    public Response<Boolean> deleteUser(String username){
+         try{
+            userService.deleteUser(username);
+            return new Response(true, "User deleted successfully", true, null, null);
+         }
+         catch (Exception e){
+             logger.error("System Service - Error during deleting user: " + e.getMessage());
+             return new Response<>(false, "Error during deleting user", false, ErrorType.INTERNAL_ERROR, null);
+         }
+    }
 
     @Override
     public Response<Boolean> deleteProduct(int productId) {

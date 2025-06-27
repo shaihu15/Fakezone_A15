@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,15 +28,17 @@ public class Guest_User_Access_to_Product_Information {
     int storeId;
     int userId;
     int productId;
+    String username;
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
+
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister = testHelper.register_and_login();
         assertTrue(resultRegister.isSuccess());
         userId = resultRegister.getData().getUserId();
+        username = resultRegister.getData().getUserEmail();
         // StoreFounder is registered and logged in
 
         Response<Integer> resultAddStore = testHelper.openStore(userId);
@@ -47,6 +50,16 @@ public class Guest_User_Access_to_Product_Information {
         Response<StoreProductDTO> productResponse = testHelper.addProductToStore(storeId, userId);
         assertTrue(productResponse.isSuccess());
         productId = productResponse.getData().getProductId();
+    }
+
+    @AfterEach
+    void tearDown() {
+        Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, userId, productId);
+        assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        Response<Boolean> deleteResponse = systemService.deleteUser(username);
+        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
     }
 
     @Test

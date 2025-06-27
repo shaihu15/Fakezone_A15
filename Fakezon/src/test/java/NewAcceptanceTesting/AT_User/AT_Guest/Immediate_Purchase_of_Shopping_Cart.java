@@ -16,6 +16,8 @@ import java.util.concurrent.Callable;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,7 +50,6 @@ public class Immediate_Purchase_of_Shopping_Cart {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         // Guest enters the system
@@ -81,6 +82,22 @@ public class Immediate_Purchase_of_Shopping_Cart {
         assertNotNull(storePResponse.getData());
         productIdInt = storePResponse.getData().getProductId();
         //the product is added to the store
+    }
+
+    @AfterEach
+    void tearDown() {
+
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+
+        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+
+        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
+
+        Response<Boolean> deleteRegisteredResponse3 = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteRegisteredResponse3.isSuccess(), "Registered user 3 deletion should succeed");
     }
  
     @Test
