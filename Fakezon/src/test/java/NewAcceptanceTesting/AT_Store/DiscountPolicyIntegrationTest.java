@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -167,6 +169,22 @@ public class DiscountPolicyIntegrationTest {
 
         } catch (Exception e) {
             fail("Failed to setup test data: " + e.getMessage());
+        }
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            // Clean up: remove products, close store, delete users
+            systemService.removeProductFromStore(storeId, ownerId, productId1);
+            systemService.removeProductFromStore(storeId, ownerId, productId2);
+            systemService.removeProductFromStore(storeId, ownerId, productId3);
+
+            systemService.closeStoreByFounder(storeId, ownerId);
+            systemService.deleteUser("owner@test.com");
+            systemService.deleteUser("user@test.com");
+        } catch (Exception e) {
+            fail("Failed to tear down test data: " + e.getMessage());
         }
     }
 

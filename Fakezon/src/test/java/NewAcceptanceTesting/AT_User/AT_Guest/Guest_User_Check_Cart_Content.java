@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,15 +33,17 @@ public class Guest_User_Check_Cart_Content {
     private int guestId;
     private int productId1;
     private int productId2;
+    private String founderEmail;
+    private String registeredEmail;
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister1 = testHelper.register_and_login();
         assertNotNull(resultRegister1.getData());
         StoreFounderId = resultRegister1.getData().getUserId();
+        founderEmail = resultRegister1.getData().getUserEmail();
         // StoreFounder is registered and logged in
 
         Response<Integer> storeResult = systemService.addStore(StoreFounderId, "StoreSuccess");
@@ -57,6 +60,7 @@ public class Guest_User_Check_Cart_Content {
         Response<UserDTO> resultRegister2 = testHelper.register_and_login2();
         assertNotNull(resultRegister2.getData());
         registeredId = resultRegister2.getData().getUserId();
+        registeredEmail = resultRegister2.getData().getUserEmail();
         // registered is registered and logged in
 
         Response<StoreProductDTO> storePResponse1 = testHelper.addProductToStore(storeId, StoreFounderId); 
@@ -76,6 +80,19 @@ public class Guest_User_Check_Cart_Content {
         Response<Void> responseRegistered = systemService.addToBasket(registeredId, productId2, storeId,1); 
         assertTrue(responseRegistered.isSuccess());
         // Registered user adds product 2 to the cart
+    }
+
+    @AfterEach
+    void tearDown() {
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteResponse.isSuccess(), "Guest user deletion should succeed");
+        Response<Boolean> deleteUserResponse = systemService.deleteUser(founderEmail);
+        assertTrue(deleteUserResponse.isSuccess(), "Registered user deletion should succeed");
+        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(registeredEmail);
+        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
+
     }
 
     @Test

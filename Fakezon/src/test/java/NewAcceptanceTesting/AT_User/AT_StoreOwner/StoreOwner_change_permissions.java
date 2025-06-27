@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,7 +44,6 @@ public class StoreOwner_change_permissions {
     private int SecondOwnerUserId;
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 
@@ -87,6 +87,25 @@ public class StoreOwner_change_permissions {
         // Second owner accepts the assignment
         Response<String> acceptSecondOwnerRes = systemService.acceptAssignment(storeId, SecondOwnerUserId);
         assertTrue(acceptSecondOwnerRes.isSuccess());
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Remove the store and users created for this test
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
+        assertTrue(closeStoreRes.isSuccess());
+
+        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteManagerRes.isSuccess());
+
+        Response<Boolean> deleteOtherUserRes = systemService.deleteUser(testHelper.validEmail3());
+        assertTrue(deleteOtherUserRes.isSuccess());
+
+        Response<Boolean> deleteSecondOwnerRes = systemService.deleteUser(testHelper.validEmail4());
+        assertTrue(deleteSecondOwnerRes.isSuccess());
+
+        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteOwnerRes.isSuccess());
     }
 
     @Test

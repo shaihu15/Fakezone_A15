@@ -43,6 +43,7 @@ public interface ISystemService {
     IAuthenticator getAuthenticatorService();
 
     IPayment getPaymentService();
+    Response<Boolean> deleteUser(String userName);
 
     Response<StoreDTO> userAccessStore(int storeId);
 

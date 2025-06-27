@@ -11,6 +11,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,15 +43,16 @@ public class Product_Search {
     String productName = "Test Product";
     String productDescription = "Test Description";
     String category = PCategory.ELECTRONICS.toString();
+    String username;
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();
         assertNotNull(StoreOwnerResult.getData());
         userId = StoreOwnerResult.getData().getUserId();
+        username = StoreOwnerResult.getData().getUserEmail();
         // StoreOwner is registered and logged in
 
         Response<Integer> storeResult = systemService.addStore(userId, "Store1");
@@ -64,6 +67,14 @@ public class Product_Search {
         assertNotNull(storePResponse.getData());
         productId = storePResponse.getData().getProductId();
         // StoreOwner added a product to Store1
+    }
+
+    @AfterEach
+    void tearDown() {
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        Response<Boolean> deleteResponse = systemService.deleteUser(username);
+        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
     }
 
     @Test

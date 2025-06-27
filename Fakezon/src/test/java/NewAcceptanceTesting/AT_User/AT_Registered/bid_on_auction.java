@@ -14,6 +14,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,7 +50,6 @@ public class bid_on_auction {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> ownerUserRes = testHelper.register_and_login();
@@ -81,6 +82,30 @@ public class bid_on_auction {
         Response<UserDTO> otherUserRes = testHelper.register_and_login4();
         assertTrue(otherUserRes.isSuccess(), "Failed to register and login other user");
         otherRegisteredUserId = otherUserRes.getData().getUserId();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Remove auction product
+        Response<Void> removeAuctionRes = systemService.removeProductFromStore(storeId, storeOwnerId, auctionProductId);
+        assertTrue(removeAuctionRes.isSuccess(), "Failed to remove auction product");
+
+        // Close store
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, storeOwnerId);
+        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
+
+        // Delete users
+        Response<Boolean> deleteBuyer1Res = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteBuyer1Res.isSuccess(), "Failed to delete buyer1");
+
+        Response<Boolean> deleteBuyer2Res = systemService.deleteUser(testHelper.validEmail3());
+        assertTrue(deleteBuyer2Res.isSuccess(), "Failed to delete buyer2");
+
+        Response<Boolean> deleteOtherUserRes = systemService.deleteUser(testHelper.validEmail4());
+        assertTrue(deleteOtherUserRes.isSuccess(), "Failed to delete other user");
+
+        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete store owner");
     }
 
     @Test

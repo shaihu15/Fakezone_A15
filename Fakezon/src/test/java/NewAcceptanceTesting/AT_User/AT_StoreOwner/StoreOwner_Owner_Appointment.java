@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,8 +40,7 @@ public class StoreOwner_Owner_Appointment {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
-        
+
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> OwnerUser = testHelper.register_and_login();
@@ -76,6 +76,18 @@ public class StoreOwner_Owner_Appointment {
         
         Response<String> acceptRes = systemService.acceptAssignment(storeId, ManagerUserId);
         assertTrue(acceptRes.isSuccess());
+    }
+
+    @AfterEach
+    void tearDown() {
+        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
+        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+
+        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteUserResponse.isSuccess(), "Owner user deletion should succeed");
+
+        Response<Boolean> deleteManagerResponse = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteManagerResponse.isSuccess(), "Manager user deletion should succeed");
     }
 
     @Test

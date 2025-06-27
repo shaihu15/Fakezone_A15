@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -58,7 +59,6 @@ public class AT_Offer {
 
     @BeforeEach
     void setUp(){
-        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
         testHelper = new TestHelper(systemService);
 
         //create users
@@ -119,7 +119,40 @@ public class AT_Offer {
         p2 = p2Res.getData().getProductId();
     }
 
-    // ********************
+    @AfterEach
+    void tearDown(){
+        //remove products
+        Response<Void> removeP1Res = systemService.removeProductFromStore(store, founder, p1);
+        assertTrue(removeP1Res.isSuccess(), "Failed to remove p1");
+        Response<Void> removeP2Res = systemService.removeProductFromStore(store, founder, p2);
+        assertTrue(removeP2Res.isSuccess(), "Failed to remove p2");
+
+        //remove owners & manager
+        Response<Void> removeO1Res = systemService.removeStoreOwner(store, founder, owner1);
+        assertTrue(removeO1Res.isSuccess(), "Failed to remove Owner1 by Founder");
+        Response<Void> removeO2Res = systemService.removeStoreOwner(store, founder, owner2);
+        assertTrue(removeO2Res.isSuccess(), "Failed to remove Owner2 by Founder");
+        Response<Void> removeManagerRes = systemService.removeStoreManager(store, founder, manager);
+        assertTrue(removeManagerRes.isSuccess(), "Failed to remove Manager by Founder");
+
+        //close store
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(store, founder);
+        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
+
+        //delete users
+        Response<Boolean> deleteFounderRes = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteFounderRes.isSuccess(), "Failed to delete Founder");
+        Response<Boolean> deleteOwner1Res = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteOwner1Res.isSuccess(), "Failed to delete Owner1");
+        Response<Boolean> deleteOwner2Res = systemService.deleteUser(testHelper.validEmail3());
+        assertTrue(deleteOwner2Res.isSuccess(), "Failed to delete Owner2");
+        Response<Boolean> deleteRegisteredRes = systemService.deleteUser(testHelper.validEmail4());
+        assertTrue(deleteRegisteredRes.isSuccess(), "Failed to delete Registered User");
+        Response<Boolean> deleteGuestRes = systemService.removeUnsignedUser(guest);
+        assertTrue(deleteGuestRes.isSuccess(), "Failed to delete Guest User");
+    }
+
+    // ********************p
     // **PlaceOffer TESTS**
     // ********************
     @Test

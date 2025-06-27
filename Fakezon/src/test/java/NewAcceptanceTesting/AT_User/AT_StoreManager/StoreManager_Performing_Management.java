@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,7 +51,6 @@ public class StoreManager_Performing_Management {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
                 Response<UserDTO> ownerUserRes = testHelper.register_and_login();
         assertTrue(ownerUserRes.isSuccess(), "Failed to register and login owner");
@@ -90,6 +90,24 @@ public class StoreManager_Performing_Management {
         Response<String> acceptRes = systemService.acceptAssignment(storeId, managerUserId);
         assertTrue(acceptRes.isSuccess(), "Expected manager to successfully accept assignment");
 
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Remove the manager from the store
+        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, ownerUserId, managerUserId);
+        assertTrue(removeManagerRes.isSuccess(), "Failed to remove store manager");
+
+        // Close the store
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, ownerUserId);
+        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
+
+        // Delete the users
+        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete owner user");
+
+        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteManagerRes.isSuccess(), "Failed to delete manager user");
     }
 
 

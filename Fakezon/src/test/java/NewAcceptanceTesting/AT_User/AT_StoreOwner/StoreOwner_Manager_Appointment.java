@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,7 +42,6 @@ public class StoreOwner_Manager_Appointment {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> ownerUserRes = testHelper.register_and_login();
@@ -75,6 +75,28 @@ public class StoreOwner_Manager_Appointment {
         Response<StoreRolesDTO> rolesAfterAddOtherOwner = systemService.getStoreRoles(storeId, ownerUserId);
         assertTrue(rolesAfterAddOtherOwner.isSuccess());
         assertTrue(rolesAfterAddOtherOwner.getData().getStoreOwners().contains(otherOwnerUserId), "otherOwnerUserId should be an owner");
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clean up: remove all roles and delete users
+        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, ownerUserId, managerUserId);
+        assertTrue(removeManagerRes.isSuccess(), "Failed to remove manager after test");
+
+        Response<Void> removeOwnerRes = systemService.removeStoreOwner(storeId, ownerUserId, otherOwnerUserId);
+        assertTrue(removeOwnerRes.isSuccess(), "Failed to remove other owner after test");
+
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, ownerUserId);
+        assertTrue(closeStoreRes.isSuccess(), "Failed to close store after test");
+
+        Response<Boolean> deleteManagerUserRes = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteManagerUserRes.isSuccess(), "Failed to delete manager user after test");
+
+        Response<Boolean> deleteOtherRegisteredUserRes = systemService.deleteUser(testHelper.validEmail3());
+        assertTrue(deleteOtherRegisteredUserRes.isSuccess(), "Failed to delete other registered user after test");
+
+        Response<Boolean> deleteOtherOwnerUserRes = systemService.deleteUser(testHelper.validEmail4());
+        assertTrue(deleteOtherOwnerUserRes.isSuccess(), "Failed to delete other owner user after test");
     }
 
     @Test
