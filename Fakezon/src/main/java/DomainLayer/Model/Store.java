@@ -768,8 +768,8 @@ public class Store implements IStore {
         System.out.println("handleAuctionEnd Triggered");
         productsLock.lock();
         try{    
-            //this.publisher.publishEvent(new AuctionSaveEvent(storeID, productID));
-            getAuctionAfterAnded(productID);
+            this.publisher.publishEvent(new AuctionSaveEvent(storeID, productID));
+            //getAuctionAfterAnded(productID);
         }
 
         catch(Exception e){

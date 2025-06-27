@@ -1,5 +1,6 @@
 package ApplicationLayer.Services;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -16,10 +17,12 @@ public class StoreEventListener {
 
     private final IStoreRepository storeRepository;
     private final NotificationWebSocketHandler wsHandler; //web socket
+    private final ApplicationEventPublisher publisher;
 
-    public StoreEventListener(IStoreRepository storeRepository, NotificationWebSocketHandler wsHandler) {
+    public StoreEventListener(IStoreRepository storeRepository, NotificationWebSocketHandler wsHandler, ApplicationEventPublisher publisher) {
         this.storeRepository = storeRepository;
         this.wsHandler = wsHandler;
+        this.publisher = publisher;
     }
 
     @Async
@@ -31,6 +34,7 @@ public class StoreEventListener {
             // Handle the case where the store is not found
             return;
         }
+        store.setPublisher(publisher);
         store.getAuctionAfterAnded(event.getProductId());
     }
 }
