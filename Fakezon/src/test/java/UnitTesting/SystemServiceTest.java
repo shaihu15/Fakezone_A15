@@ -1341,6 +1341,7 @@ class SystemServiceTest {
     void testUserAccessStore_Success() {
         int storeId = 1;
         StoreDTO storeDTO = mock(StoreDTO.class);
+        when(storeService.isStoreOpen(storeId)).thenReturn(true); // <-- Mock store is open
         when(storeService.viewStore(storeId)).thenReturn(storeDTO);
         when(storeDTO.isOpen()).thenReturn(true);
     
@@ -1370,6 +1371,7 @@ class SystemServiceTest {
     @Test
     void testUserAccessStore_Exception() {
         int storeId = 1;
+        when(storeService.isStoreOpen(storeId)).thenReturn(true); // <-- Mock store is open
         when(storeService.viewStore(storeId)).thenThrow(new RuntimeException("fail"));
     
         Response<StoreDTO> response = systemService.userAccessStore(storeId);
