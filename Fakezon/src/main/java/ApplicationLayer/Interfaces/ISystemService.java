@@ -214,6 +214,7 @@ public interface ISystemService {
     Response<List<OrderDTO>> getOrdersByUserId(int userId);
 
     boolean isStoreOpen(int storeId);
+    Response<Void> removeStore(int storeId, int requesterId); // remove store for test purposes
 
     // Discount Policy Methods
     Response<Void> addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs,

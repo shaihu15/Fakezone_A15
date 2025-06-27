@@ -106,6 +106,9 @@ public class bid_on_auction {
 
         Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
         assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete store owner");
+        // Remove store
+        Response<Void> removeStoreRes = systemService.removeStore(storeId, storeOwnerId);
+        assertTrue(removeStoreRes.isSuccess(), "Failed to remove store");
     }
 
     @Test

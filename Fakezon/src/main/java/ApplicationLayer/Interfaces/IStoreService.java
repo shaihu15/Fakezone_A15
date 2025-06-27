@@ -74,6 +74,7 @@ public interface IStoreService {
   void addStoreManager(int storeId, int requesterId, int newManagerId, List<StoreManagerPermission> perms);
 
   void removeStoreManager(int storeId, int requesterId, int managerId);
+  void removeStore(int storeId);
 
   HashMap<Integer, List<StoreManagerPermission>> getStoreManagers(int storeId, int requesterId);
 

@@ -148,8 +148,14 @@ public class AT_Offer {
         assertTrue(deleteOwner2Res.isSuccess(), "Failed to delete Owner2");
         Response<Boolean> deleteRegisteredRes = systemService.deleteUser(testHelper.validEmail4());
         assertTrue(deleteRegisteredRes.isSuccess(), "Failed to delete Registered User");
+        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail5());
+        assertTrue(deleteManagerRes.isSuccess(), "Failed to delete Manager User");
         Response<Boolean> deleteGuestRes = systemService.removeUnsignedUser(guest);
         assertTrue(deleteGuestRes.isSuccess(), "Failed to delete Guest User");
+
+        //delete store
+        Response<Void> deleteStoreRes = systemService.removeStore(store, founder);
+        assertTrue(deleteStoreRes.isSuccess(), "Failed to delete store");
     }
 
     // ********************p
