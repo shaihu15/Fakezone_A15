@@ -711,8 +711,8 @@ public class Store implements IStore {
 
     private void handleRecivedHigherBid(int prevHigherBid, int auctionProductID) {
         System.out.println("handleRecivedHigherBid Triggered");
-        if (auctionProducts.containsKey(auctionProductID)) {
-            AuctionProduct auctionProduct = auctionProducts.get(auctionProductID);
+        if (auctionProducts.containsKey(new StoreProductKey(storeID, auctionProductID))) {
+            AuctionProduct auctionProduct = auctionProducts.get(new StoreProductKey(storeID, auctionProductID));
             // Use the original product ID for the event
             this.publisher.publishEvent(new AuctionGotHigherBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(), prevHigherBid,
                     auctionProduct.getCurrentHighestBid()));
