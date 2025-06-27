@@ -28,7 +28,7 @@ public class AuctionProductTest {
         assertNotNull(auctionProduct, "AuctionProduct object should be created");
         assertEquals(50.0, auctionProduct.getCurrentHighestBid(), "Initial highest bid should match base price");
         assertEquals(7, auctionProduct.getMinutesToEnd(), "Minutes to end should match");
-        assertEquals(1, auctionProduct.getProductID(), "Product ID should match");
+        assertEquals(1, auctionProduct.getStoreProduct().getSproductID(), "Product ID should match");
         assertEquals(-1, auctionProduct.getUserIDHighestBid(), "No bids should be placed initially");
     }
 
@@ -83,14 +83,11 @@ public class AuctionProductTest {
     void toDTO_ShouldReturnCorrectDTO() {
         StoreProductDTO dto = auctionProduct.toDTO(1001);
         assertNotNull(dto, "DTO object should be created");
-        // Note: The DTO returns the AuctionProduct's own auto-generated ID (0 in tests), 
-        // not the original StoreProduct's ID. The original ID is stored in getProductID().
-        assertEquals(0, dto.getProductId(), "AuctionProduct's own ID should be 0 in unit tests");
-        assertEquals(1, auctionProduct.getProductID(), "Original product ID should be preserved in productID field");
+        // The DTO returns the StoreProduct's ID as productId
+        assertEquals(1, dto.getProductId(), "StoreProduct's ID should match");
         assertEquals("p1", dto.getName(), "Product name should match");
-        assertEquals(10.0, dto.getBasePrice(), "Base price should match");
+        assertEquals(50.0, dto.getBasePrice(), "Base price should match");
         assertEquals(4, dto.getQuantity(), "Quantity should match");
         assertEquals(1001, dto.getStoreId(), "Store ID should match");
-        
     }
 }

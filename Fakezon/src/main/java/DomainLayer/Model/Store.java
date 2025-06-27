@@ -79,8 +79,8 @@ public class Store implements IStore {
     
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "auction_store_id")
-    @MapKey(name = "SproductID")
-    private Map<Integer, AuctionProduct> auctionProducts; // HASH productID to auction product
+    @MapKeyClass(StoreProductKey.class)
+    private Map<StoreProductKey, AuctionProduct> auctionProducts; // HASH productID to auction product
     
     @Transient
     private HashMap<Integer, PurchasePolicy> purchasePolicies; // HASH policyID to purchase policy
@@ -309,7 +309,7 @@ public class Store implements IStore {
         try{
             // Find auction product by original product ID (not map key)
             AuctionProduct ap = auctionProducts.values().stream()
-                .filter(auctionProduct -> auctionProduct.getProductID() == productID)
+                .filter(auctionProduct -> auctionProduct.getStoreProduct().getSproductID() == productID)
                 .findFirst()
                 .orElse(null);
                 
@@ -319,7 +319,7 @@ public class Store implements IStore {
                 }
                 int prevId = ap.addBid(requesterId, bidAmount);
                 if(prevId == requesterId) return false;
-                if(prevId != -1) handleRecivedHigherBid(prevId, ap.getSproductID()); // Use auction product's ID for events
+                if(prevId != -1) handleRecivedHigherBid(prevId, ap.getStoreProduct().getSproductID()); // Use auction product's ID for events
                 return true;
             } else {
                 throw new IllegalArgumentException(
@@ -353,22 +353,8 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-            //public StoreProduct(int SproductID, int storeId,String name, double basePrice, int quantity,PCategory category) {
 
             StoreProduct storeProduct = new StoreProduct(productID, storeID, name, basePrice, quantity, category);
-
-            // // Create StoreProduct without ID - let JPA generate it
-            // StoreProduct storeProduct = new StoreProduct();
-            // storeProduct.setStoreId(storeID);
-            // storeProduct.setName(name);
-            // storeProduct.setBasePrice(basePrice);
-            // storeProduct.setQuantity(quantity);
-            // storeProduct.setCategory(category);
-            
-            // In unit tests (non-JPA), the auto-generated ID will be 0, so use the productID parameter
-            // In production (JPA), use the auto-generated ID
-            //int mapKey = storeProduct.getSproductID() == 0 ? productID : storeProduct.getSproductID();
-            //storeProducts.put(mapKey, storeProduct);
             storeProducts.put(new StoreProductKey(storeID, productID), storeProduct);
             return new StoreProductDTO(storeProduct); //returns the productDTO
         }
@@ -419,7 +405,7 @@ public class Store implements IStore {
         try {
             if (!hasInventoryPermissions(requesterId)) {
                 throw new IllegalArgumentException(
-                        "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+                        "User " + requesterId + " has insufficient inventory permissions for store ID: " + storeID);
             }
             if (!storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
@@ -427,11 +413,11 @@ public class Store implements IStore {
 
             // Remove auction product by original product ID
             AuctionProduct auctionToRemove = auctionProducts.values().stream()
-                .filter(ap -> ap.getProductID() == productID)
+                .filter(ap -> ap.getStoreProduct().getSproductID() == productID)
                 .findFirst()
                 .orElse(null);
             if (auctionToRemove != null) {
-                auctionProducts.remove(auctionToRemove.getSproductID());
+                auctionProducts.remove(new StoreProductKey(storeID, productID));
             }
             storeProducts.remove(new StoreProductKey(storeID, productID));
         }
@@ -631,20 +617,21 @@ public class Store implements IStore {
         System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         rolesLock.lock();
         productsLock.lock();
+        StoreProductKey auctionMapKey = new StoreProductKey(storeID, productID);
         try {
             if (!hasInventoryPermissions(requesterId)) {
                 throw new IllegalArgumentException(
                         "User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
             }
             if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
-                StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productID));
+                StoreProduct storeProduct = storeProducts.get(auctionMapKey);
                 if (storeProduct.getQuantity() <= 0) {
                     throw new IllegalArgumentException(
                             "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
                 }
                 // Check if product is already an auction product by original product ID
                 boolean isAlreadyAuction = auctionProducts.values().stream()
-                    .anyMatch(ap -> ap.getProductID() == productID);
+                    .anyMatch(ap -> ap.getStoreProduct().getSproductID() == productID);
                 if (isAlreadyAuction) {
                     throw new IllegalArgumentException(
                             "Product with ID: " + productID + " is already an auction product in store ID: " + storeID);
@@ -660,20 +647,13 @@ public class Store implements IStore {
                 }
                 AuctionProduct auctionProduct = new AuctionProduct(storeProduct, basePrice, MinutesToEnd);
                 
-                // Handle unit tests where auto-generated IDs are 0
-                if (auctionProduct.getSproductID() == 0) {
-                    // In unit tests, set the productID to the original productID for proper lookup
-                    auctionProduct.setProductID(productID);
-                }
-                
                 // In unit tests (non-JPA), the auto-generated ID will be 0, so use the productID parameter
                 // In production (JPA), use the auto-generated ID
-                int auctionMapKey = auctionProduct.getSproductID() == 0 ? productID : auctionProduct.getSproductID();
                 auctionProducts.put(auctionMapKey, auctionProduct);
                 System.out.println("Auction product added with ID: " + auctionMapKey);
                 
                 scheduler.schedule(() -> {
-                    handleAuctionEnd(auctionMapKey);
+                    handleAuctionEnd(productID);
                 }, MinutesToEnd, TimeUnit.MINUTES);
 
             } else {
@@ -696,7 +676,7 @@ public class Store implements IStore {
         try {
             // Find auction product by original product ID
             AuctionProduct auctionProduct = auctionProducts.values().stream()
-                .filter(ap -> ap.getProductID() == productID)
+                .filter(ap -> ap.getStoreProduct().getSproductID() == productID)
                 .findFirst()
                 .orElse(null);
                 
@@ -734,37 +714,37 @@ public class Store implements IStore {
         if (auctionProducts.containsKey(auctionProductID)) {
             AuctionProduct auctionProduct = auctionProducts.get(auctionProductID);
             // Use the original product ID for the event
-            this.publisher.publishEvent(new AuctionGotHigherBidEvent(this.storeID, auctionProduct.getProductID(), prevHigherBid,
+            this.publisher.publishEvent(new AuctionGotHigherBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(), prevHigherBid,
                     auctionProduct.getCurrentHighestBid()));
 
         }
     }
 
     public void getAuctionAfterAnded(int productID){
-         if (auctionProducts.containsKey(productID)) {
+         if (auctionProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 
                 if (this.publisher != null) {
-                    AuctionProduct auctionProduct = auctionProducts.get(productID);
+                    AuctionProduct auctionProduct = auctionProducts.get(new StoreProductKey(storeID, productID));
                     System.out.println("current bid "+auctionProduct.getCurrentHighestBid());
-                    System.out.println("product id  "+auctionProduct.getProductID());
+                    System.out.println("product id  "+auctionProduct.getStoreProduct().getSproductID());
                     int currentHighestBidUserId = auctionProduct.getUserIDHighestBid();
                     System.out.println("user with id: "+ currentHighestBidUserId + " has the highest bid");
                     System.out.println("Auction product found - " + auctionProduct.getUserIDHighestBid());
                     if (auctionProduct.getUserIDHighestBid() != -1) // if there was a bid
                     {
-                        if(auctionProduct.getQuantity() > 0){ //if there is stock
+                        if(auctionProduct.getStoreProduct().getQuantity() > 0){ //if there is stock
                             //update owner
                             this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID,
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                             //update winner
-                            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(),
+                            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(),
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(),
                                 auctionProduct.toDTO(storeID)));
                         }
                         else
                         {
                             //update winner for fail
-                            this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
+                            this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(),
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                             this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, product no longer available in store"));
@@ -788,7 +768,8 @@ public class Store implements IStore {
         System.out.println("handleAuctionEnd Triggered");
         productsLock.lock();
         try{    
-            this.publisher.publishEvent(new AuctionSaveEvent(storeID, productID));
+            //this.publisher.publishEvent(new AuctionSaveEvent(storeID, productID));
+            getAuctionAfterAnded(productID);
         }
 
         catch(Exception e){
@@ -1461,17 +1442,17 @@ public class Store implements IStore {
             }
             // Find auction product by original product ID
             AuctionProduct auctionProduct = auctionProducts.values().stream()
-                .filter(ap -> ap.getProductID() == productId)
+                .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
                 .findFirst()
                 .orElse(null);
                 
             if (auctionProduct != null) {
                 if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone()) {
                     amount += auctionProduct.getCurrentHighestBid();
-                    amount += auctionProduct.getBasePrice() * (quantity - 1); 
+                    amount += auctionProduct.getStoreProduct().getBasePrice() * (quantity - 1); 
                 }
                 else{
-                    amount += auctionProduct.getBasePrice() * quantity;
+                    amount += auctionProduct.getStoreProduct().getBasePrice() * quantity;
                 }
                 
             } else {
@@ -1576,16 +1557,16 @@ public class Store implements IStore {
                 int newQuantity = Math.min(quantity, storeProduct.getQuantity());
                 // Find auction product by original product ID
                 AuctionProduct auctionProduct = auctionProducts.values().stream()
-                    .filter(ap -> ap.getProductID() == productId)
+                    .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
                     .findFirst()
                     .orElse(null);
                     
                 if(auctionProduct != null){
                     if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isDone()){
-                        if(auctionProduct.getQuantity() < quantity) {
+                        if(auctionProduct.getStoreProduct().getQuantity() < quantity) {
                             throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
                         }
-                        auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
+                        auctionProduct.getStoreProduct().setQuantity(auctionProduct.getStoreProduct().getQuantity() - quantity);
                         auctionProducts.remove(new StoreProductKey(storeID, productId)); // Remove using auction product's auto-generated ID
                     }
                 }
