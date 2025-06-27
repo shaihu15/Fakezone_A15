@@ -31,6 +31,6 @@ public class StoreEventListener {
             // Handle the case where the store is not found
             return;
         }
-        storeRepository.save(store);
+        store.getAuctionAfterAnded(event.getProductId());
     }
 }

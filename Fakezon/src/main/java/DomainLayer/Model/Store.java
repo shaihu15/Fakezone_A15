@@ -740,13 +740,8 @@ public class Store implements IStore {
         }
     }
 
-    private void handleAuctionEnd(int productID) {
-        System.out.println("handleAuctionEnd Triggered");
-        
-        productsLock.lock();
-        try{    
-
-            if (auctionProducts.containsKey(productID)) {
+    public void getAuctionAfterAnded(int productID){
+         if (auctionProducts.containsKey(productID)) {
                 
                 if (this.publisher != null) {
                     AuctionProduct auctionProduct = auctionProducts.get(productID);
@@ -780,13 +775,20 @@ public class Store implements IStore {
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, no bids were placed"));
                     }
                     auctionProduct.setIsDone(true);
-                    this.publisher.publishEvent(new AuctionSaveEvent(storeID));
+                    //this.publisher.publishEvent(new AuctionSaveEvent(storeID));
                 }
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " is not an auction product in store ID: " + storeID);
             }
 
+    }
+
+    private void handleAuctionEnd(int productID) {
+        System.out.println("handleAuctionEnd Triggered");
+        productsLock.lock();
+        try{    
+            this.publisher.publishEvent(new AuctionSaveEvent(storeID, productID));
         }
 
         catch(Exception e){
