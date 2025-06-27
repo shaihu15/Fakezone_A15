@@ -215,7 +215,7 @@ public class StoreController {
                                                                  @RequestParam("bid") double bid,
                                                                  @RequestHeader("Authorization") String token) {
         try {
-            logger.info("Received request to add bid on auction product {} in store {} by user {} with token {}", productId, storeId, requesterId, token);
+            logger.info("Received request to add bid on auction product {} in store {} by user {} with bid {} and token {}", productId, storeId, requesterId, bid, token);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
