@@ -1554,7 +1554,6 @@ public class Store implements IStore {
                     throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
                             + storeID);
                 }
-                int newQuantity = Math.min(quantity, storeProduct.getQuantity());
                 // Find auction product by original product ID
                 AuctionProduct auctionProduct = auctionProducts.values().stream()
                     .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
@@ -1568,20 +1567,25 @@ public class Store implements IStore {
                         }
                         auctionProduct.getStoreProduct().setQuantity(auctionProduct.getStoreProduct().getQuantity() - quantity);
                         auctionProducts.remove(new StoreProductKey(storeID, productId)); // Remove using auction product's auto-generated ID
+                        products.put(new StoreProductDTO(auctionProduct.getStoreProduct(), quantity),true);
+
                     }
                 }
-                Offer offer = getUserOfferOnStoreProduct(userId, productId);
-                if(offer != null){
-                    removeOffer(offer);
-                }
-                if (newQuantity == quantity) { //this if was else-if, it might cause problems now?
-                    products.put(new StoreProductDTO(storeProduct, quantity),true);
-                    storeProduct.decrementProductQuantity(newQuantity);
-                }
                 else{
-                    //storeProduct.decrementProductQuantity(newQuantity);
-                    products.put(new StoreProductDTO(storeProduct, newQuantity),false);
-
+                    int newQuantity = Math.min(quantity, storeProduct.getQuantity());
+                    Offer offer = getUserOfferOnStoreProduct(userId, productId);
+                    if(offer != null){
+                        removeOffer(offer);
+                    }
+                    if (newQuantity == quantity) { //this if was else-if, it might cause problems now?
+                        products.put(new StoreProductDTO(storeProduct, quantity),true);
+                        storeProduct.decrementProductQuantity(newQuantity);
+                    }
+                    else{
+                        //storeProduct.decrementProductQuantity(newQuantity);
+                        products.put(new StoreProductDTO(storeProduct, newQuantity),false);
+    
+                    }
                 }
             }
 
