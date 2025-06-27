@@ -3,6 +3,7 @@ package NewAcceptanceTesting.AT_User.AT_Guest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +30,6 @@ public class User_Registration {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         validEmail = testHelper.validEmail();
@@ -42,6 +42,12 @@ public class User_Registration {
         assertTrue(guestResponse.isSuccess());
         guestId = guestResponse.getData().getUserId();
     }
+    @AfterEach
+    void tearDown() {
+        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
+
+    }
 
     
     @Test
@@ -50,6 +56,8 @@ public class User_Registration {
         assertTrue(result.isSuccess(), "Registration should succeed");
 
         assertEquals("Guest registered successfully", result.getMessage());
+        Response<Boolean> deleteUserResponse = systemService.deleteUser(validEmail);
+        assertTrue(deleteUserResponse.isSuccess(), "User deletion should succeed");
     }
 
     @Test

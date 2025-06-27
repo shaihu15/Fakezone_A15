@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import ApplicationLayer.DTO.AuctionProductDTO;
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.ProductRatingDTO;
 import ApplicationLayer.DTO.StoreDTO;
@@ -48,6 +49,7 @@ import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Interfaces.IPayment;
 import DomainLayer.Model.Cart;
 import DomainLayer.Model.Offer;
+import DomainLayer.Model.OrderedProduct;
 import DomainLayer.Model.ProductRating;
 import DomainLayer.Model.Registered;
 import DomainLayer.Model.StoreFounder;
@@ -405,6 +407,17 @@ public class SystemService implements ISystemService {
             return new Response<>(false, "Error during updating product", false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
+    public Response<Boolean> deleteUser(String username){
+         try{
+            userService.deleteUser(username);
+            return new Response(true, "User deleted successfully", true, null, null);
+         }
+         catch (Exception e){
+             logger.error("System Service - Error during deleting user: " + e.getMessage());
+             return new Response<>(false, "Error during deleting user", false, ErrorType.INTERNAL_ERROR, null);
+         }
+    }
 
     @Override
     @Transactional
@@ -735,6 +748,7 @@ public class SystemService implements ISystemService {
     public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName,
             String description, double basePrice, int quantity, String category) {
         String name = null;
+        boolean existingProduct = false; // used to check if the product already exists in the store
         int productId;
         PCategory categoryEnum = null;
         boolean isNewProd = false; //used for reverting if the operation fails
@@ -762,6 +776,9 @@ public class SystemService implements ISystemService {
                 if (prod.getName().equals(productName)) {
                     product = prod;
                     description = prod.getDescription();
+                    if(!product.getStoreIds().contains(storeId)){
+                          existingProduct = true;
+                        }
                     break;
                 }
             }
@@ -774,7 +791,14 @@ public class SystemService implements ISystemService {
                 isNewProd = true;
                 productId = productService.addProduct(productName, description, categoryEnum);
                 productService.addProductsToStore(storeId, List.of(productId));
-            } else {
+            }
+            else if(existingProduct){
+                productId =product.getId();
+                Set<Integer> storeIds = new HashSet<>();
+                storeIds.add(storeId);
+                productService.updateProduct(productId, productName, description, storeIds);
+            }
+             else {
                 productId = product.getId();
                 if (!product.getDescription().equals(description)
                         || !product.getCategory().toString().equals(category)) {
@@ -998,6 +1022,7 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
         try {
+            prices = this.storeService.calcAmount(userId, cart, dob);
             validCartDTO = this.storeService.decrementProductsInStores(userId, cart.getAllProducts());
         } catch (Exception e) {
             logger.error("System Service - Error during purchase cart - decrementProductsInStores: " + e.getMessage());
@@ -1020,10 +1045,8 @@ public class SystemService implements ISystemService {
         }
         //if payment/delivery won't work
         userService.setCart(userId, validCart);
-
-        prices = this.storeService.calcAmount(userId, cart, dob);
         totalPrice = prices.values().stream().mapToDouble(Double::doubleValue).sum();
-        logger.info("System Service - User " + userId + "cart price: " + totalPrice);
+        logger.info("System Service - User " + userId + " cart price: " + totalPrice);
         int paymentTransactionId = -1;
         try {
             paymentTransactionId = this.paymentService.pay(cardNumber, cardHolder, expDate, cvv, totalPrice,userId);
@@ -1153,13 +1176,12 @@ public class SystemService implements ISystemService {
 
     @Transactional(readOnly = true)
     public OrderDTO createOrderDTO(IOrder order) {
-        List<ProductDTO> productDTOS = new ArrayList<>();
-        for (int productId : order.getProductIds()) {
-            ProductDTO productDTO = this.productService.viewProduct(productId);
-            productDTOS.add(productDTO);
+        List<OrderedProductDTO> productDTOS = new ArrayList<>();
+        for (OrderedProduct prod : order.getProducts()) {
+            productDTOS.add(new OrderedProductDTO(prod.getProductId(), prod.getName(), prod.getPrice(), prod.getQuantity()));
         }
         return new OrderDTO(order.getId(), order.getUserId(), order.getStoreId(), productDTOS,
-                order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString());
+                order.getState().toString(), order.getAddress(), order.getPaymentMethod().toString(), order.getTotalPrice());
 
     }
 
@@ -2537,4 +2559,16 @@ public class SystemService implements ISystemService {
             return new Response<>(null, e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    @Override
+    public Response<List<StoreDTO>> getAllStores() {
+        try {
+            List<StoreDTO> stores = storeService.getAllStores();
+            return new Response<>(stores, "Stores retrieved successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during getting all stores: " + e.getMessage());
+            return new Response<>(null, "Error during getting all stores: " + e.getMessage(), false,
+                    ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    
 }

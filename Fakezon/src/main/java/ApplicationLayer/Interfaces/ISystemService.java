@@ -43,6 +43,7 @@ public interface ISystemService {
     IAuthenticator getAuthenticatorService();
 
     IPayment getPaymentService();
+    Response<Boolean> deleteUser(String userName);
 
     Response<StoreDTO> userAccessStore(int storeId);
 
@@ -73,6 +74,8 @@ public interface ISystemService {
     Response<List<ProductDTO>> searchByCategory(String category);
 
     Response<List<ProductDTO>> searchProductsByName(String productName);
+
+    Response<List<StoreDTO>> getAllStores();
 
     Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId,
             List<StoreManagerPermission> perms);

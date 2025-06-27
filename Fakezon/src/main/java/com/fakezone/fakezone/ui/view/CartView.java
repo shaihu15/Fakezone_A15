@@ -313,12 +313,12 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
 
             // New fields for address details
             TextField streetAddress = new TextField("Street Address");
-            streetAddress.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            streetAddress.setAllowedCharPattern("[^*]"); // Restrict '*'
             TextField city = new TextField("City");
-            city.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            city.setAllowedCharPattern("[^*]"); // Restrict '*'
             ComboBox<String> countryComboBox = new ComboBox<>("Country");
             TextField zipCode = new TextField("Zip Code"); 
-            zipCode.setAllowedCharPattern("[^*]*"); // Restrict '*'
+            zipCode.setAllowedCharPattern("[^*]"); // Restrict '*'
 
             List<String> countryNames = Arrays.stream(Locale.getISOCountries())
                 .map(code -> Locale.forLanguageTag("und-" + code).getDisplayCountry())
@@ -339,6 +339,11 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
             dialog.add(totalBox);
             Button confirmPurchase = new Button("Confirm Purchase");
             confirmPurchase.addClickListener(e ->{
+                                if(exp.isEmpty() || exp.getValue().isBefore(LocalDate.now())){
+                                    exp.focus();
+                                    Notification.show("Please Enter a Valid Exp Date").setPosition(Notification.Position.MIDDLE);
+                                    return;
+                                }
                                 if(!paymentMethodComboBox.isEmpty() && !deliveryMethod.isEmpty() && !cardNumber.isEmpty() &&
                                    !cardHolder.isEmpty() && !exp.isEmpty() && !cvv.isEmpty() && !streetAddress.isEmpty() && 
                                    !city.isEmpty() && !zipCode.isEmpty() && !countryComboBox.isEmpty() && !packageDetails.isEmpty()){

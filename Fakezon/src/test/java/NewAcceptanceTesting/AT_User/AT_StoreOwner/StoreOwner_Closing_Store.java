@@ -2,6 +2,7 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +25,6 @@ public class StoreOwner_Closing_Store {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 
@@ -37,6 +37,17 @@ public class StoreOwner_Closing_Store {
         Response<Integer> storeIdResponse = testHelper.openStore(OwnerUserId);
         assertTrue(storeIdResponse.isSuccess());
         storeId = storeIdResponse.getData();
+    }
+    @AfterEach
+    void tearDown() {
+        // Close the store if it's still open
+        if (systemService.isStoreOpen(storeId)) {
+            Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
+            assertTrue(closeStoreResponse.isSuccess());
+        }
+        // Delete the owner user
+        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteUserResponse.isSuccess());
     }
 
     @Test

@@ -31,6 +31,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinRequest;
 
 import ApplicationLayer.DTO.OrderDTO;
+import ApplicationLayer.DTO.OrderedProductDTO;
 import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -40,6 +41,7 @@ import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Request;
 import ApplicationLayer.Response;
 import DomainLayer.Enums.StoreManagerPermission;
+import DomainLayer.Model.OrderedProduct;
 import DomainLayer.Model.helpers.UserMsg;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -1335,12 +1337,15 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
                 meta.add(new Div(new H3("Payment: "), new Div(order.getPaymentMethod())));
                 meta.add(new Div(new H3("Store ID: "), new Div(String.valueOf(order.getStoreId()))));
                 meta.add(new Div(new H3("User ID: "), new Div(String.valueOf(order.getUserId()))));
+                double totalPrice = order.getTotalPrice();
+                String formattedPrice = String.format("%.2f", totalPrice);
+                meta.add(new Div(new H3("Total Price: "), new Div(formattedPrice)));
                 detailsLayout.add(meta);
 
                 // Products grid
                 detailsLayout.add(new H3("Products"));
-                Grid<ProductDTO> grid = new Grid<>(ProductDTO.class, false);
-                grid.addColumn(ProductDTO::getName).setHeader("Name");
+                Grid<OrderedProductDTO> grid = new Grid<>(OrderedProductDTO.class, false);
+                grid.addColumn(OrderedProductDTO::getName).setHeader("Name");
                 grid.setItems(order.getProducts());
                 grid.setHeight("200px");               // or use setSizeFull() only
                 detailsLayout.add(grid);

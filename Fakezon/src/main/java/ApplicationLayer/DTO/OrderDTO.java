@@ -19,7 +19,7 @@ public class OrderDTO {
     private final int storeId;
 
     @JsonProperty("products")
-    private final Collection<ProductDTO> products;
+    private final Collection<OrderedProductDTO> products;
 
     @JsonProperty("orderState")
     private final String orderState;
@@ -29,8 +29,12 @@ public class OrderDTO {
 
     @JsonProperty("paymentMethod")
     private final String paymentMethod;
+
+    @JsonProperty("totalPrice")
+    private final double totalPrice;
+
     @JsonCreator
-    public OrderDTO(int orderId, int userId, int storeId, Collection<ProductDTO> products, String orderState, String address, String paymentMethod) {
+    public OrderDTO(int orderId, int userId, int storeId, Collection<OrderedProductDTO> products, String orderState, String address, String paymentMethod, double totalPrice) {
         this.orderId = orderId;
         this.userId = userId;
         this.storeId = storeId;
@@ -38,6 +42,7 @@ public class OrderDTO {
         this.orderState = orderState;
         this.address = address;
         this.paymentMethod = paymentMethod;
+        this.totalPrice = totalPrice;
     }
     public int getOrderId() {
         return orderId;
@@ -48,7 +53,7 @@ public class OrderDTO {
     public int getStoreId() {
         return storeId;
     }
-    public Collection<ProductDTO> getProducts() {
+    public Collection<OrderedProductDTO> getProducts() {
         return products;
     }
 
@@ -62,6 +67,10 @@ public class OrderDTO {
         return paymentMethod;
     }
     
+
+    public double getTotalPrice(){
+        return totalPrice;
+    }
     
     
 }

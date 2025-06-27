@@ -216,11 +216,11 @@ public class UserController {
         }
     }
 
-    @GetMapping("/getAuctionEndedMessages/{userId}")
-    public ResponseEntity<Response<Map<Integer, StoreMsg>>> getAuctionEndedMessages(@RequestHeader("Authorization") String token,
+    @GetMapping("/getOfferMessages/{userId}")
+    public ResponseEntity<Response<Map<Integer, StoreMsg>>> getOfferMessages(@RequestHeader("Authorization") String token,
                                                                                        @PathVariable int userId) {
         try {
-            logger.info("Received request to get auction ended messages for user: {}", userId);
+            logger.info("Received request to getOfferMessages for user: {}", userId);
             if (!authenticatorAdapter.isValid(token)) {
                 Response<Map<Integer, StoreMsg>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
                 return ResponseEntity.status(401).body(response);
@@ -231,7 +231,7 @@ public class UserController {
             }
             return ResponseEntity.status(400).body(response);
         } catch (Exception e) {
-            logger.error("Error in getAuctionEndedMessages: {}", e.getMessage());
+            logger.error("Error in getOfferMessages: {}", e.getMessage());
             Response<Map<Integer, StoreMsg>> response = new Response<>(null, "An error occurred while retrieving auction ended messages", false, ErrorType.INTERNAL_ERROR, null);
             return ResponseEntity.status(500).body(response);
         }

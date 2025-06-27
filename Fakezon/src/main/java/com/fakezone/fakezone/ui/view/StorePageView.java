@@ -123,6 +123,7 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
                     topLayout.add(createManageButton());
                 }
                 topLayout.add(createMsgButton());
+                topLayout.add(createOfferButton());
             }
             // 1) SET UP SEARCH FIELD
             searchField = new TextField();
@@ -607,6 +608,71 @@ public class StorePageView extends VerticalLayout implements AfterNavigationObse
             Notification.show("Message Sent Successfully");
         }
         else{
+            Notification.show(response.getMessage());
+        }
+    }
+
+    private Button createOfferButton(){
+        HttpServletRequest request = (HttpServletRequest) VaadinRequest.getCurrent();
+        HttpSession session = request.getSession(false);
+        UserDTO user = (UserDTO) session.getAttribute("userDTO");
+        String token = (String) session.getAttribute("token");
+        int userId = user.getUserId();
+        Button ofrButton = new Button("Place Offer");
+        ofrButton.addClickListener(e -> ofrDialog(storeId, userId, token));
+        return ofrButton;
+    }
+
+    private void ofrDialog(int storeId, int userId, String token){
+        Dialog dialog = new Dialog();
+        dialog.setWidth("400px");
+
+        ComboBox<StoreProductDTO> productCombo = new ComboBox<>("Select product");
+        productCombo.setItems(allProducts); // set your DTOs
+        productCombo.setItemLabelGenerator(StoreProductDTO::getName);
+        productCombo.setPlaceholder("— choose one —");
+        productCombo.setWidthFull();
+        dialog.add(productCombo);
+        NumberField offerAmountField = new NumberField("Your Offer");
+        dialog.add(offerAmountField);
+        Button send = new Button("Send", e -> {
+            StoreProductDTO selected = productCombo.getValue();
+            Double offer = offerAmountField.getValue();
+            
+            if (selected == null) {
+                productCombo.focus();
+                Notification.show("Please pick a product").setPosition(Notification.Position.MIDDLE);
+                return;
+            }
+            if (offer == null || offer <= 0) {
+                offerAmountField.focus();
+                Notification.show("Please enter a valid offer").setPosition(Notification.Position.MIDDLE);
+                return;
+            }
+            int selectedProductId = selected.getProductId();
+            placeOffer(storeId, userId, selectedProductId, offer, token);
+            dialog.close();
+        });
+        dialog.add(send);
+        dialog.open();
+    }
+    
+    private void placeOffer(int storeId, int userId, int productId, double offer, String token){
+        String url = apiUrl + "store/placeOfferOnStoreProduct/" + storeId + "/" + userId + "/" + productId
+                + "?offerAmount=" + offer;
+        HttpHeaders header = new HttpHeaders();
+        header.add("Authorization", token);
+        HttpEntity<Void> entity = new HttpEntity<>(header);
+        ResponseEntity<Response<Void>> apiResp = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Response<Void>>() {
+                });
+        Response<Void> response = apiResp.getBody();
+        if (response.isSuccess()) {
+            Notification.show("Offer Submitted Successfully");
+        } else {
             Notification.show(response.getMessage());
         }
     }

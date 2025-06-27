@@ -134,7 +134,7 @@ class OrderControllerTest {
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
 
         int userId = 42;
-        OrderDTO orderDTO = new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment");
+        OrderDTO orderDTO = new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment", 0);
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(authenticatorAdapter.getUserId(token)).thenReturn(userId);
@@ -205,7 +205,7 @@ class OrderControllerTest {
     void searchOrders_Success() {
         String keyword = "test";
         String token = "valid-token";
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment"));
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment", 0));
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         int userId = 42;
 
@@ -247,7 +247,7 @@ class OrderControllerTest {
         String token = "valid-token";
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         int userId = 42;
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment"));
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment", 0));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(authenticatorAdapter.getUserId(token)).thenReturn(userId);
@@ -319,7 +319,7 @@ class OrderControllerTest {
         int userId = 1;
         String token = "valid-token";
         int authenticatedUserId = 42;
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment"));
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 1, List.of(), "Pending", "address", "payment", 0));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(authenticatorAdapter.getUserId(token)).thenReturn(authenticatedUserId);

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,7 +34,6 @@ public class StoreOwner_Responding_to_User_Inquiries {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         // Register store owner
@@ -55,6 +55,19 @@ public class StoreOwner_Responding_to_User_Inquiries {
         Response<Void> sendMsgResp = systemService.sendMessageToStore(customerId, storeId, "Is this product vegan?");
         assertTrue(sendMsgResp.isSuccess());
 
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clean up: remove store and delete users
+        Response<String> closeStoreResp = systemService.closeStoreByFounder(storeId, storeOwnerId);
+        assertTrue(closeStoreResp.isSuccess());
+
+        Response<Boolean> deleteCustomerResp = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteCustomerResp.isSuccess());
+
+        Response<Boolean> deleteStoreOwnerResp = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteStoreOwnerResp.isSuccess());
     }
 
     @Test

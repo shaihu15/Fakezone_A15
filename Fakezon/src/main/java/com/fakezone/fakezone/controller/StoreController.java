@@ -835,7 +835,7 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
     }
 
 
-    @PostMapping("/placeOfferOnStoreProduct/{storeId}/{productId}/{userId}")
+    @PostMapping("/placeOfferOnStoreProduct/{storeId}/{userId}/{productId}")
     public ResponseEntity<Response<Void>> placeOfferOnStoreProduct(@PathVariable("storeId") int storeId,
                                                             @PathVariable("userId") int userId,
                                                             @PathVariable("productId") int productId,
@@ -862,5 +862,175 @@ public ResponseEntity<Response<Void>> removeStoreManagerPermissions(@PathVariabl
         }
     }
 
+    @PostMapping("/acceptOfferOnStoreProduct/{storeId}/{ownerId}/{userId}/{productId}")
+    public ResponseEntity<Response<Void>> acceptOfferOnStoreProduct(@PathVariable("storeId") int storeId,
+            @PathVariable("userId") int userId,
+            @PathVariable("productId") int productId,
+            @PathVariable("ownerId") int ownerId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to acceptOfferOnStoreProduct '{}' to store {} by user {} with owner {}",
+                    productId, storeId, userId, ownerId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.acceptOfferOnStoreProduct(storeId, ownerId, userId, productId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
+                    ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    @PostMapping("/declineOfferOnStoreProduct/{storeId}/{ownerId}/{userId}/{productId}")
+    public ResponseEntity<Response<Void>> declineOfferOnStoreProduct(@PathVariable("storeId") int storeId,
+            @PathVariable("userId") int userId,
+            @PathVariable("productId") int productId,
+            @PathVariable("ownerId") int ownerId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to declineOfferOnStoreProduct '{}' to store {} by user {} with owner {}",
+                    productId, storeId, userId, ownerId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.declineOfferOnStoreProduct(storeId, ownerId, userId, productId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
+                    ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    @PostMapping("/counterOffer/{storeId}/{ownerId}/{userId}/{productId}")
+    public ResponseEntity<Response<Void>> counterOffer(@PathVariable("storeId") int storeId,
+            @PathVariable("userId") int userId,
+            @PathVariable("ownerId") int ownerId,
+            @PathVariable("productId") int productId,
+            @RequestParam("offerAmount") double offerAmount,
+            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to counterOffer '{}' to store {} by user {} with amount {}",
+                    productId, storeId, userId, offerAmount);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.counterOffer(storeId, ownerId, userId, productId, offerAmount);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
+                    ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    @PostMapping("/acceptCounterOffer/{storeId}/{userId}/{productId}")
+    public ResponseEntity<Response<Void>> acceptCounterOffer(@PathVariable("storeId") int storeId,
+            @PathVariable("userId") int userId,
+            @PathVariable("productId") int productId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to acceptCounterOffer '{}' to store {} by user {}",
+                    productId, storeId, userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.acceptCounterOffer(storeId, userId, productId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
+                    ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+
+    @PostMapping("/declineCounterOffer/{storeId}/{userId}/{productId}")
+    public ResponseEntity<Response<Void>> declineCounterOffer(@PathVariable("storeId") int storeId,
+            @PathVariable("userId") int userId,
+            @PathVariable("productId") int productId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to declineCounterOffer '{}' to store {} by user {}",
+                    productId, storeId, userId);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<Void> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<Void> response = systemService.declineCounterOffer(storeId, userId, productId);
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in StoreController: {}", e.getMessage());
+            Response<Void> response = new Response<>(null, "An error occurred at the controller level", false,
+                    ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/getAllStores")
+    public ResponseEntity<Response<List<StoreDTO>>> getAllStores(@RequestHeader("Authorization") String token) {
+        try {
+            logger.info("Received request to get all stores with token {}", token);
+            if (!authenticatorAdapter.isValid(token)) {
+                Response<List<StoreDTO>> response = new Response<>(null, "Invalid token", false, ErrorType.UNAUTHORIZED, null);
+                return ResponseEntity.status(401).body(response);
+            }
+            Response<List<StoreDTO>> response = systemService.getAllStores();
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(response);
+            }
+            if (response.getErrorType() == ErrorType.INTERNAL_ERROR) {
+                return ResponseEntity.status(500).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            logger.error("Error in getAllStores: {}", e.getMessage());
+            Response<List<StoreDTO>> response = new Response<>(null, "An error occurred at the controller level", false, ErrorType.INTERNAL_ERROR, null);
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
 }

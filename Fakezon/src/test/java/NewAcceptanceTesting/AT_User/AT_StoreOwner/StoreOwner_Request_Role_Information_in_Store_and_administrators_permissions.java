@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,7 +44,6 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
 
     @BeforeEach
     void setUp() throws InterruptedException{
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         // Initialize the system with a store owner and a product
@@ -82,6 +82,20 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         Response<String> acceptRes = systemService.acceptAssignment(storeId, newManagerID);
         assertTrue(acceptRes.isSuccess(), "Expected manager to successfully accept assignment");
 
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clean up: remove the store manager and close the store
+        Response<Void> removeManagerResponse = systemService.removeStoreManager(storeId, storeOwnerId, newManagerID);
+        assertTrue(removeManagerResponse.isSuccess(), "Expected manager removal to succeed");
+
+        Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, storeOwnerId);
+        assertTrue(closeStoreResponse.isSuccess(), "Expected store closure to succeed");
+
+        // Remove the store owner
+        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteUserResponse.isSuccess(), "Expected user deletion to succeed");
     }
 
 

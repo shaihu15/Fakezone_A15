@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.AbstractMap;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -63,6 +64,14 @@ public class Guest_Login {
             logger.error("Error during test setup", e);
             throw e;
         }
+    }
+
+    @AfterEach
+    void tearDown() {
+        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
+        Response<Boolean> deleteUserResponse = systemService.deleteUser(validEmail);
+                assertTrue(deleteUserResponse.isSuccess(), "User deletion should succeed");
     }
 
     @Test

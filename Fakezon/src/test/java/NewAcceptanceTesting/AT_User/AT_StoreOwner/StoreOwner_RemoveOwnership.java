@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +40,6 @@ public class StoreOwner_RemoveOwnership {
 
     @BeforeEach
     void setUp() {
-        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         // User1 creates a store
@@ -102,6 +103,35 @@ public class StoreOwner_RemoveOwnership {
         Response<UserDTO> otherUserRes = testHelper.register_and_login4();
         assertTrue(otherUserRes.isSuccess());
         otherRegisteredUserId = otherUserRes.getData().getUserId();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clean up: remove all owners and close the store
+        Response<Void> removeOwner2Res = systemService.removeStoreOwner(storeId, ManagerUserId, OwnerUserId2);
+        assertTrue(removeOwner2Res.isSuccess(), "Failed to remove OwnerUserId2");
+
+        Response<Void> removeManagerRes = systemService.removeStoreOwner(storeId, OwnerUserId, ManagerUserId);
+        assertTrue(removeManagerRes.isSuccess(), "Failed to remove ManagerUserId");
+
+        Response<Void> removeOwner1Res = systemService.removeStoreOwner(storeId, OwnerUserId, OwnerUserId);
+        assertTrue(removeOwner1Res.isSuccess(), "Failed to remove OwnerUserId");
+
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
+        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
+
+        // Remove test users
+        Response<Boolean> deleteResponse1 = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteResponse1.isSuccess(), "Failed to delete OwnerUserId");
+
+        Response<Boolean> deleteResponse2 = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteResponse2.isSuccess(), "Failed to delete ManagerUserId");
+
+        Response<Boolean> deleteResponse3 = systemService.deleteUser(testHelper.validEmail3());
+        assertTrue(deleteResponse3.isSuccess(), "Failed to delete OwnerUserId2");
+
+        Response<Boolean> deleteOtherResponse = systemService.deleteUser(testHelper.validEmail4());
+        assertTrue(deleteOtherResponse.isSuccess(), "Failed to delete other registered user");
     }
 
     @Test
