@@ -49,6 +49,9 @@ public class Offer {
     
     @Column(name = "is_handled", nullable = false)
     private boolean isHandled = false;
+    
+    @Column(name = "offer_type", nullable = false)
+    private String offerType = "REGULAR"; // "REGULAR" or "PENDING"
 
     // Default constructor for JPA
     public Offer() {
@@ -186,5 +189,13 @@ public class Offer {
     
     public void setHandled(boolean isHandled) {
         this.isHandled = isHandled;
+    }
+    
+    public String getOfferType() {
+        return offerType;
+    }
+    
+    public void setOfferType(String offerType) {
+        this.offerType = offerType;
     }
 }

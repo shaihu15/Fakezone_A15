@@ -156,13 +156,10 @@ public class Store implements IStore {
     
     @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id")
-    private List<Offer> allOffers = new ArrayList<>(); // All offers for this store
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pending_store_id")
-    private List<Offer> allPendingOffers = new ArrayList<>(); // All pending counter offers for this store
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private List<Offer> allOffers = new ArrayList<>(); // All offers for this store (both regular and pending)
     
     @Transient
     private Map<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited (derived from allOffers) 
@@ -214,11 +211,11 @@ public class Store implements IStore {
         }
         this.messagesFromUsers = new ArrayList<>();
         this.allOffers = new ArrayList<>();
-        this.allPendingOffers = new ArrayList<>();
         rebuildOffersOnProductsMap();
         rebuildPendingOffersMap();
     }
 
+    @PostLoad
     private void initializeTransientFields() {
         this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
@@ -242,24 +239,36 @@ public class Store implements IStore {
         }
     }
     
-    // Rebuild the offersOnProducts map from the persistent allOffers list
+    // Rebuild the offersOnProducts map from the persistent allOffers list (filtered by REGULAR type and not handled)
     private void rebuildOffersOnProductsMap() {
-        this.offersOnProducts = new HashMap<>();
+        if (this.offersOnProducts == null) {
+            this.offersOnProducts = new HashMap<>();
+        } else {
+            this.offersOnProducts.clear();
+        }
         if (allOffers != null) {
             for (Offer offer : allOffers) {
-                int userId = offer.getUserId();
-                offersOnProducts.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+                if ("REGULAR".equals(offer.getOfferType()) && !offer.isHandled()) {
+                    int userId = offer.getUserId();
+                    offersOnProducts.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+                }
             }
         }
     }
     
-    // Rebuild the pendingOffers map from the persistent allPendingOffers list
+    // Rebuild the pendingOffers map from the persistent allOffers list (filtered by PENDING type and not handled)
     private void rebuildPendingOffersMap() {
-        this.pendingOffers = new HashMap<>();
-        if (allPendingOffers != null) {
-            for (Offer offer : allPendingOffers) {
-                int userId = offer.getUserId();
-                pendingOffers.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+        if (this.pendingOffers == null) {
+            this.pendingOffers = new HashMap<>();
+        } else {
+            this.pendingOffers.clear();
+        }
+        if (allOffers != null) {
+            for (Offer offer : allOffers) {
+                if ("PENDING".equals(offer.getOfferType()) && !offer.isHandled()) {
+                    int userId = offer.getUserId();
+                    pendingOffers.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+                }
             }
         }
     }
@@ -1660,20 +1669,26 @@ public class Store implements IStore {
             if(offerAmount < 1){
                 throw new IllegalArgumentException("Offer must be at least $1");
             }
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
             List<Offer> userOffers = offersOnProducts.get(userId);
             if (userOffers == null){
                 userOffers = new ArrayList<>();
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer != null){
                 throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }
-            offer = getUserPendingOfferOnStoreProduct(userId, productId);
+            offer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
             if(offer != null){
                 throw new IllegalArgumentException("User already has pending counter offer on the same product");
             }
 
             Offer newOffer = new Offer(userId, this.storeID, productId, offerAmount, new ArrayList<>(this.storeOwners));
+            newOffer.setOfferType("REGULAR");
             userOffers.add(newOffer);
             offersOnProducts.put(userId, userOffers);
             allOffers.add(newOffer); // Also add to persistent list
@@ -1694,7 +1709,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("Only Store Owners can Accept Offers");
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1705,7 +1720,7 @@ public class Store implements IStore {
             }
         }
         finally{
-            rolesLock.lock();
+            rolesLock.unlock();
             offersLock.unlock();
             productsLock.unlock();
         }
@@ -1720,7 +1735,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("Only Store Owners can Decline Offers");
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1728,7 +1743,7 @@ public class Store implements IStore {
             handleOfferDone(offer);
         }
         finally{
-            rolesLock.lock();
+            rolesLock.unlock();
             offersLock.unlock();
             productsLock.unlock();
         }
@@ -1737,23 +1752,38 @@ public class Store implements IStore {
     private Offer getUserOfferOnStoreProduct(int userId, int productId){
         offersLock.lock();
         try{
-            if(offersOnProducts.containsKey(userId)){
-                for(Offer offer : offersOnProducts.get(userId)){
-                    if(offer.getProductId() == productId){
-                        return offer;
-                    }
-                }
-            }
-            return null;
+            return getUserOfferOnStoreProductUnsafe(userId, productId);
         }
         finally{
             offersLock.unlock();
         }
     }
+    
+    // Internal method that doesn't acquire locks - caller must hold offersLock
+    private Offer getUserOfferOnStoreProductUnsafe(int userId, int productId){
+        // Defensive check: if offersOnProducts is null or seems out of sync, rebuild it
+        if(offersOnProducts == null || (allOffers != null && allOffers.stream().anyMatch(o -> "REGULAR".equals(o.getOfferType()) && !o.isHandled()) && offersOnProducts.isEmpty())){
+            rebuildOffersOnProductsMap();
+        }
+        
+        if(offersOnProducts.containsKey(userId)){
+            for(Offer offer : offersOnProducts.get(userId)){
+                if(offer.getProductId() == productId){
+                    return offer;
+                }
+            }
+        }
+        return null;
+    }
 
     private void removeOwnerFromAllOffers(int ownerId){
         offersLock.lock();
         try{
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
             for(List<Offer> offersList : offersOnProducts.values()){
                 for(Offer offer : offersList){
                     offer.removeOwner(ownerId);
@@ -1778,8 +1808,15 @@ public class Store implements IStore {
             else{
                 if(offer.isDeclined() && !offer.isHandled()){
                     this.publisher.publishEvent(new OfferDeclinedEvent(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount(), offer.getDeclinedBy()));
-                    removeOffer(offer);
                     offer.setHandled();
+                    // Remove only from transient maps, not persistent collection
+                    List<Offer> offers = offersOnProducts.get(offer.getUserId());
+                    if(offers != null){
+                        offers.remove(offer);
+                        if(offers.isEmpty()){
+                            offersOnProducts.remove(offer.getUserId());
+                        }
+                    }
                 }
             }
         }
@@ -1791,6 +1828,11 @@ public class Store implements IStore {
     private void removeOffer(Offer offer){
         offersLock.lock();
         try{
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
             List<Offer> offers = offersOnProducts.get(offer.getUserId());
             if(offers != null){
                 offers.remove(offer);
@@ -1807,71 +1849,137 @@ public class Store implements IStore {
 
     @Override
     public void counterOffer(int ownerId, int userId, int productId, double offerAmount){
+        productsLock.lock();
         offersLock.lock();
         rolesLock.lock();
         try{
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("User " + ownerId + " is not a valid Store Owner in store " + storeID);
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
             if(offerAmount < 1){
                 throw new IllegalArgumentException("Counter offer must be more than $1");
             }
-            offer = getUserPendingOfferOnStoreProduct(userId, productId);
-            if(offer != null){
+            Offer pendingOffer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
+            if(pendingOffer != null){
                 throw new IllegalArgumentException("User already has a counter offer pending");
             }
-            declineOfferOnStoreProduct(ownerId, userId, productId); // handles the decline too (msgs & all)
+            
+            // Decline the original offer silently (no events for counter offers)
+            offer.decline(ownerId);
+            offer.setHandled(); // Mark as handled to prevent event publishing
+            // Don't remove from persistent collection - just remove from transient maps
+            List<Offer> offers = offersOnProducts.get(offer.getUserId());
+            if(offers != null){
+                offers.remove(offer);
+                if(offers.isEmpty()){
+                    offersOnProducts.remove(offer.getUserId());
+                }
+            }
+            
+            // Create the counter offer
             Offer counterOffer = new Offer(userId, storeID, productId, offerAmount, List.copyOf(storeOwners));
+            counterOffer.setOfferType("PENDING");
+        
+            // Ensure pendingOffers map is initialized
+            if(pendingOffers == null){
+                rebuildPendingOffersMap();
+            }
+        
             List<Offer> pendingUserOffers = pendingOffers.get(userId);
             if(pendingUserOffers == null){
                 pendingUserOffers = new ArrayList<>();
             }
             pendingUserOffers.add(counterOffer);
             pendingOffers.put(userId, pendingUserOffers);
-            allPendingOffers.add(counterOffer); // Also add to persistent list
+            allOffers.add(counterOffer); // Also add to persistent list
             this.publisher.publishEvent(new CounterOfferEvent(storeID, productId, userId, offerAmount));
         }
         finally{
             rolesLock.unlock();
             offersLock.unlock();
+            productsLock.unlock();
         }
-
     }
 
     private Offer getUserPendingOfferOnStoreProduct(int userId, int productId){
         offersLock.lock();
         try{
-            if(pendingOffers.containsKey(userId)){
-                for(Offer offer : pendingOffers.get(userId)){
-                    if(offer.getProductId() == productId){
-                        return offer;
-                    }
-                }
-            }
-            return null;
+            return getUserPendingOfferOnStoreProductUnsafe(userId, productId);
         }
         finally{
             offersLock.unlock();
         }
     }
+    
+    // Internal method that doesn't acquire locks - caller must hold offersLock
+    private Offer getUserPendingOfferOnStoreProductUnsafe(int userId, int productId){
+        // Defensive check: if pendingOffers is null or seems out of sync, rebuild it
+        if(pendingOffers == null || (allOffers != null && allOffers.stream().anyMatch(o -> "PENDING".equals(o.getOfferType()) && !o.isHandled()) && pendingOffers.isEmpty())){
+            rebuildPendingOffersMap();
+        }
+        
+        if(pendingOffers.containsKey(userId)){
+            for(Offer offer : pendingOffers.get(userId)){
+                if(offer.getProductId() == productId){
+                    return offer;
+                }
+            }
+        }
+        return null;
+    }
 
     @Override
     public void acceptCounterOffer(int userId, int productId){
+        productsLock.lock();
         offersLock.lock();
         try{
-            Offer pendingOffer = getUserPendingOfferOnStoreProduct(userId, productId);
+            Offer pendingOffer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
             if(pendingOffer == null){
                 throw new IllegalArgumentException("User has no Pending Counter Offers");
             }
+            
+            // Validate product exists and is in stock
+            if(!storeProducts.containsKey(new StoreProductKey(storeID, productId))){
+                throw new IllegalArgumentException("Store Product " + productId + " Does Not Exist in Store " + storeID);
+            }
+            if(storeProducts.get(new StoreProductKey(storeID, productId)).getQuantity() < 1){
+                throw new IllegalArgumentException("Product " + productId + " is out of stock");
+            }
+            
+            // Remove the pending offer
             removePendingOffer(pendingOffer);
-            placeOfferOnStoreProduct(userId, productId, pendingOffer.getOfferAmount());
+            
+            // Place the new offer inline to avoid nested locking
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
+            List<Offer> userOffers = offersOnProducts.get(userId);
+            if (userOffers == null){
+                userOffers = new ArrayList<>();
+            }
+            
+            // Check if user already has an offer on this product
+            Offer existingOffer = getUserOfferOnStoreProductUnsafe(userId, productId);
+            if(existingOffer != null){
+                throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
+            }
+            
+            Offer newOffer = new Offer(userId, this.storeID, productId, pendingOffer.getOfferAmount(), new ArrayList<>(this.storeOwners));
+            newOffer.setOfferType("REGULAR");
+            userOffers.add(newOffer);
+            offersOnProducts.put(userId, userOffers);
+            allOffers.add(newOffer); // Also add to persistent list
+            this.publisher.publishEvent(new OfferReceivedEvent(this.storeID, productId, userId, pendingOffer.getOfferAmount()));
         }
         finally{
             offersLock.unlock();
+            productsLock.unlock();
         }
     }
 
@@ -1879,7 +1987,7 @@ public class Store implements IStore {
     public void declineCounterOffer(int userId, int productId){
         offersLock.lock();
         try{
-            Offer pendingOffer = getUserPendingOfferOnStoreProduct(userId, productId);
+            Offer pendingOffer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
             if(pendingOffer == null){
                 throw new IllegalArgumentException("User has no Pending Counter Offers");
             }
@@ -1894,6 +2002,11 @@ public class Store implements IStore {
     private void removePendingOffer(Offer offer){
         offersLock.lock();
         try{
+            // Ensure pendingOffers map is initialized
+            if(pendingOffers == null){
+                rebuildPendingOffersMap();
+            }
+            
             List<Offer> offers = pendingOffers.get(offer.getUserId());
             if(offers != null){
                 offers.remove(offer);
@@ -1901,7 +2014,8 @@ public class Store implements IStore {
             if(offers == null || offers.isEmpty()){
                 pendingOffers.remove(offer.getUserId());
             }
-            allPendingOffers.remove(offer); // Also remove from persistent list
+            // Don't remove from persistent collection - just mark as handled
+            offer.setHandled();
         }
         finally{
             offersLock.unlock();
@@ -1909,6 +2023,11 @@ public class Store implements IStore {
     }
 
     public List<Offer> getUserOffers(int userId){
+        // Ensure offersOnProducts map is initialized
+        if(offersOnProducts == null){
+            rebuildOffersOnProductsMap();
+        }
+        
         List<Offer> offers = offersOnProducts.get(userId);
         if(offers == null){
             return new ArrayList<>();
@@ -1924,16 +2043,7 @@ public class Store implements IStore {
     public void setAllOffers(List<Offer> allOffers) {
         this.allOffers = allOffers;
         rebuildOffersOnProductsMap(); // Rebuild the transient map when setting persistent list
-    }
-    
-    // Getter for persistent pending offers list
-    public List<Offer> getAllPendingOffers() {
-        return allPendingOffers;
-    }
-    
-    public void setAllPendingOffers(List<Offer> allPendingOffers) {
-        this.allPendingOffers = allPendingOffers;
-        rebuildPendingOffersMap(); // Rebuild the transient map when setting persistent list
+        rebuildPendingOffersMap(); // Also rebuild pending offers map
     }
     
     public void setPublisher(ApplicationEventPublisher publisher) {
