@@ -85,8 +85,10 @@ public class Store implements IStore {
     @Transient
     private HashMap<Integer, PurchasePolicy> purchasePolicies; // HASH policyID to purchase policy
     
-    @Transient
-    private HashMap<Integer, IDiscountPolicy> discountPolicies; // HASH policyID to discount policy
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "store_id")
+    @MapKeyColumn(name = "policy_id")
+    private Map<Integer, BaseDiscountPolicy> discountPolicies; // HASH policyID to discount policy
     
     //@ElementCollection
     @ElementCollection(fetch = FetchType.LAZY)
@@ -219,7 +221,6 @@ public class Store implements IStore {
     private void initializeTransientFields() {
         this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
-        this.discountPolicies = new HashMap<>();
         this.storeManagers = new HashMap<>();
         this.messagesFromUsers = new ArrayList<>();
         // Ensure pendingManagers and pendingManagersPerms are initialized (they're now persistent but may be null on first load)
@@ -229,6 +230,13 @@ public class Store implements IStore {
         if (this.pendingManagersPerms == null) {
             this.pendingManagersPerms = new HashMap<>();
         }
+        // Ensure discountPolicies is initialized if null
+        if (this.discountPolicies == null) {
+            this.discountPolicies = new HashMap<>();
+        }
+        // Update transient storeProducts reference in discount scopes
+        updateDiscountScopesStoreProducts();
+        
         rebuildOffersOnProductsMap(); // Build from persistent allOffers
         rebuildPendingOffersMap(); // Build from persistent allPendingOffers
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -236,6 +244,20 @@ public class Store implements IStore {
         // rolesTree is now persistent and handled by JPA
         if (rolesTree == null && storeFounderID != 0) {
             this.rolesTree = new Tree(storeFounderID);
+        }
+    }
+    
+    // Update storeProducts reference in discount scopes after loading from DB
+    private void updateDiscountScopesStoreProducts() {
+        if (discountPolicies != null && storeProducts != null) {
+            for (BaseDiscountPolicy policy : discountPolicies.values()) {
+                BaseDiscountScope scope = (BaseDiscountScope) policy.getScope();
+                if (scope instanceof ProductsDiscountScope) {
+                    ((ProductsDiscountScope) scope).setStoreProducts(storeProducts);
+                } else if (scope instanceof StoreDiscountScope) {
+                    ((StoreDiscountScope) scope).setStoreProducts(storeProducts);
+                }
+            }
         }
     }
     
@@ -464,12 +486,9 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new SimpleDiscount(policyIDCounter.incrementAndGet(), percentage,
+                BaseDiscountPolicy discountPolicy = new SimpleDiscount(0, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
-            } else {
-                throw new IllegalArgumentException(
-                        "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
             }
         }
         finally{
@@ -483,7 +502,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new SimpleDiscount(policyIDCounter.incrementAndGet(), percentage,
+                BaseDiscountPolicy discountPolicy = new SimpleDiscount(0, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -499,7 +518,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -515,7 +534,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -531,7 +550,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -547,7 +566,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -563,7 +582,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new OrDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new OrDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -579,7 +598,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new OrDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new OrDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -595,7 +614,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new XorDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new XorDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -611,7 +630,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new XorDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new XorDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -858,7 +877,7 @@ public class Store implements IStore {
 
     @Override
     public HashMap<Integer, IDiscountPolicy> getDiscountPolicies() {
-        return discountPolicies;
+        return new HashMap<>(discountPolicies);
     }
 
     @Override

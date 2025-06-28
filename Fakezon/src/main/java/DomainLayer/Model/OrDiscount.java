@@ -2,21 +2,31 @@ package DomainLayer.Model;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import DomainLayer.Interfaces.IDiscountPolicy;
 import DomainLayer.Interfaces.IDiscountScope;
+import jakarta.persistence.*;
 
-public class OrDiscount implements IDiscountPolicy {
-    private int policyID;
+@Entity
+@DiscriminatorValue("OR")
+public class OrDiscount extends BaseDiscountPolicy {
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "discount_policy_id")
+    private List<DiscountConditionEntity> conditionEntities;
+    
+    @Transient
     private List<Predicate<Cart>> conditions;
-    private double percentage;
-    private IDiscountScope scope;
+    
+    // Default constructor for JPA
+    protected OrDiscount() {
+        super();
+    }
 
     public OrDiscount(int policyID, List<Predicate<Cart>> conditions, double percentage, IDiscountScope scope) {
-        this.policyID = policyID;
+        super(policyID, percentage, scope);
         this.conditions = conditions;
-        this.percentage = percentage;
-        this.scope = scope;
     }
 
     @Override
@@ -24,16 +34,29 @@ public class OrDiscount implements IDiscountPolicy {
         if (!isApplicable(cart)) {
             return 0;
         }
-        return scope.getEligibleAmount(cart) * percentage / 100;
+        return getScope().getEligibleAmount(cart) * getPercentage() / 100;
     }
 
     @Override
     public boolean isApplicable(Cart cart) {
-        return conditions.stream().anyMatch(condition -> condition.test(cart));
+        if (conditions != null) {
+            return conditions.stream().anyMatch(condition -> condition.test(cart));
+        } else if (conditionEntities != null) {
+            // Reconstruct conditions from entities
+            conditions = conditionEntities.stream()
+                .map(DiscountConditionEntity::toPredicate)
+                .collect(Collectors.toList());
+            return conditions.stream().anyMatch(condition -> condition.test(cart));
+        }
+        return false;
     }
-
-    @Override
-    public int getPolicyID() {
-        return policyID;
+    
+    public void setConditionEntities(List<DiscountConditionEntity> conditionEntities) {
+        this.conditionEntities = conditionEntities;
+        this.conditions = null;
+    }
+    
+    public List<DiscountConditionEntity> getConditionEntities() {
+        return conditionEntities;
     }
 } 

@@ -1,28 +1,36 @@
 package DomainLayer.Model;
 
 import DomainLayer.Interfaces.IDiscountScope;
+import jakarta.persistence.*;
 
 import java.util.List;
 import java.util.Map;
 
-public class ProductsDiscountScope implements IDiscountScope {
+@Entity
+@DiscriminatorValue("PRODUCTS")
+public class ProductsDiscountScope extends BaseDiscountScope {
+    
+    @ElementCollection
+    @CollectionTable(name = "discount_scope_products", joinColumns = @JoinColumn(name = "scope_id"))
+    @Column(name = "product_id")
     private List<Integer> productIds;
-    private int storeId;
+    
+    @Transient
     private Map<StoreProductKey, StoreProduct> storeProducts;
     
+    // Default constructor for JPA
+    protected ProductsDiscountScope() {
+        super();
+    }
+    
     public ProductsDiscountScope(List<Integer> productIds, int storeId, Map<StoreProductKey, StoreProduct> storeProducts) {
+        super(storeId);
         this.productIds = productIds;
-        this.storeId = storeId;
         this.storeProducts = storeProducts;
     }
 
-
     public List<Integer> getProductIds() {
         return productIds;
-    }
-
-    public int getStoreId() {
-        return storeId;
     }
 
     @Override
@@ -34,18 +42,22 @@ public class ProductsDiscountScope implements IDiscountScope {
             Map<Integer, Integer> products = entry.getValue();
             
             // Check if this is the correct store
-            if (currentStoreId == storeId) {
+            if (currentStoreId == getStoreId()) {
                 for (Map.Entry<Integer, Integer> product : products.entrySet()) {
                     int productId = product.getKey();
                     int quantity = product.getValue();
                     
                     // Check if this product is in the eligible products list
                     if (productIds.contains(productId)) {
-                        eligibleAmount += quantity * storeProducts.get(new StoreProductKey(storeId, productId)).getBasePrice();
+                        eligibleAmount += quantity * storeProducts.get(new StoreProductKey(getStoreId(), productId)).getBasePrice();
                     }
                 }
             }
         }
         return eligibleAmount;
+    }
+    
+    public void setStoreProducts(Map<StoreProductKey, StoreProduct> storeProducts) {
+        this.storeProducts = storeProducts;
     }
 }
