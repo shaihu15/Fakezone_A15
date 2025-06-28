@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -53,6 +54,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
         // Customer sends inquiry
         Response<Void> sendMsgResp = systemService.sendMessageToStore(customerId, storeId, "Is this product vegan?");
         assertTrue(sendMsgResp.isSuccess());
+
     }
 
     @AfterEach
@@ -69,7 +71,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
     }
 
     @Test
-    void testRespondingtoUserInquiries_Success() {
+    void testRespondingtoUserInquiries_Success() throws InterruptedException {
         // Store owner sends reply to customer
         String replyMessage = "Yes, the product is 100% vegan.";
         Response<Void> replyResp = systemService.sendMessageToUser(storeOwnerId, storeId, customerId, replyMessage);
@@ -77,6 +79,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
         assertTrue(replyResp.isSuccess());
         assertEquals("Message sent successfully", replyResp.getMessage());
 
+        TimeUnit.SECONDS.sleep(2); // Small buffer
         // Simulate customer checking messages
         Response<Map<Integer, StoreMsg>> inboxResp = systemService.getAllMessages(customerId);
         assertTrue(inboxResp.isSuccess());

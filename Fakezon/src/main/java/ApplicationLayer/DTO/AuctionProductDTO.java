@@ -47,14 +47,13 @@ public class AuctionProductDTO {
     }
 
     public AuctionProductDTO(AuctionProduct auctionProduct) {
-        this.productId = auctionProduct.getSproductID();
-        this.name = auctionProduct.getName();
-        this.basePrice = auctionProduct.getBasePrice();
+        this.productId = auctionProduct.getStoreProduct().getSproductID(); // Use the original StoreProduct ID for matching
+        this.name = auctionProduct.getStoreProduct().getName();
+        this.basePrice = auctionProduct.getStoreProduct().getBasePrice();
         this.currentHighestBid = auctionProduct.getCurrentHighestBid();
-        this.averageRating = auctionProduct.getAverageRating(); // Assuming getAverageRating() returns a double
-        this.category = auctionProduct.getCategory();
+        this.averageRating = auctionProduct.getStoreProduct().getAverageRating(); // Assuming getAverageRating() returns a double
+        this.category = auctionProduct.getStoreProduct().getCategory();
         this.isDone = auctionProduct.isDone();
-
     }
 
     public int getProductId() {

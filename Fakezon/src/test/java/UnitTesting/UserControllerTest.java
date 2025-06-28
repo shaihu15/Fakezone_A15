@@ -327,7 +327,7 @@ class UserControllerTest {
         String token = "validToken";
         int userId = 1;
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Message 1", null));
+        messages.put(1, new StoreMsg(1, -1, "Message 1", null,userId));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAllMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
@@ -393,13 +393,45 @@ class UserControllerTest {
         verify(systemService, never()).sendMessageToStore(anyInt(), anyInt(), anyString());
     }
 
+    @Test
+    void testGetOfferMessages_Success() {
+        String token = "validToken";
+        int userId = 1;
+        Map<Integer, StoreMsg> messages = new HashMap<>();
+        messages.put(1, new StoreMsg(1, -1, "Auction ended message", null, userId));
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(true);
+        when(systemService.getUserOfferMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getOfferMessages(token, userId);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Messages retrieved successfully", response.getBody().getMessage());
+        verify(systemService, times(1)).getUserOfferMessages(userId);
+    }
+
+    @Test
+    void testGetOfferMessages_InvalidToken() {
+        String token = "invalidToken";
+        int userId = 1;
+
+        when(authenticatorAdapter.isValid(token)).thenReturn(false);
+
+        ResponseEntity<Response<Map<Integer, StoreMsg>>> response = userController.getOfferMessages(token, userId);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Invalid token", response.getBody().getMessage());
+        verify(systemService, never()).getUserOfferMessages(anyInt());
+    }
 
     @Test
     void testGetAssignmentMessages_Success() {
         String token = "validToken";
         int userId = 1;
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Assignment message", null));
+        messages.put(1, new StoreMsg(1, -1, "Assignment message", null,userId));
 
         when(authenticatorAdapter.isValid(token)).thenReturn(true);
         when(systemService.getAssignmentMessages(userId)).thenReturn(new Response<>(messages, "Messages retrieved successfully", true, null, null));

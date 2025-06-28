@@ -6,12 +6,18 @@ import DomainLayer.Model.Basket;
 import DomainLayer.Model.StoreProduct;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import DomainLayer.Interfaces.IOrder;
 import InfrastructureLayer.Repositories.OrderRepository;
+import InfrastructureLayer.Repositories.OrderJpaRepository;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Enums.OrderState;
@@ -25,9 +31,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Collection;
 
+import com.fakezone.fakezone.FakezoneApplication;
 
+@SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class OrderRepositoryTest {
+    @Autowired
     private OrderRepository repository;
+    
+    @Autowired
+    private OrderJpaRepository orderJpaRepository;
+    
     private IOrder order1;
     private IOrder order2;
     private int storeId;
@@ -36,7 +50,9 @@ public class OrderRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository = new OrderRepository(new HashMap<>());
+        // Clear the database before each test
+        orderJpaRepository.deleteAll();
+        
         storeId = 1;
         // Create mock StoreProductDTO objects with all required fields
         StoreProductDTO product1 = new StoreProductDTO(1, "Product1", 10.0, 5, 4.5, storeId,PCategory.ELECTRONICS);
@@ -52,58 +68,72 @@ public class OrderRepositoryTest {
         List<OrderedProduct> orderedProducts2 = products2.stream().map(product -> new OrderedProduct(product, product.getQuantity())).collect(Collectors.toList());
         double totalPrice1 = products1.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
         double totalPrice2 = products2.stream().mapToDouble(product -> product.getBasePrice() * product.getQuantity()).sum();
-        order1 = new Order(1, user1Id, storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1, 111, 222);
-        order2 = new Order(2, user2Id, storeId, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2, 333, 444);
+        // Remove hard-coded IDs to let JPA auto-generate them
+        order1 = new Order(user1Id, storeId, OrderState.PENDING, orderedProducts1, "123 Main St", PaymentMethod.CREDIT_CARD, totalPrice1, 111, 222);
+        order2 = new Order(user2Id, storeId, OrderState.SHIPPED, orderedProducts2, "456 Elm St", PaymentMethod.CASH_ON_DELIVERY, totalPrice2, 333, 444);
     }
     @Test
+    @Transactional
     void givenValidOrder_WhenAddOrder_ThenOrderIsAdded() {
         repository.addOrder(order1);
-        assertEquals(order1, repository.getOrder(1));
+        int generatedId = order1.getId();
+        assertEquals(order1, repository.getOrder(generatedId));
     }
 
     @Test
+    @Transactional
     void givenDuplicateOrder_WhenAddOrder_ThenThrowsException() {
         repository.addOrder(order1);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        int generatedId = order1.getId();
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
             repository.addOrder(order1);
         });
-        assertEquals("Order with ID 1 already exists.", exception.getMessage());
+        assertEquals("Order with ID " + generatedId + " already exists.", exception.getMessage());
     }
 
     @Test
+    @Transactional
     void givenExistingOrder_WhenDeleteOrder_ThenOrderIsDeleted() {
         repository.addOrder(order1);
-        repository.deleteOrder(1);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.getOrder(1);
+        int generatedId = order1.getId();
+        repository.deleteOrder(generatedId);
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
+            repository.getOrder(generatedId);
         });
-        assertEquals("Order with ID 1 does not exist.", exception.getMessage());
+        assertEquals("Order with ID " + generatedId + " does not exist.", exception.getMessage());
     }
 
     @Test
+    @Transactional
     void givenNonExistingOrder_WhenDeleteOrder_ThenThrowsException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.deleteOrder(1);
+        int nonExistentId = 999;
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
+            repository.deleteOrder(nonExistentId);
         });
-        assertEquals("Order with ID 1 does not exist.", exception.getMessage());
+        assertEquals("Order with ID " + nonExistentId + " does not exist.", exception.getMessage());
     }
 
     @Test
+    @Transactional
     void givenExistingOrder_WhenGetOrder_ThenReturnsOrder() {
         repository.addOrder(order1);
-        IOrder retrievedOrder = repository.getOrder(1);
+        int generatedId = order1.getId();
+        IOrder retrievedOrder = repository.getOrder(generatedId);
         assertEquals(order1, retrievedOrder);
     }
 
     @Test
+    @Transactional
     void givenNonExistingOrder_WhenGetOrder_ThenThrowsException() {
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            repository.getOrder(1);
+        int nonExistentId = 999;
+        Exception exception = assertThrows(InvalidDataAccessApiUsageException.class, () -> {
+            repository.getOrder(nonExistentId);
         });
-        assertEquals("Order with ID 1 does not exist.", exception.getMessage());
+        assertEquals("Order with ID " + nonExistentId + " does not exist.", exception.getMessage());
     }
 
     @Test
+    @Transactional
     void givenNonExistingOrders_WhenGetOrderByUser_ThenReturnsOrders() {
         repository.addOrder(order1);
         repository.addOrder(order2);
@@ -113,6 +143,7 @@ public class OrderRepositoryTest {
     }
 
     @Test
+    @Transactional
     void givenNoOrders_WhenGetOrderByUser_ThenReturnsEmptyList() {
         Collection<IOrder> userOrders = repository.getOrdersByUserId(user1Id);
         assertTrue(userOrders.isEmpty());

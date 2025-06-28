@@ -50,7 +50,8 @@ public class purchase_auction_product {
     private int buyer2Id;
     private int regularProductId; // To be used for auction setup
 
-    @BeforeEach
+    //@BeforeEach
+    @Test
     void setUp() {
 
         testHelper = new TestHelper(systemService);

@@ -9,37 +9,50 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.StoreService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Product;
+import jakarta.transaction.Transactional;
+
+
 
 @Repository
+@Primary
+//@Transactional
 public class ProductRepository implements IProductRepository {
-    private static final Logger logger = LoggerFactory.getLogger(ProductRepository.class);
-    private final HashMap<Integer, IProduct> products;
+    
+    private ProductJpaRepository productJpaRepository;
 
-    public ProductRepository( HashMap<Integer, IProduct> products) {
-        this.products = products;
+    private static final Logger logger = LoggerFactory.getLogger(ProductRepository.class);
+    //private final HashMap<Integer, IProduct> products;
+    @Autowired
+    public ProductRepository(ProductJpaRepository productJpaRepository) {
+        this.productJpaRepository = productJpaRepository;
     }
 
     public ProductRepository() {
-        this.products =  new HashMap<>();
-
-        //FOR UI PUT IN COMMENT IF NOT NEEDED!
-        //init();
+        throw new UnsupportedOperationException("ProductRepository requires productJpaRepository. Use @SpringBootTest for integration tests.");
     }
 
     @Override
-    public void addProduct(IProduct product) {
-        products.put(product.getId(), product);
+    public Product addProduct(IProduct product) {
+        if (product instanceof Product) {
+            return productJpaRepository.save((Product) product);
+        } else {
+            throw new IllegalArgumentException("Product must be an instance of Product class");
+        }
     }
 
     @Override
     public void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds) {
-        IProduct currentProduct = products.get(productId);
+        Product currentProduct = productJpaRepository.findById(productId)
+        .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
+
         if(currentProduct == null){
             throw new IllegalArgumentException("Product not found in the repository.");
         }
@@ -59,22 +72,20 @@ public class ProductRepository implements IProductRepository {
                 }
             }
         }
-
-        products.put(productId, currentProduct);
+        productJpaRepository.save(currentProduct);
     }
 
     @Override
     public void deleteProduct(int productId) {
-        IProduct currentProduct = products.get(productId);
-        if(currentProduct == null){
+        if(!productJpaRepository.existsById(productId)){
             throw new IllegalArgumentException("Product not found in the repository.");
         }
-        products.remove(productId);    
+        productJpaRepository.deleteById(productId);    
     }
 
     @Override
     public IProduct getProductById(int productId) {
-        IProduct currentProduct = products.get(productId);
+        IProduct currentProduct = productJpaRepository.findById(productId).orElse(null);
         if(currentProduct == null){
             throw new IllegalArgumentException("Product not found in the repository.");
         }
@@ -83,49 +94,42 @@ public class ProductRepository implements IProductRepository {
 
     @Override
     public Collection<IProduct> getAllProducts() {
-        return products.values();    
+        return productJpaRepository.findAll().stream()
+                .map(product -> (IProduct) product)
+                .collect(Collectors.toList());
     }
     
     @Override
     public Collection<IProduct> searchProducts(String keyword){
-        Collection<IProduct> result = new ArrayList<>();
-        for(IProduct product : products.values()){
-            if(product.getName().toLowerCase().contains(keyword.toLowerCase()) || 
-               product.getDescription().toLowerCase().contains(keyword.toLowerCase())){
-                result.add(product);
-            }
-        }
-        return result;
+        return productJpaRepository.searchByKeyword(keyword).stream()
+        .map(product -> (IProduct) product)
+        .toList();
     }
 
     @Override
     public Collection<IProduct> getProductsByCategory(PCategory category) {
-        Collection<IProduct> result = new ArrayList<>();
-        for(IProduct product : products.values()){
-            if(product.getCategory() == category){
-                result.add(product);
-            }
-        }
-        return result;
+        return productJpaRepository.findByCategory(category).stream()
+        .map(product -> (IProduct) product)
+        .toList();
     } 
 
 
     @Override
     public Collection<IProduct> searchProductsByName(String name) {
-        return products.values().stream()
-                .filter(product -> product.getName().toLowerCase().contains(name.toLowerCase()))
-                .collect(Collectors.toList());
+        return productJpaRepository.findByNameContainingIgnoreCase(name).stream()
+        .map(product -> (IProduct) product)
+        .toList();
     }
-    private void init(){
-        logger.info("product repo init");
-        products.put(1001, new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
-        products.put(1002, new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
-        products.get(1001).addStore(1001);
-        products.get(1002).addStore(1001);
-    }
+    // private void init(){
+    //     logger.info("product repo init");
+    //     productJpaRepository.save(new Product("Product1001", "description1001", PCategory.BOOKS, 1001));
+    //     productJpaRepository.save(new Product("Product1002", "description1002", PCategory.MUSIC, 1002));
+    //     productJpaRepository.findById(1001).orElse(null).addStore(1001);
+    //     productJpaRepository.findById(1002).orElse(null).addStore(1001);
+    // }
 
     @Override
     public void clearAllData() {
-        products.clear();
+        productJpaRepository.deleteAll();
     }
 }

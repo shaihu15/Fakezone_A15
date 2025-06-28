@@ -5,9 +5,10 @@ import java.util.Set;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
+import DomainLayer.Model.Product;
 
 public interface IProductRepository {
-    void addProduct(IProduct product);
+    Product addProduct(IProduct product);
     void updateProduct(int productId, String productName, String productDescription, Set<Integer> storesIds);
     void deleteProduct(int productId);
     IProduct getProductById(int productId);

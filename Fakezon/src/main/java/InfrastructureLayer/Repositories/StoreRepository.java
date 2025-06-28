@@ -1,68 +1,76 @@
 package InfrastructureLayer.Repositories;
-import static org.mockito.ArgumentMatchers.*;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
+import InfrastructureLayer.StoreJpaRepository;
 
 @Repository
 public class StoreRepository implements IStoreRepository {
-    private Map<Integer, Store> stores;
-    
-    public StoreRepository(Map<Integer, Store> stores) {
-        this.stores = stores;
-    }
-    public StoreRepository() {
-        this.stores = new HashMap<>();
-    }
+
+    @Autowired
+    private StoreJpaRepository storeJpaRepository;
+
     @Override
     public Store findById(int storeID) {
-        // Implementation to find a store by its ID
-        return stores.get(storeID); // Placeholder return statement
+        return storeJpaRepository.findById(storeID).orElse(null);
     }
-    
+
+    @Override
+    public Store findByName(String storeName) {
+        return storeJpaRepository.findByName(storeName).orElse(null);
+    }
 
     @Override
     public Collection<Store> getAllStores() {
-      return new ArrayList<>(stores.values());
+        return storeJpaRepository.findAll();
     }
 
     @Override
     public void addStore(Store store) {
-        stores.put(store.getId(), store);
+        storeJpaRepository.save(store);
     }
 
+    @Override
+    public void save(Store store) {
+        storeJpaRepository.save(store);
+    }
 
     @Override
     public void delete(int storeID) {
-        stores.remove(storeID);
-    }
-
-
-    @Override
-    public Store findByName(String storeName) {
-        for (Store store : stores.values()) {
-            if (store.getName().equals(storeName)) {
-                return store;
-            }
+        if (storeJpaRepository.existsById(storeID)) {
+            storeJpaRepository.deleteById(storeID);
         }
-        return null; // Store not found
     }
 
     @Override
     public Collection<Store> getTop10Stores() {
-       return stores.values().stream().sorted((s1, s2) -> Double.compare(s2.getAverageRating(), s1.getAverageRating())).limit(10).collect(Collectors.toList());
-    }
-    @Override
-    public void clearAllData() {
-        stores.clear();
+        return storeJpaRepository.findTop10StoresByRating();
     }
 
+    @Override
+    public void clearAllData() {
+        storeJpaRepository.deleteAll();
+    }
+
+    // Additional helper methods
+    public Collection<Store> getOpenStores() {
+        return storeJpaRepository.findByIsOpenTrue();
+    }
+
+    public Collection<Store> getStoresByFounder(int founderId) {
+        return storeJpaRepository.findByStoreFounderID(founderId);
+    }
+
+    public Collection<Store> searchStores(String keyword) {
+        return storeJpaRepository.searchByKeyword(keyword);
+    }
+
+    public Collection<Store> getStoresByOwner(Integer ownerId) {
+        return storeJpaRepository.findStoresByOwnerId(ownerId);
+    }
 }

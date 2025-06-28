@@ -1,15 +1,24 @@
 package DomainLayer.Model;
 
 import DomainLayer.Interfaces.IDiscountScope;
+import jakarta.persistence.*;
 
 import java.util.Map;
 
-public class StoreDiscountScope implements IDiscountScope {
-    private int storeId;
-    private Map<Integer, StoreProduct> storeProducts;
+@Entity
+@DiscriminatorValue("STORE")
+public class StoreDiscountScope extends BaseDiscountScope {
+    
+    @Transient
+    private Map<StoreProductKey, StoreProduct> storeProducts;
+    
+    // Default constructor for JPA
+    protected StoreDiscountScope() {
+        super();
+    }
 
-    public StoreDiscountScope(int storeId, Map<Integer, StoreProduct> storeProducts) {
-        this.storeId = storeId;
+    public StoreDiscountScope(int storeId, Map<StoreProductKey, StoreProduct> storeProducts) {
+        super(storeId);
         this.storeProducts = storeProducts;
     }
 
@@ -17,12 +26,16 @@ public class StoreDiscountScope implements IDiscountScope {
     public double getEligibleAmount(Cart cart) {
         double eligibleAmount = 0;
         for (Map.Entry<Integer, Map<Integer, Integer>> entry : cart.getAllProducts().entrySet()) {
-            if (entry.getKey() == storeId) {
+            if (entry.getKey() == getStoreId()) {
                 for (Map.Entry<Integer, Integer> product : entry.getValue().entrySet()) {
-                    eligibleAmount += product.getValue() * storeProducts.get(product.getKey()).getBasePrice();
+                    eligibleAmount += product.getValue() * storeProducts.get(new StoreProductKey(getStoreId(), product.getKey())).getBasePrice();
                 }
             }
         }
         return eligibleAmount;
+    }
+    
+    public void setStoreProducts(Map<StoreProductKey, StoreProduct> storeProducts) {
+        this.storeProducts = storeProducts;
     }
 }

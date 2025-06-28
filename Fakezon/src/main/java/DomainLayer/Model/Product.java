@@ -1,31 +1,48 @@
 package DomainLayer.Model;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Locale.Category;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import ApplicationLayer.Enums.PCategory;
 import DomainLayer.Interfaces.IProduct;
 
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "products")
 public class Product implements IProduct {
     
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_id")
     private int id;
+
+    @Column(name = "name", nullable = false)
     private String name;
+    
+    @Column(name = "description", length = 1000)
     private String description;
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false)
     private PCategory category; 
+    
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "product_stores", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "store_id")
     private Set<Integer> storesIds; // List of store IDs where the product is available
+    
+    // Default constructor for JPA
+    public Product() {
+        this.storesIds = new HashSet<>();
+    }
 
     public Product(String name, String description,PCategory category) {
-        this.id = idCounter.incrementAndGet();
+        this();
         this.name = name;
         this.description = description;
         this.category = category;
-        this.storesIds = new HashSet<>();
-        
+
     }
 
     public Product(int id, String name, String description,PCategory category, Set<Integer> storesIds) {
@@ -44,11 +61,11 @@ public class Product implements IProduct {
      * **********DO NOT USE - JUST FOR UI PURPOSES**********
      **/
     public Product(String name, String description,PCategory category, int productId) {
+        this();
         this.id = productId;
         this.name = name;
         this.description = description;
         this.category = category;
-        this.storesIds = new HashSet<>();
         
     }
 

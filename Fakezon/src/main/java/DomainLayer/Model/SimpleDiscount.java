@@ -2,16 +2,19 @@ package DomainLayer.Model;
 
 import DomainLayer.Interfaces.IDiscountPolicy;
 import DomainLayer.Interfaces.IDiscountScope;
+import jakarta.persistence.*;
 
-public class SimpleDiscount implements IDiscountPolicy {
-    private int policyID;
-    private double percentage;
-    private IDiscountScope scope;
+@Entity
+@DiscriminatorValue("SIMPLE")
+public class SimpleDiscount extends BaseDiscountPolicy {
+    
+    // Default constructor for JPA
+    protected SimpleDiscount() {
+        super();
+    }
 
     public SimpleDiscount(int policyID, double percentage, IDiscountScope scope) {
-        this.policyID = policyID;
-        this.percentage = percentage;
-        this.scope = scope;
+        super(policyID, percentage, scope);
     }
 
     @Override
@@ -19,16 +22,11 @@ public class SimpleDiscount implements IDiscountPolicy {
         if (!isApplicable(cart)) {
             return 0;
         }
-        return scope.getEligibleAmount(cart) * percentage / 100;
+        return getScope().getEligibleAmount(cart) * getPercentage() / 100;
     }
 
     @Override
     public boolean isApplicable(Cart cart) {
         return DiscountCondition.alwaysTrue().test(cart);
-    }
-
-    @Override
-    public int getPolicyID() {
-        return policyID;
     }
 }

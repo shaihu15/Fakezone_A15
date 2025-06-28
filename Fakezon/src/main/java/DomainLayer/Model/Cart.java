@@ -6,35 +6,56 @@ import java.util.List;
 import java.util.Map;
 
 import ApplicationLayer.DTO.StoreProductDTO;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "carts")
 public class Cart {
 
-    private Map<Integer,Basket> baskets; // storeID -> Basket
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "cart_id")
+    private List<Basket> baskets = new ArrayList<>(); // storeID -> Basket
 
     public Cart() {
-        this.baskets = new HashMap<>();
+        // JPA default constructor
     }
 
     public void clear() {
         baskets.clear();
     }
 
-    public Map<Integer,Basket> getBaskets() {
+    public List<Basket> getBaskets() {
         return baskets;
     }
+
+    private Basket findBasket(int storeId) {
+        for (Basket basket : baskets) {
+            if (basket.getStoreID() == storeId) {
+                return basket;
+            }
+        }
+        return null;
+    }
+
     public void addProduct(int storeID, int productId, int quantity) {
-        if (baskets.containsKey(storeID)) {
-            baskets.get(storeID).addProduct(productId, quantity);
+        Basket basket = findBasket(storeID);
+        if (basket != null) {
+            basket.addProduct(productId, quantity);
         } else {
             Basket newBasket = new Basket(storeID);
             newBasket.addProduct(productId, quantity);
-            baskets.put(storeID, newBasket);
+            baskets.add(newBasket);
         }
     }
 
     public Basket getBasket(int storeID) {
-        if(baskets.containsKey(storeID)) {
-            return baskets.get(storeID);
+        Basket basket = findBasket(storeID);
+        if (basket != null) {
+            return basket;
         } else {
             throw new IllegalArgumentException("No basket found for store ID: " + storeID);
         }
@@ -42,9 +63,8 @@ public class Cart {
 
     public Map<Integer,Map<Integer,Integer>> getAllProducts() {//returns a map of storeID to productID to quantity
         Map<Integer,Map<Integer,Integer>> allProducts = new HashMap<>();
-        for (Map.Entry<Integer, Basket> entry : baskets.entrySet()) {
-            int storeID = entry.getKey();
-            Basket basket = entry.getValue();
+        for (Basket basket : baskets) {
+            int storeID = basket.getStoreID();
             Map<Integer, Integer> products = basket.getProducts(); // productID to quantity
             allProducts.put(storeID, products);
         }
@@ -52,23 +72,25 @@ public class Cart {
     }
 
     public void setProduct(int storeId, int productId, int quantity){
-        if (baskets.containsKey(storeId)) {
-            baskets.get(storeId).setProduct(productId, quantity);
+        Basket basket = findBasket(storeId);
+        if (basket != null) {
+            basket.setProduct(productId, quantity);
         } else {
             Basket newBasket = new Basket(storeId);
             newBasket.setProduct(productId, quantity);
-            baskets.put(storeId, newBasket);
+            baskets.add(newBasket);
         }
     }
 
     public void removeItem(int storeId, int productId){
-        if(baskets.containsKey(storeId)){
-            baskets.get(storeId).removeItem(productId);
+        Basket basket = findBasket(storeId);
+        if (basket != null) {
+            basket.removeItem(productId);
         }
     }
 
     public boolean containsProduct(int productId) {
-        for (Basket basket : baskets.values()) {
+        for (Basket basket : baskets) {
             if (basket.containsProduct(productId)) {
                 return true;
             }
@@ -77,12 +99,13 @@ public class Cart {
     }
 
     public void addProductQuantity(int storeID, int productId, int quantity) {
-        if (baskets.containsKey(storeID)) {
-            baskets.get(storeID).addProductQuantity(productId, quantity);
+        Basket basket = findBasket(storeID);
+        if (basket != null) {
+            basket.addProductQuantity(productId, quantity);
         } else {
             Basket newBasket = new Basket(storeID);
             newBasket.addProductQuantity(productId, quantity);
-            baskets.put(storeID, newBasket);
+            baskets.add(newBasket);
         }
     }
     

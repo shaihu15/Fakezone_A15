@@ -7,8 +7,8 @@ public interface IStoreRepository {
     Store findByName(String storeName);
     Collection<Store> getAllStores();
     void addStore(Store store);
+    void save(Store store);
     void delete(int storeID);
     Collection<Store> getTop10Stores();
-        void clearAllData();
-
+    void clearAllData();
 }

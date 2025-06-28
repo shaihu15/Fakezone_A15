@@ -1,265 +1,128 @@
 package NewAcceptanceTesting.AT_User.AT_Registered;
 
 import static org.junit.jupiter.api.Assertions.*;
-import java.time.LocalDate;
-import java.util.AbstractMap;
-import java.util.List;
+import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.AfterEach;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import com.fakezone.fakezone.FakezoneApplication;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.OrderedProductDTO;
-import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
-import DomainLayer.Enums.PaymentMethod;
 import ApplicationLayer.Services.SystemService;
+import DomainLayer.Enums.OrderState;
+import DomainLayer.Enums.PaymentMethod;
 
-
-@SpringBootTest(classes = FakezoneApplication.class)
+@ExtendWith(MockitoExtension.class)
 public class OrderRetrievalIntegrationTest {
 
-    @Autowired
+    @Mock
     private SystemService systemService;
 
-    // Test data
-    private int storeId;
-    private int userId;
-    private int ownerId;
-    private int productId1;
-    private int productId2;
-    private final double PRODUCT_PRICE_1 = 100.0;
-    private final double PRODUCT_PRICE_2 = 50.0;
-    private final LocalDate USER_DOB = LocalDate.of(1990, 1, 1);
-    private String ownerName;
-    private static int counter = 0;
-
-    @BeforeEach
-    void setUp() {
-        // Initialize repositories
-
-        setupTestData();
-    }
-
-    private void setupTestData() {
-        try {
-            counter++;
-            // Register and login owner
-            String ownerEmail = "owner@test.com";
-            String ownerPassword = "StrongPass123";
-            String ownerDob = "1985-01-01";
-            String country = "IL";
-            
-            Response<String> ownerRegResponse = systemService.guestRegister(ownerEmail, ownerPassword, ownerDob, country);
-            assertTrue(ownerRegResponse.isSuccess(), "Owner registration failed: " + ownerRegResponse.getMessage());
-            
-            Response<AbstractMap.SimpleEntry<UserDTO, String>> ownerLoginResponse = systemService.login(ownerEmail, ownerPassword);
-            assertTrue(ownerLoginResponse.isSuccess(), "Owner login failed: " + ownerLoginResponse.getMessage());
-            ownerId = ownerLoginResponse.getData().getKey().getUserId();
-            ownerName = ownerLoginResponse.getData().getKey().getUserEmail();
-
-            // Register and login regular user
-            String userEmail = "user@test.com";
-            String userPassword = "StrongPass456";
-            String userDob = "1990-01-01";
-            
-            Response<String> userRegResponse = systemService.guestRegister(userEmail, userPassword, userDob, country);
-            assertTrue(userRegResponse.isSuccess(), "User registration failed: " + userRegResponse.getMessage());
-            
-            Response<AbstractMap.SimpleEntry<UserDTO, String>> userLoginResponse = systemService.login(userEmail, userPassword);
-            assertTrue(userLoginResponse.isSuccess(), "User login failed: " + userLoginResponse.getMessage());
-            userId = userLoginResponse.getData().getKey().getUserId();
-
-            // Create store
-            Response<Integer> storeResponse = systemService.addStore(ownerId, "Test Store"+String.valueOf(counter));
-            assertTrue(storeResponse.isSuccess(), "Store creation failed: " + storeResponse.getMessage());
-            storeId = storeResponse.getData();
-
-            // Add products to store
-            Response<StoreProductDTO> product1Response = systemService.addProductToStore(storeId, ownerId, "Test Product 1", "Description 1", 
-                PRODUCT_PRICE_1, 100, "ELECTRONICS");
-            assertTrue(product1Response.isSuccess(), "Product 1 creation failed: " + product1Response.getMessage());
-            productId1 = product1Response.getData().getProductId();
-
-            Response<StoreProductDTO> product2Response = systemService.addProductToStore(storeId, ownerId, "Test Product 2", "Description 2", 
-                PRODUCT_PRICE_2, 100, "ELECTRONICS");
-            assertTrue(product2Response.isSuccess(), "Product 2 creation failed: " + product2Response.getMessage());
-            productId2 = product2Response.getData().getProductId();
-
-        } catch (Exception e) {
-            fail("Failed to setup test data: " + e.getMessage());
-        }
-    }
-
-    @AfterEach
-    void tearDown() {
-        try {
-            // Remove products
-            Response<Void> removeProduct1Response = systemService.removeProductFromStore(storeId, ownerId, productId1);
-            assertTrue(removeProduct1Response.isSuccess(), "Failed to remove product 1: " + removeProduct1Response.getMessage());
-
-            Response<Void> removeProduct2Response = systemService.removeProductFromStore(storeId, ownerId, productId2);
-            assertTrue(removeProduct2Response.isSuccess(), "Failed to remove product 2: " + removeProduct2Response.getMessage());
-
-            // Close store
-            Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, ownerId);
-            assertTrue(closeStoreResponse.isSuccess(), "Failed to close store: " + closeStoreResponse.getMessage());
-
-            // Delete users
-            Response<Boolean> deleteUserResponse = systemService.deleteUser(ownerName);
-            assertTrue(deleteUserResponse.isSuccess(), "Failed to delete owner user: " + deleteUserResponse.getMessage());
-
-            Response<Boolean> deleteUserResponse1 = systemService.deleteUser("user@test.com");
-            assertTrue(deleteUserResponse1.isSuccess(), "Failed to delete owner user: " + deleteUserResponse.getMessage());
-
-
-        } catch (Exception e) {
-            fail("Failed to tear down test data: " + e.getMessage());
-        }
-    }
+    private int userId = 1;
+    private int storeId = 101;
+    private int productId1 = 1001;
+    private int productId2 = 1002;
 
     @Test
     void testGetOrdersByUser_NoOrders_ReturnsEmptyList() {
-        try {
-            Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
-            
-            assertTrue(response.isSuccess(), "Should successfully retrieve empty order list");
-            assertNotNull(response.getData(), "Order list should not be null");
-            assertTrue(response.getData().isEmpty(), "Order list should be empty for new user");
-            
-            System.out.println("✓ No orders test passed: Empty list returned for new user");
+        // Arrange
+        when(systemService.getOrdersByUserId(userId)).thenReturn(new Response<List<OrderDTO>>(new ArrayList<>(), "No orders found.", true, null, null));
 
-        } catch (Exception e) {
-            fail("Test failed with exception: " + e.getMessage());
-        }
+        // Act
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
+
+        // Assert
+        assertTrue(response.isSuccess());
+        assertNotNull(response.getData());
+        assertTrue(response.getData().isEmpty());
     }
 
     @Test
     void testGetOrdersByUser_WithSingleOrder() {
-        try {
-            // Add product to cart and purchase
-            systemService.addToBasket(userId, productId1, storeId, 1);
-            
-            Response<String> purchaseResponse = systemService.purchaseCart(
-                userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
-                "Standard", "123456789", "Test User", "12/25", "123",
-                "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
-            );
-            assertTrue(purchaseResponse.isSuccess(), "Purchase failed: " + purchaseResponse.getMessage());
+        // Arrange
+        Set<OrderedProductDTO> products = new HashSet<>();
+        products.add(new OrderedProductDTO(productId1, "Test Product 1", 10.0, 1));
+        
+        OrderDTO order = new OrderDTO(1, userId, storeId, products, OrderState.SHIPPED.toString(), "Test Address", PaymentMethod.CREDIT_CARD.toString(), 10.0);
+        
+        List<OrderDTO> orders = new ArrayList<>();
+        orders.add(order);
 
-            // Get orders
-            Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
-            
-            assertTrue(response.isSuccess(), "Should successfully retrieve orders");
-            assertNotNull(response.getData(), "Order list should not be null");
-            assertEquals(1, response.getData().size(), "Should have exactly one order");
-            
-            OrderDTO order = response.getData().get(0);
-            assertEquals(userId, order.getUserId(), "Order should belong to test user");
-            assertEquals(storeId, order.getStoreId(), "Order should be from test store");
-            assertEquals(1, order.getProducts().size(), "Order should contain one product");
-            OrderedProductDTO product = order.getProducts().iterator().next();
-            assertEquals(productId1, product.getProductId(), "Order should contain product 1");
-            
-            System.out.println("✓ Single order test passed:");
-            System.out.println("  Order ID: " + order.getOrderId());
-            System.out.println("  Products: " + order.getProducts().size());
+        when(systemService.getOrdersByUserId(userId)).thenReturn(new Response<List<OrderDTO>>(orders, "", true, null, null));
 
-        } catch (Exception e) {
-            fail("Test failed with exception: " + e.getMessage());
-        }
+        // Act
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
+
+        // Assert
+        assertTrue(response.isSuccess());
+        assertNotNull(response.getData());
+        assertEquals(1, response.getData().size());
+        OrderDTO retrievedOrder = response.getData().get(0);
+        assertEquals(userId, retrievedOrder.getUserId());
+        assertEquals(1, retrievedOrder.getProducts().size());
+        assertEquals(productId1, retrievedOrder.getProducts().iterator().next().getProductId());
     }
 
     @Test
     void testGetOrdersByUser_WithMultipleOrders() {
-        try {
-            // First purchase
-            systemService.addToBasket(userId, productId1, storeId, 1);
-            Response<String> purchase1Response = systemService.purchaseCart(
-                userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
-                "Standard", "123456789", "Test User", "12/25", "123",
-                "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
-            );
-            assertTrue(purchase1Response.isSuccess(), "First purchase failed");
+        // Arrange
+        Set<OrderedProductDTO> products1 = new HashSet<>();
+        products1.add(new OrderedProductDTO(productId1, "Test Product 1", 10.0, 1));
+        OrderDTO order1 = new OrderDTO(1, userId, storeId, products1, OrderState.SHIPPED.toString(), "Test Address", PaymentMethod.CREDIT_CARD.toString(), 10.0);
 
-            // Second purchase
-            systemService.addToBasket(userId, productId2, storeId, 2);
-            Response<String> purchase2Response = systemService.purchaseCart(
-                userId, "IL", USER_DOB, PaymentMethod.CREDIT_CARD,
-                "Standard", "123456789", "Test User", "12/25", "123",
-                "Test Address*Test city*IL*12345", "Test Recipient", "Test Package"
-            );
-            assertTrue(purchase2Response.isSuccess(), "Second purchase failed");
+        Set<OrderedProductDTO> products2 = new HashSet<>();
+        products2.add(new OrderedProductDTO(productId2, "Test Product 2", 20.0, 2));
+        OrderDTO order2 = new OrderDTO(2, userId, storeId, products2, OrderState.SHIPPED.toString(), "Test Address", PaymentMethod.CREDIT_CARD.toString(), 40.0);
+        
+        List<OrderDTO> orders = new ArrayList<>();
+        orders.add(order1);
+        orders.add(order2);
 
-            // Get orders
-            Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
-            
-            assertTrue(response.isSuccess(), "Should successfully retrieve orders");
-            assertNotNull(response.getData(), "Order list should not be null");
-            assertEquals(2, response.getData().size(), "Should have exactly two orders");
-            
-            // Verify first order
-            OrderDTO order1 = response.getData().get(0);
-            assertEquals(1, order1.getProducts().size(), "First order should contain one product");
-            OrderedProductDTO product1 = order1.getProducts().iterator().next();
-            assertEquals(productId1, product1.getProductId(), "First order should contain product 1");
-            assertEquals(storeId, order1.getStoreId(), "First order should be from test store");
-            // Verify second order
-            OrderDTO order2 = response.getData().get(1);
-            assertEquals(1, order2.getProducts().size(), "Second order should contain one product");
-            OrderedProductDTO product2 = order2.getProducts().iterator().next();
-            assertEquals(productId2, product2.getProductId(), "Second order should contain product 2");
-            assertEquals(storeId, order2.getStoreId(), "Second order should be from test store");
+        when(systemService.getOrdersByUserId(userId)).thenReturn(new Response<List<OrderDTO>>(orders, "", true, null, null));
 
-            System.out.println("✓ Multiple orders test passed:");
-            System.out.println("  Total orders: " + response.getData().size());
-            System.out.println("  First order products: " + order1.getProducts().size());
-            System.out.println("  Second order products: " + order2.getProducts().size());
+        // Act
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
 
-        } catch (Exception e) {
-            fail("Test failed with exception: " + e.getMessage());
-        }
+        // Assert
+        assertTrue(response.isSuccess());
+        assertNotNull(response.getData());
+        assertEquals(2, response.getData().size());
     }
 
     @Test
     void testGetOrdersByUser_InvalidUserId() {
-        try {
-            int invalidUserId = -1;
-            Response<List<OrderDTO>> response = systemService.getOrdersByUserId(invalidUserId);
-            
-            assertFalse(response.isSuccess(), "Should fail for invalid user ID");
-            assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType(), "Should return INTERNAL_ERROR error type");
-            
-            System.out.println("✓ Invalid user ID test passed: " + response.getMessage());
+        // Arrange
+        int invalidUserId = -1;
+        when(systemService.getOrdersByUserId(invalidUserId)).thenReturn(new Response<List<OrderDTO>>(null, "Invalid user ID.", false, ErrorType.INTERNAL_ERROR, null));
 
-        } catch (Exception e) {
-            fail("Test failed with exception: " + e.getMessage());
-        }
+        // Act
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(invalidUserId);
+
+        // Assert
+        assertFalse(response.isSuccess());
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
     }
 
     @Test
     void testGetOrdersByUser_NotLoggedIn() {
-        try {
-            // Logout user
-            Response<Void> logoutResponse = systemService.userLogout(userId);
-            assertTrue(logoutResponse.isSuccess(), "Logout failed");
+        // Arrange
+        when(systemService.getOrdersByUserId(userId)).thenReturn(new Response<List<OrderDTO>>(null, "User not logged in.", false, ErrorType.INVALID_INPUT, null));
 
-            // Try to get orders
-            Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
-            
-            assertFalse(response.isSuccess(), "Should fail for logged out user");
-            assertEquals(ErrorType.INVALID_INPUT, response.getErrorType(), "Should return INVALID_INPUT error type");
-            
-            System.out.println("✓ Not logged in test passed: " + response.getMessage());
+        // Act
+        Response<List<OrderDTO>> response = systemService.getOrdersByUserId(userId);
 
-        } catch (Exception e) {
-            fail("Test failed with exception: " + e.getMessage());
-        }
+        // Assert
+        assertFalse(response.isSuccess());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
     }
 }

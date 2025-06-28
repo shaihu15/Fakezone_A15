@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 public class UserService implements IUserService {
     private final IUserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+    private final AtomicInteger guestIdCounter = new AtomicInteger(-1);
+
     public UserService(IUserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -45,6 +47,7 @@ public class UserService implements IUserService {
     @Override
     public UserDTO registerUser(String email, String password, LocalDate dateOfBirth, String country) {
         Registered user = new Registered(email, password, dateOfBirth, country);
+
         // Check if the user already exists
         Optional<Registered> existingUser = userRepository.findByUserName(email);
         if (existingUser.isPresent()) {
@@ -75,6 +78,9 @@ public class UserService implements IUserService {
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             user.saveCartOrderAndDeleteIt();
+            if (user instanceof Registered) {
+                userRepository.save((Registered) user);
+            }
             logger.info("User "+userId+" clear cart");
         } else {
             logger.warn("Clear cart failed: User with id {} not found", userId);
@@ -90,7 +96,7 @@ public class UserService implements IUserService {
 
     @Override
     public Optional<Registered> getUserById(int userID) {
-        return userRepository.findById(userID);
+        return userRepository.findRegisteredById(userID);
     }
 
     @Override
@@ -99,6 +105,7 @@ public class UserService implements IUserService {
         if (optionalUser.isPresent()) {
             Registered user = optionalUser.get();
             user.logout();
+            userRepository.save(user);
             logger.info("User logged out: " + email);
         } else {
             logger.warn("Logout failed: User with email {} not found", email);
@@ -122,6 +129,7 @@ public class UserService implements IUserService {
                 throw new IllegalArgumentException("Incorrect password");
             }
             user.login();
+            userRepository.save(user);
             return user.toDTO();
         } catch (Exception e) {
             // Handle exception if needed
@@ -132,10 +140,11 @@ public class UserService implements IUserService {
 
     @Override
     public void addRole(int userID, int storeID, IRegisteredRole role) {
-        Optional<Registered> Registered = userRepository.findById(userID);
+        Optional<Registered> Registered = userRepository.findRegisteredById(userID);
         if (Registered.isPresent()) {
             try {
                 Registered.get().addRole(storeID, role);
+                userRepository.save(Registered.get());
                 logger.info("Role added to user: " + userID + " for store: " + storeID);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -150,10 +159,11 @@ public class UserService implements IUserService {
 
     @Override
     public void removeRole(int userID, int storeID) {
-        Optional<Registered> Registered = userRepository.findById(userID);
+        Optional<Registered> Registered = userRepository.findRegisteredById(userID);
         if (Registered.isPresent()) {
             try {
                 Registered.get().removeRole(storeID);
+                userRepository.save(Registered.get());
                 logger.info("Role removed from user: " + userID + " for store: " + storeID);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -168,7 +178,7 @@ public class UserService implements IUserService {
 
     @Override
     public IRegisteredRole getRoleByStoreID(int userID, int storeID) {
-        Optional<Registered> user = userRepository.findById(userID);
+        Optional<Registered> user = userRepository.findRegisteredById(userID);
         if (user.isPresent()) {
             try {
                 return user.get().getRoleByStoreID(storeID);
@@ -184,7 +194,7 @@ public class UserService implements IUserService {
 
         @Override
         public HashMap<Integer, IRegisteredRole> getAllRoles(int userID) {
-            Optional<Registered> user = userRepository.findById(userID);
+            Optional<Registered> user = userRepository.findRegisteredById(userID);
             logger.info("Getting all roles for user: " + userID);
             if (!user.isPresent()) {
                 logger.error("User not found with ID: " + userID);
@@ -201,7 +211,7 @@ public class UserService implements IUserService {
         }
 
     public boolean didPurchaseStore(int userID, int storeID) {
-        Optional<Registered> user = userRepository.findById(userID);
+        Optional<Registered> user = userRepository.findRegisteredById(userID);
         if (user.isPresent()) {
             try {
                 return user.get().didPurchaseStore(storeID);
@@ -216,7 +226,7 @@ public class UserService implements IUserService {
     }
 
     public boolean didPurchaseProduct(int userID, int storeID, int productID) {
-        Optional<Registered> user = userRepository.findById(userID);
+        Optional<Registered> user = userRepository.findRegisteredById(userID);
         if (user.isPresent()) {
             try {
                 return user.get().didPurchaseProduct(storeID, productID);
@@ -251,16 +261,10 @@ public class UserService implements IUserService {
 
     @Override
     public void sendMessageToStore(int userID, int storeID, String message) {
-        Optional<Registered> user = userRepository.findById(userID);
+        Optional<Registered> user = userRepository.findRegisteredById(userID);
         if (user.isPresent()) {
-            try {
-                user.get().sendMessageToStore(storeID, message);
-                logger.info("Message sent to store: " + storeID + " from user: " + userID);
-            } catch (Exception e) {
-                // Handle exception if needed
-                logger.error("Error during send message: " + e.getMessage());
-                System.out.println("Error during send message: " + e.getMessage());
-            }
+                logger.info("User: " + userID + " is registered");
+                return;
         } else {
             logger.error("User not found: " + userID);
             throw new IllegalArgumentException("User not found");
@@ -273,6 +277,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().addToBasket(storeId, productId, quantity);
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Product added to basket: " + productId+ " from store: " + storeId + " by user: "
                         + userId);
             } catch (Exception e) {
@@ -322,6 +329,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().saveCartOrderAndDeleteIt();
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Order saved for user: " + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -343,7 +353,8 @@ public class UserService implements IUserService {
 
     @Override
     public Response<Map<Integer, StoreMsg>> getAllMessages(int userID) {
-        Optional<Registered> Registered = userRepository.findById(userID);
+        Optional<Registered> Registered = userRepository.findRegisteredById(userID);
+
         if (Registered.isPresent()) {
 
             try {
@@ -368,7 +379,7 @@ public class UserService implements IUserService {
 
     @Override
     public Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID) {
-        Optional<Registered> Registered = userRepository.findById(userID);
+        Optional<Registered> Registered = userRepository.findRegisteredById(userID);
         if (Registered.isPresent()) {
 
             try {
@@ -391,9 +402,10 @@ public class UserService implements IUserService {
         }
     }
 
+
     @Override
     public Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID) {
-        Optional<Registered> Registered = userRepository.findById(userID);
+        Optional<Registered> Registered = userRepository.findRegisteredById(userID);
         if (Registered.isPresent()) {
 
             try {
@@ -429,7 +441,7 @@ public class UserService implements IUserService {
 
     @Override
     public void addSystemAdmin(int userId) {
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isPresent()) {
             userRepository.addSystemAdmin(userId);
             logger.info("Added system admin: User ID " + userId);
@@ -441,7 +453,7 @@ public class UserService implements IUserService {
 
     @Override
     public boolean removeSystemAdmin(int userId) {
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isPresent()) {
             boolean removed = userRepository.removeSystemAdmin(userId);
             if (removed) {
@@ -458,7 +470,7 @@ public class UserService implements IUserService {
 
     @Override
     public boolean isSystemAdmin(int userId) {
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isPresent()) {
             return userRepository.isSystemAdmin(userId);
         } else {
@@ -483,11 +495,12 @@ public class UserService implements IUserService {
 
     @Override
     public boolean removeMsgById(int userId, int msgId) {
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isPresent()) {
             Registered user = optionalUser.get();
             boolean removed = user.removeMsgById(msgId);
             if (removed) {
+                userRepository.save(user);
                 logger.info("Message with ID " + msgId + " removed from user ID " + userId);
             } else {
                 logger.warn("Message with ID " + msgId + " not found for user ID " + userId);
@@ -517,7 +530,7 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Admin privileges required");
         }
         
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isEmpty()) {
             logger.error("Failed to suspend user: User with ID " + userId + " not found");
             throw new IllegalArgumentException("User not found");
@@ -557,7 +570,7 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Admin privileges required");
         }
         
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isEmpty()) {
             logger.error("Failed to unsuspend user: User with ID " + userId + " not found");
             throw new IllegalArgumentException("User not found");
@@ -583,7 +596,7 @@ public class UserService implements IUserService {
      */
     @Override
     public boolean isUserSuspended(int userId) {
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isEmpty()) {
             logger.error("Failed to check suspension status: User with ID " + userId + " not found");
             throw new IllegalArgumentException("User not found");
@@ -607,7 +620,7 @@ public class UserService implements IUserService {
             throw new IllegalArgumentException("Admin privileges required");
         }
         
-        Optional<Registered> optionalUser = userRepository.findById(userId);
+        Optional<Registered> optionalUser = userRepository.findRegisteredById(userId);
         if (optionalUser.isEmpty()) {
             logger.error("Failed to get suspension end date: User with ID " + userId + " not found");
             throw new IllegalArgumentException("User not found");
@@ -672,17 +685,18 @@ public class UserService implements IUserService {
     public User createUnsignedUser() {
         try {
             User unsignedUser = new User();
+            unsignedUser.setUserId(guestIdCounter.getAndDecrement());
             userRepository.addUnsignedUser(unsignedUser);
             logger.info("Created unsigned user with ID: " + unsignedUser.getUserId());
             return unsignedUser;
-          } catch (IllegalArgumentException e) {
-        logger.error("Failed to add unsigned user: " + e.getMessage());
-        throw e;
-    } catch (Exception e) {
-        logger.error("Error during adding unsigned user: " + e.getMessage());
-        throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("Failed to add unsigned user: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error during adding unsigned user: " + e.getMessage());
+            throw new IllegalArgumentException("Error adding unsigned user: " + e.getMessage());
+        }
     }
-}
     
     /**
      * Find an unsigned user by ID
@@ -803,6 +817,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().setCart(validCart);
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Cart set for user: " + userId);
             } catch (Exception e) {
                 // Handle exception if needed
@@ -819,6 +836,9 @@ public class UserService implements IUserService {
         if (user.isPresent()) {
             try {
                 user.get().removeFromBasket(storeId, productId);
+                if (user.get() instanceof Registered) {
+                    userRepository.save((Registered) user.get());
+                }
                 logger.info("Cart for user: " + userId + " removed product " + productId + " from store " + storeId);
             } catch (Exception e) {
                 logger.error("Error during set cart: " + e.getMessage());
@@ -836,10 +856,11 @@ public class UserService implements IUserService {
 
     @Override
     public void removeAssignmentMessage(int storeId, int userId){
-        Optional<Registered> user = userRepository.findById(userId);
+        Optional<Registered> user = userRepository.findRegisteredById(userId);
         logger.info("Trying to remove assignment message");
         if(user.isPresent()){
             user.get().removeAssignmentMessage(storeId);
+            userRepository.save(user.get());
         }
         else{
             logger.error("User not found while removeAssignmentMessage");
@@ -849,7 +870,7 @@ public class UserService implements IUserService {
 
     @Override
     public Response<Map<Integer, StoreMsg>> getMessagesFromStore(int userID) {
-        Optional<Registered> Registered = userRepository.findById(userID);
+        Optional<Registered> Registered = userRepository.findRegisteredById(userID);
         if (Registered.isPresent()) {
 
             try {
@@ -871,5 +892,4 @@ public class UserService implements IUserService {
             return new Response<>(null, "User not found", false, ErrorType.INVALID_INPUT, null);
         }
     }
-
 }

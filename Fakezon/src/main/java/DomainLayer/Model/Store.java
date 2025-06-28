@@ -1,11 +1,9 @@
 package DomainLayer.Model;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
@@ -26,6 +24,7 @@ import DomainLayer.Model.helpers.AuctionEvents.AuctionDeclinedBidEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionEndedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionFailedToOwnersEvent;
 import DomainLayer.Model.helpers.AuctionEvents.AuctionGotHigherBidEvent;
+import DomainLayer.Model.helpers.AuctionEvents.AuctionSaveEvent;
 import DomainLayer.Model.helpers.OfferEvents.CounterOfferDeclineEvent;
 import DomainLayer.Model.helpers.OfferEvents.CounterOfferEvent;
 import DomainLayer.Model.helpers.OfferEvents.OfferAcceptedByAll;
@@ -38,71 +37,150 @@ import DomainLayer.Model.helpers.ResponseFromStoreEvent;
 import DomainLayer.Model.helpers.Tree;
 import DomainLayer.Model.helpers.UserMsg;
 
+import jakarta.persistence.*;
+
 
 import java.time.LocalDate;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Entity
+@Table(name = "stores")
 public class Store implements IStore {
 
-    private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "storeid")
     private int storeID;
+    
+    @Version
+    @Column(name = "version")
+    private Long version;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    @Column(nullable = false)
     private boolean isOpen = true;
+    
+    @Column(nullable = false)
     private int storeFounderID; // store founder ID
-    private HashMap<Integer, StoreRating> Sratings; // HASH userID to store rating
-    private HashMap<Integer, StoreProduct> storeProducts; // HASH productID to store product
-    private HashMap<Integer, AuctionProduct> auctionProducts; // HASH productID to auction product
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    @MapKeyColumn(name = "user_id")
+    private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)//LAZY
+    @JoinColumn(name = "owner_store_id")
+    @MapKeyClass(StoreProductKey.class)
+    private Map<StoreProductKey, StoreProduct> storeProducts; // HASH (storeId, sproductId) to store product
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "auction_store_id")
+    @MapKeyClass(StoreProductKey.class)
+    private Map<StoreProductKey, AuctionProduct> auctionProducts; // HASH productID to auction product
+    
+    @Transient
     private HashMap<Integer, PurchasePolicy> purchasePolicies; // HASH policyID to purchase policy
-    private HashMap<Integer, IDiscountPolicy> discountPolicies; // HASH policyID to discount policy
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "store_id")
+    @MapKeyColumn(name = "policy_id")
+    private Map<Integer, BaseDiscountPolicy> discountPolicies; // HASH policyID to discount policy
+    
+    //@ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "store_owners", joinColumns = @JoinColumn(name = "store_id"))
+    @Column(name = "owner_id")
     private List<Integer> storeOwners;
-    private HashMap<Integer, Integer> pendingOwners; // appointee : appointor
-    private HashMap<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
+    
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "pending_owners", joinColumns = @JoinColumn(name = "store_id"))
+    @MapKeyColumn(name = "appointee_id")
+    @Column(name = "appointor_id")
+    private Map<Integer, Integer> pendingOwners; // appointee : appointor
+    
+    // Store managers permissions - simplified for now
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+        name = "store_manager_permissions",
+        joinColumns = @JoinColumn(name = "store_id")
+    )
+    @MapKeyColumn(name = "user_id")
+    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    private Map<Integer, List<StoreManagerPermission>> storeManagers; // HASH userID to store manager perms
+    
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "roles_tree_id")
     private Tree rolesTree;
-    private Map<Integer, UserMsg> messagesFromUsers; // HASH msgId to message
-    protected static final AtomicInteger UserMsgIdCounter = new AtomicInteger(0);
 
-    private Stack<SimpleEntry<Integer, String>> messagesFromStore; // HASH userID to message
-    private static final AtomicInteger idCounter = new AtomicInteger(0);
+        
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "store_id")
+    private List<UserMsg> messagesFromUsers; // List for persistence
+     
+    @Transient
     private static final AtomicInteger policyIDCounter = new AtomicInteger(0);
-    private final ApplicationEventPublisher publisher;
+    
+    @Transient
+    private ApplicationEventPublisher publisher;
+    
+    @Transient
     private static final Logger logger = LoggerFactory.getLogger(Store.class);
-    private final ReentrantLock rolesLock = new ReentrantLock(); // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED
-                                                                 // BOTH!
-    private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED
-                                                                    // BOTH
+    
+    @Transient
+    private final ReentrantLock rolesLock = new ReentrantLock(); // ALWAYS ~LOCK~ ROLES BEFORE PRODUCTS IF YOU NEED BOTH!
+    
+    @Transient                                                                
+    private final ReentrantLock productsLock = new ReentrantLock(); // ALWAYS *UNLOCK* PRODS BEFORE LOCK IF YOU NEED BOTH
+    
+    @Transient
     private final ReentrantLock ratingLock = new ReentrantLock();
-    private HashMap<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager
-                                                                                 // perms
-    private HashMap<Integer, Integer> pendingManagers; // appointee : appointor
+    
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+        name = "pending_manager_permissions",
+        joinColumns = @JoinColumn(name = "store_id")
+    )
+    @MapKeyColumn(name = "user_id")
+    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    private Map<Integer, List<StoreManagerPermission>> pendingManagersPerms; // HASH userID to PENDING store manager perms
+    
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "pending_managers", joinColumns = @JoinColumn(name = "store_id"))
+    @MapKeyColumn(name = "appointee_id")
+    @Column(name = "appointor_id")
+    private Map<Integer, Integer> pendingManagers; // appointee : appointor
+    
+    @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private HashMap<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited 
+    
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private List<Offer> allOffers = new ArrayList<>(); // All offers for this store (both regular and pending)
+    
+    @Transient
+    private Map<Integer, List<Offer>> offersOnProducts; // userId -> List of offers they submited (derived from allOffers) 
+    @Transient
     private final ReentrantLock offersLock = new ReentrantLock();
-    private HashMap<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept
+    @Transient
+    private Map<Integer, List<Offer>> pendingOffers; // userId -> List of COUNTER offers waiting for the user to accept (derived from allPendingOffers)
+
+    
+    // Default constructor for JPA
+    public Store() {
+        initializeTransientFields();
+    }
 
     public Store(String name, int founderID, ApplicationEventPublisher publisher) {
         this.storeFounderID = founderID;
-        this.storeOwners = new ArrayList<>();
-        // storeOwners.put(founderID, new StoreOwner(founderID, name));
-        this.storeManagers = new HashMap<>();
         this.name = name;
-        this.storeID = idCounter.incrementAndGet();
-        this.Sratings = new HashMap<>();
-        this.storeProducts = new HashMap<>();
-        this.auctionProducts = new HashMap<>();
-        this.purchasePolicies = new HashMap<>();
-        this.discountPolicies = new HashMap<>();
-        this.rolesTree = new Tree(founderID); // founder = root
-        this.storeOwners.add(founderID);
-        this.pendingOwners = new HashMap<>(); // appointee : appointor
-        this.storeManagers = new HashMap<>(); // HASH userID to store manager
-        this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
-        this.messagesFromStore = new Stack<>();
         this.publisher = publisher;
-        this.pendingManagersPerms = new HashMap<>();
-        this.pendingManagers = new HashMap<>();
-        this.offersOnProducts = new HashMap<>();
-        this.pendingOffers = new HashMap<>();
+        initializeCollections();
     }
 
     /**
@@ -110,25 +188,111 @@ public class Store implements IStore {
      **/
     public Store(String name, int founderID, ApplicationEventPublisher publisher, int storeId) {
         this.storeFounderID = founderID;
-        this.storeOwners = new ArrayList<>();
-        // storeOwners.put(founderID, new StoreOwner(founderID, name));
-        this.storeManagers = new HashMap<>();
         this.name = name;
         this.storeID = storeId;
+        this.publisher = publisher;
+        initializeCollections();
+    }
+
+    private void initializeCollections() {
+        this.storeOwners = new ArrayList<>();
+        this.storeManagers = new HashMap<>();
         this.Sratings = new HashMap<>();
         this.storeProducts = new HashMap<>();
         this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
         this.discountPolicies = new HashMap<>();
-        this.rolesTree = new Tree(founderID); // founder = root
-        this.storeOwners.add(founderID);
+        this.rolesTree = new Tree(storeFounderID); // founder = root
+        this.storeOwners.add(storeFounderID);
         this.pendingOwners = new HashMap<>(); // appointee : appointor
-        this.storeManagers = new HashMap<>(); // HASH userID to store manager
-        this.messagesFromUsers = new HashMap<>(); // HASH msgId to message
-        this.messagesFromStore = new Stack<>();
-        this.publisher = publisher;
-        this.pendingManagersPerms = new HashMap<>();
-        this.pendingManagers = new HashMap<>();
+        if (this.pendingManagers == null) {
+            this.pendingManagers = new HashMap<>();
+        }
+        if (this.pendingManagersPerms == null) {
+            this.pendingManagersPerms = new HashMap<>();
+        }
+        this.messagesFromUsers = new ArrayList<>();
+        this.allOffers = new ArrayList<>();
+        rebuildOffersOnProductsMap();
+        rebuildPendingOffersMap();
+    }
+
+    @PostLoad
+    private void initializeTransientFields() {
+        this.auctionProducts = new HashMap<>();
+        this.purchasePolicies = new HashMap<>();
+        this.storeManagers = new HashMap<>();
+        this.messagesFromUsers = new ArrayList<>();
+        // Ensure pendingManagers and pendingManagersPerms are initialized (they're now persistent but may be null on first load)
+        if (this.pendingManagers == null) {
+            this.pendingManagers = new HashMap<>();
+        }
+        if (this.pendingManagersPerms == null) {
+            this.pendingManagersPerms = new HashMap<>();
+        }
+        // Ensure discountPolicies is initialized if null
+        if (this.discountPolicies == null) {
+            this.discountPolicies = new HashMap<>();
+        }
+        // Update transient storeProducts reference in discount scopes
+        updateDiscountScopesStoreProducts();
+        
+        rebuildOffersOnProductsMap(); // Build from persistent allOffers
+        rebuildPendingOffersMap(); // Build from persistent allPendingOffers
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        this.publisher = null; // Will be injected/set when needed
+        // rolesTree is now persistent and handled by JPA
+        if (rolesTree == null && storeFounderID != 0) {
+            this.rolesTree = new Tree(storeFounderID);
+        }
+    }
+    
+    // Update storeProducts reference in discount scopes after loading from DB
+    private void updateDiscountScopesStoreProducts() {
+        if (discountPolicies != null && storeProducts != null) {
+            for (BaseDiscountPolicy policy : discountPolicies.values()) {
+                BaseDiscountScope scope = (BaseDiscountScope) policy.getScope();
+                if (scope instanceof ProductsDiscountScope) {
+                    ((ProductsDiscountScope) scope).setStoreProducts(storeProducts);
+                } else if (scope instanceof StoreDiscountScope) {
+                    ((StoreDiscountScope) scope).setStoreProducts(storeProducts);
+                }
+            }
+        }
+    }
+    
+    // Rebuild the offersOnProducts map from the persistent allOffers list (filtered by REGULAR type and not handled)
+    private void rebuildOffersOnProductsMap() {
+        if (this.offersOnProducts == null) {
+            this.offersOnProducts = new HashMap<>();
+        } else {
+            this.offersOnProducts.clear();
+        }
+        if (allOffers != null) {
+            for (Offer offer : allOffers) {
+                if ("REGULAR".equals(offer.getOfferType()) && !offer.isHandled()) {
+                    int userId = offer.getUserId();
+                    offersOnProducts.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+                }
+            }
+        }
+    }
+    
+    // Rebuild the pendingOffers map from the persistent allOffers list (filtered by PENDING type and not handled)
+    private void rebuildPendingOffersMap() {
+        if (this.pendingOffers == null) {
+            this.pendingOffers = new HashMap<>();
+        } else {
+            this.pendingOffers.clear();
+        }
+        if (allOffers != null) {
+            for (Offer offer : allOffers) {
+                if ("PENDING".equals(offer.getOfferType()) && !offer.isHandled()) {
+                    int userId = offer.getUserId();
+                    pendingOffers.computeIfAbsent(userId, k -> new ArrayList<>()).add(offer);
+                }
+            }
+        }
     }
 
     @Override
@@ -158,8 +322,8 @@ public class Store implements IStore {
     public void addStoreProductRating(int userID, int productID, double rating, String comment) {
         productsLock.lock();
         try{
-            if (storeProducts.containsKey(productID)) {
-                storeProducts.get(productID).addRating(userID, rating, comment);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                storeProducts.get(new StoreProductKey(storeID, productID)).addRating(userID, rating, comment);
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " does not exist in store ID: " + storeID);
@@ -174,14 +338,19 @@ public class Store implements IStore {
         productsLock.lock();
 
         try{
-            if (auctionProducts.containsKey(productID)) {
-                AuctionProduct ap = auctionProducts.get(productID);
+            // Find auction product by original product ID (not map key)
+            AuctionProduct ap = auctionProducts.values().stream()
+                .filter(auctionProduct -> auctionProduct.getStoreProduct().getSproductID() == productID)
+                .findFirst()
+                .orElse(null);
+                
+            if (ap != null) {
                 if(ap.isDone()){
                     throw new IllegalArgumentException("Auction is Done");
                 }
                 int prevId = ap.addBid(requesterId, bidAmount);
                 if(prevId == requesterId) return false;
-                if(prevId != -1) handleRecivedHigherBid(prevId, productID);
+                if(prevId != -1) handleRecivedHigherBid(prevId, ap.getStoreProduct().getSproductID()); // Use auction product's ID for events
                 return true;
             } else {
                 throw new IllegalArgumentException(
@@ -203,7 +372,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
             }
-            if (storeProducts.containsKey(productID)) {
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is already in store " + storeID);
             }
             if (quantity <= 0) {
@@ -215,9 +384,9 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-           
-            StoreProduct storeProduct = new StoreProduct(productID,storeID, name, basePrice, quantity, category);
-            storeProducts.put(productID, storeProduct); //overrides old product
+
+            StoreProduct storeProduct = new StoreProduct(productID, storeID, name, basePrice, quantity, category);
+            storeProducts.put(new StoreProductKey(storeID, productID), storeProduct);
             return new StoreProductDTO(storeProduct); //returns the productDTO
         }
         catch(Exception e){
@@ -238,7 +407,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException(
                         "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
             }
-            if (!storeProducts.containsKey(productID)) {
+            if (!storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
             }
             if (basePrice <= 0) {
@@ -247,7 +416,7 @@ public class Store implements IStore {
             if (name == null || name.length() <= 0) {
                 throw new IllegalArgumentException("Product's name can not be empty");
             }
-            StoreProduct storeProduct = storeProducts.get(productID);
+            StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productID));
             storeProduct.setQuantity(quantity);
             storeProduct.setBasePrice(basePrice);
         }
@@ -267,16 +436,21 @@ public class Store implements IStore {
         try {
             if (!hasInventoryPermissions(requesterId)) {
                 throw new IllegalArgumentException(
-                        "User " + requesterId + " has insufficient inventory permissions for store " + storeID);
+                        "User " + requesterId + " has insufficient inventory permissions for store ID: " + storeID);
             }
-            if (!storeProducts.containsKey(productID)) {
+            if (!storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
                 throw new IllegalArgumentException("Product " + productID + " is not in store " + storeID);
             }
 
-            if (auctionProducts.containsKey(productID)) {
-                auctionProducts.remove(productID);
+            // Remove auction product by original product ID
+            AuctionProduct auctionToRemove = auctionProducts.values().stream()
+                .filter(ap -> ap.getStoreProduct().getSproductID() == productID)
+                .findFirst()
+                .orElse(null);
+            if (auctionToRemove != null) {
+                auctionProducts.remove(new StoreProductKey(storeID, productID));
             }
-            storeProducts.remove(productID);
+            storeProducts.remove(new StoreProductKey(storeID, productID));
         }
         catch(Exception e){
             throw e;
@@ -312,12 +486,9 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new SimpleDiscount(policyIDCounter.incrementAndGet(), percentage,
+                BaseDiscountPolicy discountPolicy = new SimpleDiscount(0, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
-            } else {
-                throw new IllegalArgumentException(
-                        "User with ID: " + userID + " has insufficient permissions for store ID: " + storeID);
             }
         }
         finally{
@@ -331,7 +502,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new SimpleDiscount(policyIDCounter.incrementAndGet(), percentage,
+                BaseDiscountPolicy discountPolicy = new SimpleDiscount(0, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -347,7 +518,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -363,7 +534,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -379,7 +550,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -395,7 +566,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new AndDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new AndDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -411,7 +582,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new OrDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new OrDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -427,7 +598,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new OrDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new OrDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -443,7 +614,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new XorDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new XorDiscount(0, conditions, percentage,
                      new ProductsDiscountScope(productIDs, storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -459,7 +630,7 @@ public class Store implements IStore {
         try{
             if (isOwner(userID)
                     || (isManager(userID) && storeManagers.get(userID).contains(StoreManagerPermission.DISCOUNT_POLICY))) {
-                IDiscountPolicy discountPolicy = new XorDiscount(policyIDCounter.incrementAndGet(), conditions, percentage,
+                BaseDiscountPolicy discountPolicy = new XorDiscount(0, conditions, percentage,
                      new StoreDiscountScope(storeID, storeProducts));
                 discountPolicies.put(discountPolicy.getPolicyID(), discountPolicy);
             }
@@ -473,18 +644,22 @@ public class Store implements IStore {
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd) {
         rolesLock.lock();
         productsLock.lock();
+        StoreProductKey auctionMapKey = new StoreProductKey(storeID, productID);
         try {
             if (!hasInventoryPermissions(requesterId)) {
                 throw new IllegalArgumentException(
                         "User with ID: " + requesterId + " has insufficient permissions for store ID: " + storeID);
             }
-            if (storeProducts.containsKey(productID)) {
-                StoreProduct storeProduct = storeProducts.get(productID);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                StoreProduct storeProduct = storeProducts.get(auctionMapKey);
                 if (storeProduct.getQuantity() <= 0) {
                     throw new IllegalArgumentException(
                             "Product with ID: " + productID + " is out of stock in store ID: " + storeID);
                 }
-                if (auctionProducts.containsKey(productID)) {
+                // Check if product is already an auction product by original product ID
+                boolean isAlreadyAuction = auctionProducts.values().stream()
+                    .anyMatch(ap -> ap.getStoreProduct().getSproductID() == productID);
+                if (isAlreadyAuction) {
                     throw new IllegalArgumentException(
                             "Product with ID: " + productID + " is already an auction product in store ID: " + storeID);
                 }
@@ -497,7 +672,13 @@ public class Store implements IStore {
                             "Minutes to end must be greater than 0 for auction product with ID: "
                                     + productID + " in store ID: " + storeID);
                 }
-                auctionProducts.put(productID, new AuctionProduct(storeProduct, basePrice, MinutesToEnd));
+                AuctionProduct auctionProduct = new AuctionProduct(storeProduct, basePrice, MinutesToEnd);
+                
+                // In unit tests (non-JPA), the auto-generated ID will be 0, so use the productID parameter
+                // In production (JPA), use the auto-generated ID
+                auctionProducts.put(auctionMapKey, auctionProduct);
+                System.out.println("Auction product added with ID: " + auctionMapKey);
+                
                 scheduler.schedule(() -> {
                     handleAuctionEnd(productID);
                 }, MinutesToEnd, TimeUnit.MINUTES);
@@ -520,8 +701,13 @@ public class Store implements IStore {
     public void isValidPurchaseAction(int requesterId, int productID) {
         productsLock.lock();
         try {
-            if (auctionProducts.containsKey(productID)) {
-                AuctionProduct auctionProduct = auctionProducts.get(productID);
+            // Find auction product by original product ID
+            AuctionProduct auctionProduct = auctionProducts.values().stream()
+                .filter(ap -> ap.getStoreProduct().getSproductID() == productID)
+                .findFirst()
+                .orElse(null);
+                
+            if (auctionProduct != null) {
                 if (auctionProduct.getMinutesToEnd() <= 0) {
                     throw new IllegalArgumentException("Auction for product with ID: " + productID + " has ended.");
                 }
@@ -550,36 +736,42 @@ public class Store implements IStore {
         return prods;
     }
 
-    private void handleRecivedHigherBid(int prevHigherBid, int productID) {
-        if (auctionProducts.containsKey(productID)) {
-            AuctionProduct auctionProduct = auctionProducts.get(productID);
-            this.publisher.publishEvent(new AuctionGotHigherBidEvent(this.storeID, productID, prevHigherBid,
+    private void handleRecivedHigherBid(int prevHigherBid, int auctionProductID) {
+        System.out.println("handleRecivedHigherBid Triggered");
+        if (auctionProducts.containsKey(new StoreProductKey(storeID, auctionProductID))) {
+            AuctionProduct auctionProduct = auctionProducts.get(new StoreProductKey(storeID, auctionProductID));
+            // Use the original product ID for the event
+            this.publisher.publishEvent(new AuctionGotHigherBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(), prevHigherBid,
                     auctionProduct.getCurrentHighestBid()));
 
         }
     }
 
-    private void handleAuctionEnd(int productID) {
-        productsLock.lock();
-        try{
-
-            if (auctionProducts.containsKey(productID)) {
-                AuctionProduct auctionProduct = auctionProducts.get(productID);
+    public void getAuctionAfterAnded(int productID){
+         if (auctionProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                
+                if (this.publisher != null) {
+                    AuctionProduct auctionProduct = auctionProducts.get(new StoreProductKey(storeID, productID));
+                    System.out.println("current bid "+auctionProduct.getCurrentHighestBid());
+                    System.out.println("product id  "+auctionProduct.getStoreProduct().getSproductID());
+                    int currentHighestBidUserId = auctionProduct.getUserIDHighestBid();
+                    System.out.println("user with id: "+ currentHighestBidUserId + " has the highest bid");
+                    System.out.println("Auction product found - " + auctionProduct.getUserIDHighestBid());
                     if (auctionProduct.getUserIDHighestBid() != -1) // if there was a bid
                     {
-                        if(auctionProduct.getQuantity() > 0){ //if there is stock
+                        if(auctionProduct.getStoreProduct().getQuantity() > 0){ //if there is stock
                             //update owner
                             this.publisher.publishEvent(new AuctionEndedToOwnersEvent(this.storeID, productID,
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                             //update winner
-                            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getProductID(),
+                            this.publisher.publishEvent(new AuctionApprovedBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(),
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid(),
                                 auctionProduct.toDTO(storeID)));
                         }
                         else
                         {
                             //update winner for fail
-                            this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getProductID(),
+                            this.publisher.publishEvent(new AuctionDeclinedBidEvent(this.storeID, auctionProduct.getStoreProduct().getSproductID(),
                                 auctionProduct.getUserIDHighestBid(), auctionProduct.getCurrentHighestBid()));
                             this.publisher.publishEvent(new AuctionFailedToOwnersEvent(this.storeID, productID,
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, product no longer available in store"));
@@ -590,12 +782,23 @@ public class Store implements IStore {
                                 auctionProduct.getCurrentHighestBid(), "Auction failed, no bids were placed"));
                     }
                     auctionProduct.setIsDone(true);
-                
+                    //this.publisher.publishEvent(new AuctionSaveEvent(storeID));
+                }
             } else {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productID + " is not an auction product in store ID: " + storeID);
             }
+
+    }
+
+    private void handleAuctionEnd(int productID) {
+        System.out.println("handleAuctionEnd Triggered");
+        productsLock.lock();
+        try{    
+            this.publisher.publishEvent(new AuctionSaveEvent(storeID, productID));
+            //getAuctionAfterAnded(productID);
         }
+
         catch(Exception e){
             throw e;
         }
@@ -606,8 +809,8 @@ public class Store implements IStore {
 
     @Override
     public void receivingMessage(int userID, String message) {
-        int msgId = UserMsgIdCounter.incrementAndGet();
-        messagesFromUsers.put(msgId, new UserMsg(userID, message));
+        UserMsg userMsg = new UserMsg(userID, message);
+        messagesFromUsers.add(userMsg);
     }
 
     @Override
@@ -616,7 +819,6 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                messagesFromStore.push(new SimpleEntry<>(userID, message));
                 this.publisher.publishEvent(new ResponseFromStoreEvent(this.storeID, userID, message));
 
             } else {
@@ -639,7 +841,11 @@ public class Store implements IStore {
         try {
             if (isOwner(managerId) || (isManager(managerId)
                     && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                return messagesFromUsers;
+                Map<Integer, UserMsg> map = new HashMap<>();
+                for (UserMsg msg : messagesFromUsers) {
+                    map.put(msg.getMsgId(), msg);
+                }
+                return map;
             } else {
                 throw new IllegalArgumentException(
                         "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
@@ -655,33 +861,12 @@ public class Store implements IStore {
     }
 
     @Override
-    public Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId) {
-        rolesLock.lock();
-        try {
-            if (isOwner(managerId) || (isManager(managerId)
-                    && storeManagers.get(managerId).contains(StoreManagerPermission.REQUESTS_REPLY))) {
-                return messagesFromStore;
-            } else {
-                throw new IllegalArgumentException(
-                        "User with id: " + managerId + " has insufficient permissions for store ID: " + storeID);
-            }
-
-        }
-        catch(Exception e){
-            throw e;
-        }
-        finally {
-            rolesLock.unlock();
-        }
-    }
-
-    @Override
-    public HashMap<Integer, StoreProduct> getStoreProducts() {
+    public Map<StoreProductKey, StoreProduct> getStoreProducts() {
         return storeProducts;
     }
 
     @Override
-    public HashMap<Integer, StoreRating> getRatings() {
+    public Map<Integer, StoreRating> getRatings() {
         return Sratings;
     }
 
@@ -692,7 +877,7 @@ public class Store implements IStore {
 
     @Override
     public HashMap<Integer, IDiscountPolicy> getDiscountPolicies() {
-        return discountPolicies;
+        return new HashMap<>(discountPolicies);
     }
 
     @Override
@@ -889,7 +1074,7 @@ public class Store implements IStore {
         }
         List<StoreManagerPermission> perms = pendingManagersPerms.remove(appointee);
         pendingManagers.remove(appointee);
-        if (perms.isEmpty())
+        if (perms == null || perms.isEmpty())
             throw new IllegalArgumentException("Permissions can not be empty"); // shouldn't happen
         storeManagers.put(appointee, perms);
         rolesTree.addNode(appointor, appointee);
@@ -1070,8 +1255,8 @@ public class Store implements IStore {
     public ProductRating getStoreProductRating(int userID, int productID) {
         productsLock.lock();
         try {
-            if (storeProducts.containsKey(productID)) {
-                ProductRating rating = storeProducts.get(productID).getRatingByUser(userID);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                ProductRating rating = storeProducts.get(new StoreProductKey(storeID, productID)).getRatingByUser(userID);
                 return rating;
             } else {
                 throw new IllegalArgumentException(
@@ -1123,8 +1308,8 @@ public class Store implements IStore {
     public StoreProduct getStoreProduct(int productID) {
         productsLock.lock();
         try {
-            if (storeProducts.containsKey(productID)) {
-                StoreProduct prod =  storeProducts.get(productID);
+            if (storeProducts.containsKey(new StoreProductKey(storeID, productID))) {
+                StoreProduct prod =  storeProducts.get(new StoreProductKey(storeID, productID));
                 return prod;
             } else {
                 throw new IllegalArgumentException(
@@ -1268,11 +1453,11 @@ public class Store implements IStore {
         for (Map.Entry<Integer, Integer> entry : productToBuy.entrySet()) {
             int productId = entry.getKey();
             int quantity = entry.getValue();
-            if (!storeProducts.containsKey(productId)) {
+            if (!storeProducts.containsKey(new StoreProductKey(storeID, productId))) {
                 throw new IllegalArgumentException(
                         "Product with ID: " + productId + " does not exist in store ID: " + storeID);
             }
-            StoreProduct product = storeProducts.get(productId);
+            StoreProduct product = storeProducts.get(new StoreProductKey(storeID, productId));
             products.put(product, quantity);
             if (this.purchasePolicies.containsKey(productId)) {
                 PurchasePolicy policy = this.purchasePolicies.get(productId);
@@ -1282,23 +1467,33 @@ public class Store implements IStore {
                                     + " is not valid for the current basket.");
                 }
             }
-            int reducedQuantity = 0;
-            if (auctionProducts.containsKey(productId)) {
-                AuctionProduct auctionProduct = auctionProducts.get(productId);
+            // Find auction product by original product ID
+            AuctionProduct auctionProduct = auctionProducts.values().stream()
+                .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
+                .findFirst()
+                .orElse(null);
+                
+            if (auctionProduct != null) {
                 if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone()) {
                     amount += auctionProduct.getCurrentHighestBid();
-                    reducedQuantity++;
-                    logger.info("Calculated auction product finished");
+                    amount += auctionProduct.getStoreProduct().getBasePrice() * (quantity - 1); 
                 }
-            } 
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
-            if(offer != null && offer.getUserId() == userId && offer.isApproved() && offer.isHandled()){
-                amount += offer.getOfferAmount();
-                reducedQuantity++;
-                logger.info("Calculated offer product finished");
+                else{
+                    amount += auctionProduct.getStoreProduct().getBasePrice() * quantity;
+                }
+                
+            } else {
+                Offer offer = getUserOfferOnStoreProduct(userId, productId);
+                if(offer != null && offer.getUserId() == userId && offer.isApproved() && offer.isHandled()){
+                    amount += offer.getOfferAmount();
+                    if(quantity > 1){
+                        amount += product.getBasePrice() * (quantity - 1);
+                    }
+                }
+                else{
+                    amount += product.getBasePrice() * quantity;
+                }
             }
-            logger.info("Calculating remaining products (quantity left: " + (quantity - reducedQuantity) + ")");
-            amount += product.getBasePrice() * (quantity - reducedQuantity);
         }
         double totalDiscount = discountPolicies.values().stream()
         .mapToDouble(d -> d.apply(cart)).sum();
@@ -1356,8 +1551,8 @@ public class Store implements IStore {
             for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
                 int productId = entry.getKey();
                 int quantity = entry.getValue();
-                if (storeProducts.containsKey(productId)) {
-                    StoreProduct storeProduct = storeProducts.get(productId);
+                if (storeProducts.containsKey(new StoreProductKey(storeID, productId))) {
+                    StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productId));
                     int newQuantity = Math.min(quantity, storeProduct.getQuantity());
                     if (quantity == newQuantity) {
                         productsInStore.put(new StoreProductDTO(storeProduct, newQuantity), true);
@@ -1381,34 +1576,43 @@ public class Store implements IStore {
             for (Map.Entry<Integer, Integer> entry : productsToBuy.entrySet()) {
                 int productId = entry.getKey();
                 int quantity = entry.getValue();
-                StoreProduct storeProduct = storeProducts.get(productId);
+                StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productId));
                 if (storeProduct == null) {
                     throw new IllegalArgumentException("Product with ID: " + productId + " does not exist in store ID: "
                             + storeID);
                 }
-                int newQuantity = Math.min(quantity, storeProduct.getQuantity());
-                if(auctionProducts.containsKey(productId)){
-                    AuctionProduct auctionProduct = auctionProducts.get(productId);
+                // Find auction product by original product ID
+                AuctionProduct auctionProduct = auctionProducts.values().stream()
+                    .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
+                    .findFirst()
+                    .orElse(null);
+                    
+                if(auctionProduct != null){
                     if(auctionProduct.getUserIDHighestBid() == userId  && auctionProduct.isDone()){
-                        if(auctionProduct.getQuantity() < quantity) {
+                        if(auctionProduct.getStoreProduct().getQuantity() < quantity) {
                             throw new IllegalArgumentException("Not enough quantity for product with ID: " + productId);
                         }
-                        auctionProduct.setQuantity(auctionProduct.getQuantity() - quantity);
-                        auctionProducts.remove(productId);
+                        auctionProduct.getStoreProduct().setQuantity(auctionProduct.getStoreProduct().getQuantity() - quantity);
+                        auctionProducts.remove(new StoreProductKey(storeID, productId)); // Remove using auction product's auto-generated ID
+                        products.put(new StoreProductDTO(auctionProduct.getStoreProduct(), quantity),true);
+
                     }
                 }
-                Offer offer = getUserOfferOnStoreProduct(userId, productId);
-                if(offer != null){
-                    removeOffer(offer);
-                }
-                if (newQuantity == quantity) { //this if was else-if, it might cause problems now?
-                    products.put(new StoreProductDTO(storeProduct, quantity),true);
-                    storeProduct.decrementProductQuantity(newQuantity);
-                }
                 else{
-                    //storeProduct.decrementProductQuantity(newQuantity);
-                    products.put(new StoreProductDTO(storeProduct, newQuantity),false);
-
+                    int newQuantity = Math.min(quantity, storeProduct.getQuantity());
+                    Offer offer = getUserOfferOnStoreProduct(userId, productId);
+                    if(offer != null){
+                        removeOffer(offer);
+                    }
+                    if (newQuantity == quantity) { //this if was else-if, it might cause problems now?
+                        products.put(new StoreProductDTO(storeProduct, quantity),true);
+                        storeProduct.decrementProductQuantity(newQuantity);
+                    }
+                    else{
+                        //storeProduct.decrementProductQuantity(newQuantity);
+                        products.put(new StoreProductDTO(storeProduct, newQuantity),false);
+    
+                    }
                 }
             }
 
@@ -1427,8 +1631,8 @@ public class Store implements IStore {
             for (Map.Entry<Integer, Integer> entry : products.entrySet()) {
                 int productId = entry.getKey();
                 int quantity = entry.getValue();
-                if (storeProducts.containsKey(productId)) {
-                    StoreProduct storeProduct = storeProducts.get(productId);
+                if (storeProducts.containsKey(new StoreProductKey(storeID, productId))) {
+                    StoreProduct storeProduct = storeProducts.get(new StoreProductKey(storeID, productId));
                     storeProduct.incrementProductQuantity(quantity);
                 }
             }
@@ -1475,30 +1679,38 @@ public class Store implements IStore {
         productsLock.lock();
         offersLock.lock();
         try{
-            if(!storeProducts.containsKey(productId)){
+            if(!storeProducts.containsKey(new StoreProductKey(storeID, productId))){
                 throw new IllegalArgumentException("Store Product " + productId + " Does Not Exist in Store " + storeID);
             }
-            if(storeProducts.get(productId).getQuantity() < 1){
+            if(storeProducts.get(new StoreProductKey(storeID, productId)).getQuantity() < 1){
                 throw new IllegalArgumentException("Product " + productId + " is out of stock");
             }
             if(offerAmount < 1){
                 throw new IllegalArgumentException("Offer must be at least $1");
             }
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
             List<Offer> userOffers = offersOnProducts.get(userId);
             if (userOffers == null){
                 userOffers = new ArrayList<>();
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer != null){
                 throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }
-            offer = getUserPendingOfferOnStoreProduct(userId, productId);
+            offer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
             if(offer != null){
                 throw new IllegalArgumentException("User already has pending counter offer on the same product");
             }
 
-            userOffers.add(new Offer(userId, this.storeID, productId, offerAmount, new ArrayList<>(this.storeOwners)));
+            Offer newOffer = new Offer(userId, this.storeID, productId, offerAmount, new ArrayList<>(this.storeOwners));
+            newOffer.setOfferType("REGULAR");
+            userOffers.add(newOffer);
             offersOnProducts.put(userId, userOffers);
+            allOffers.add(newOffer); // Also add to persistent list
             this.publisher.publishEvent(new OfferReceivedEvent(this.storeID, productId, userId, offerAmount));
         }
         finally{
@@ -1516,7 +1728,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("Only Store Owners can Accept Offers");
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1542,7 +1754,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("Only Store Owners can Decline Offers");
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1559,23 +1771,38 @@ public class Store implements IStore {
     private Offer getUserOfferOnStoreProduct(int userId, int productId){
         offersLock.lock();
         try{
-            if(offersOnProducts.containsKey(userId)){
-                for(Offer offer : offersOnProducts.get(userId)){
-                    if(offer.getProductId() == productId){
-                        return offer;
-                    }
-                }
-            }
-            return null;
+            return getUserOfferOnStoreProductUnsafe(userId, productId);
         }
         finally{
             offersLock.unlock();
         }
     }
+    
+    // Internal method that doesn't acquire locks - caller must hold offersLock
+    private Offer getUserOfferOnStoreProductUnsafe(int userId, int productId){
+        // Defensive check: if offersOnProducts is null or seems out of sync, rebuild it
+        if(offersOnProducts == null || (allOffers != null && allOffers.stream().anyMatch(o -> "REGULAR".equals(o.getOfferType()) && !o.isHandled()) && offersOnProducts.isEmpty())){
+            rebuildOffersOnProductsMap();
+        }
+        
+        if(offersOnProducts.containsKey(userId)){
+            for(Offer offer : offersOnProducts.get(userId)){
+                if(offer.getProductId() == productId){
+                    return offer;
+                }
+            }
+        }
+        return null;
+    }
 
     private void removeOwnerFromAllOffers(int ownerId){
         offersLock.lock();
         try{
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
             for(List<Offer> offersList : offersOnProducts.values()){
                 for(Offer offer : offersList){
                     offer.removeOwner(ownerId);
@@ -1600,8 +1827,15 @@ public class Store implements IStore {
             else{
                 if(offer.isDeclined() && !offer.isHandled()){
                     this.publisher.publishEvent(new OfferDeclinedEvent(storeID, offer.getProductId(), offer.getUserId(), offer.getOfferAmount(), offer.getDeclinedBy()));
-                    removeOffer(offer);
                     offer.setHandled();
+                    // Remove only from transient maps, not persistent collection
+                    List<Offer> offers = offersOnProducts.get(offer.getUserId());
+                    if(offers != null){
+                        offers.remove(offer);
+                        if(offers.isEmpty()){
+                            offersOnProducts.remove(offer.getUserId());
+                        }
+                    }
                 }
             }
         }
@@ -1613,6 +1847,11 @@ public class Store implements IStore {
     private void removeOffer(Offer offer){
         offersLock.lock();
         try{
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
             List<Offer> offers = offersOnProducts.get(offer.getUserId());
             if(offers != null){
                 offers.remove(offer);
@@ -1620,6 +1859,7 @@ public class Store implements IStore {
             if(offers == null || offers.isEmpty()){
                 offersOnProducts.remove(offer.getUserId());
             }
+            allOffers.remove(offer); // Also remove from persistent list
         }
         finally{
             offersLock.unlock();
@@ -1628,70 +1868,137 @@ public class Store implements IStore {
 
     @Override
     public void counterOffer(int ownerId, int userId, int productId, double offerAmount){
+        productsLock.lock();
         offersLock.lock();
         rolesLock.lock();
         try{
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("User " + ownerId + " is not a valid Store Owner in store " + storeID);
             }
-            Offer offer = getUserOfferOnStoreProduct(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
             if(offerAmount < 1){
                 throw new IllegalArgumentException("Counter offer must be more than $1");
             }
-            offer = getUserPendingOfferOnStoreProduct(userId, productId);
-            if(offer != null){
+            Offer pendingOffer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
+            if(pendingOffer != null){
                 throw new IllegalArgumentException("User already has a counter offer pending");
             }
-            declineOfferOnStoreProduct(ownerId, userId, productId); // handles the decline too (msgs & all)
+            
+            // Decline the original offer silently (no events for counter offers)
+            offer.decline(ownerId);
+            offer.setHandled(); // Mark as handled to prevent event publishing
+            // Don't remove from persistent collection - just remove from transient maps
+            List<Offer> offers = offersOnProducts.get(offer.getUserId());
+            if(offers != null){
+                offers.remove(offer);
+                if(offers.isEmpty()){
+                    offersOnProducts.remove(offer.getUserId());
+                }
+            }
+            
+            // Create the counter offer
             Offer counterOffer = new Offer(userId, storeID, productId, offerAmount, List.copyOf(storeOwners));
+            counterOffer.setOfferType("PENDING");
+        
+            // Ensure pendingOffers map is initialized
+            if(pendingOffers == null){
+                rebuildPendingOffersMap();
+            }
+        
             List<Offer> pendingUserOffers = pendingOffers.get(userId);
             if(pendingUserOffers == null){
                 pendingUserOffers = new ArrayList<>();
             }
             pendingUserOffers.add(counterOffer);
             pendingOffers.put(userId, pendingUserOffers);
+            allOffers.add(counterOffer); // Also add to persistent list
             this.publisher.publishEvent(new CounterOfferEvent(storeID, productId, userId, offerAmount));
         }
         finally{
             rolesLock.unlock();
             offersLock.unlock();
+            productsLock.unlock();
         }
-
     }
 
     private Offer getUserPendingOfferOnStoreProduct(int userId, int productId){
         offersLock.lock();
         try{
-            if(pendingOffers.containsKey(userId)){
-                for(Offer offer : pendingOffers.get(userId)){
-                    if(offer.getProductId() == productId){
-                        return offer;
-                    }
-                }
-            }
-            return null;
+            return getUserPendingOfferOnStoreProductUnsafe(userId, productId);
         }
         finally{
             offersLock.unlock();
         }
     }
+    
+    // Internal method that doesn't acquire locks - caller must hold offersLock
+    private Offer getUserPendingOfferOnStoreProductUnsafe(int userId, int productId){
+        // Defensive check: if pendingOffers is null or seems out of sync, rebuild it
+        if(pendingOffers == null || (allOffers != null && allOffers.stream().anyMatch(o -> "PENDING".equals(o.getOfferType()) && !o.isHandled()) && pendingOffers.isEmpty())){
+            rebuildPendingOffersMap();
+        }
+        
+        if(pendingOffers.containsKey(userId)){
+            for(Offer offer : pendingOffers.get(userId)){
+                if(offer.getProductId() == productId){
+                    return offer;
+                }
+            }
+        }
+        return null;
+    }
 
     @Override
     public void acceptCounterOffer(int userId, int productId){
+        productsLock.lock();
         offersLock.lock();
         try{
-            Offer pendingOffer = getUserPendingOfferOnStoreProduct(userId, productId);
+            Offer pendingOffer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
             if(pendingOffer == null){
                 throw new IllegalArgumentException("User has no Pending Counter Offers");
             }
+            
+            // Validate product exists and is in stock
+            if(!storeProducts.containsKey(new StoreProductKey(storeID, productId))){
+                throw new IllegalArgumentException("Store Product " + productId + " Does Not Exist in Store " + storeID);
+            }
+            if(storeProducts.get(new StoreProductKey(storeID, productId)).getQuantity() < 1){
+                throw new IllegalArgumentException("Product " + productId + " is out of stock");
+            }
+            
+            // Remove the pending offer
             removePendingOffer(pendingOffer);
-            placeOfferOnStoreProduct(userId, productId, pendingOffer.getOfferAmount());
+            
+            // Place the new offer inline to avoid nested locking
+            // Ensure offersOnProducts map is initialized
+            if(offersOnProducts == null){
+                rebuildOffersOnProductsMap();
+            }
+            
+            List<Offer> userOffers = offersOnProducts.get(userId);
+            if (userOffers == null){
+                userOffers = new ArrayList<>();
+            }
+            
+            // Check if user already has an offer on this product
+            Offer existingOffer = getUserOfferOnStoreProductUnsafe(userId, productId);
+            if(existingOffer != null){
+                throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
+            }
+            
+            Offer newOffer = new Offer(userId, this.storeID, productId, pendingOffer.getOfferAmount(), new ArrayList<>(this.storeOwners));
+            newOffer.setOfferType("REGULAR");
+            userOffers.add(newOffer);
+            offersOnProducts.put(userId, userOffers);
+            allOffers.add(newOffer); // Also add to persistent list
+            this.publisher.publishEvent(new OfferReceivedEvent(this.storeID, productId, userId, pendingOffer.getOfferAmount()));
         }
         finally{
             offersLock.unlock();
+            productsLock.unlock();
         }
     }
 
@@ -1699,7 +2006,7 @@ public class Store implements IStore {
     public void declineCounterOffer(int userId, int productId){
         offersLock.lock();
         try{
-            Offer pendingOffer = getUserPendingOfferOnStoreProduct(userId, productId);
+            Offer pendingOffer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
             if(pendingOffer == null){
                 throw new IllegalArgumentException("User has no Pending Counter Offers");
             }
@@ -1714,6 +2021,11 @@ public class Store implements IStore {
     private void removePendingOffer(Offer offer){
         offersLock.lock();
         try{
+            // Ensure pendingOffers map is initialized
+            if(pendingOffers == null){
+                rebuildPendingOffersMap();
+            }
+            
             List<Offer> offers = pendingOffers.get(offer.getUserId());
             if(offers != null){
                 offers.remove(offer);
@@ -1721,6 +2033,8 @@ public class Store implements IStore {
             if(offers == null || offers.isEmpty()){
                 pendingOffers.remove(offer.getUserId());
             }
+            // Don't remove from persistent collection - just mark as handled
+            offer.setHandled();
         }
         finally{
             offersLock.unlock();
@@ -1728,10 +2042,30 @@ public class Store implements IStore {
     }
 
     public List<Offer> getUserOffers(int userId){
+        // Ensure offersOnProducts map is initialized
+        if(offersOnProducts == null){
+            rebuildOffersOnProductsMap();
+        }
+        
         List<Offer> offers = offersOnProducts.get(userId);
         if(offers == null){
             return new ArrayList<>();
         }
         return offers;
+    }
+    
+    // Getter for persistent offers list
+    public List<Offer> getAllOffers() {
+        return allOffers;
+    }
+    
+    public void setAllOffers(List<Offer> allOffers) {
+        this.allOffers = allOffers;
+        rebuildOffersOnProductsMap(); // Rebuild the transient map when setting persistent list
+        rebuildPendingOffersMap(); // Also rebuild pending offers map
+    }
+    
+    public void setPublisher(ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
     }
 }

@@ -81,8 +81,6 @@ public interface IStoreService {
 
   void sendMessageToUser(int managerId, int storeId, int userId, String message);
 
-  Stack<SimpleEntry<Integer, String>> getMessagesFromStore(int managerId, int storeId);
-
   Map<StoreDTO, Map<StoreProductDTO, Boolean>> decrementProductsInStores(int userId, Map<Integer,Map<Integer,Integer>> productsToBuy);
   
   void removeProductFromStore(int storeId, int requesterId, int productId);

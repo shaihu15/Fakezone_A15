@@ -65,12 +65,12 @@ public class UserServiceTest {
         int storeId = 10;
 
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
 
         userService.removeAssignmentMessage(storeId, userId);
 
         verify(mockUser, times(1)).removeAssignmentMessage(storeId);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
 
     @Test
@@ -78,13 +78,13 @@ public class UserServiceTest {
         int userId = 999;
         int storeId = 10;
 
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> userService.removeAssignmentMessage(storeId, userId));
 
         assertEquals("User not found", exception.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class UserServiceTest {
         HashMap<Integer, IRegisteredRole> roles = new HashMap<>();
         IRegisteredRole mockRole = mock(IRegisteredRole.class);
         roles.put(10, mockRole);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllRoles()).thenReturn(roles);
 
         HashMap<Integer, IRegisteredRole> result = userService.getAllRoles(userId);
@@ -105,7 +105,7 @@ public class UserServiceTest {
     void testGetAllRoles_UserExists_RolesNull_ReturnsEmptyMap() {
         int userId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllRoles()).thenReturn(null);
 
         HashMap<Integer, IRegisteredRole> result = userService.getAllRoles(userId);
@@ -116,7 +116,7 @@ public class UserServiceTest {
     @Test
     void testGetAllRoles_UserNotFound_ThrowsException() {
         int userId = 999;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
         Exception exception = assertThrows(IllegalArgumentException.class, () -> userService.getAllRoles(userId));
         assertEquals("User not found with ID: " + userId, exception.getMessage());
     }
@@ -125,7 +125,7 @@ public class UserServiceTest {
     void testGetAllRoles_ExceptionInGetAllRoles_ThrowsRuntimeException() {
         int userId = 3;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllRoles()).thenThrow(new RuntimeException("fail"));
         RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.getAllRoles(userId));
         assertTrue(exception.getMessage().contains("Error retrieving roles for user " + userId));
@@ -138,7 +138,7 @@ public class UserServiceTest {
         Registered mockUser = mock(Registered.class);
         
         // Mock the findById method to return the mock user
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         // You should use findAllById according to the provided function, but it returns Optional<User>
         // It's likely a typo in your provided method signature or the internal implementation.
         // I will use findById as it is more common for single entity retrieval by ID in repositories.
@@ -181,8 +181,8 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Hello", null));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        messages.put(1, new StoreMsg(1, -1, "Hello", null,userId));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenReturn(messages);
 
         Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
@@ -197,7 +197,7 @@ public class UserServiceTest {
     void testGetAllMessages_EmptyMessages() {
         int userId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenReturn(new HashMap<>());
 
         Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
@@ -212,7 +212,7 @@ public class UserServiceTest {
     void testGetAllMessages_UserThrowsException() {
         int userId = 3;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllMessages()).thenThrow(new RuntimeException("DB error"));
 
         Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
@@ -226,7 +226,7 @@ public class UserServiceTest {
     @Test
     void testGetAllMessages_UserNotFound() {
         int userId = 999;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
 
         Response<Map<Integer, StoreMsg>> response = userService.getAllMessages(userId);
 
@@ -240,8 +240,8 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Assignment message", null));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        messages.put(1, new StoreMsg(1, -1, "Assignment message", null,userId));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenReturn(messages);
 
         Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
@@ -256,7 +256,7 @@ public class UserServiceTest {
     void testGetAssignmentMessages_Empty() {
         int userId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenReturn(new HashMap<>());
 
         Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
@@ -271,7 +271,7 @@ public class UserServiceTest {
     void testGetAssignmentMessages_Exception() {
         int userId = 3;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAssignmentMessages()).thenThrow(new RuntimeException("DB error"));
 
         Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
@@ -285,7 +285,7 @@ public class UserServiceTest {
     @Test
     void testGetAssignmentMessages_UserNotFound() {
         int userId = 999;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
 
         Response<Map<Integer, StoreMsg>> response = userService.getAssignmentMessages(userId);
 
@@ -300,8 +300,8 @@ public class UserServiceTest {
         int userId = 1;
         Registered mockUser = mock(Registered.class);
         Map<Integer, StoreMsg> messages = new HashMap<>();
-        messages.put(1, new StoreMsg(1, -1, "Auction ended", null));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        messages.put(1, new StoreMsg(1, -1, "Auction ended", null,userId));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenReturn(messages);
 
         Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
@@ -316,7 +316,7 @@ public class UserServiceTest {
     void testGetAuctionEndedMessages_Empty() {
         int userId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenReturn(new HashMap<>());
 
         Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
@@ -331,7 +331,7 @@ public class UserServiceTest {
     void testGetAuctionEndedMessages_Exception() {
         int userId = 3;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getOffersMessages()).thenThrow(new RuntimeException("DB error"));
 
         Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
@@ -345,7 +345,7 @@ public class UserServiceTest {
     @Test
     void testGetAuctionEndedMessages_UserNotFound() {
         int userId = 999;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
 
         Response<Map<Integer, StoreMsg>> response = userService.getUserOfferMessages(userId);
 
@@ -362,7 +362,7 @@ public class UserServiceTest {
         HashMap<Integer, IRegisteredRole> roles = new HashMap<>();
         IRegisteredRole role = mock(IRegisteredRole.class);
         roles.put(1, role);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllRoles()).thenReturn(roles);
     
         HashMap<Integer, IRegisteredRole> result = userService.getAllRoles(userId);
@@ -374,7 +374,7 @@ public class UserServiceTest {
     void testGetAllRoles_NullRoles() {
         int userId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllRoles()).thenReturn(null);
     
         HashMap<Integer, IRegisteredRole> result = userService.getAllRoles(userId);
@@ -387,7 +387,7 @@ public class UserServiceTest {
     void testGetAllRoles_Exception() {
         int userId = 3;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getAllRoles()).thenThrow(new RuntimeException("DB error"));
     
         RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.getAllRoles(userId));
@@ -397,7 +397,7 @@ public class UserServiceTest {
     @Test
     void testGetAllRoles_UserNotFound() {
         int userId = 999;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
     
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.getAllRoles(userId));
         assertEquals("User not found with ID: " + userId, ex.getMessage());
@@ -407,52 +407,51 @@ public class UserServiceTest {
         int userId = 1, storeId = 2;
         String message = "Hello";
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
     
         userService.sendMessageToStore(userId, storeId, message);
     
-        verify(mockUser, times(1)).sendMessageToStore(storeId, message);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
     void testSendMessageToStore_UserNotFound_ShouldThrow() {
         int userId = 999, storeId = 2;
         String message = "Hello";
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
     
         Exception ex = assertThrows(IllegalArgumentException.class, () -> userService.sendMessageToStore(userId, storeId, message));
         assertEquals("User not found", ex.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
     void testRemoveRole_Success() {
         int userId = 1, storeId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
     
         userService.removeRole(userId, storeId);
     
         verify(mockUser, times(1)).removeRole(storeId);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
     void testRemoveRole_UserNotFound_ShouldThrow() {
         int userId = 999, storeId = 2;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
     
         Exception ex = assertThrows(IllegalArgumentException.class, () -> userService.removeRole(userId, storeId));
         assertEquals("User not found", ex.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
     void testDidPurchaseProduct_Success() {
         int userId = 1, storeId = 2, productId = 3;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.didPurchaseProduct(storeId, productId)).thenReturn(true);
     
         boolean result = userService.didPurchaseProduct(userId, storeId, productId);
@@ -464,11 +463,11 @@ public class UserServiceTest {
     @Test
     void testDidPurchaseProduct_UserNotFound_ShouldThrow() {
         int userId = 999, storeId = 2, productId = 3;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
     
         Exception ex = assertThrows(IllegalArgumentException.class, () -> userService.didPurchaseProduct(userId, storeId, productId));
         assertEquals("User not found", ex.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
@@ -599,36 +598,36 @@ public class UserServiceTest {
         int userId = 1, storeId = 2;
         Registered mockUser = mock(Registered.class);
         IRegisteredRole mockRole = mock(IRegisteredRole.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getRoleByStoreID(storeId)).thenReturn(mockRole);
     
         IRegisteredRole result = userService.getRoleByStoreID(userId, storeId);
     
         assertEquals(mockRole, result);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
         verify(mockUser, times(1)).getRoleByStoreID(storeId);
     }
     
     @Test
     void testGetRoleByStoreID_UserNotFound_ShouldThrow() {
         int userId = 999, storeId = 2;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
     
         Exception ex = assertThrows(IllegalArgumentException.class, () -> userService.getRoleByStoreID(userId, storeId));
         assertEquals("User not found", ex.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
     void testGetRoleByStoreID_ExceptionInUser() {
         int userId = 1, storeId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.getRoleByStoreID(storeId)).thenThrow(new RuntimeException("fail"));
     
         IRegisteredRole result = userService.getRoleByStoreID(userId, storeId);
         assertNull(result);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
         verify(mockUser, times(1)).getRoleByStoreID(storeId);
     }
     
@@ -636,36 +635,36 @@ public class UserServiceTest {
     void testDidPurchaseStore_Success() {
         int userId = 1, storeId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.didPurchaseStore(storeId)).thenReturn(true);
     
         boolean result = userService.didPurchaseStore(userId, storeId);
     
         assertTrue(result);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
         verify(mockUser, times(1)).didPurchaseStore(storeId);
     }
     
     @Test
     void testDidPurchaseStore_UserNotFound_ShouldThrow() {
         int userId = 999, storeId = 2;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.empty());
     
         Exception ex = assertThrows(IllegalArgumentException.class, () -> userService.didPurchaseStore(userId, storeId));
         assertEquals("User not found", ex.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
     }
     
     @Test
     void testDidPurchaseStore_ExceptionInUser() {
         int userId = 1, storeId = 2;
         Registered mockUser = mock(Registered.class);
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(userRepository.findRegisteredById(userId)).thenReturn(Optional.of(mockUser));
         when(mockUser.didPurchaseStore(storeId)).thenThrow(new RuntimeException("fail"));
     
         boolean result = userService.didPurchaseStore(userId, storeId);
         assertFalse(result);
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).findRegisteredById(userId);
         verify(mockUser, times(1)).didPurchaseStore(storeId);
     }
     

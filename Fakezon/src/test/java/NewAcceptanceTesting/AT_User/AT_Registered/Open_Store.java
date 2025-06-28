@@ -34,43 +34,24 @@ import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
 import NewAcceptanceTesting.TestHelper;
 import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+import com.fakezone.fakezone.FakezoneApplication;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest(classes = FakezoneApplication.class)
 public class Open_Store {
     //Use-case: 3.2 Open Store 
 
+     @Autowired
     private SystemService systemService;
-    private IStoreRepository storeRepository;
-    private IUserRepository userRepository;
-    private IProductRepository productRepository;
-    private IOrderRepository orderRepository;
-    private IDelivery   deliveryService;
-    private IAuthenticator authenticatorService;
-    private IPayment paymentService;
-    private ApplicationEventPublisher eventPublisher;
-    private INotificationWebSocketHandler notificationWebSocketHandler;
-    private IStoreService storeService;
-    private IProductService productService;
-    private IUserService userService;
-    private IOrderService orderService;
 
     private TestHelper testHelper;
 
     @BeforeEach
     void setUp() {
 
-        storeRepository = new StoreRepository();
-        userRepository = new UserRepository();
-        productRepository = new ProductRepository();
-        orderRepository = new OrderRepository();
-        paymentService = new PaymentAdapter();
-        deliveryService = new DeliveryAdapter();
-        notificationWebSocketHandler = new NotificationWebSocketHandler();
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        orderService = new OrderService(orderRepository);
-        productService = new ProductService(productRepository);
-        authenticatorService = new AuthenticatorAdapter(userService);
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService,
-                authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
+        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
         testHelper = new TestHelper(systemService);
     }
 
@@ -84,10 +65,7 @@ public class Open_Store {
         int storeId = resultAddStore.getData();
 
         assertNotNull(resultAddStore.getData());
-        assertEquals(storeRepository.findByName(storeName).getId(), storeId);
-        assertTrue(storeRepository.findByName(storeName).isOpen());
-        assertTrue(storeRepository.findById(resultAddStore.getData()).isOpen());
-
+        assertTrue(systemService.isStoreOpen(storeId)); // Check if store is created and can be retrieved
     }
 
     @Test
@@ -100,7 +78,7 @@ public class Open_Store {
         int storeId1 = resultAddStore1.getData();
 
         assertNotNull(storeId1);
-        assertTrue(storeRepository.findById(storeId1).isOpen()); //store1 is open
+        assertTrue(systemService.isStoreOpen(storeId1)); // Check if store is created and can be retrieved
 
         assertNull(resultAddStore2.getData());//store2 dont get id - not open
         assertEquals("Error during opening store: Store name already exists", resultAddStore2.getMessage());

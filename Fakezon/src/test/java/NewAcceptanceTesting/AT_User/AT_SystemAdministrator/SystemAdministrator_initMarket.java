@@ -16,22 +16,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
+import com.fakezone.fakezone.FakezoneApplication;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest(classes = FakezoneApplication.class)
 public class SystemAdministrator_initMarket {
 
+     @Autowired
     private SystemService systemService;
-    private IStoreRepository storeRepository;
-    private IUserRepository userRepository;
-    private IProductRepository productRepository;
-    private IOrderRepository orderRepository;
-    private IDelivery deliveryService;
-    private IAuthenticator authenticatorService;
-    private IPayment paymentService;
-    private ApplicationEventPublisher eventPublisher;
-    private IStoreService storeService;
-    private IProductService productService;
-    private IUserService userService;
-    private IOrderService orderService;
-    private INotificationWebSocketHandler notificationWebSocketHandler;
+
     private TestHelper testHelper;
 
     int storeId;
@@ -40,21 +35,7 @@ public class SystemAdministrator_initMarket {
 
     @BeforeEach
     void setUp() {
-        storeRepository = new StoreRepository();
-        userRepository = new UserRepository();
-        productRepository = new ProductRepository();
-        orderRepository = new OrderRepository();
-        paymentService = new PaymentAdapter();
-        deliveryService = new DeliveryAdapter();
-
-        storeService = new StoreService(storeRepository, eventPublisher);
-        userService = new UserService(userRepository);
-        orderService = new OrderService(orderRepository);
-        productService = new ProductService(productRepository);
-        authenticatorService = new AuthenticatorAdapter(userService);
-
-        systemService = new SystemService(storeService, userService, productService, orderService, deliveryService,
-                authenticatorService, paymentService, eventPublisher, notificationWebSocketHandler);
+        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultUser = testHelper.register_and_login();

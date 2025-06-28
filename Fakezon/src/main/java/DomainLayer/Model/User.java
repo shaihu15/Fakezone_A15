@@ -6,22 +6,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.persistence.*;
+
 import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.UserDTO;
 
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.GenerationType;
+
+@MappedSuperclass
 public class User {
-    protected boolean isLoggedIn;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     protected int userId;
 
+    @Column(name = "is_logged_in")
+    protected boolean isLoggedIn;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cart_id", referencedColumnName = "id")
     protected Cart cart;
-    protected static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public User() {
-        this.userId = idCounter.incrementAndGet(); // auto-increment userID
         this.cart = new Cart();
         this.isLoggedIn = false;
     }
+
+
 
     /**
      * **********DO NOT USE - JUST FOR UI PURPOSES**********
@@ -39,6 +52,7 @@ public class User {
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
+
     public Cart getCart() {
         return cart;
     }
@@ -53,7 +67,7 @@ public class User {
     }
 
     public void addToBasket(int storeId, int productId, int quantity) {
-        cart.addProductQuantity(storeId, productId, quantity);
+        cart.addProduct(storeId, productId, quantity);
     }
 
     public Basket getBasket(int storeId) {
@@ -99,10 +113,8 @@ public class User {
     public void removeFromBasket(int storeId, int productId){
         cart.removeItem(storeId, productId);
     }
-
     public void addToBasketQuantity(int storeId, int productId, int quantity) {
         cart.addProductQuantity(storeId, productId, quantity);
     }
-
 
 }

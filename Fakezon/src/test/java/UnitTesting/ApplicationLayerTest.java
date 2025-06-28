@@ -78,7 +78,7 @@ public class ApplicationLayerTest {
         when(event.getUserId()).thenReturn(1);
         when(event.getStoreId()).thenReturn(2);
         when(event.getRoleName()).thenReturn(roleName);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
 
         listener.handleAssignmentEvent(event);
 
@@ -89,7 +89,7 @@ public class ApplicationLayerTest {
     void testHandleAssignmentEvent_UserNotPresent() {
         AssignmentEvent event = mock(AssignmentEvent.class);
         when(event.getUserId()).thenReturn(1);
-        when(userRepository.findById(1)).thenReturn(Optional.empty());
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.empty());
         listener.handleAssignmentEvent(event);
 
         // No exception, nothing to verify
@@ -118,7 +118,7 @@ public class ApplicationLayerTest {
         when(event.getUserId()).thenReturn(1);
         when(event.getStoreId()).thenReturn(2);
         when(event.getMessage()).thenReturn("msg");
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(false);
 
         listener.handleResponseFromStore(event);
@@ -131,7 +131,7 @@ public class ApplicationLayerTest {
         ResponseFromStoreEvent event = mock(ResponseFromStoreEvent.class);
         Registered user = mock(Registered.class);
         when(event.getUserId()).thenReturn(1);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(true);
 
         listener.handleResponseFromStore(event);
@@ -204,7 +204,7 @@ public class ApplicationLayerTest {
         AuctionApprovedBidEvent event = mock(AuctionApprovedBidEvent.class);
         Registered user = mock(Registered.class);
         when(event.getUserIDHighestBid()).thenReturn(1);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(true);
         StoreProductDTO prodMock = mock(StoreProductDTO.class);
         when(prodMock.getProductId()).thenReturn(3);
@@ -223,7 +223,7 @@ public class ApplicationLayerTest {
         when(event.getStoreId()).thenReturn(2);
         when(event.getProductID()).thenReturn(3);
         when(event.getCurrentHighestBid()).thenReturn(250.0);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(false);
 
         listener.handleAuctionGotHigherBidEvent(event);
@@ -236,7 +236,7 @@ public class ApplicationLayerTest {
         AuctionGotHigherBidEvent event = mock(AuctionGotHigherBidEvent.class);
         Registered user = mock(Registered.class);
         when(event.getUserIDPrevHighestBid()).thenReturn(1);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(true);
 
         listener.handleAuctionGotHigherBidEvent(event);
@@ -251,7 +251,7 @@ public class ApplicationLayerTest {
         when(event.getUserIDHighestBid()).thenReturn(1);
         when(event.getStoreId()).thenReturn(2);
         when(event.getProductID()).thenReturn(3);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(false);
 
         listener.handleDeclinedBidOnAuctionEvent(event);
@@ -264,7 +264,7 @@ public class ApplicationLayerTest {
         AuctionDeclinedBidEvent event = mock(AuctionDeclinedBidEvent.class);
         Registered user = mock(Registered.class);
         when(event.getUserIDHighestBid()).thenReturn(1);
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findRegisteredById(1)).thenReturn(Optional.of(user));
         when(user.isLoggedIn()).thenReturn(true);
 
         listener.handleDeclinedBidOnAuctionEvent(event);

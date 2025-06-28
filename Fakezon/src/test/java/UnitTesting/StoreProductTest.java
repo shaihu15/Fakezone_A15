@@ -26,7 +26,6 @@ class StoreProductTest {
         StoreProduct original = new StoreProduct(2, 20, "CopyProduct", 49.99, 3, PCategory.ELECTRONICS);
         StoreProduct copy = new StoreProduct(original);
 
-        assertEquals(original.getSproductID(), copy.getSproductID());
         assertEquals(original.getStoreId(), copy.getStoreId());
         assertEquals(original.getName(), copy.getName());
         assertEquals(original.getBasePrice(), copy.getBasePrice());

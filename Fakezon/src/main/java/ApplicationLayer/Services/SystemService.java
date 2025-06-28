@@ -61,6 +61,8 @@ import DomainLayer.Model.helpers.UserMsg;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class SystemService implements ISystemService {
@@ -124,6 +126,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addToBasket(int userId, int productId, int storeId, int quantity) {
         StoreProductDTO product;
         try {
@@ -169,6 +172,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> ratingStore(int storeId, int userId, double rating, String comment) {
         try {
             if (!storeService.isStoreOpen(storeId)) {
@@ -197,6 +201,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> ratingStoreProduct(int storeId, int productId, int userId, double rating, String comment) {
         try {
             if (!storeService.isStoreOpen(storeId)) {
@@ -237,6 +242,9 @@ public class SystemService implements ISystemService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true) //This tells Spring explicitly that the operation is read-only, which can: Slightly optimize performanc and 
+    //Prevent accidental writes inside the method (if the method is not supposed to write to the database)
     public Response<StoreDTO> userAccessStore(int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId);
@@ -255,6 +263,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Integer> addStore(int userId, String storeName) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
@@ -275,6 +284,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> sendMessageToStore(int userId, int storeId, String message) {
         try {
             if (message == null || message.trim().isEmpty()) {
@@ -306,6 +316,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> sendMessageToUser(int managerId, int storeId, int userToAnswer, String message) {
         try {
             if (message == null || message.trim().isEmpty()) {
@@ -333,6 +344,7 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
+    
     @Override
     public LocalDate parseDate(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -344,6 +356,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<StoreProductDTO> getProductFromStore(int productId, int storeId) {
         try {
             logger.info("System service - user trying to view product " + productId + " in store: " + storeId);
@@ -362,6 +375,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<ProductDTO> getProduct(int productId) {
         try {
             logger.info("System service - user trying to view product " + productId);
@@ -381,6 +395,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Boolean> updateProduct(int productId, String productName, String productDescription,
             Set<Integer> storesIds) {
         try {
@@ -405,6 +420,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Boolean> deleteProduct(int productId) {
         try {
             logger.info("System service - user trying to delete product " + productId);
@@ -417,6 +433,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<String> guestRegister(String email, String password, String dateOfBirth, String country) {
         logger.info("System service - user trying to register " + email);
         LocalDate dateOfBirthLocalDate;
@@ -455,6 +472,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<ProductDTO>> searchByKeyword(String keyword) {
         try {
             logger.info("System service - user trying to view product " + keyword);
@@ -468,6 +486,7 @@ public class SystemService implements ISystemService {
     }
     //addProduct method should be with amount and store?
     @Override
+    @Transactional
     public Response<Integer> addProduct(String productName, String productDescription, String category) {
         try {
             if (productName == null || productDescription == null || category == null) {
@@ -506,6 +525,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<StoreRolesDTO> getStoreRoles(int storeId, int userId) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
@@ -524,6 +544,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addStoreManagerPermissions(int storeId, int managerId, int requesterId, List<StoreManagerPermission> perms) {
         try {
             logger.info("System service - user trying to add permissions: "
@@ -538,6 +559,7 @@ public class SystemService implements ISystemService {
 
     // add details to response
     @Override
+    @Transactional
     public Response<Void> removeStoreManagerPermissions(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
         try {
@@ -552,6 +574,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> removeStoreManager(int storeId, int requesterId, int managerId) {
         try {
             logger.info("System service - user " + requesterId + " trying to remove manager " + managerId
@@ -574,6 +597,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> removeStoreOwner(int storeId, int requesterId, int ownerId) {
         try {
             logger.info("System service - user " + requesterId + " trying to remove owner " + ownerId + " from store: "
@@ -596,6 +620,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addStoreManager(int storeId, int requesterId, int managerId,
             List<StoreManagerPermission> perms) {
         if(!userService.isUserLoggedIn(requesterId)) {
@@ -617,6 +642,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addStoreOwner(int storeId, int requesterId, int ownerId) {
         if(!userService.isUserLoggedIn(requesterId)) {
             logger.error("System service - user " + requesterId + " is not logged in, cannot add as owner");
@@ -638,6 +664,8 @@ public class SystemService implements ISystemService {
         }
     }
 
+    @Override
+    @Transactional
     public Response<Void> addAuctionProductToStore(int storeId, int requesterId, int productID, double basePrice, int MinutesToEnd) {
         try {
             logger.info("System service - user " + requesterId + " trying to add auction product " + productID + " to store: " + storeId);
@@ -652,6 +680,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addBidOnAuctionProductInStore(int storeId, int requesterId, int productID, double bid) {
         try {
             if (this.userService.isUserLoggedIn(requesterId)) {
@@ -672,6 +701,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<String> closeStoreByFounder(int storeId, int userId) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
@@ -690,6 +720,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<String> closeStoreByAdmin(int storeId, int adminId) {
         try {
             if (this.userService.isUserLoggedIn(adminId)) {
@@ -713,6 +744,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<StoreProductDTO> addProductToStore(int storeId, int requesterId, String productName,
             String description, double basePrice, int quantity, String category) {
         String name = null;
@@ -796,6 +828,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> updateProductInStore(int storeId, int requesterId, int productId, double basePrice,
             int quantity) {
         String name = null;
@@ -819,6 +852,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> removeProductFromStore(int storeId, int requesterId, int productId) {
         try {
             logger.info("System service - user " + requesterId + " trying to remove product " + productId
@@ -849,7 +883,8 @@ public class SystemService implements ISystemService {
     }
 
     @Override
-    public Response<List<CartItemInfoDTO>> viewCart(int userId) { 
+    @Transactional(readOnly = true)
+    public Response<List<CartItemInfoDTO>> viewCart(int userId) {
         try {
             logger.info("System service - user " + userId + " trying to view cart");
             if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
@@ -876,6 +911,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Map<Integer,UserMsg>> getMessagesFromUsers(int storeId, int userId) {
         if(!userService.isUserLoggedIn(userId)){
             logger.error("System Service - User is not logged in: " + userId);
@@ -897,6 +933,7 @@ public class SystemService implements ISystemService {
 
 
 	@Override
+	@Transactional(readOnly = true)
 	public Response<Map<Integer, StoreMsg>> getAllMessages(int userID) {
 		try{
             if (this.userService.isUserLoggedIn(userID)) {
@@ -914,6 +951,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Map<Integer, StoreMsg>> getAssignmentMessages(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
@@ -931,6 +969,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Map<Integer, StoreMsg>> getUserOfferMessages(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
@@ -948,6 +987,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<String> purchaseCart(int userId, String country, LocalDate dob, PaymentMethod paymentMethod,
             String deliveryMethod,
             String cardNumber, String cardHolder, String expDate, String cvv, String address,
@@ -1068,6 +1108,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Integer> extractPurchasedProductIds(Map<StoreDTO, Map<StoreProductDTO, Boolean>> validCart) {
     List<Integer> productIds = new ArrayList<>();
     for (Map<StoreProductDTO, Boolean> products : validCart.values()) {
@@ -1081,6 +1122,7 @@ public class SystemService implements ISystemService {
 }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<StoreProductDTO>> getTopRatedProducts(int limit) {
         try {
             logger.info("System service - fetching top " + limit + " rated products");
@@ -1090,6 +1132,7 @@ public class SystemService implements ISystemService {
 
             // 2. Create a list to store products with their ratings
             List<StoreProductDTO> ratedProducts = new ArrayList<>();
+            List<StoreProductDTO> nonRatedProducts = new ArrayList<>();
 
             // 3. For each product, get its StoreProductDTO from each store it's in
             for (ProductDTO product : allProducts) {
@@ -1099,6 +1142,8 @@ public class SystemService implements ISystemService {
                         // Only add products that have ratings
                         if (!Double.isNaN(storeProduct.getAverageRating())) {
                             ratedProducts.add(storeProduct);
+                        } else {
+                            nonRatedProducts.add(storeProduct);
                         }
                     } catch (Exception e) {
                         // Skip if product not found in store or other errors
@@ -1110,7 +1155,13 @@ public class SystemService implements ISystemService {
 
             // 4. Sort products by average rating (highest first)
             ratedProducts.sort((p1, p2) -> Double.compare(p2.getAverageRating(), p1.getAverageRating()));
-
+            int nonRatedToAdd = limit - ratedProducts.size();
+            // If there are fewer rated products than the limit, add non-rated products
+            if (nonRatedToAdd > 0) {
+                for (int i = 0; i < nonRatedToAdd && i < nonRatedProducts.size(); i++) {
+                    ratedProducts.add(nonRatedProducts.get(i));
+                }
+            }
             // 5. Return top 'limit' products (or all if there are fewer than 'limit')
             int resultSize = Math.min(limit, ratedProducts.size());
             List<StoreProductDTO> topRatedProducts = ratedProducts.subList(0, resultSize);
@@ -1123,6 +1174,7 @@ public class SystemService implements ISystemService {
         }
     }
 
+    @Transactional(readOnly = true)
     public OrderDTO createOrderDTO(IOrder order) {
         List<OrderedProductDTO> productDTOS = new ArrayList<>();
         for (OrderedProduct prod : order.getProducts()) {
@@ -1134,6 +1186,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<OrderDTO>> getAllStoreOrders(int storeId, int userId) {
         try {
             logger.info("System service - user " + userId + " trying to get all orders from " + storeId);
@@ -1154,6 +1207,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<String> acceptAssignment(int storeId, int userId) {
         try {
             boolean isowner;
@@ -1180,6 +1234,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<String> declineAssignment(int storeId, int userId) {
         try {
             logger.info("system service - user " + userId + " trying to decline assignment for store " + storeId);
@@ -1197,6 +1252,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<Integer>> getPendingOwners(int storeId, int requesterId) {
         try {
             logger.info("system service - user " + requesterId + " trying to get pending owners for store " + storeId);
@@ -1212,6 +1268,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<Integer>> getPendingManagers(int storeId, int requesterId) {
         try {
             logger.info(
@@ -1234,6 +1291,8 @@ public class SystemService implements ISystemService {
     }
 
 
+    @Override
+    @Transactional
     public Response<Boolean> deleteOrder(int orderId, int userId) {
         try {
             if(this.userService.isUserLoggedIn(userId)) {
@@ -1250,6 +1309,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<OrderDTO> viewOrder(int orderId, int userId) {
         try {
             if(this.userService.isUserLoggedIn(userId)) {
@@ -1267,6 +1327,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<OrderDTO>> searchOrders(String keyword, int userId) {
         try {
             if(this.userService.isUserLoggedIn(userId)) {
@@ -1288,6 +1349,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<OrderDTO>> getOrdersByStoreId(int storeId, int userId) {
         try {
 
@@ -1311,6 +1373,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<AbstractMap.SimpleEntry<UserDTO, String>> login(String email, String password) {
         try {
             // Check if the user exists first
@@ -1337,6 +1400,7 @@ public class SystemService implements ISystemService {
     // User suspension management methods (admin only)
 
     @Override
+    @Transactional
     public Response<Void> suspendUser(int requesterId, int userId, LocalDate endOfSuspension) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1367,6 +1431,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Boolean> unsuspendUser(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1397,6 +1462,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Boolean> isUserSuspended(int userId) {
         try {
             boolean isSuspended = userService.isUserSuspended(userId);
@@ -1414,6 +1480,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<LocalDate> getSuspensionEndDate(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1439,6 +1506,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<Registered>> getAllSuspendedUsers(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1464,6 +1532,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Integer> cleanupExpiredSuspensions(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1491,6 +1560,7 @@ public class SystemService implements ISystemService {
     // System admin management methods
 
     @Override
+    @Transactional
     public Response<Void> addSystemAdmin(int requesterId, int userId) {
         try {
             if (userId == 1) { // Check if the target user ID is 1 for initial admin setup
@@ -1521,6 +1591,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Boolean> removeSystemAdmin(int requesterId, int userId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1558,6 +1629,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Boolean> isSystemAdmin(int userId) {
         try {
             boolean isAdmin = userService.isSystemAdmin(userId);
@@ -1575,6 +1647,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<Registered>> getAllSystemAdmins(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1600,6 +1673,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Integer> getSystemAdminCount(int requesterId) {
         try {
             if (!userService.isSystemAdmin(requesterId)) {
@@ -1639,6 +1713,7 @@ public class SystemService implements ISystemService {
     // }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<ProductDTO>> searchByCategory(String category) {
         try {
             PCategory categoryEnum = isCategoryValid(category);
@@ -1658,6 +1733,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> userLogout(int userID) {
         try {
             logger.info("System service - user " + userID + " trying to logout");
@@ -1686,6 +1762,7 @@ public class SystemService implements ISystemService {
     // Unsigned (guest) user management methods
 
     @Override
+    @Transactional
     public Response<UserDTO> createUnsignedUser() {
         try {
             User unsignedUser = userService.createUnsignedUser(); 
@@ -1703,6 +1780,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<UserDTO> getUnsignedUserById(int userId) {
         try {
             Optional<User> optionalUser = userService.getUnsignedUserById(userId);
@@ -1726,6 +1804,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<UserDTO>> getAllUnsignedUsers(int adminId) {
         try {
             if (!userService.isSystemAdmin(adminId)) {
@@ -1749,6 +1828,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Boolean> removeUnsignedUser(int userId) {
         try {
             boolean removed = userService.removeUnsignedUser(userId);
@@ -1770,6 +1850,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Boolean> isUnsignedUser(int userId) {
         try {
             boolean isUnsigned = userService.isUnsignedUser(userId);
@@ -1786,6 +1867,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Integer> getUnsignedUserCount(int adminId) {
         try {
             if (!userService.isSystemAdmin(adminId)) {
@@ -1808,6 +1890,7 @@ public class SystemService implements ISystemService {
         }
     }
     @Override
+    @Transactional(readOnly = true)
     public Response<List<ProductDTO>> searchProductsByName(String productName) {
          try {
             logger.info("System Service - Searching for products with name: " + productName);
@@ -1818,6 +1901,8 @@ public class SystemService implements ISystemService {
             return new Response<>(null, "Error during getting all products", false, ErrorType.INTERNAL_ERROR, null);
         }
     }
+    
+    @Transactional
     public boolean init(){
         try{
             logger.info("system service init");
@@ -1835,6 +1920,7 @@ public class SystemService implements ISystemService {
 
     }
 
+
     private List<CartItemInfoDTO> cartToList(Map<StoreDTO, Map<StoreProductDTO, Boolean>> cart) {
         List<CartItemInfoDTO> items = new ArrayList<>();
         for (StoreDTO store : cart.keySet()) {
@@ -1846,6 +1932,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Double> getCartFinalPrice(int userId, LocalDate dob){
         Cart cart = null;
         try {
@@ -1879,13 +1966,17 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public void clearAllData() {
-        storeService.clearAllData();
-        userService.clearAllData();
+        // Delete dependent entities first, then stores
         orderService.clearAllData();
         productService.clearAllData();
+        userService.clearAllData();
+        storeService.clearAllData();
     }
+    
     @Override
+    @Transactional(readOnly = true)
     public Response<List<ProductRatingDTO>> getStoreProductRatings(int storeId, int prodId){
         try{
             logger.info("System Service - request for all store product rating store " + storeId + " prodId "+ prodId);
@@ -1914,6 +2005,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> removeFromBasket(int userId, int productId, int storeId) {
         try {
             if (this.userService.isUserLoggedIn(userId) || this.userService.isUnsignedUser(userId)) {
@@ -1940,7 +2032,9 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
+
     @Override
+    @Transactional(readOnly = true)
     public Response<HashMap<Integer, IRegisteredRole>> getUserRoles(int requesterId){
         try {
             if(this.userService.isUserLoggedIn(requesterId)) {
@@ -1960,6 +2054,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Boolean> isStoreOwner(int storeId, int userId){
         try{
             logger.info("checking if user " + userId + " is owner in store "+ storeId);
@@ -1972,6 +2067,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override // returns null if not manager
+    @Transactional(readOnly = true)
     public Response<List<StoreManagerPermission>> isStoreManager(int storeId, int userId){
         try{
             logger.info("checking if user " + userId + " is owner in store "+ storeId);
@@ -1984,6 +2080,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<AuctionProductDTO>> getAuctionProductsFromStore(int storeId, int userId){
         try{
             logger.info("User " + userId + " Trying to fetch auction products from store " + storeId);
@@ -2000,6 +2097,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<List<OrderDTO>> getOrdersByUserId(int userId) {
         try {
             if (!userService.isUserLoggedIn(userId)) {
@@ -2017,6 +2115,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isStoreOpen(int storeId) {
         return storeService.isStoreOpen(storeId);
     }
@@ -2025,6 +2124,7 @@ public class SystemService implements ISystemService {
     // Discount Policy System Service Methods
 
     @Override
+    @Transactional
     public Response<Void> addSimpleDiscountWithProductsScope(int storeId, int requesterId, List<Integer> productIDs, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2050,6 +2150,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addSimpleDiscountWithStoreScope(int storeId, int requesterId, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2071,6 +2172,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addConditionDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2100,6 +2202,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addConditionDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2125,6 +2228,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addAndDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2154,6 +2258,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addAndDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2179,6 +2284,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addOrDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2208,6 +2314,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addOrDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2233,6 +2340,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addXorDiscountWithProductsScope(int storeId, int requesterId, int cartId, List<Integer> productIDs, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2262,6 +2370,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> addXorDiscountWithStoreScope(int storeId, int requesterId, int cartId, List<Predicate<Cart>> conditions, double percentage) {
         try {
             if (!userService.isUserLoggedIn(requesterId)) {
@@ -2287,6 +2396,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Response<Map<Integer, StoreMsg>> getMessagesFromStore(int userID) {
         try {
             if (this.userService.isUserLoggedIn(userID)) {
@@ -2304,6 +2414,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> removeUserMessageById(int userId, int msgId) {
         try {
             if (this.userService.isUserLoggedIn(userId)) {
@@ -2327,6 +2438,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> openStore(int storeId, int userId){
         try{
             this.storeService.openStore(storeId, userId);
@@ -2339,6 +2451,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> placeOfferOnStoreProduct(int storeId, int userId, int productId, double offerAmount){
         try{
             logger.info("User " + userId + " Placing offer on product " + productId + " in store " + storeId + " amount " + offerAmount);
@@ -2357,6 +2470,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> acceptOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
         try{
             logger.info("Owner " + ownerId + " accepting offer on product " + productId + " in store " + storeId + " from user " + userId);
@@ -2371,6 +2485,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override
+    @Transactional
     public Response<Void> declineOfferOnStoreProduct(int storeId, int ownerId, int userId, int productId){
         try{
             logger.info("Owner " + ownerId + " declineing offer on product " + productId + " in store " + storeId + " from user " + userId);
@@ -2385,6 +2500,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override    
+    @Transactional
     public Response<Void> counterOffer(int storeId, int ownerId, int userId, int productId, double offerAmount){
         try{
             logger.info("Owner " + ownerId + " trying to submit a counter offer to user " + userId + " on product " + productId + " in store " + storeId);
@@ -2399,6 +2515,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override    
+    @Transactional
     public Response<Void> acceptCounterOffer(int storeId, int userId, int productId){
         try{
             logger.info("user " + userId + " trying to accept counter offer on product " + productId + " in store " + storeId);
@@ -2413,6 +2530,7 @@ public class SystemService implements ISystemService {
     }
 
     @Override    
+    @Transactional
     public Response<Void> declineCounterOffer(int storeId, int userId, int productId){
         try{
             logger.info("user " + userId + " trying to decline counter offer on product " + productId + " in store " + storeId);

@@ -6,19 +6,44 @@ import java.util.List;
 import java.util.Map;
 
 import ApplicationLayer.Enums.PCategory;
+import jakarta.persistence.*;
 
 import java.util.Locale.Category;
 
-
+@Entity
+@Table(name = "store_products")
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "product_type", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue("STORE_PRODUCT")
 public class StoreProduct {
+    
+    @Id
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private int SproductID;
+    
+    @Column(nullable = false)
     private int storeId;
+    
+    @Column(nullable = false)
     private String name;
+    
+    @Column(nullable = false)
     private double basePrice;
+    
+    @Column(nullable = false)
     private int quantity;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false)
     private PCategory category;
+    
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_product_id")
+    @MapKeyColumn(name = "user_id")
     private Map<Integer, ProductRating> Pratings = new HashMap<>(); //HASH userID to product rating
 
+    // Default constructor for JPA
+    public StoreProduct() {}
 
    public StoreProduct(int SproductID, int storeId,String name, double basePrice, int quantity,PCategory category) {
         this.SproductID = SproductID;
@@ -29,7 +54,6 @@ public class StoreProduct {
         this.category = category;
     }
     public StoreProduct(StoreProduct storeProduct) {
-        this.SproductID = storeProduct.SproductID;
         this.storeId = storeProduct.storeId;
         this.name = storeProduct.name;
         this.basePrice = storeProduct.basePrice;
@@ -109,6 +133,18 @@ public class StoreProduct {
             throw new IllegalArgumentException("basePrice cannot be negative");
         }
         this.basePrice = basePrice;
+    }
+
+    public void setStoreId(int storeId) {
+        this.storeId = storeId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCategory(PCategory category) {
+        this.category = category;
     }
 
 }
