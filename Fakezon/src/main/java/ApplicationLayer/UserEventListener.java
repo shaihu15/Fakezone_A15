@@ -168,8 +168,7 @@ public class UserEventListener {
                                                                                                         // bidder
         user.ifPresent(registeredUser -> {
             String msg = "Your auction bid on product: " + event.getProductID()
-                    + " was rejected due to a higher bid of: " + event.getCurrentHighestBid() + " by user "
-                    + event.getUserIDPrevHighestBid() + ".";
+                    + " was rejected due to a higher bid of: " + event.getCurrentHighestBid() + ".";
             registeredUser.addMessageFromStore(
                     new StoreMsg(event.getStoreId(), event.getProductID(), msg, null, registeredUser.getUserId()));
             userRepository.save(registeredUser);

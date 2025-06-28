@@ -7,7 +7,7 @@ import DomainLayer.Interfaces.IOrderRepository;
 import DomainLayer.Model.Order;
 import DomainLayer.Model.OrderedProduct;
 import InfrastructureLayer.Repositories.OrderJpaRepository;
-import InfrastructureLayer.Repositories.OrderRepositoryImpl;
+import InfrastructureLayer.Repositories.OrderRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +19,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -45,15 +46,15 @@ public class OrderPersistenceTest {
         orderRepository.clearAllData();
 
         // Create test ordered products
-        List<OrderedProduct> products1 = Arrays.asList(
+        List<OrderedProduct> products1 = new ArrayList<>(Arrays.asList(
                 new OrderedProduct(1, "Product 1", 10.0, 2),
                 new OrderedProduct(2, "Product 2", 15.0, 1)
-        );
+        ));
 
-        List<OrderedProduct> products2 = Arrays.asList(
+        List<OrderedProduct> products2 = new ArrayList<>(Arrays.asList(
                 new OrderedProduct(3, "Product 3", 20.0, 1),
                 new OrderedProduct(4, "Product 4", 25.0, 2)
-        );
+        ));
 
         // Create test orders (let JPA assign IDs)
         testOrder1 = new Order(101, 201, OrderState.PENDING, products1, 
@@ -193,8 +194,8 @@ public class OrderPersistenceTest {
 
         // Test state update
         savedOrder.setState(OrderState.SHIPPED);
-        if (orderRepository instanceof OrderRepositoryImpl) {
-            ((OrderRepositoryImpl) orderRepository).updateOrder(savedOrder);
+        if (orderRepository instanceof OrderRepository) {
+            ((OrderRepository) orderRepository).updateOrder(savedOrder);
         }
 
         IOrder updatedOrder = orderRepository.getOrder(testOrder1.getId());
