@@ -614,7 +614,6 @@ public class Store implements IStore {
 
     @Override
     public void addAuctionProduct(int requesterId, int productID, double basePrice, int MinutesToEnd) {
-        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         rolesLock.lock();
         productsLock.lock();
         StoreProductKey auctionMapKey = new StoreProductKey(storeID, productID);
