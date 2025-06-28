@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
@@ -32,6 +34,8 @@ import ApplicationLayer.Services.SystemService;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+
 public class StoreManager_Performing_Management {
 
     @Autowired
@@ -108,6 +112,9 @@ public class StoreManager_Performing_Management {
 
         Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
         assertTrue(deleteManagerRes.isSuccess(), "Failed to delete manager user");
+        //remove the store
+        Response<Void> removeStoreRes = systemService.removeStore(storeId, ownerUserId);
+        assertTrue(removeStoreRes.isSuccess(), "Failed to remove store");
     }
 
 

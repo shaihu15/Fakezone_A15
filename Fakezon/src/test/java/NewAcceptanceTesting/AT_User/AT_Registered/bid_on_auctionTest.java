@@ -19,6 +19,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +34,11 @@ import ApplicationLayer.Services.SystemService;
 import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
+
 @SpringBootTest(classes = FakezoneApplication.class)
-public class bid_on_auction {
+@ActiveProfiles("test")
+
+public class bid_on_auctionTest {
 
     @Autowired
     private SystemService systemService;
@@ -82,6 +87,7 @@ public class bid_on_auction {
         Response<UserDTO> otherUserRes = testHelper.register_and_login4();
         assertTrue(otherUserRes.isSuccess(), "Failed to register and login other user");
         otherRegisteredUserId = otherUserRes.getData().getUserId();
+
     }
 
     @AfterEach
@@ -106,6 +112,10 @@ public class bid_on_auction {
 
         Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
         assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete store owner");
+
+        // Remove store
+        Response<Void> removeStoreRes = systemService.removeStore(storeId, storeOwnerId);
+        assertTrue(removeStoreRes.isSuccess(), "Failed to remove store");
     }
 
     @Test

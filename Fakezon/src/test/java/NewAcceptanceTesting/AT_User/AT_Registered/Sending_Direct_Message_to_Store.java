@@ -14,6 +14,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.ActiveProfiles;
 
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
@@ -53,6 +54,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+
 public class Sending_Direct_Message_to_Store {
     //Use-case: 3.5 Sending a Direct Message to a Store
 

@@ -13,6 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -28,8 +30,8 @@ import NewAcceptanceTesting.TestHelper;
 import DomainLayer.Enums.StoreManagerPermission;
 
 
-
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 
 public class StoreOwner_Request_Role_Information_in_Store_and_administrators_permissions {
 

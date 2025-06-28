@@ -265,4 +265,6 @@ public interface ISystemService {
     
     Response<List<Offer>> getUserOffers(int storeId, int userId); //FOR TESTS ONLY
 
+    Response<Void> removeStore(int storeId, int requesterId); // remove store for test purposes
+
 }

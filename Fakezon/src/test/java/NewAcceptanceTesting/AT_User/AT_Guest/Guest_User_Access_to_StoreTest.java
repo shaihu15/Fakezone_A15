@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Response;
@@ -18,8 +20,9 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Services.SystemService;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 
-public class Guest_User_Access_to_Store {
+public class Guest_User_Access_to_StoreTest {
     // Use-case: 2.1 Guest User Access to Store
      @Autowired
     private SystemService systemService;
@@ -48,10 +51,21 @@ public class Guest_User_Access_to_Store {
 
     @AfterEach
     void tearDown() {
+        // Try to close the store (ignore if already closed)
+        Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, userId);
+        if (!closeStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", closeStoreResponse.getMessage());
+        }
+
+        // Try to remove the store (ignore if already removed)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, userId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreResponse.getMessage());
+        }
+
+        // Now delete the user
         Response<Boolean> deleteResponse = systemService.deleteUser(username);
         assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
     }
                     
     @Test
@@ -63,7 +77,7 @@ public class Guest_User_Access_to_Store {
 
     @Test
     void testGuestUserAccessStore_StoreIsClose_Fail() {
-        systemService.closeStoreByFounder(userId, storeId);
+        systemService.closeStoreByFounder(storeId, userId);
         //the store is closed
          
         Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(storeId); 
@@ -76,6 +90,5 @@ public class Guest_User_Access_to_Store {
         Response<StoreDTO> accessStoreResponse = systemService.userAccessStore(9999); // Non-existing store ID
         assertFalse(accessStoreResponse.isSuccess());
         assertEquals("Error during user access store: Store not found", accessStoreResponse.getMessage());
-    }
-     
+}
 }

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -35,6 +36,8 @@ import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+
 public class purchase_auction_product {
 
     @Autowired

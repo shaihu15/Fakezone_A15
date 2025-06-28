@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -31,7 +32,9 @@ import NewAcceptanceTesting.TestHelper;
 import UnitTesting.getCartFinalPriceTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class AT_Offer {
+@ActiveProfiles("test")
+
+public class AT_OfferTest {
 
     @Autowired
     private SystemService systemService;
@@ -121,25 +124,40 @@ public class AT_Offer {
 
     @AfterEach
     void tearDown(){
-        //remove products
+        // remove products
         Response<Void> removeP1Res = systemService.removeProductFromStore(store, founder, p1);
         assertTrue(removeP1Res.isSuccess(), "Failed to remove p1");
         Response<Void> removeP2Res = systemService.removeProductFromStore(store, founder, p2);
         assertTrue(removeP2Res.isSuccess(), "Failed to remove p2");
 
-        //remove owners & manager
+        // remove owners & manager (ignore if already removed)
         Response<Void> removeO1Res = systemService.removeStoreOwner(store, founder, owner1);
-        assertTrue(removeO1Res.isSuccess(), "Failed to remove Owner1 by Founder");
+        if (!removeO1Res.isSuccess()) {
+            assertTrue(removeO1Res.getMessage().contains("not found") || removeO1Res.getMessage().contains("is not a store owner"),
+                "Failed to remove Owner1 by Founder: " + removeO1Res.getMessage());
+        }
         Response<Void> removeO2Res = systemService.removeStoreOwner(store, founder, owner2);
-        assertTrue(removeO2Res.isSuccess(), "Failed to remove Owner2 by Founder");
+        if (!removeO2Res.isSuccess()) {
+            assertTrue(removeO2Res.getMessage().contains("not found") || removeO2Res.getMessage().contains("is not a store owner"),
+                "Failed to remove Owner2 by Founder: " + removeO2Res.getMessage());
+        }
         Response<Void> removeManagerRes = systemService.removeStoreManager(store, founder, manager);
-        assertTrue(removeManagerRes.isSuccess(), "Failed to remove Manager by Founder");
+        if (!removeManagerRes.isSuccess()) {
+            String msg = removeManagerRes.getMessage();
+            assertTrue(
+                msg.contains("not found") ||
+                msg.contains("is not a store manager") ||
+                msg.contains("is not a valid store manager") || // <-- add this!
+                msg.contains("is not a store owner"), // just in case
+                "Failed to remove Manager by Founder: " + msg
+            );
+        }
 
-        //close store
+        // close store
         Response<String> closeStoreRes = systemService.closeStoreByFounder(store, founder);
         assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
 
-        //delete users
+        // delete users
         Response<Boolean> deleteFounderRes = systemService.deleteUser(testHelper.validEmail());
         assertTrue(deleteFounderRes.isSuccess(), "Failed to delete Founder");
         Response<Boolean> deleteOwner1Res = systemService.deleteUser(testHelper.validEmail2());
@@ -148,12 +166,18 @@ public class AT_Offer {
         assertTrue(deleteOwner2Res.isSuccess(), "Failed to delete Owner2");
         Response<Boolean> deleteRegisteredRes = systemService.deleteUser(testHelper.validEmail4());
         assertTrue(deleteRegisteredRes.isSuccess(), "Failed to delete Registered User");
+        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail5());
+        assertTrue(deleteManagerRes.isSuccess(), "Failed to delete Manager User");
         Response<Boolean> deleteGuestRes = systemService.removeUnsignedUser(guest);
         assertTrue(deleteGuestRes.isSuccess(), "Failed to delete Guest User");
+
+        // delete store
+        Response<Void> deleteStoreRes = systemService.removeStore(store, founder);
+        assertTrue(deleteStoreRes.isSuccess(), "Failed to delete store");
     }
 
     // ********************p
-    // **PlaceOffer TESTS**
+    // *PlaceOffer TESTS*
     // ********************
     @Test
     void testPlaceOffer_byGuest_Fail(){
@@ -269,7 +293,7 @@ public class AT_Offer {
     }
 
     // *********************
-    // **AcceptOffer TESTS**
+    // *AcceptOffer TESTS*
     // *********************
 
     @Test
@@ -413,7 +437,7 @@ public class AT_Offer {
     }
 
     // **********************
-    // **DeclineOffer TESTS**
+    // *DeclineOffer TESTS*
     // **********************
 
     @Test
@@ -496,7 +520,7 @@ public class AT_Offer {
     }
 
     // **********************
-    // **CounterOffer TESTS**
+    // *CounterOffer TESTS*
     // **********************
 
     @Test
@@ -585,7 +609,7 @@ public class AT_Offer {
     }
 
     // ****************************
-    // **AcceptCounterOffer TESTS**
+    // *AcceptCounterOffer TESTS*
     // ****************************
     @Test
     void testAcceptCounterOffer_storeNotFound_Fail(){
@@ -633,7 +657,7 @@ public class AT_Offer {
     }
 
     // *****************************
-    // **DeclineCounterOffer TESTS**
+    // *DeclineCounterOffer TESTS*
     // *****************************
     @Test
     void testDeclineCounterOffer_storeNotFound_Fail(){

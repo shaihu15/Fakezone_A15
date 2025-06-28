@@ -4,13 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -20,7 +21,9 @@ import ApplicationLayer.Services.SystemService;
 import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
+
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class StoreOwner_Responding_to_User_Inquiries {
 
     @Autowired
@@ -54,7 +57,6 @@ public class StoreOwner_Responding_to_User_Inquiries {
         // Customer sends inquiry
         Response<Void> sendMsgResp = systemService.sendMessageToStore(customerId, storeId, "Is this product vegan?");
         assertTrue(sendMsgResp.isSuccess());
-
     }
 
     @AfterEach
@@ -68,10 +70,28 @@ public class StoreOwner_Responding_to_User_Inquiries {
 
         Response<Boolean> deleteStoreOwnerResp = systemService.deleteUser(testHelper.validEmail());
         assertTrue(deleteStoreOwnerResp.isSuccess());
+        // Optionally, you can also delete any additional users created in tests
+        Response<Boolean> deleteFifthUserResp = systemService.deleteUser(testHelper.validEmail5());
+        if (!deleteFifthUserResp.isSuccess()) {
+            String msg = deleteFifthUserResp.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
+        // remove store if it exists
+        Response<Void> removeStoreResp = systemService.removeStore(storeId, storeOwnerId);
+        if (!removeStoreResp.isSuccess()) {
+            String msg = removeStoreResp.getMessage();
+            assertTrue(
+                msg.equals("Store not found") || msg.equals("Error during removing store"),
+                "Unexpected remove store message: " + msg
+            );
+        }
     }
 
     @Test
-    void testRespondingtoUserInquiries_Success() throws InterruptedException {
+    void testRespondingtoUserInquiries_Success() {
         // Store owner sends reply to customer
         String replyMessage = "Yes, the product is 100% vegan.";
         Response<Void> replyResp = systemService.sendMessageToUser(storeOwnerId, storeId, customerId, replyMessage);
@@ -79,7 +99,6 @@ public class StoreOwner_Responding_to_User_Inquiries {
         assertTrue(replyResp.isSuccess());
         assertEquals("Message sent successfully", replyResp.getMessage());
 
-        TimeUnit.SECONDS.sleep(2); // Small buffer
         // Simulate customer checking messages
         Response<Map<Integer, StoreMsg>> inboxResp = systemService.getAllMessages(customerId);
         assertTrue(inboxResp.isSuccess());

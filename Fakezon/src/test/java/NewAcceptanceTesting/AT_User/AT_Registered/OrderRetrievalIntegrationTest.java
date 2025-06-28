@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.ActiveProfiles;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
@@ -23,6 +24,8 @@ import DomainLayer.Enums.OrderState;
 import DomainLayer.Enums.PaymentMethod;
 
 @ExtendWith(MockitoExtension.class)
+@ActiveProfiles("test")
+
 public class OrderRetrievalIntegrationTest {
 
     @Mock

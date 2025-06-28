@@ -29,6 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+
 public class StoreOwner_Add_product {
     //Use-case: 4.1 StoreOwner - Add a product
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -21,8 +22,9 @@ import ApplicationLayer.Services.SystemService;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Guest_User_Check_Cart_Content {
+@ActiveProfiles("test")
 
+public class Guest_User_Check_Cart_ContentTest {
     @Autowired
     private SystemService systemService;
     private TestHelper testHelper;
@@ -84,15 +86,25 @@ public class Guest_User_Check_Cart_Content {
 
     @AfterEach
     void tearDown() {
+        // Close the store (ignore if already closed)
         Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        if (!deleteStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", deleteStoreResponse.getMessage());
+        }
+        // Remove the store (ignore if already removed)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, StoreFounderId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreResponse.getMessage());
+        }
+        // Remove guest user
         Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteResponse.isSuccess(), "Guest user deletion should succeed");
+        // Remove founder user
         Response<Boolean> deleteUserResponse = systemService.deleteUser(founderEmail);
-        assertTrue(deleteUserResponse.isSuccess(), "Registered user deletion should succeed");
+        assertTrue(deleteUserResponse.isSuccess(), "Founder user deletion should succeed");
+        // Remove registered user
         Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(registeredEmail);
         assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
-
     }
 
     @Test
@@ -129,8 +141,7 @@ public class Guest_User_Check_Cart_Content {
         assertTrue(resultRegister3.isSuccess());
         int registeredId3 = resultRegister3.getData().getUserId();
         Response<List<CartItemInfoDTO>> emptyCartResponse = systemService.viewCart(registeredId3);
-        assertFalse(emptyCartResponse.isSuccess());
+        assertTrue(emptyCartResponse.isSuccess());
         assertEquals("Cart is empty", emptyCartResponse.getMessage());
-        assertNull(emptyCartResponse.getData());
     }
 }

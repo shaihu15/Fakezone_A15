@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -33,6 +34,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 
 public class StoreOwner_Retrieving_Store_Purchase_History {
 
@@ -127,6 +129,9 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
 
         Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+        //remove the store
+        Response<Void> deleteStoreResponse2 = systemService.removeStore(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse2.isSuccess(), "Store removal should succeed");
     }
     
     @Test

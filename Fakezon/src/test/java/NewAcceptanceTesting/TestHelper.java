@@ -24,25 +24,25 @@ public class TestHelper {
     }
 
     public String validEmail() {
-        return "user@gmail.com";
+        return "user1234@gmail.com";
     }
 
     public String validEmail2() {
-        return "user2@gmail.com";
+        return "user234@gmail.com";
     }
 
     public String validEmail3() {
-        return "user3@gmail.com";
+        return "user345@gmail.com";
     }
 
     // Added for register_and_login4
     public String validEmail4() {
-        return "user4@gmail.com";
+        return "user456@gmail.com";
     }
 
     // Added for register_and_login5
     public String validEmail5() {
-        return "user5@gmail.com";
+        return "user567@gmail.com";
     }
 
     public String validPassword() {
@@ -120,28 +120,38 @@ public class TestHelper {
         if(!result.isSuccess()){
             return null;
         }
-        return result;
-    }
+            return result;
+        }
 
-    public Response<UserDTO> register_and_login(){
+    public Response<UserDTO> register_and_login() {
         String email = validEmail();
         String password = validPassword();
         String validBirthDay = validBirthDate_Over18();
         String validCountry = validCountry();
-        Response<String> result = systemService.guestRegister(email, password, validBirthDay, validCountry );
 
-        if(!result.isSuccess()){
-            return null;
+        // Register the guest
+        Response<String> registerResponse = systemService.guestRegister(email, password, validBirthDay, validCountry);
+        if (registerResponse == null) {
+            return new Response<>(null, "Registration failed: response was null", false, ErrorType.INTERNAL_ERROR, null);
         }
+        if (!registerResponse.isSuccess()) {
+            return new Response<>(null, "Registration failed: " + registerResponse.getMessage(), false, registerResponse.getErrorType(), null);
+        }
+
+        // Login the guest
         Response<AbstractMap.SimpleEntry<UserDTO, String>> loginResponse = systemService.login(email, password);
-        Response<UserDTO> loginResult = loginResponse.isSuccess() 
-            ? new Response<>(loginResponse.getData().getKey(), loginResponse.getMessage(), true, null, null)
-            : new Response<>(null, loginResponse.getMessage(), false, ErrorType.INVALID_INPUT, null);
-        if(!loginResult.isSuccess()){
-            return null;
+        if (loginResponse == null) {
+            return new Response<>(null, "Login failed: response was null", false, ErrorType.INTERNAL_ERROR, null);
         }
-        return loginResult;
+        if (!loginResponse.isSuccess()) {
+            return new Response<>(null, "Login failed: " + loginResponse.getMessage(), false, loginResponse.getErrorType(), null);
+        }
+
+        // Success
+        UserDTO user = loginResponse.getData().getKey();
+        return new Response<>(user, "Register and login successful", true, null, null);
     }
+
 
     public Response<UserDTO> login1(){
         String email = validEmail();

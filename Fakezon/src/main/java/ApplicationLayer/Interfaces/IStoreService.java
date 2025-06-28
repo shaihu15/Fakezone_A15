@@ -150,4 +150,6 @@ public interface IStoreService {
 
   List<Offer> getUserOffers(int storeId, int userId);
 
+  void removeStore(int storeId);
+
 }

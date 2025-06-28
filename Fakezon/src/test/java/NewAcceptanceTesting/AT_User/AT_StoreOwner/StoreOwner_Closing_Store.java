@@ -6,6 +6,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.UserDTO;
@@ -13,6 +15,7 @@ import ApplicationLayer.Services.SystemService;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 
 public class StoreOwner_Closing_Store {
     // Use-case: 4.9 Close a store
@@ -40,14 +43,35 @@ public class StoreOwner_Closing_Store {
     }
     @AfterEach
     void tearDown() {
-        // Close the store if it's still open
+        // Close and remove the main store (ignore if already closed/removed)
         if (systemService.isStoreOpen(storeId)) {
             Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
-            assertTrue(closeStoreResponse.isSuccess());
+            assertTrue(closeStoreResponse.isSuccess() ||
+                       closeStoreResponse.getMessage().contains("already closed") ||
+                       closeStoreResponse.getMessage().contains("Store not found"),
+                       "Unexpected close store message: " + closeStoreResponse.getMessage());
         }
-        // Delete the owner user
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteUserResponse.isSuccess());
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, OwnerUserId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertTrue(removeStoreResponse.getMessage().contains("Store not found"),
+                       "Unexpected remove store message: " + removeStoreResponse.getMessage());
+        }
+
+        // Delete the main owner user
+        Response<Boolean> deleteOwnerResponse = systemService.deleteUser(testHelper.validEmail());
+        if (!deleteOwnerResponse.isSuccess()) {
+            String msg = deleteOwnerResponse.getMessage();
+            assertTrue(msg.equals("User not found") || msg.equals("Error during deleting user"),
+                       "Unexpected delete user message: " + msg);
+        }
+
+        // Delete any secondary users and stores created in tests
+        Response<Boolean> deleteSecondOwnerResponse = systemService.deleteUser(testHelper.validEmail2());
+        if (!deleteSecondOwnerResponse.isSuccess()) {
+            String msg = deleteSecondOwnerResponse.getMessage();
+            assertTrue(msg.equals("User not found") || msg.equals("Error during deleting user"),
+                       "Unexpected delete user message: " + msg);
+        }
     }
 
     @Test
@@ -163,9 +187,6 @@ public class StoreOwner_Closing_Store {
         assertTrue(systemService.isStoreOpen(storeId));
 
     }
-
-    
-
 
 
 

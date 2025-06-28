@@ -7,6 +7,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Response;
@@ -15,8 +17,9 @@ import ApplicationLayer.Services.SystemService;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 
-public class User_Registration {
+public class User_RegistrationTest {
     //Use-case: 1.3 User Registration
     @Autowired
     private SystemService systemService;
@@ -44,9 +47,19 @@ public class User_Registration {
     }
     @AfterEach
     void tearDown() {
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
+        // Remove the unsigned guest user created in setUp
+        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
 
+        // Remove the registered user if it was created (ignore if not found or error during deleting)
+        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(validEmail);
+        if (!deleteRegisteredResponse.isSuccess()) {
+            String msg = deleteRegisteredResponse.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
     }
 
     
@@ -142,5 +155,5 @@ public class User_Registration {
         assertFalse(result.isSuccess());
         assertEquals("Invalid country code", result.getMessage());
     }
-    
+
 }

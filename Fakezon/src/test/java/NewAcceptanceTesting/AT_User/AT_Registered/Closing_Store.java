@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ActiveProfiles;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.UserDTO;
@@ -44,7 +46,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Closing_Store {
+@ActiveProfiles("test")
+
+public class Closing_Store{
     //Use-case: 4.9 Closing Store
 
      @Autowired

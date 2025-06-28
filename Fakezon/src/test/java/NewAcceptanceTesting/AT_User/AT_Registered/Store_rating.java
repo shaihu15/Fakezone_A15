@@ -3,6 +3,7 @@ package NewAcceptanceTesting.AT_User.AT_Registered;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,6 +50,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
+
 public class Store_rating {
     //Use-case: 3.4 Store rating
     

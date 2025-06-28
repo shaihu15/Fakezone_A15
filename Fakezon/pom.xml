@@ -183,6 +183,12 @@
                             <goal>report</goal>
                         </goals>
                         <configuration>
+                            <includes>
+                                <include>**/*Test.java</include>
+                                <include>**/*Tests.java</include>
+                                <include>**/*TestCase.java</include>
+                                <include>/NewAcceptanceTesting/**/*.java</include>
+                            </includes>
                             <excludes>
                                 <exclude>com/fakezone/fakezone/ui/view/**</exclude>
                                 <exclude>com/fakezone/fakezone/FakezoneApplication.class</exclude>

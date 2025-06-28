@@ -8,6 +8,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Response;
@@ -16,8 +18,9 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Services.SystemService;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 
-public class Save_Products_in_Purchase_Basket {
+public class Save_Products_in_Purchase_BasketTest {
     //Use-case: 2.3 Save Products in Purchase Basket 
 
        @Autowired
@@ -69,10 +72,16 @@ public class Save_Products_in_Purchase_Basket {
         assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
         Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
         assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        // Delete the users
+        Response<Boolean> deleteOwnerResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteOwnerResponse.isSuccess(), "Store founder deletion should succeed");
         Response<Boolean> deleteResponse = systemService.deleteUser(testHelper.validEmail2());
         assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
         Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+        // Clean up the store
+        Response<Void> deleteStoreResponse2 = systemService.removeStore(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse2.isSuccess(), "Store deletion should succeed");
     }
 
 
@@ -121,4 +130,3 @@ public class Save_Products_in_Purchase_Basket {
     }
 
 }
-

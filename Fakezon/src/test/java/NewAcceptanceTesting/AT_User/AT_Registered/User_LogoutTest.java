@@ -7,6 +7,8 @@ import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.ActiveProfiles;
+
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Response;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
@@ -39,7 +41,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class User_Logout {
+@ActiveProfiles("test")
+
+public class User_LogoutTest {
 //Use-case: 3.1 User Logout
 
      @Autowired

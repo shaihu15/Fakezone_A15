@@ -1,26 +1,21 @@
 package NewAcceptanceTesting.AT_User.AT_Guest;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.ActiveProfiles;
 
 import ApplicationLayer.Response;
-import ApplicationLayer.DTO.StoreProductDTO;
-
-import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
 import ApplicationLayer.Interfaces.IOrderService;
 import ApplicationLayer.Interfaces.IProductService;
 import ApplicationLayer.Interfaces.IStoreService;
 import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Response;
 import ApplicationLayer.Services.OrderService;
 import ApplicationLayer.Services.ProductService;
 import ApplicationLayer.Services.StoreService;
@@ -29,16 +24,18 @@ import ApplicationLayer.Services.UserService;
 import DomainLayer.IRepository.IProductRepository;
 import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.IRepository.IUserRepository;
+import DomainLayer.Interfaces.IAuthenticator;
+import DomainLayer.Interfaces.IDelivery;
+import DomainLayer.Interfaces.IOrderRepository;
+import DomainLayer.Interfaces.IPayment;
 import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
+import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import InfrastructureLayer.Repositories.OrderRepository;
 import InfrastructureLayer.Repositories.ProductRepository;
 import InfrastructureLayer.Repositories.StoreRepository;
 import InfrastructureLayer.Repositories.UserRepository;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
-import InfrastructureLayer.Security.TokenService;
-
 import NewAcceptanceTesting.TestHelper;
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -46,13 +43,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Guest_User_Enters_The_System {
-    // Use-Case: 1.1 Guest user enters the system
+@ActiveProfiles("test")
 
-    @Autowired
+public class Guest_User_Exiting_The_SystemTest {
+     @Autowired
     private SystemService systemService;
 
+
     private TestHelper testHelper;
+
+    int guestUserId;
 
     int storeOwnerId;
     int storeId;
@@ -61,25 +61,29 @@ public class Guest_User_Enters_The_System {
     @BeforeEach
     void setUp() {
 
-        systemService.clearAllData(); // should be removed when there's a DB and we exclude the tests!!!
+        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
         testHelper = new TestHelper(systemService);
-    }
 
-    @Test
-    void testGuestUserCreatedSuccessfully() {
         // Act: Create a guest (unsigned) user
         Response<UserDTO> response = systemService.createUnsignedUser();
-        int guestUserId = response.getData().getUserId();
+        guestUserId = response.getData().getUserId();
 
         // Assert: The response should indicate success
         assertTrue(response.isSuccess(), "Guest user should be created successfully");
         assertEquals("Unsigned user created successfully", response.getMessage());
         assertNotNull(guestUserId, "Guest user ID should not be null");
-        assertEquals(-1, guestUserId);
+        assertEquals(-1, guestUserId );
+    }
 
-        Response<UserDTO> response2 = systemService.createUnsignedUser();
-        int guestUserId2 = response2.getData().getUserId();
-        assertEquals(-2, guestUserId2);
+    @Test
+    void testGuestUserExitsSuccessfully() {
+        // Act: Guest user exits the system
+        Response<Boolean> response = systemService.removeUnsignedUser(guestUserId);
+
+        // Assert: The response should indicate success
+        assertTrue(response.isSuccess(), "Guest user should exit the system successfully");
+        assertEquals("Unsigned user removed successfully", response.getMessage());
+        assertTrue(response.getData(), "Guest user should be removed successfully");
     }
 
 }
