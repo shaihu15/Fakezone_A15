@@ -84,15 +84,25 @@ public class Guest_User_Check_Cart_Content {
 
     @AfterEach
     void tearDown() {
+        // Close the store (ignore if already closed)
         Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        if (!deleteStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", deleteStoreResponse.getMessage());
+        }
+        // Remove the store (ignore if already removed)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, StoreFounderId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreResponse.getMessage());
+        }
+        // Remove guest user
         Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteResponse.isSuccess(), "Guest user deletion should succeed");
+        // Remove founder user
         Response<Boolean> deleteUserResponse = systemService.deleteUser(founderEmail);
-        assertTrue(deleteUserResponse.isSuccess(), "Registered user deletion should succeed");
+        assertTrue(deleteUserResponse.isSuccess(), "Founder user deletion should succeed");
+        // Remove registered user
         Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(registeredEmail);
         assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
-
     }
 
     @Test

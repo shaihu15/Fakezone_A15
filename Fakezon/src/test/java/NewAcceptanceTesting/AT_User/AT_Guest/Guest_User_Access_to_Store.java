@@ -48,10 +48,21 @@ public class Guest_User_Access_to_Store {
 
     @AfterEach
     void tearDown() {
+        // Try to close the store (ignore if already closed)
+        Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, userId);
+        if (!closeStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", closeStoreResponse.getMessage());
+        }
+
+        // Try to remove the store (ignore if already removed)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, userId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreResponse.getMessage());
+        }
+
+        // Now delete the user
         Response<Boolean> deleteResponse = systemService.deleteUser(username);
         assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
     }
                     
     @Test

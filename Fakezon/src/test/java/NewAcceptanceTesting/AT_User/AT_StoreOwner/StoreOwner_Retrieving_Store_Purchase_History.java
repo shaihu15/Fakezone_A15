@@ -127,6 +127,9 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
 
         Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+        //remove the store
+        Response<Void> deleteStoreResponse2 = systemService.removeStore(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse2.isSuccess(), "Store removal should succeed");
     }
     
     @Test

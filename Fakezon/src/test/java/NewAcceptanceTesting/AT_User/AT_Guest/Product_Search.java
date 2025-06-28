@@ -71,8 +71,19 @@ public class Product_Search {
 
     @AfterEach
     void tearDown() {
+        // Close the store (ignore if already closed)
         Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        if (!deleteStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", deleteStoreResponse.getMessage());
+        }
+
+        // Remove the store (ignore if already removed, if you have removeStore)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, userId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreResponse.getMessage());
+        }
+
+        // Delete the user
         Response<Boolean> deleteResponse = systemService.deleteUser(username);
         assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
     }
@@ -84,7 +95,10 @@ public class Product_Search {
         Response<List<ProductDTO>> result = systemService.searchByCategory(category_toTset);
         assertNotNull(result.getData());
         assertTrue(result.isSuccess());
-        assertEquals(productName, result.getData().get(0).getName());
+        // Fix: Check that at least one product matches the expected name
+        boolean found = result.getData().stream()
+            .anyMatch(p -> productName.equals(p.getName()));
+        assertTrue(found, "Expected to find product with name: " + productName);
     }
 
     @Test

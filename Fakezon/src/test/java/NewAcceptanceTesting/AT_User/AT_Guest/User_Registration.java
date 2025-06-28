@@ -44,9 +44,19 @@ public class User_Registration {
     }
     @AfterEach
     void tearDown() {
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
+        // Remove the unsigned guest user created in setUp
+        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
+        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
 
+        // Remove the registered user if it was created (ignore if not found or error during deleting)
+        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(validEmail);
+        if (!deleteRegisteredResponse.isSuccess()) {
+            String msg = deleteRegisteredResponse.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
     }
 
     

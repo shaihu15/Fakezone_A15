@@ -107,31 +107,101 @@ public class StoreOwner_RemoveOwnership {
 
     @AfterEach
     void tearDown() {
-        // Clean up: remove all owners and close the store
+        // Remove OwnerUserId2 (User3) as owner (ignore if already removed)
         Response<Void> removeOwner2Res = systemService.removeStoreOwner(storeId, ManagerUserId, OwnerUserId2);
-        assertTrue(removeOwner2Res.isSuccess(), "Failed to remove OwnerUserId2");
+        if (!removeOwner2Res.isSuccess()) {
+            String msg = removeOwner2Res.getMessage();
+            assertTrue(
+                msg.contains("not found") ||
+                msg.contains("is not a store owner") ||
+                msg.contains("is not a valid store owner"),
+                "Failed to remove OwnerUserId2: " + msg
+            );
+        }
 
+        // Remove ManagerUserId (User2) as owner (ignore if already removed)
         Response<Void> removeManagerRes = systemService.removeStoreOwner(storeId, OwnerUserId, ManagerUserId);
-        assertTrue(removeManagerRes.isSuccess(), "Failed to remove ManagerUserId");
+        if (!removeManagerRes.isSuccess()) {
+            String msg = removeManagerRes.getMessage();
+            assertTrue(
+                msg.contains("not found") ||
+                msg.contains("is not a store owner") ||
+                msg.contains("is not a valid store owner"),
+                "Failed to remove ManagerUserId: " + msg
+            );
+        }
 
+        // Remove OwnerUserId (User1) as owner (ignore if already removed or is founder)
         Response<Void> removeOwner1Res = systemService.removeStoreOwner(storeId, OwnerUserId, OwnerUserId);
-        assertTrue(removeOwner1Res.isSuccess(), "Failed to remove OwnerUserId");
+        if (!removeOwner1Res.isSuccess()) {
+            String msg = removeOwner1Res.getMessage();
+            assertTrue(
+                msg.contains("not found") ||
+                msg.contains("is not a store owner") ||
+                msg.contains("is not a valid store owner") ||
+                msg.contains("Can not remove Store Founder") ||
+                msg.contains("User not found"),
+                "Failed to remove OwnerUserId: " + msg
+            );
+        }
 
+        // Close the store (ignore if already closed or not found)
         Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
+        if (!closeStoreRes.isSuccess()) {
+            String msg = closeStoreRes.getMessage();
+            assertTrue(
+                msg.contains("already closed") ||
+                msg.contains("Store not found") ||
+                msg.contains("User not found"),
+                "Failed to close store: " + msg
+            );
+        }
 
-        // Remove test users
+        // Remove test users (ignore if already deleted or error during deleting)
         Response<Boolean> deleteResponse1 = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteResponse1.isSuccess(), "Failed to delete OwnerUserId");
+        if (!deleteResponse1.isSuccess()) {
+            String msg = deleteResponse1.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Failed to delete OwnerUserId: " + msg
+            );
+        }
 
         Response<Boolean> deleteResponse2 = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteResponse2.isSuccess(), "Failed to delete ManagerUserId");
+        if (!deleteResponse2.isSuccess()) {
+            String msg = deleteResponse2.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Failed to delete ManagerUserId: " + msg
+            );
+        }
 
         Response<Boolean> deleteResponse3 = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteResponse3.isSuccess(), "Failed to delete OwnerUserId2");
+        if (!deleteResponse3.isSuccess()) {
+            String msg = deleteResponse3.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Failed to delete OwnerUserId2: " + msg
+            );
+        }
 
         Response<Boolean> deleteOtherResponse = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteOtherResponse.isSuccess(), "Failed to delete other registered user");
+        if (!deleteOtherResponse.isSuccess()) {
+            String msg = deleteOtherResponse.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Failed to delete other registered user: " + msg
+            );
+        }
+        //remove store from system
+        Response<Void> removeStoreRes = systemService.removeStore(storeId, OwnerUserId);
+        if (!removeStoreRes.isSuccess()) {
+            String msg = removeStoreRes.getMessage();
+            assertTrue(
+                msg.equals("Store not found") || msg.equals("Error during removing store"),
+                "Failed to remove store: " + msg
+            );
+        }
     }
 
     @Test

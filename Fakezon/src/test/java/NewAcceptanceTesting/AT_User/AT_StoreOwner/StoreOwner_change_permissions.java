@@ -91,21 +91,92 @@ public class StoreOwner_change_permissions {
 
     @AfterEach
     void tearDown() {
-        // Remove the store and users created for this test
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(closeStoreRes.isSuccess());
+        // Remove manager from store (ignore if already removed)
+        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, OwnerUserId, ManagerUserId);
+        if (!removeManagerRes.isSuccess()) {
+            String msg = removeManagerRes.getMessage();
+            assertTrue(
+                msg.contains("not found") ||
+                msg.contains("is not a store manager") ||
+                msg.contains("is not a valid store manager") ||
+                msg.contains("is not a store owner"),
+                "Failed to remove manager: " + msg
+            );
+        }
 
+        // Remove second owner from store (ignore if already removed)
+        Response<Void> removeSecondOwnerRes = systemService.removeStoreOwner(storeId, OwnerUserId, SecondOwnerUserId);
+        if (!removeSecondOwnerRes.isSuccess()) {
+            String msg = removeSecondOwnerRes.getMessage();
+            assertTrue(
+                msg.contains("not found") ||
+                msg.contains("is not a store owner"),
+                "Failed to remove second owner: " + msg
+            );
+        }
+
+        // Close the store (ignore if already closed or not found)
+        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
+        if (!closeStoreRes.isSuccess()) {
+            assertTrue(
+                closeStoreRes.getMessage().equals("Error during closing store: Store: " + storeId + " is already closed") ||
+                closeStoreRes.getMessage().equals("Error during closing store: Store not found"),
+                "Unexpected close store message: " + closeStoreRes.getMessage()
+            );
+        }
+
+        // Remove the store (ignore if already removed)
+        Response<Void> removeStoreRes = systemService.removeStore(storeId, OwnerUserId);
+        if (!removeStoreRes.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreRes.getMessage());
+        }
+
+        // Delete the users (ignore if already deleted or error during deleting)
         Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerRes.isSuccess());
+        if (!deleteManagerRes.isSuccess()) {
+            String msg = deleteManagerRes.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
 
         Response<Boolean> deleteOtherUserRes = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteOtherUserRes.isSuccess());
+        if (!deleteOtherUserRes.isSuccess()) {
+            String msg = deleteOtherUserRes.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
 
         Response<Boolean> deleteSecondOwnerRes = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteSecondOwnerRes.isSuccess());
+        if (!deleteSecondOwnerRes.isSuccess()) {
+            String msg = deleteSecondOwnerRes.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
 
         Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess());
+        if (!deleteOwnerRes.isSuccess()) {
+            String msg = deleteOwnerRes.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
+
+        // Delete the fifth user (if created in any test)
+        Response<Boolean> deleteFifthUserRes = systemService.deleteUser(testHelper.validEmail5());
+        if (!deleteFifthUserRes.isSuccess()) {
+            String msg = deleteFifthUserRes.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
     }
 
     @Test

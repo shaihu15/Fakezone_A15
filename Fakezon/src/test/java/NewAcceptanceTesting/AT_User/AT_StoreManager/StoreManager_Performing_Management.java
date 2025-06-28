@@ -108,6 +108,9 @@ public class StoreManager_Performing_Management {
 
         Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
         assertTrue(deleteManagerRes.isSuccess(), "Failed to delete manager user");
+        //remove the store
+        Response<Void> removeStoreRes = systemService.removeStore(storeId, ownerUserId);
+        assertTrue(removeStoreRes.isSuccess(), "Failed to remove store");
     }
 
 

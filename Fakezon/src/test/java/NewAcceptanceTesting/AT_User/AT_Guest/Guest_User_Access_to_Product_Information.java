@@ -57,14 +57,16 @@ public class Guest_User_Access_to_Product_Information {
         Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, userId, productId);
         assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
         Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        if (!deleteStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", deleteStoreResponse.getMessage());
+        }
         Response<Boolean> deleteResponse = systemService.deleteUser(username);
         assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-        // Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(userId);
-        // assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
-        // // Clean up the store
-        // Response<Void> deleteStoreResponse2 = systemService.removeStore(storeId, userId);
-        // assertTrue(deleteStoreResponse2.isSuccess(), "Store deletion should succeed");
+        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(userId);
+        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+        // Clean up the store
+        Response<Void> deleteStoreResponse2 = systemService.removeStore(storeId, userId);
+        assertTrue(deleteStoreResponse2.isSuccess(), "Store deletion should succeed");
     }
 
     @Test

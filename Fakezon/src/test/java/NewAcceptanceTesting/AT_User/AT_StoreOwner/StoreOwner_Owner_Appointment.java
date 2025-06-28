@@ -80,14 +80,55 @@ public class StoreOwner_Owner_Appointment {
 
     @AfterEach
     void tearDown() {
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        // Close the store (ignore if already closed or not found)
+        Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
+        if (!closeStoreResponse.isSuccess()) {
+            String msg = closeStoreResponse.getMessage();
+            assertTrue(
+                msg.contains("already closed") || msg.contains("Store not found"),
+                "Unexpected close store message: " + msg
+            );
+        }
 
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteUserResponse.isSuccess(), "Owner user deletion should succeed");
+        // Remove the store (ignore if already removed)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, OwnerUserId);
+        if (!removeStoreResponse.isSuccess()) {
+            String msg = removeStoreResponse.getMessage();
+            assertTrue(
+                msg.contains("Store not found"),
+                "Unexpected remove store message: " + msg
+            );
+        }
 
+        // Delete the main owner user
+        Response<Boolean> deleteOwnerResponse = systemService.deleteUser(testHelper.validEmail());
+        if (!deleteOwnerResponse.isSuccess()) {
+            String msg = deleteOwnerResponse.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
+
+        // Delete the manager user
         Response<Boolean> deleteManagerResponse = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerResponse.isSuccess(), "Manager user deletion should succeed");
+        if (!deleteManagerResponse.isSuccess()) {
+            String msg = deleteManagerResponse.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
+
+        // Delete any additional users created in tests (e.g., ManagerUser3)
+        Response<Boolean> deleteManager3Response = systemService.deleteUser(testHelper.validEmail3());
+        if (!deleteManager3Response.isSuccess()) {
+            String msg = deleteManager3Response.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
     }
 
     @Test

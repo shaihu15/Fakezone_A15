@@ -69,10 +69,16 @@ public class Save_Products_in_Purchase_Basket {
         assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
         Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
         assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        // Delete the users
+        Response<Boolean> deleteOwnerResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteOwnerResponse.isSuccess(), "Store founder deletion should succeed");
         Response<Boolean> deleteResponse = systemService.deleteUser(testHelper.validEmail2());
         assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
         Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
+        // Clean up the store
+        Response<Void> deleteStoreResponse2 = systemService.removeStore(storeId, StoreFounderId);
+        assertTrue(deleteStoreResponse2.isSuccess(), "Store deletion should succeed");
     }
 
 

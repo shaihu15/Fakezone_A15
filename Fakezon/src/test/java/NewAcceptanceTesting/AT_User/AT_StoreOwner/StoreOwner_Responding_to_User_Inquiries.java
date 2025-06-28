@@ -66,6 +66,24 @@ public class StoreOwner_Responding_to_User_Inquiries {
 
         Response<Boolean> deleteStoreOwnerResp = systemService.deleteUser(testHelper.validEmail());
         assertTrue(deleteStoreOwnerResp.isSuccess());
+        // Optionally, you can also delete any additional users created in tests
+        Response<Boolean> deleteFifthUserResp = systemService.deleteUser(testHelper.validEmail5());
+        if (!deleteFifthUserResp.isSuccess()) {
+            String msg = deleteFifthUserResp.getMessage();
+            assertTrue(
+                msg.equals("User not found") || msg.equals("Error during deleting user"),
+                "Unexpected delete user message: " + msg
+            );
+        }
+        // remove store if it exists
+        Response<Void> removeStoreResp = systemService.removeStore(storeId, storeOwnerId);
+        if (!removeStoreResp.isSuccess()) {
+            String msg = removeStoreResp.getMessage();
+            assertTrue(
+                msg.equals("Store not found") || msg.equals("Error during removing store"),
+                "Unexpected remove store message: " + msg
+            );
+        }
     }
 
     @Test

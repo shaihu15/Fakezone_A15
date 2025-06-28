@@ -86,17 +86,32 @@ public class Immediate_Purchase_of_Shopping_Cart {
 
     @AfterEach
     void tearDown() {
+        // Close the store (ignore if already closed)
+        Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
+        if (!closeStoreResponse.isSuccess()) {
+            assertEquals("Error during closing store: Store: " + storeId + " is already closed", closeStoreResponse.getMessage());
+        }
 
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
+        // Remove the store (ignore if already removed)
+        Response<Void> removeStoreResponse = systemService.removeStore(storeId, StoreFounderId);
+        if (!removeStoreResponse.isSuccess()) {
+            assertEquals("Error during removing store: Store not found", removeStoreResponse.getMessage());
+        }
 
+        // Remove guest user
         Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
         assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
 
-        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
+        // Remove founder user
+        Response<Boolean> deleteFounderResponse = systemService.deleteUser(testHelper.validEmail());
+        assertTrue(deleteFounderResponse.isSuccess(), "Founder user deletion should succeed");
 
-        Response<Boolean> deleteRegisteredResponse3 = systemService.deleteUser(testHelper.validEmail2());
+        // Remove registered user 2
+        Response<Boolean> deleteRegisteredResponse2 = systemService.deleteUser(testHelper.validEmail2());
+        assertTrue(deleteRegisteredResponse2.isSuccess(), "Registered user 2 deletion should succeed");
+
+        // Remove registered user 3
+        Response<Boolean> deleteRegisteredResponse3 = systemService.deleteUser(testHelper.validEmail3());
         assertTrue(deleteRegisteredResponse3.isSuccess(), "Registered user 3 deletion should succeed");
     }
  
