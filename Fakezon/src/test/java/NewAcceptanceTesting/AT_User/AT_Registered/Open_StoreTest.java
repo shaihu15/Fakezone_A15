@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import DomainLayer.Interfaces.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,53 +46,57 @@ import org.springframework.boot.test.context.SpringBootTest;
 @ActiveProfiles("test")
 
 public class Open_StoreTest {
-    //Use-case: 3.2 Open Store 
+    // Use-case: 3.2 Open Store 
 
-     @Autowired
+    @Autowired
     private SystemService systemService;
 
     private TestHelper testHelper;
 
+    // Track created user and store for cleanup
+    private Integer userId = null;
+    private Integer storeId = null;
+
     @BeforeEach
     void setUp() {
-
-        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
         testHelper = new TestHelper(systemService);
+        userId = null;
+        storeId = null;
     }
 
     @Test
     void testOpenStore_validArguments_Success() {
         Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
+        userId = resultUser.getData().getUserId();
         String storeName = "Test Store";
 
         Response<Integer> resultAddStore = systemService.addStore(userId, storeName);
-        int storeId = resultAddStore.getData();
+        storeId = resultAddStore.getData();
 
-        assertNotNull(resultAddStore.getData());
-        assertTrue(systemService.isStoreOpen(storeId)); // Check if store is created and can be retrieved
+        assertNotNull(storeId);
+        assertTrue(systemService.isStoreOpen(storeId));
     }
 
     @Test
     void testOpenStore_StoreNameAlreadyTaken_Failure() {
         Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
+        userId = resultUser.getData().getUserId();
 
         Response<Integer> resultAddStore1 = systemService.addStore(userId, "Test Store");
+        storeId = resultAddStore1.getData();
+
         Response<Integer> resultAddStore2 = systemService.addStore(userId, "Test Store");
-        int storeId1 = resultAddStore1.getData();
 
-        assertNotNull(storeId1);
-        assertTrue(systemService.isStoreOpen(storeId1)); // Check if store is created and can be retrieved
-
-        assertNull(resultAddStore2.getData());//store2 dont get id - not open
+        assertNotNull(storeId);
+        assertTrue(systemService.isStoreOpen(storeId));
+        assertNull(resultAddStore2.getData());
         assertEquals("Error during opening store: Store name already exists", resultAddStore2.getMessage());
     }
 
     @Test
     void testOpenStore_StoreNameIsEmpty_Failure() {
         Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
+        userId = resultUser.getData().getUserId();
 
         String invalidStoreName = ""; 
 
@@ -101,21 +106,20 @@ public class Open_StoreTest {
         assertEquals("Error during opening store: Store name is empty", resultAddStore.getMessage());
     }
 
-        @Test
+    @Test
     void testOpenStore_StoreNameIsNull_Failure() {
         Response<UserDTO> resultUser = testHelper.register_and_login();
-        int userId = resultUser.getData().getUserId();
-
+        userId = resultUser.getData().getUserId();
 
         Response<Integer> resultAddStore = systemService.addStore(userId, null);
 
         assertNull(resultAddStore.getData());
         assertEquals("Error during opening store: Store name is empty", resultAddStore.getMessage());
     }
- 
+
     @Test
     void testOpenStore_UserNotRegistered_Failure() {
-        int userId = 9999; // Assuming this user ID does not exist
+        userId = 9999; // Assuming this user ID does not exist
 
         Response<Integer> resultAddStore = systemService.addStore(userId, "Test Store");
 
@@ -123,4 +127,22 @@ public class Open_StoreTest {
         assertEquals("Error during opening store: User not found", resultAddStore.getMessage());
     }
 
+    @AfterEach
+    void tearDown() {
+        // Try to close the store (ignore if already closed)
+        if (storeId != null && userId != null) {
+            Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, userId);
+            // Ignore if already closed or not found
+        }
+
+        // Try to remove the store (ignore if already removed)
+        if (storeId != null && userId != null) {
+            systemService.removeStore(storeId, userId);
+        }
+
+        // Now delete the user (ignore if already deleted)
+        if (userId != null) {
+            systemService.deleteUser(testHelper.validEmail());
+        }
+    }
 }

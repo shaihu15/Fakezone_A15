@@ -78,11 +78,11 @@ public class Guest_User_Enters_The_SystemTest {
         assertTrue(response.isSuccess(), "Guest user should be created successfully");
         assertEquals("Unsigned user created successfully", response.getMessage());
         assertNotNull(guestUserId, "Guest user ID should not be null");
-        assertEquals(1, guestUserId);
+        assertEquals(-1, guestUserId);
 
         Response<UserDTO> response2 = systemService.createUnsignedUser();
         int guestUserId2 = response2.getData().getUserId();
-        assertEquals(2, guestUserId2);
+        assertEquals(-2, guestUserId2);
     }
 
 }

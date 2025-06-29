@@ -55,6 +55,7 @@ public class bid_on_auctionTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> ownerUserRes = testHelper.register_and_login();
