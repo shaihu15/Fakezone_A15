@@ -2560,6 +2560,7 @@ public class SystemService implements ISystemService {
         }
     }
     @Override
+    @Transactional
     public Response<List<StoreDTO>> getAllStores() {
         try {
             List<StoreDTO> stores = storeService.getAllStores();
