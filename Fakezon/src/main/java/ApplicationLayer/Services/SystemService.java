@@ -2562,7 +2562,7 @@ public class SystemService implements ISystemService {
         }
     }
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Response<List<StoreDTO>> getAllStores() {
         try {
             List<StoreDTO> stores = storeService.getAllStores();
