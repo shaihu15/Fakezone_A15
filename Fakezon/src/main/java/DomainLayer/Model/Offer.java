@@ -19,8 +19,8 @@ public class Offer {
     @Column(name = "user_id", nullable = false)
     private int userId;
     
-    @Column(name = "store_id", nullable = false)
-    private int storeId;
+    @Column(name = "store_id", nullable = true)
+    private Integer storeId;
     
     @Column(name = "product_id", nullable = false)
     private int productId;
