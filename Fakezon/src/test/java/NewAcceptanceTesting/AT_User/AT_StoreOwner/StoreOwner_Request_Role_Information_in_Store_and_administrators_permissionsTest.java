@@ -31,7 +31,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 
-public class StoreOwner_Request_Role_Information_in_Store_and_administrators_permissions {
+public class StoreOwner_Request_Role_Information_in_Store_and_administrators_permissionsTest {
 
     @Autowired
     private SystemService systemService;

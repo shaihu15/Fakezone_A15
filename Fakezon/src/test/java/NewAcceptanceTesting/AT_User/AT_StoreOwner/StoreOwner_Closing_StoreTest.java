@@ -14,7 +14,7 @@ import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 
-public class StoreOwner_Closing_Store {
+public class StoreOwner_Closing_StoreTest {
     // Use-case: 4.9 Close a store
     @Autowired
     private SystemService systemService;

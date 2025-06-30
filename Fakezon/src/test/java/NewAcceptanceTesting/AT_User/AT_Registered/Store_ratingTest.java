@@ -49,7 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Store_rating {
+public class Store_ratingTest {
     //Use-case: 3.4 Store rating
     
      @Autowired

@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_Update_product_details {
+public class StoreOwner_Update_product_detailsTest {
     //Use-case: 4.1 StoreOwner -Update product details
 
      @Autowired

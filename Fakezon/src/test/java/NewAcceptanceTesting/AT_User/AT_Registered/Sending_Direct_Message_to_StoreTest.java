@@ -53,7 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Sending_Direct_Message_to_Store {
+public class Sending_Direct_Message_to_StoreTest {
     //Use-case: 3.5 Sending a Direct Message to a Store
 
      @Autowired

@@ -33,7 +33,7 @@ import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class bid_on_auction {
+public class bid_on_auctionTest {
 
     @Autowired
     private SystemService systemService;

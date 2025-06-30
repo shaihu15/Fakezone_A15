@@ -35,7 +35,7 @@ import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class purchase_auction_product {
+public class purchase_auction_productTest {
 
     @Autowired
     private SystemService systemService;

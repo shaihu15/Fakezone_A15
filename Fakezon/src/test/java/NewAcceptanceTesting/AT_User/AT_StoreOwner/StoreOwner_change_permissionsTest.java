@@ -30,7 +30,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_change_permissions {
+public class StoreOwner_change_permissionsTest {
 
     @Autowired
     private SystemService systemService;

@@ -32,7 +32,7 @@ import ApplicationLayer.Services.SystemService;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreManager_Performing_Management {
+public class StoreManager_Performing_ManagementTest {
 
     @Autowired
     private SystemService systemService;

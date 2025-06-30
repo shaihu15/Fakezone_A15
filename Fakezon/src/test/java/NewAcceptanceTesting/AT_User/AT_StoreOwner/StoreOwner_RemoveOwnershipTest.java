@@ -25,7 +25,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_RemoveOwnership {
+public class StoreOwner_RemoveOwnershipTest {
 
     @Autowired
     private SystemService systemService;

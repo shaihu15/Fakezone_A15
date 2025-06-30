@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Open_Store {
+public class Open_StoreTest {
     //Use-case: 3.2 Open Store 
 
      @Autowired

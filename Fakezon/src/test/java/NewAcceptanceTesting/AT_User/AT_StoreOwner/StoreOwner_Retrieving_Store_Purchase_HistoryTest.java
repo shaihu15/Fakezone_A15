@@ -34,7 +34,7 @@ import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 
-public class StoreOwner_Retrieving_Store_Purchase_History {
+public class StoreOwner_Retrieving_Store_Purchase_HistoryTest {
 
     @Autowired
     private SystemService systemService;

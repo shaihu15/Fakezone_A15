@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class User_Logout {
+public class User_LogoutTest {
 //Use-case: 3.1 User Logout
 
      @Autowired

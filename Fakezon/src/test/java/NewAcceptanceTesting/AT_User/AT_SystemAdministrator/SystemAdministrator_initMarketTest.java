@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class SystemAdministrator_initMarket {
+public class SystemAdministrator_initMarketTest {
 
      @Autowired
     private SystemService systemService;
