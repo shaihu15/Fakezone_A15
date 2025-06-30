@@ -408,6 +408,7 @@ public class SystemService implements ISystemService {
         }
     }
     @Override
+    @Transactional
     public Response<Boolean> deleteUser(String username){
          try{
             userService.deleteUser(username);
@@ -2548,6 +2549,7 @@ public class SystemService implements ISystemService {
      * **********DO NOT USE - JUST FOR TESTS PURPOSES**********
      **/
     @Override
+    @Transactional(readOnly = true)
     public Response<List<Offer>> getUserOffers(int storeId, int userId){
         try{
             logger.info("fetching user " + userId + " offers from store " + storeId);
@@ -2560,6 +2562,7 @@ public class SystemService implements ISystemService {
         }
     }
     @Override
+    @Transactional
     public Response<List<StoreDTO>> getAllStores() {
         try {
             List<StoreDTO> stores = storeService.getAllStores();
