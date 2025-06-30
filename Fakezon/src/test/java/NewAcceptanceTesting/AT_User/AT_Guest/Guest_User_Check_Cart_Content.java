@@ -38,6 +38,7 @@ public class Guest_User_Check_Cart_Content {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister1 = testHelper.register_and_login();

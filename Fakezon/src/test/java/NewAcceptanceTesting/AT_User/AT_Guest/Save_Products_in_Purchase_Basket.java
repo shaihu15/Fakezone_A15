@@ -34,6 +34,7 @@ public class Save_Products_in_Purchase_Basket {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister1 = testHelper.register_and_login();

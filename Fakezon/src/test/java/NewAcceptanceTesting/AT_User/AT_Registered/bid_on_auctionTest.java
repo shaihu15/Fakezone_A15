@@ -2,8 +2,6 @@ package NewAcceptanceTesting.AT_User.AT_Registered;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -21,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fakezone.fakezone.FakezoneApplication;
-import java.util.concurrent.TimeUnit;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
@@ -50,6 +47,7 @@ public class bid_on_auctionTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> ownerUserRes = testHelper.register_and_login();

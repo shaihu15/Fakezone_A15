@@ -2,9 +2,7 @@ package NewAcceptanceTesting.AT_User.AT_StoreManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -18,12 +16,10 @@ import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
-import ApplicationLayer.Enums.PCategory;
+
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
@@ -51,6 +47,8 @@ public class StoreManager_Performing_ManagementTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
+
         testHelper = new TestHelper(systemService);
                 Response<UserDTO> ownerUserRes = testHelper.register_and_login();
         assertTrue(ownerUserRes.isSuccess(), "Failed to register and login owner");

@@ -2,13 +2,10 @@ package NewAcceptanceTesting.AT_User.AT_Guest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.AbstractMap;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -47,6 +44,7 @@ public class Product_Search {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> StoreOwnerResult = testHelper.register_and_login();

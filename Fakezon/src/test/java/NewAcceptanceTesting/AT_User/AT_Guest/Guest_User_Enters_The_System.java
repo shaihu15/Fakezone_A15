@@ -1,6 +1,5 @@
 package NewAcceptanceTesting.AT_User.AT_Guest;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -8,37 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import DomainLayer.Interfaces.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
 
 import ApplicationLayer.Response;
-import ApplicationLayer.DTO.StoreProductDTO;
 
-import ApplicationLayer.DTO.StoreDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Response;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
-import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
-import InfrastructureLayer.Security.TokenService;
 
+import ApplicationLayer.Services.SystemService;
 import NewAcceptanceTesting.TestHelper;
 import com.fakezone.fakezone.FakezoneApplication;
 

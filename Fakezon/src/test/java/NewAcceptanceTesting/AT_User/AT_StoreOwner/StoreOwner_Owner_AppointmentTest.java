@@ -3,7 +3,6 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +39,7 @@ public class StoreOwner_Owner_AppointmentTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 

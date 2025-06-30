@@ -3,8 +3,7 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,16 +18,12 @@ import com.fakezone.fakezone.FakezoneApplication;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.OrderedProductDTO;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory; 
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Enums.StoreManagerPermission;
 
 import NewAcceptanceTesting.TestHelper;
 
@@ -52,6 +47,7 @@ public class StoreOwner_Retrieving_Store_Purchase_HistoryTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Guest enters the system

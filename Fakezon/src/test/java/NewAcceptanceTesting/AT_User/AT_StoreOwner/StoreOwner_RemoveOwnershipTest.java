@@ -40,6 +40,8 @@ public class StoreOwner_RemoveOwnershipTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
+
         testHelper = new TestHelper(systemService);
 
         // User1 creates a store

@@ -4,17 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Interfaces.*;
 import ApplicationLayer.Response;
 import ApplicationLayer.Services.*;
-import DomainLayer.IRepository.*;
-import DomainLayer.Interfaces.*;
-import InfrastructureLayer.Adapters.*;
-import InfrastructureLayer.Repositories.*;
+
 import NewAcceptanceTesting.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
 
 import com.fakezone.fakezone.FakezoneApplication;
 

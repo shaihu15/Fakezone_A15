@@ -44,7 +44,7 @@ public class StoreOwner_change_permissionsTest {
     private int SecondOwnerUserId;
     @BeforeEach
     void setUp() {
-
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Setup Owner

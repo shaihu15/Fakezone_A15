@@ -30,6 +30,9 @@ public class PaymentProcessingTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize the systemService mock and any other necessary setup
+        systemService.clearAllData();
+
         // Mocks are handled by MockitoExtension
     }
 

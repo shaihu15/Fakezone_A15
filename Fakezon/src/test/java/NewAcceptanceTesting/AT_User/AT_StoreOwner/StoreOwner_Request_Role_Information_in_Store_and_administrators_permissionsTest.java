@@ -3,7 +3,6 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -19,13 +18,11 @@ import com.fakezone.fakezone.FakezoneApplication;
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
-import DomainLayer.Enums.StoreManagerPermission;
 
 
 
@@ -44,6 +41,7 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
 
     @BeforeEach
     void setUp() throws InterruptedException{
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Initialize the system with a store owner and a product

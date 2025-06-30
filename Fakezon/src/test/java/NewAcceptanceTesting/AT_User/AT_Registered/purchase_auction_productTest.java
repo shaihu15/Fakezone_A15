@@ -3,17 +3,11 @@ package NewAcceptanceTesting.AT_User.AT_Registered;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 
 import org.junit.jupiter.api.Test;
@@ -27,7 +21,6 @@ import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
@@ -53,6 +46,7 @@ public class purchase_auction_productTest {
     //@BeforeEach
     @Test
     void setUp() {
+        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 

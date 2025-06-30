@@ -30,6 +30,7 @@ public class User_Registration {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         validEmail = testHelper.validEmail();

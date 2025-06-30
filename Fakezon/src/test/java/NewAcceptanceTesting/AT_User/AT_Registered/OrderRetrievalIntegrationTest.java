@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -32,6 +32,12 @@ public class OrderRetrievalIntegrationTest {
     private int storeId = 101;
     private int productId1 = 1001;
     private int productId2 = 1002;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize the systemService mock and any other necessary setup
+        systemService.clearAllData();
+    }
 
     @Test
     void testGetOrdersByUser_NoOrders_ReturnsEmptyList() {

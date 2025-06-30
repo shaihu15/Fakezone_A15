@@ -3,7 +3,6 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +41,8 @@ public class StoreOwner_Manager_AppointmentTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
+
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> ownerUserRes = testHelper.register_and_login();
@@ -60,7 +61,8 @@ public class StoreOwner_Manager_AppointmentTest {
         assertTrue(otherUserRes.isSuccess(), "Failed to register and login other registered user");
         otherRegisteredUserId = otherUserRes.getData().getUserId();
 
-        // For testing scenarios where an owner might try to appoint another existing owner as manager
+        // For testing scenarios where an owner might try to appoint another existing
+        // owner as manager
         Response<UserDTO> otherOwnerRes = testHelper.register_and_login4();
         assertTrue(otherOwnerRes.isSuccess(), "Failed to register and login other owner");
         otherOwnerUserId = otherOwnerRes.getData().getUserId();
@@ -74,7 +76,8 @@ public class StoreOwner_Manager_AppointmentTest {
         // Verify otherOwnerUserId is indeed an owner
         Response<StoreRolesDTO> rolesAfterAddOtherOwner = systemService.getStoreRoles(storeId, ownerUserId);
         assertTrue(rolesAfterAddOtherOwner.isSuccess());
-        assertTrue(rolesAfterAddOtherOwner.getData().getStoreOwners().contains(otherOwnerUserId), "otherOwnerUserId should be an owner");
+        assertTrue(rolesAfterAddOtherOwner.getData().getStoreOwners().contains(otherOwnerUserId),
+                "otherOwnerUserId should be an owner");
     }
 
     @AfterEach
@@ -108,15 +111,17 @@ public class StoreOwner_Manager_AppointmentTest {
         Response<Void> response = systemService.addStoreManager(storeId, ownerUserId, managerUserId, perms);
         assertTrue(response.isSuccess(), "Expected manager appointment to succeed");
         assertEquals("Store manager added successfully", response.getMessage());
-        
+
         TimeUnit.SECONDS.sleep(1);
         // Verify assignment message is sent
         Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
-        assertTrue(assignmentMessagesRes.getData().size() > 0, "Expected manager to have at least one assignment message");
+        assertTrue(assignmentMessagesRes.getData().size() > 0,
+                "Expected manager to have at least one assignment message");
         StoreMsg assignmentMessage = assignmentMessagesRes.getData().values().iterator().next();
         assertEquals(storeId, assignmentMessage.getStoreId(), "Assignment message should be for the correct store");
-        assertTrue(assignmentMessage.getMessage().contains("Please approve or decline this role"), "Expected assignment message to contain appointment notification");
+        assertTrue(assignmentMessage.getMessage().contains("Please approve or decline this role"),
+                "Expected assignment message to contain appointment notification");
     }
 
     @Test
@@ -136,8 +141,10 @@ public class StoreOwner_Manager_AppointmentTest {
         Response<StoreRolesDTO> storeRolesRes = systemService.getStoreRoles(storeId, ownerUserId);
         assertTrue(storeRolesRes.isSuccess(), "Failed to retrieve store roles");
         StoreRolesDTO storeRolesData = storeRolesRes.getData();
-        assertTrue(storeRolesData.getStoreManagers().containsKey(managerUserId), "Manager should be listed in store roles");
-        assertTrue(storeRolesData.getStoreManagers().get(managerUserId).containsAll(perms), "Manager should have the assigned permissions");
+        assertTrue(storeRolesData.getStoreManagers().containsKey(managerUserId),
+                "Manager should be listed in store roles");
+        assertTrue(storeRolesData.getStoreManagers().get(managerUserId).containsAll(perms),
+                "Manager should have the assigned permissions");
 
         // Verify assignment message is cleared after acceptance
         Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
@@ -160,7 +167,8 @@ public class StoreOwner_Manager_AppointmentTest {
         Response<StoreRolesDTO> storeRolesRes = systemService.getStoreRoles(storeId, ownerUserId);
         assertTrue(storeRolesRes.isSuccess(), "Failed to retrieve store roles");
         StoreRolesDTO storeRolesData = storeRolesRes.getData();
-        assertFalse(storeRolesData.getStoreManagers().containsKey(managerUserId), "Manager should NOT be listed in store roles after decline");
+        assertFalse(storeRolesData.getStoreManagers().containsKey(managerUserId),
+                "Manager should NOT be listed in store roles after decline");
 
         // Verify assignment message is cleared after decline
         Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
@@ -177,7 +185,8 @@ public class StoreOwner_Manager_AppointmentTest {
         Response<Void> response = systemService.addStoreManager(invalidStoreId, ownerUserId, managerUserId, perms);
         assertFalse(response.isSuccess(), "Expected manager appointment to fail for invalid store ID");
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType()); // Assuming INTERNAL_ERROR for invalid IDs
-        assertTrue(response.getMessage().contains("Error during adding store manager"), "Expected error message for invalid store ID");
+        assertTrue(response.getMessage().contains("Error during adding store manager"),
+                "Expected error message for invalid store ID");
     }
 
     @Test
@@ -199,8 +208,11 @@ public class StoreOwner_Manager_AppointmentTest {
         // otherRegisteredUserId is not an owner of the store
         Response<Void> response = systemService.addStoreManager(storeId, otherRegisteredUserId, managerUserId, perms);
         assertFalse(response.isSuccess(), "Expected manager appointment to fail when requester is not an owner");
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType()); // Assuming INTERNAL_ERROR for permission issues
-        assertTrue(response.getMessage().contains("Error during adding store manager"), "Expected error message for non-owner requester");}
+        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType()); // Assuming INTERNAL_ERROR for permission
+                                                                         // issues
+        assertTrue(response.getMessage().contains("Error during adding store manager"),
+                "Expected error message for non-owner requester");
+    }
 
     @Test
     void testAddStoreManager_Failure_AppointingAlreadyManager() {
@@ -217,24 +229,31 @@ public class StoreOwner_Manager_AppointmentTest {
         Response<Void> response = systemService.addStoreManager(storeId, ownerUserId, managerUserId, newPerms);
         assertFalse(response.isSuccess(), "Expected manager appointment to fail if user is already a manager");
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType()); // Or a more specific error type
-        assertTrue(response.getMessage().contains("Error during adding store manager"), "Expected error message for appointing existing manager");
+        assertTrue(response.getMessage().contains("Error during adding store manager"),
+                "Expected error message for appointing existing manager");
         // Verify original permissions are not overwritten if this is a failure case
         Response<StoreRolesDTO> storeRolesRes = systemService.getStoreRoles(storeId, ownerUserId);
         assertTrue(storeRolesRes.isSuccess());
         assertTrue(storeRolesRes.getData().getStoreManagers().get(managerUserId).containsAll(initialPerms));
-        assertFalse(storeRolesRes.getData().getStoreManagers().get(managerUserId).containsAll(newPerms)); // New permissions should not be added on failure
+        assertFalse(storeRolesRes.getData().getStoreManagers().get(managerUserId).containsAll(newPerms)); // New
+                                                                                                          // permissions
+                                                                                                          // should not
+                                                                                                          // be added on
+                                                                                                          // failure
     }
 
     @Test
     void testAddStoreManager_Failure_AppointingAlreadyOwner() {
-        // Here, `otherOwnerUserId` is already an owner. Try to appoint them as a manager.
+        // Here, `otherOwnerUserId` is already an owner. Try to appoint them as a
+        // manager.
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
 
         Response<Void> response = systemService.addStoreManager(storeId, ownerUserId, otherOwnerUserId, perms);
         assertFalse(response.isSuccess(), "Expected manager appointment to fail if user is already an owner");
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        assertTrue(response.getMessage().contains("Error during adding store manager"), "Expected error message for appointing existing owner as manager");
+        assertTrue(response.getMessage().contains("Error during adding store manager"),
+                "Expected error message for appointing existing owner as manager");
     }
 
     @Test
@@ -245,6 +264,7 @@ public class StoreOwner_Manager_AppointmentTest {
         Response<Void> response = systemService.addStoreManager(storeId, ownerUserId, ownerUserId, perms);
         assertFalse(response.isSuccess(), "Expected manager appointment to fail when appointing self");
         assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        assertTrue(response.getMessage().contains("Error during adding store manager"), "Expected error message for appointing self as manager");
+        assertTrue(response.getMessage().contains("Error during adding store manager"),
+                "Expected error message for appointing self as manager");
     }
 }

@@ -6,14 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Callable;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -29,7 +27,6 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Interfaces.IOrder;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 
@@ -50,6 +47,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Guest enters the system

@@ -31,7 +31,7 @@ public class Guest_User_Access_to_Store {
 
     @BeforeEach
     void setUp() {
-
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister = testHelper.register_and_login();

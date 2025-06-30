@@ -25,6 +25,7 @@ public class StoreOwner_Closing_StoreTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 

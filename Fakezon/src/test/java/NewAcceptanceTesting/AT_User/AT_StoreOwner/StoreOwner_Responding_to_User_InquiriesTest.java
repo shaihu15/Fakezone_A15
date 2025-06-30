@@ -2,7 +2,6 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +33,7 @@ public class StoreOwner_Responding_to_User_InquiriesTest {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Register store owner
