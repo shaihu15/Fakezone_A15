@@ -61,3 +61,5 @@ frontend/generated/
 /node_modules/
 /frontend/generated/
 /target/
+
+Fakezon/fakezon-test.db
