@@ -248,10 +248,6 @@ public class SystemService implements ISystemService {
     public Response<StoreDTO> userAccessStore(int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId);
-            if (!this.storeService.isStoreOpen(storeId)) {
-                logger.error("System Service - Store is closed: " + storeId);
-                return new Response<StoreDTO>(null, "Store is closed", false, ErrorType.INVALID_INPUT, null);
-            }
             StoreDTO s = this.storeService.viewStore(storeId);
 
             return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
@@ -1567,7 +1563,7 @@ public class SystemService implements ISystemService {
     @Transactional
     public Response<Void> addSystemAdmin(int requesterId, int userId) {
         try {
-            if (userId == 1 || userId == 1001) { // Check if the target user ID is 1 for initial admin setup
+            if (userId == 1) { // Check if the target user ID is 1 for initial admin setup
                 logger.info("System Service - User ID 1 detected. Attempting to add user ID 1 as the first system admin, bypassing requester check.");
                 userService.addSystemAdmin(userId); // This calls the UserService method which calls UserRepository
                 logger.info("System Service - User ID 1 successfully added as the FIRST system admin.");
