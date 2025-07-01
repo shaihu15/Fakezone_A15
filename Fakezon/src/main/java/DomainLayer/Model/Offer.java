@@ -28,12 +28,12 @@ public class Offer {
     @Column(name = "offer_amount", nullable = false)
     private double offerAmount;
     
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "offer_owners_accepted", joinColumns = @JoinColumn(name = "offer_id"))
     @Column(name = "owner_id")
     private Set<Integer> ownersAccepted = new HashSet<>();
     
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "offer_current_store_owners", joinColumns = @JoinColumn(name = "offer_id"))
     @Column(name = "owner_id")
     private List<Integer> currentStoreOwners = new ArrayList<>();

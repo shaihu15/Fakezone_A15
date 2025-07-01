@@ -141,6 +141,7 @@ public class Registered extends User {
     }
 
     public int addOfferMessage(StoreMsg message) {
+        System.out.println("addOfferMessage @@@@@@@@@@@@@@@@@@@@@@@"+message.getMsgId());
         this.offersMessages.add(message);
         return message.getMsgId();
     }
@@ -164,7 +165,9 @@ public class Registered extends User {
 
     public Map<Integer, StoreMsg> getOffersMessages() {
         Map<Integer, StoreMsg> result = new HashMap<>();
+        System.out.println("getOffersMessages @@@@@@@@@@@@@@@@@@@@@@@"+offersMessages.size());
         for (StoreMsg msg : offersMessages) {
+            System.out.println("getOffersMessages @@@@@@@@@@@@@@@@@@@@@@@"+msg.getMessage());
             result.put(msg.getMsgId(), msg);
         }
         return result;

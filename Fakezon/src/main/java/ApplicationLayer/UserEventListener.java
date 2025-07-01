@@ -202,6 +202,7 @@ public class UserEventListener {
     @EventListener
     @Transactional
     public void handleOfferReceivedEvent(OfferReceivedEvent event) {
+        System.out.println("handleOfferReceivedEvent @@@@@@@@@@@@@@@@@@@@@@@"+event.getStoreId());
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
