@@ -1067,4 +1067,15 @@ public class StoreService implements IStoreService {
         return store.getUserOffers(userId);
     }
 
+    // only for testing purposes
+    @Override
+    public void removeStore(int storeId) {
+        Store store = storeRepository.findById(storeId);
+        if (store == null) {
+            logger.error("removeStore - Store not found: " + storeId);
+            throw new IllegalArgumentException("Store not found");
+        }
+        storeRepository.delete(storeId);
+        logger.info("Store removed: " + storeId);
+    }
 }
