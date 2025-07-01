@@ -30,6 +30,7 @@ import DomainLayer.Model.Offer;
 import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 import UnitTesting.getCartFinalPriceTest;
+import jakarta.transaction.Transactional;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 @ActiveProfiles("test")
@@ -245,6 +246,8 @@ public class AT_OfferTest {
     // *********************
 
     @Test
+        @Transactional
+
     void testAcceptOffer_storeNotFound_Fail(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         Response<Void> acceptRes = systemService.acceptOfferOnStoreProduct(wrongStore, owner1, registered, p1);
@@ -255,6 +258,7 @@ public class AT_OfferTest {
     }
 
     @Test
+    @Transactional
     void testAcceptOffer_notOwner_Fail(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         Response<Void> acceptRes = systemService.acceptOfferOnStoreProduct(store, manager, registered, p1);
@@ -271,6 +275,7 @@ public class AT_OfferTest {
     }
 
     @Test
+        @Transactional
     void testAcceptOffer_singleOwnerAccept_Success(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         systemService.placeOfferOnStoreProduct(store, registered, p2, 16);
@@ -295,7 +300,7 @@ public class AT_OfferTest {
 
         //verify all OTHER owners got the msg
         for(Integer owner : owners){
-            Map<Integer, StoreMsg> msgs = systemService.getMessagesFromStore(owner).getData();
+            Map<Integer, StoreMsg> msgs = systemService.getAllMessages(owner).getData();
             boolean found = false;
             for(Integer msgId : msgs.keySet()){
                 StoreMsg msg = msgs.get(msgId);
@@ -316,6 +321,7 @@ public class AT_OfferTest {
     }
 
     @Test
+    @Transactional
     void testAcceptOffer_allOwnersAccept_Success(){
         Response<Void> removeRes = systemService.removeStoreManager(store, founder, manager);
         assertTrue(removeRes.isSuccess());
@@ -399,6 +405,8 @@ public class AT_OfferTest {
     }
 
     @Test
+        @Transactional
+
     void testDeclineOffer_notOwner_Fail(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         Response<Void> declineRes = systemService.declineOfferOnStoreProduct(store, manager, registered, p1);
@@ -415,6 +423,7 @@ public class AT_OfferTest {
     }
 
     @Test
+    @Transactional
     void testDeclineOffer_Success(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         Response<List<Offer>> getOffersRes = systemService.getUserOffers(store, registered);
@@ -513,6 +522,7 @@ public class AT_OfferTest {
 
 
     @Test
+    @Transactional
     void testCounterOffer_Success(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         Response<List<Offer>> getOffersRes = systemService.getUserOffers(store, registered);
