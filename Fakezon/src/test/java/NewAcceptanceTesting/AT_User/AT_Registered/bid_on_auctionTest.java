@@ -17,6 +17,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -30,6 +32,7 @@ import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class bid_on_auctionTest {
 
     @Autowired
@@ -107,6 +110,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Success_FirstBid() {
         double bidAmount = initialBasePrice + 10.0;
 
@@ -118,6 +122,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_BidTooLow_Initial() {
         double bidAmount = initialBasePrice - 10.0;
 
@@ -131,6 +136,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Success_HigherBid() {
         double bid1Amount = initialBasePrice + 10.0;
         double bid2Amount = bid1Amount + 5.0;
@@ -147,6 +153,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_LowerBidThanCurrentHighest() {
         double bid1Amount = initialBasePrice + 20.0;
         double bid2Amount = bid1Amount - 5.0;
@@ -165,6 +172,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_EqualBidToCurrentHighest() {
         double bid1Amount = initialBasePrice + 20.0;
         double bid2Amount = bid1Amount;
@@ -183,6 +191,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_InvalidProductId() {
         int invalidProductId = -1;
         double bidAmount = initialBasePrice + 10.0;
@@ -197,6 +206,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_InvalidStoreId() {
         int invalidStoreId = -1;
         double bidAmount = initialBasePrice + 10.0;
@@ -211,6 +221,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_RequesterNotLoggedIn() {
         int notLoggedInUserId = otherRegisteredUserId;
         systemService.userLogout(notLoggedInUserId);
@@ -224,6 +235,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_ProductIsNotAuctionProduct() {
         Response<StoreProductDTO> regularProductRes = systemService.addProductToStore(storeId, storeOwnerId,
                 "Regular Item", "Just a regular item", 50.0, 10, PCategory.ELECTRONICS.toString());
@@ -242,6 +254,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Failure_AuctionEnded() {
         systemService.addAuctionProductToStore(storeId, storeOwnerId, 2, initialBasePrice, 0);
         int expiredAuctionProductId = 2;
@@ -257,6 +270,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Success_User2BidsHigherThanUser1(){
         double user1Bid = initialBasePrice + 15.0;
         double user2Bid = user1Bid + 10.0;
@@ -298,6 +312,7 @@ public class bid_on_auctionTest {
     }
 
     @Test
+    @Transactional
     void testAddBid_Concurrency_SameBidAmount() throws InterruptedException, ExecutionException {
         // Arrange
         double concurrentBidAmount = initialBasePrice + 50.0; // A high bid amount for both
