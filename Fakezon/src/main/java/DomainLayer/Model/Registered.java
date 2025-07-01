@@ -241,7 +241,9 @@ public class Registered extends User {
     }
 
     public int addAssignmentMessage(StoreMsg msg) {
+        System.out.println("addAssignmentMessage @@@@@@@@@@@@@@@@@@@@@@@"+msg.getMsgId());
         this.assignmentMessages.add(msg);
+        System.out.println("addAssignmentMessage @@@@@@@@@@@@@@@@@@@@@@@"+assignmentMessages.size());
         return msg.getMsgId();
     }
 

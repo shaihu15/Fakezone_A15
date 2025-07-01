@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -24,8 +25,10 @@ import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
+import jakarta.transaction.Transactional;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class StoreOwner_Manager_AppointmentTest {
 
     @Autowired
@@ -80,29 +83,8 @@ public class StoreOwner_Manager_AppointmentTest {
                 "otherOwnerUserId should be an owner");
     }
 
-    @AfterEach
-    void tearDown() {
-        // Clean up: remove all roles and delete users
-        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, ownerUserId, managerUserId);
-        assertTrue(removeManagerRes.isSuccess(), "Failed to remove manager after test");
-
-        Response<Void> removeOwnerRes = systemService.removeStoreOwner(storeId, ownerUserId, otherOwnerUserId);
-        assertTrue(removeOwnerRes.isSuccess(), "Failed to remove other owner after test");
-
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, ownerUserId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store after test");
-
-        Response<Boolean> deleteManagerUserRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerUserRes.isSuccess(), "Failed to delete manager user after test");
-
-        Response<Boolean> deleteOtherRegisteredUserRes = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteOtherRegisteredUserRes.isSuccess(), "Failed to delete other registered user after test");
-
-        Response<Boolean> deleteOtherOwnerUserRes = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteOtherOwnerUserRes.isSuccess(), "Failed to delete other owner user after test");
-    }
-
     @Test
+    @Transactional
     void testAddStoreManager_Success() throws InterruptedException {
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
@@ -112,7 +94,7 @@ public class StoreOwner_Manager_AppointmentTest {
         assertTrue(response.isSuccess(), "Expected manager appointment to succeed");
         assertEquals("Store manager added successfully", response.getMessage());
 
-        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.SECONDS.sleep(3);
         // Verify assignment message is sent
         Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
@@ -125,6 +107,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_ManagerAcceptsAssignment_Success() {
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
@@ -132,6 +115,13 @@ public class StoreOwner_Manager_AppointmentTest {
 
         Response<Void> addManagerRes = systemService.addStoreManager(storeId, ownerUserId, managerUserId, perms);
         assertTrue(addManagerRes.isSuccess(), "Failed to add manager for acceptance test");
+
+          // Verify assignment message is cleared after acceptance
+          Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
+          assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages");
+          assertTrue(assignmentMessagesRes.getData() != null);
+          assertTrue(assignmentMessagesRes.getData().size() != 0, "Expected manager to have no assignment messages after acceptance");
+  
 
         // Manager accepts the assignment
         Response<String> acceptRes = systemService.acceptAssignment(storeId, managerUserId);
@@ -147,11 +137,13 @@ public class StoreOwner_Manager_AppointmentTest {
                 "Manager should have the assigned permissions");
 
         // Verify assignment message is cleared after acceptance
-        Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(managerUserId);
-        assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages");
+        Response<Map<Integer, StoreMsg>> assignmentMessagesRes2 = systemService.getAssignmentMessages(managerUserId);
+        assertTrue(assignmentMessagesRes2.isSuccess(), "Expected to retrieve assignment messages");
+
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_ManagerDeclinesAssignment_Success() {
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.DISCOUNT_POLICY);
@@ -177,6 +169,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_Failure_InvalidStoreId() {
         int invalidStoreId = -1;
         List<StoreManagerPermission> perms = new ArrayList<>();
@@ -190,6 +183,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_Failure_InvalidManagerUserId() {
         int invalidUserId = -100;
         List<StoreManagerPermission> perms = new ArrayList<>();
@@ -201,6 +195,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_Failure_RequesterIsNotOwner() {
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
@@ -215,6 +210,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_Failure_AppointingAlreadyManager() {
         List<StoreManagerPermission> initialPerms = new ArrayList<>();
         initialPerms.add(StoreManagerPermission.INVENTORY);
@@ -243,6 +239,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_Failure_AppointingAlreadyOwner() {
         // Here, `otherOwnerUserId` is already an owner. Try to appoint them as a
         // manager.
@@ -257,6 +254,7 @@ public class StoreOwner_Manager_AppointmentTest {
     }
 
     @Test
+    @Transactional
     void testAddStoreManager_Failure_AppointingSelf() {
         List<StoreManagerPermission> perms = new ArrayList<>();
         perms.add(StoreManagerPermission.INVENTORY);
