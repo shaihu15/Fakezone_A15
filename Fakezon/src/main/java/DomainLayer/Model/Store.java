@@ -219,21 +219,7 @@ public class Store implements IStore {
 
     @PostLoad
     private void initializeTransientFields() {
-        this.auctionProducts = new HashMap<>();
         this.purchasePolicies = new HashMap<>();
-        this.storeManagers = new HashMap<>();
-        this.messagesFromUsers = new ArrayList<>();
-        // Ensure pendingManagers and pendingManagersPerms are initialized (they're now persistent but may be null on first load)
-        if (this.pendingManagers == null) {
-            this.pendingManagers = new HashMap<>();
-        }
-        if (this.pendingManagersPerms == null) {
-            this.pendingManagersPerms = new HashMap<>();
-        }
-        // Ensure discountPolicies is initialized if null
-        if (this.discountPolicies == null) {
-            this.discountPolicies = new HashMap<>();
-        }
         // Update transient storeProducts reference in discount scopes
         updateDiscountScopesStoreProducts();
         
