@@ -248,7 +248,6 @@ public class SystemService implements ISystemService {
     public Response<StoreDTO> userAccessStore(int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId);
-            
             StoreDTO s = this.storeService.viewStore(storeId);
 
             return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
@@ -2571,6 +2570,35 @@ public class SystemService implements ISystemService {
             logger.error("System Service - Error during getting all stores: " + e.getMessage());
             return new Response<>(null, "Error during getting all stores: " + e.getMessage(), false,
                     ErrorType.INTERNAL_ERROR, null);
+        }
+    }
+    // only for tests
+    @Override 
+    @Transactional
+
+    public Response<Void> removeStore(int storeId, int requesterId) {
+        try {
+        // // Check if requester is logged in and is a system admin (optional, but recommended)
+        // if (!userService.isUserLoggedIn(requesterId)) {
+        //     logger.error("System Service - User is not logged in: " + requesterId);
+        //     return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+        // }
+        if (!storeService.isStoreOwner(storeId, requesterId)) {
+            logger.error("System Service - User is not a system admin: " + requesterId);
+            return new Response<>(null, "User is not a system admin", false, ErrorType.UNAUTHORIZED, null);
+        }
+        // Check if store is closed
+        if (storeService.isStoreOpen(storeId)) {
+            logger.error("System Service - Store must be closed before removal: " + storeId);
+            return new Response<>(null, "Store must be closed before removal", false, ErrorType.INVALID_INPUT, null);
+        }
+        // Remove the store from the repository/service
+        storeService.removeStore(storeId);
+        logger.info("System Service - Store removed: " + storeId + " by admin: " + requesterId);
+        return new Response<>(null, "Store removed successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing store: " + e.getMessage());
+            return new Response<>(null, "Error during removing store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
         }
     }
     
