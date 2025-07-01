@@ -1,58 +1,28 @@
 package NewAcceptanceTesting.AT_User.AT_Registered;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-
-import ApplicationLayer.Response;
-
-
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
-
-import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.PCategory;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
-import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
-import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import DomainLayer.Model.helpers.UserMsg;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
-import NewAcceptanceTesting.TestHelper;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Response;
+import ApplicationLayer.Services.SystemService;
+import DomainLayer.Model.helpers.UserMsg;
+import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class Sending_Direct_Message_to_StoreTest {
     //Use-case: 3.5 Sending a Direct Message to a Store
 
@@ -86,6 +56,7 @@ public class Sending_Direct_Message_to_StoreTest {
     }
 
     @Test
+    @Transactional
     void testSendDirectMessageToStore_validArguments_Success() {
         String message = "Hello, this is a test message!";
         Response<Void> response = systemService.sendMessageToStore(registeredId, storeId, message);
@@ -102,6 +73,7 @@ public class Sending_Direct_Message_to_StoreTest {
     }
 
     @Test
+    @Transactional
     void testSendDirectMessageToStore_emptyMessage_Failure() {
         String message = "";
         Response<Void> response = systemService.sendMessageToStore(registeredId, storeId, message);
@@ -114,7 +86,7 @@ public class Sending_Direct_Message_to_StoreTest {
     }
 
     @Test
-    void testSendDirectMessageToStore_nullMessage_Failure() {
+    @Transactional    void testSendDirectMessageToStore_nullMessage_Failure() {
         Response<Void> response = systemService.sendMessageToStore(registeredId, storeId, null);
         assertFalse(response.isSuccess());
         assertEquals("Message cannot be empty", response.getMessage());
@@ -123,8 +95,8 @@ public class Sending_Direct_Message_to_StoreTest {
         assertEquals("No messages found", messagesResponse.getMessage());
         assertFalse(messagesResponse.isSuccess());
     }
-
     @Test
+    @Transactional
     void testSendDirectMessageToStore_invalidStoreId_Failure() {
         String message = "Hello, this is a test message!";
         int invalidStoreId = 9999; // Assuming this store ID does not exist
@@ -138,6 +110,7 @@ public class Sending_Direct_Message_to_StoreTest {
     }
 
     @Test
+    @Transactional
     void testSendDirectMessageToStore_userNotRegistered_Failure() {
         String message = "Hello, this is a test message!";
         int unregisteredUserId = 9999; // Assuming this user ID does not exist
