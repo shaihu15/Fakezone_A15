@@ -19,6 +19,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Response;
@@ -29,7 +31,7 @@ import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-
+@ActiveProfiles("test")
 public class Immediate_Purchase_of_Shopping_Cart {
     //Use-Case: 2.5 Immediate Purchase of Shopping Cart
 
@@ -82,21 +84,6 @@ public class Immediate_Purchase_of_Shopping_Cart {
         //the product is added to the store
     }
 
-    @AfterEach
-    void tearDown() {
-
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-
-        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
-
-        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
-
-        Response<Boolean> deleteRegisteredResponse3 = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteRegisteredResponse3.isSuccess(), "Registered user 3 deletion should succeed");
-    }
  
     @Test
     void testImmediatePurchase_Registered_Success() {

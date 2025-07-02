@@ -276,7 +276,7 @@ public class UserService implements IUserService {
         Optional<User> user = userRepository.findAllById(userId);
         if (user.isPresent()) {
             try {
-                user.get().addToBasket(storeId, productId, quantity);
+                user.get().addToBasketQuantity(storeId, productId, quantity);
                 if (user.get() instanceof Registered) {
                     userRepository.save((Registered) user.get());
                 }
