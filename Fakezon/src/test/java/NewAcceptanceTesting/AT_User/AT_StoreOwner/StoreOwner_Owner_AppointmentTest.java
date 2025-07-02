@@ -202,6 +202,8 @@ public class StoreOwner_Owner_AppointmentTest {
 
         Response<Void> response = systemService.addStoreOwner(storeId, OwnerUserId, invalidUserId);
         assertFalse(response.isSuccess());
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+        assertTrue(response.getMessage().contains("User is not registered"));
     }
 
     @Test
