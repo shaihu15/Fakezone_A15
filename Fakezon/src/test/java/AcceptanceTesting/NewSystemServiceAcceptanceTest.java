@@ -52,7 +52,6 @@ import InfrastructureLayer.Repositories.*;
 import com.fakezone.fakezone.FakezoneApplication;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 @Transactional
 public class NewSystemServiceAcceptanceTest {
     @Autowired

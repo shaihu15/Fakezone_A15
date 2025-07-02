@@ -29,7 +29,6 @@ import DomainLayer.Enums.PaymentMethod;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class StoreOwner_Retrieving_Store_Purchase_HistoryTest {
 
     @Autowired
@@ -100,30 +99,6 @@ public class StoreOwner_Retrieving_Store_Purchase_HistoryTest {
         Response<List<OrderDTO>> orders =systemService.getOrdersByUserId(registeredId);
         assertTrue(orders.isSuccess());
         assertTrue(orders.getData().size() == 1);
-    }
-
-    @AfterEach
-    void tearDown() {
-        // Remove the product from the store
-        Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, StoreFounderId, productIdInt);
-        assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
-
-        // Close the store
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-
-        // Delete the users
-        Response<Boolean> deleteResponse1 = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteResponse1.isSuccess(), "User deletion should succeed");
-
-        Response<Boolean> deleteResponse2 = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteResponse2.isSuccess(), "User deletion should succeed");
-
-        Response<Boolean> deleteResponse3 = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteResponse3.isSuccess(), "User deletion should succeed");
-
-        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
     }
     
     @Test

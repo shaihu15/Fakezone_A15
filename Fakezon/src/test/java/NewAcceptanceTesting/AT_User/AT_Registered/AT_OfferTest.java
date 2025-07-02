@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -32,7 +33,7 @@ import NewAcceptanceTesting.TestHelper;
 import UnitTesting.getCartFinalPriceTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
+@Transactional
 public class AT_OfferTest {
 
     @Autowired

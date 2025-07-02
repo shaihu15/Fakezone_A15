@@ -82,29 +82,6 @@ public class bid_on_auctionTest {
         otherRegisteredUserId = otherUserRes.getData().getUserId();
     }
 
-    @AfterEach
-    void tearDown() {
-        // Remove auction product
-        Response<Void> removeAuctionRes = systemService.removeProductFromStore(storeId, storeOwnerId, auctionProductId);
-        assertTrue(removeAuctionRes.isSuccess(), "Failed to remove auction product");
-
-        // Close store
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, storeOwnerId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
-
-        // Delete users
-        Response<Boolean> deleteBuyer1Res = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteBuyer1Res.isSuccess(), "Failed to delete buyer1");
-
-        Response<Boolean> deleteBuyer2Res = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteBuyer2Res.isSuccess(), "Failed to delete buyer2");
-
-        Response<Boolean> deleteOtherUserRes = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteOtherUserRes.isSuccess(), "Failed to delete other user");
-
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete store owner");
-    }
 
     @Test
     void testAddBid_Success_FirstBid() {

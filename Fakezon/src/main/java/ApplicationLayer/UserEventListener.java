@@ -203,6 +203,7 @@ public class UserEventListener {
     @Transactional
     public void handleOfferReceivedEvent(OfferReceivedEvent event) {
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
+        System.out.println("@@@@@@@@@@@ OFFER RECIEVED @@@@@@@@@@@@@@@@@@@@@");
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();
             if (isOwner(roles, event.getStoreId())) {
@@ -210,6 +211,7 @@ public class UserEventListener {
                         + event.getOfferAmount() +
                         " by user " + event.getUserId() + " in Store " + event.getStoreId()
                         + ". Please approve or decline this offer.";
+                System.out.println("@@@@@@@@@@@ MSG SENT @@@@@@@@@@@@@@@@@@@@@");
                 registeredUser.addOfferMessage(new StoreMsg(event.getStoreId(), event.getProductId(), msg,
                         event.getUserId(), registeredUser.getUserId()));
                 userRepository.save(registeredUser);
@@ -224,6 +226,7 @@ public class UserEventListener {
     @EventListener
     @Transactional
     public void handleOfferAcceptedSingleOwnerEvent(OfferAcceptedSingleOwnerEvent event) {
+        System.out.println("@@@@@@@@@@@ OFFER ACCEPTED SINGLE @@@@@@@@@@@@@@@@@@@@@");
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             if (registeredUser.getUserId() != event.getOwnerId()) {
@@ -248,6 +251,7 @@ public class UserEventListener {
     @EventListener
     @Transactional
     public void handleOfferAcceptedByAll(OfferAcceptedByAll event) {
+        System.out.println("@@@@@@@@@@@ OFFER ACCEPTED ALL @@@@@@@@@@@@@@@@@@@@@");
         List<Registered> users = userRepository.UsersWithRolesInStoreId(event.getStoreId());
         for (Registered registeredUser : users) {
             HashMap<Integer, IRegisteredRole> roles = registeredUser.getAllRoles();

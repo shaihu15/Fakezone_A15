@@ -79,18 +79,6 @@ public class StoreOwner_Owner_AppointmentTest {
         assertTrue(acceptRes.isSuccess());
     }
 
-    @AfterEach
-    void tearDown() {
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteUserResponse.isSuccess(), "Owner user deletion should succeed");
-
-        Response<Boolean> deleteManagerResponse = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerResponse.isSuccess(), "Manager user deletion should succeed");
-    }
-
     @Test
     void testAddStoreOwner_Success() {
         Response<Void> response = systemService.addStoreOwner(storeId, OwnerUserId, ManagerUserId);

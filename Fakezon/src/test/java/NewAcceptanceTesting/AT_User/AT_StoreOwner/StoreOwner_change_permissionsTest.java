@@ -89,24 +89,6 @@ public class StoreOwner_change_permissionsTest {
         assertTrue(acceptSecondOwnerRes.isSuccess());
     }
 
-    @AfterEach
-    void tearDown() {
-        // Remove the store and users created for this test
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(closeStoreRes.isSuccess());
-
-        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerRes.isSuccess());
-
-        Response<Boolean> deleteOtherUserRes = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteOtherUserRes.isSuccess());
-
-        Response<Boolean> deleteSecondOwnerRes = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteSecondOwnerRes.isSuccess());
-
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess());
-    }
 
     @Test
     void testAddStoreManagerPermissions_Success_SinglePermission() {

@@ -27,7 +27,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class Store_ratingTest {
     //Use-case: 3.4 Store rating
     

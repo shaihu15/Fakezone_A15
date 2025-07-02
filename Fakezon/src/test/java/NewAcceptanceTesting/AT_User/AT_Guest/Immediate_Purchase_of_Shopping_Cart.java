@@ -31,7 +31,6 @@ import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class Immediate_Purchase_of_Shopping_Cart {
     //Use-Case: 2.5 Immediate Purchase of Shopping Cart
 

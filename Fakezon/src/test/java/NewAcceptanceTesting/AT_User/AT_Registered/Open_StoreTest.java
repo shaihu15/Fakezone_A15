@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test") // Use the test profile to avoid affecting production data
 public class Open_StoreTest {
     //Use-case: 3.2 Open Store 
 

@@ -56,20 +56,7 @@ public class StoreOwner_Responding_to_User_InquiriesTest {
         assertTrue(sendMsgResp.isSuccess());
 
     }
-
-    @AfterEach
-    void tearDown() {
-        // Clean up: remove store and delete users
-        Response<String> closeStoreResp = systemService.closeStoreByFounder(storeId, storeOwnerId);
-        assertTrue(closeStoreResp.isSuccess());
-
-        Response<Boolean> deleteCustomerResp = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteCustomerResp.isSuccess());
-
-        Response<Boolean> deleteStoreOwnerResp = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteStoreOwnerResp.isSuccess());
-    }
-
+    
     @Test
     void testRespondingtoUserInquiries_Success() throws InterruptedException {
         // Store owner sends reply to customer

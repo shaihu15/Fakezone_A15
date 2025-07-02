@@ -46,13 +46,6 @@ public class Guest_User_Access_to_Store {
         storeId = resultAddStore.getData();
     }
 
-    @AfterEach
-    void tearDown() {
-        Response<Boolean> deleteResponse = systemService.deleteUser(username);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-    }
                     
     @Test
     void testGuestUserAccessStore_Succsses() {

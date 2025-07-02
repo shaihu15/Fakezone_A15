@@ -67,13 +67,6 @@ public class Product_Search {
         // StoreOwner added a product to Store1
     }
 
-    @AfterEach
-    void tearDown() {
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-        Response<Boolean> deleteResponse = systemService.deleteUser(username);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-    }
 
     @Test
     void testSearchByCategory_validCategoryExistingProduct_Success() {
