@@ -72,12 +72,12 @@ public class Store implements IStore {
     @MapKeyColumn(name = "user_id")
     private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)//LAZY
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)//LAZY
     @JoinColumn(name = "owner_store_id")
     @MapKeyClass(StoreProductKey.class)
     private Map<StoreProductKey, StoreProduct> storeProducts; // HASH (storeId, sproductId) to store product
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "auction_store_id")
     @MapKeyClass(StoreProductKey.class)
     private Map<StoreProductKey, AuctionProduct> auctionProducts; // HASH productID to auction product
@@ -1876,18 +1876,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("User already has a counter offer pending");
             }
             
-            // Decline the original offer silently (no events for counter offers)
-            offer.decline(ownerId);
-            offer.setHandled(); // Mark as handled to prevent event publishing
-            // Don't remove from persistent collection - just remove from transient maps
-            List<Offer> offers = offersOnProducts.get(offer.getUserId());
-            if(offers != null){
-                offers.remove(offer);
-                if(offers.isEmpty()){
-                    offersOnProducts.remove(offer.getUserId());
-                }
-            }
-            
+            declineOfferOnStoreProduct(ownerId, userId, productId);
             // Create the counter offer
             Offer counterOffer = new Offer(userId, storeID, productId, offerAmount, List.copyOf(storeOwners));
             counterOffer.setOfferType("PENDING");
