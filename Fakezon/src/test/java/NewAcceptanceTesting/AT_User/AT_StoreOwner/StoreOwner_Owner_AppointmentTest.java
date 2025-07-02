@@ -1,25 +1,26 @@
 package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
-
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
@@ -201,8 +202,8 @@ public class StoreOwner_Owner_AppointmentTest {
 
         Response<Void> response = systemService.addStoreOwner(storeId, OwnerUserId, invalidUserId);
         assertFalse(response.isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        assertTrue(response.getMessage().contains("Error during adding store owner"));
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+        assertTrue(response.getMessage().contains("User is not registered"));
     }
 
     @Test
