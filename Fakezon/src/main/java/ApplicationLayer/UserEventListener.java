@@ -48,12 +48,16 @@ public class UserEventListener {
     @Transactional
     public void handleAssignmentEvent(AssignmentEvent event) {
         Optional<Registered> user = userRepository.findRegisteredById(event.getUserId());
+        System.out.println("@@@@@@@@@@@@@@@ RECIEVED ASSIGNMENT @@@@@@@@@@@@@");
         if (user.isPresent()) {
+            System.out.println("@@@@@@@@@@@@@@@ FOUND USER " + user.get().getUserId() + "@@@@@@@@@@@@@");
             String msg = "Please approve or decline this role: " + event.getRoleName() + " for store "
                     + event.getStoreId();
             user.get().addAssignmentMessage(
                     new StoreMsg(event.getStoreId(), -1, msg, null, event.getUserId()));
             userRepository.save(user.get());
+            System.out.println("@@@@@@@@@@@@@@@ SAVED @@@@@@@@@@@@@");
+
             if (user.get().isLoggedIn()) {
                 wsHandler.broadcast(String.valueOf(event.getUserId()), msg);
             }

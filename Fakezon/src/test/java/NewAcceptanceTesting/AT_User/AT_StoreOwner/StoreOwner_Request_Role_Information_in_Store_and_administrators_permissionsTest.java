@@ -74,6 +74,7 @@ public class StoreOwner_Request_Role_Information_in_Store_and_administrators_per
         // Verify assignment message is sent
         Response<Map<Integer, StoreMsg>> assignmentMessagesRes = systemService.getAssignmentMessages(newManagerID);
         assertTrue(assignmentMessagesRes.isSuccess(), "Expected to retrieve assignment messages for manager");
+        System.out.println("@@@@@@@@@@@@@@@ TEST USER " + newManagerID + "@@@@@@@@@@@@@");
         //assertTrue(assignmentMessagesRes.getData().containsKey(storeId), "Expected manager to have pending assignment for the store");
 
          // Manager accepts the assignment

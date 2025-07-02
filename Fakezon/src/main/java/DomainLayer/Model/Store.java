@@ -159,7 +159,7 @@ public class Store implements IStore {
     @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "store_id")
     private List<Offer> allOffers = new ArrayList<>(); // All offers for this store (both regular and pending)
     
