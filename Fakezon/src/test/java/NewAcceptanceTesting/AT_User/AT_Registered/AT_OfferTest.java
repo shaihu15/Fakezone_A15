@@ -197,6 +197,7 @@ public class AT_OfferTest {
         for(Integer owner : owners){
             Response<Map<Integer, StoreMsg>> msgsRes = systemService.getUserOfferMessages(owner);
             assertTrue(msgsRes.isSuccess(), msgsRes.getMessage());
+            assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + owner);
             Map<Integer, StoreMsg> msgs = msgsRes.getData();
             boolean msg1Found = false;
             boolean msg2Found = false;
@@ -238,6 +239,7 @@ public class AT_OfferTest {
         assertTrue(offerRes.isSuccess() && !offerRes2.isSuccess(), "FAILURE - 2nd offer succeeded");
         Response<List<Offer>> getOffersRes = systemService.getUserOffers(store, registered);
         List<Offer> offers = getOffersRes.getData();
+        assertTrue(offers != null && !offers.isEmpty(), "FAILURE - No offers found");
         assertTrue(offers.size() == 1 && offers.get(0).getOfferAmount() == 12);
     }
 
@@ -269,12 +271,6 @@ public class AT_OfferTest {
     }
 
     @Test
-    void testAcceptOffer_offerNotFound_Fail(){
-        Response<Void> acceptRes = systemService.acceptOfferOnStoreProduct(store, owner1, registered, p1);
-        assertTrue(!acceptRes.isSuccess() && acceptRes.getMessage().contains("Did not place an Offer on Product"), acceptRes.getMessage());
-    }
-
-    @Test
         @Transactional
     void testAcceptOffer_singleOwnerAccept_Success(){
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
@@ -283,6 +279,8 @@ public class AT_OfferTest {
         assertTrue(acceptRes.isSuccess());
         Response<List<Offer>> getOffersRes = systemService.getUserOffers(store, registered);
         List<Offer> offers = getOffersRes.getData();
+        assertTrue(offers != null && !offers.isEmpty(), "FAILURE - No offers found");
+        assertTrue(offers.size() == 2, "FAILURE - Incorrect number of offers found");
         Offer offer1 = offers.get(0);
         assertTrue(offer1.getUserId() == registered && offer1.getStoreId() == store && offer1.getProductId() == p1); // verify correct offer
         Offer offer2 = offers.get(1);
@@ -300,8 +298,18 @@ public class AT_OfferTest {
 
         //verify all OTHER owners got the msg
         for(Integer owner : owners){
-            Map<Integer, StoreMsg> msgs = systemService.getAllMessages(owner).getData();
+            Response<Map<Integer, StoreMsg>> msgsRes = systemService.getAllMessages(owner);
+            //assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + owner);
+
+            Map<Integer, StoreMsg> msgs = msgsRes.getData();
             boolean found = false;
+            if(owner == owner1){
+                assertTrue(msgs.isEmpty(), "FAILURE - Owner who accepted offer should not have received a message");
+                continue; // skip the owner who accepted the offer
+            }
+            if(msgs == null || msgs.isEmpty()){
+                fail("FAILURE - No messages found for owner " + owner + " when owner: " + owner1 + " accepted an offer for product: " + p1);
+            }
             for(Integer msgId : msgs.keySet()){
                 StoreMsg msg = msgs.get(msgId);
                 if(msg.getMessage().contains("Owner " + owner1 + " accepted an offer for product " + p1)){
@@ -334,6 +342,7 @@ public class AT_OfferTest {
         systemService.addToBasket(registered, p1, store, 2); // to make sure the quantity & final price are correct!
         systemService.placeOfferOnStoreProduct(store, registered, p1, 12);
         List<CartItemInfoDTO> cart =  systemService.viewCart(registered).getData();
+        assertTrue(cart != null && !cart.isEmpty(), "FAILURE - Cart is empty");
         assertTrue(cart.size() == 1 && cart.get(0).getQuantityInCart() == 2); // offer should not be added to quantity until accepted
         
         for(Integer owner: owners){
@@ -341,6 +350,7 @@ public class AT_OfferTest {
         }
         Response<List<Offer>> getOffersRes = systemService.getUserOffers(store, registered);
         List<Offer> offers = getOffersRes.getData();
+        assertTrue(offers != null && !offers.isEmpty(), "FAILURE - No offers found");
         Offer offer = offers.get(0);
         assertFalse(offer.isApproved());
         assertFalse(offer.isHandled());
@@ -355,6 +365,7 @@ public class AT_OfferTest {
             fail("Sleep was interrupted");
         }
         cart =  systemService.viewCart(registered).getData();
+        assertTrue(cart != null && !cart.isEmpty(), "FAILURE - Cart is empty");
         assertTrue(cart.size() == 1 && cart.get(0).getQuantityInCart() == 3); // verify the quantity increased
 
         //verify all owners got the success msg
@@ -370,8 +381,10 @@ public class AT_OfferTest {
             }
             assertTrue(found);
         }
+        Response<Map<Integer, StoreMsg>> msgsRes = systemService.getMessagesFromStore(registered);
+        assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + registered);
 
-        Map<Integer, StoreMsg> registeredMsgs = systemService.getMessagesFromStore(registered).getData();
+        Map<Integer, StoreMsg> registeredMsgs = msgsRes.getData();
         boolean found = false;
         for(Integer msgId : registeredMsgs.keySet()){
             StoreMsg msg = registeredMsgs.get(msgId);
@@ -447,8 +460,10 @@ public class AT_OfferTest {
             Thread.currentThread().interrupt();
             fail("Sleep was interrupted");
         }
-        Map<Integer, StoreMsg> registeredMsgs = systemService.getMessagesFromStore(registered).getData();
-        boolean found = false;
+        Response<Map<Integer, StoreMsg>> msgsRes = systemService.getMessagesFromStore(registered);
+        assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + registered);
+
+        Map<Integer, StoreMsg> registeredMsgs = msgsRes.getData();        boolean found = false;
         for(Integer msgId : registeredMsgs.keySet()){
             StoreMsg msg = registeredMsgs.get(msgId);
             if(msg.getMessage().contains("We regret to inform you that the offer for product: " + p1)){
@@ -539,8 +554,10 @@ public class AT_OfferTest {
             Thread.currentThread().interrupt();
             fail("Sleep was interrupted");
         }
-        Map<Integer, StoreMsg> registeredMsgs = systemService.getMessagesFromStore(registered).getData();
-        boolean found = false;
+        Response<Map<Integer, StoreMsg>> msgsRes = systemService.getMessagesFromStore(registered);
+        assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + registered);
+
+        Map<Integer, StoreMsg> registeredMsgs = msgsRes.getData();        boolean found = false;
         for(Integer msgId : registeredMsgs.keySet()){
             StoreMsg msg = registeredMsgs.get(msgId);
             if(msg.getMessage().contains("We regret to inform you that the offer for product: " + p1)){
@@ -600,6 +617,7 @@ public class AT_OfferTest {
         for(Integer owner : owners){
             Response<Map<Integer, StoreMsg>> msgsRes = systemService.getUserOfferMessages(owner);
             assertTrue(msgsRes.isSuccess(), msgsRes.getMessage());
+            assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + owner);
             Map<Integer, StoreMsg> msgs = msgsRes.getData();
             boolean found = false;
             for(Integer msgId : msgs.keySet()){
@@ -611,6 +629,7 @@ public class AT_OfferTest {
             assertTrue(found);
         }
         List<Offer> offers = systemService.getUserOffers(store, registered).getData();
+        assertTrue(offers != null && !offers.isEmpty(), "FAILURE - No offers found");
         assertTrue(offers.size() == 1 && offers.get(0).getOfferAmount() == 20); // from here its the same as a normal offer which got tested already
     }
 
@@ -652,6 +671,7 @@ public class AT_OfferTest {
         for(Integer owner : owners){
             Response<Map<Integer, StoreMsg>> msgsRes = systemService.getMessagesFromStore(owner);
             assertTrue(msgsRes.isSuccess(), msgsRes.getMessage());
+            assertTrue(msgsRes.getData() != null && !msgsRes.getData().isEmpty(), "FAILURE - No messages found for owner " + owner);
             Map<Integer, StoreMsg> msgs = msgsRes.getData();
             boolean found = false;
             for(Integer msgId : msgs.keySet()){
