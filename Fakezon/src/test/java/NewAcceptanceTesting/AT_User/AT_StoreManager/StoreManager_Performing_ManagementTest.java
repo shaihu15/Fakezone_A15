@@ -2,9 +2,7 @@ package NewAcceptanceTesting.AT_User.AT_StoreManager;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDate;
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -14,16 +12,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
-import ApplicationLayer.Enums.PCategory;
+
 import DomainLayer.Enums.PaymentMethod;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
@@ -32,7 +30,7 @@ import ApplicationLayer.Services.SystemService;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreManager_Performing_Management {
+public class StoreManager_Performing_ManagementTest {
 
     @Autowired
     private SystemService systemService;
@@ -51,6 +49,8 @@ public class StoreManager_Performing_Management {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
+
         testHelper = new TestHelper(systemService);
                 Response<UserDTO> ownerUserRes = testHelper.register_and_login();
         assertTrue(ownerUserRes.isSuccess(), "Failed to register and login owner");
@@ -91,25 +91,6 @@ public class StoreManager_Performing_Management {
         assertTrue(acceptRes.isSuccess(), "Expected manager to successfully accept assignment");
 
     }
-
-    @AfterEach
-    void tearDown() {
-        // Remove the manager from the store
-        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, ownerUserId, managerUserId);
-        assertTrue(removeManagerRes.isSuccess(), "Failed to remove store manager");
-
-        // Close the store
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, ownerUserId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
-
-        // Delete the users
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete owner user");
-
-        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerRes.isSuccess(), "Failed to delete manager user");
-    }
-
 
     @Test
     void testOwnerCanViewRoles() {

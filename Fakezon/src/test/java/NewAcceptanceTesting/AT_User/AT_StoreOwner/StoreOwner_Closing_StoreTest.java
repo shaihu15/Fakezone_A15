@@ -14,7 +14,7 @@ import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
 
-public class StoreOwner_Closing_Store {
+public class StoreOwner_Closing_StoreTest {
     // Use-case: 4.9 Close a store
     @Autowired
     private SystemService systemService;
@@ -25,6 +25,7 @@ public class StoreOwner_Closing_Store {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 
@@ -37,17 +38,6 @@ public class StoreOwner_Closing_Store {
         Response<Integer> storeIdResponse = testHelper.openStore(OwnerUserId);
         assertTrue(storeIdResponse.isSuccess());
         storeId = storeIdResponse.getData();
-    }
-    @AfterEach
-    void tearDown() {
-        // Close the store if it's still open
-        if (systemService.isStoreOpen(storeId)) {
-            Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
-            assertTrue(closeStoreResponse.isSuccess());
-        }
-        // Delete the owner user
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteUserResponse.isSuccess());
     }
 
     @Test

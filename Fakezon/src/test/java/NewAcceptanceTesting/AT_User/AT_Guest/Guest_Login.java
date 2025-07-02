@@ -9,8 +9,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Response;
@@ -66,13 +64,6 @@ public class Guest_Login {
         }
     }
 
-    @AfterEach
-    void tearDown() {
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(validEmail);
-                assertTrue(deleteUserResponse.isSuccess(), "User deletion should succeed");
-    }
 
     @Test
     void testLoginUser_validCredentials_Success() {

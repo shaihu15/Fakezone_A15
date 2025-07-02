@@ -2,11 +2,9 @@ package NewAcceptanceTesting.AT_User.AT_Registered;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -15,41 +13,21 @@ import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
+
 import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
 import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
+
 import NewAcceptanceTesting.TestHelper;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
+
 
 import com.fakezone.fakezone.FakezoneApplication;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Store_rating {
+public class Store_ratingTest {
     //Use-case: 3.4 Store rating
     
      @Autowired
@@ -86,7 +64,7 @@ public class Store_rating {
         Response<UserDTO> registered = testHelper.register_and_login2();
         registeredId = registered.getData().getUserId();
 
-        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productId, 1); 
+        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, productId, storeId, 1); 
         assertTrue(responseAddToBasket.isSuccess());
 
         Response<String> responsePurchaseCart = systemService.purchaseCart

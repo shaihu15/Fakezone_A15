@@ -1,33 +1,33 @@
 package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
-import ApplicationLayer.Response;
 import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.ErrorType;
-
+import ApplicationLayer.Response;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_Owner_Appointment {
+public class StoreOwner_Owner_AppointmentTest {
 
     @Autowired
     private SystemService systemService;
@@ -40,6 +40,7 @@ public class StoreOwner_Owner_Appointment {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 
@@ -76,18 +77,6 @@ public class StoreOwner_Owner_Appointment {
         
         Response<String> acceptRes = systemService.acceptAssignment(storeId, ManagerUserId);
         assertTrue(acceptRes.isSuccess());
-    }
-
-    @AfterEach
-    void tearDown() {
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteUserResponse.isSuccess(), "Owner user deletion should succeed");
-
-        Response<Boolean> deleteManagerResponse = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerResponse.isSuccess(), "Manager user deletion should succeed");
     }
 
     @Test
@@ -201,8 +190,8 @@ public class StoreOwner_Owner_Appointment {
 
         Response<Void> response = systemService.addStoreOwner(storeId, OwnerUserId, invalidUserId);
         assertFalse(response.isSuccess());
-        assertEquals(ErrorType.INTERNAL_ERROR, response.getErrorType());
-        assertTrue(response.getMessage().contains("Error during adding store owner"));
+        assertEquals(ErrorType.INVALID_INPUT, response.getErrorType());
+        assertTrue(response.getMessage().contains("User is not registered"));
     }
 
     @Test

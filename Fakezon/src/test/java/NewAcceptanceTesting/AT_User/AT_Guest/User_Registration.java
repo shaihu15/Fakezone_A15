@@ -30,6 +30,7 @@ public class User_Registration {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         validEmail = testHelper.validEmail();
@@ -41,12 +42,6 @@ public class User_Registration {
         Response<UserDTO> guestResponse = systemService.createUnsignedUser();
         assertTrue(guestResponse.isSuccess());
         guestId = guestResponse.getData().getUserId();
-    }
-    @AfterEach
-    void tearDown() {
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-
     }
 
     

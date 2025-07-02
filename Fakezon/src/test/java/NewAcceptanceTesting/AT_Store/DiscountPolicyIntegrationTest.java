@@ -5,6 +5,8 @@ import DomainLayer.Model.*;
 import ApplicationLayer.DTO.*;
 import DomainLayer.Interfaces.IDiscountPolicy;
 import com.fakezone.fakezone.FakezoneApplication;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * These tests verify that discount policies can be properly persisted and retrieved.
  */
 @SpringBootTest(classes = FakezoneApplication.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
 public class DiscountPolicyIntegrationTest {
 
@@ -30,6 +31,12 @@ public class DiscountPolicyIntegrationTest {
     private SystemService systemService;
 
     private final LocalDate USER_DOB = LocalDate.of(1990, 1, 1);
+
+    @BeforeEach
+    void setUp() {
+        // Clear all data before each test to ensure isolation
+        systemService.clearAllData();
+    }
 
     @Test
     void testSimpleDiscountPersistence() {

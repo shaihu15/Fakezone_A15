@@ -34,7 +34,6 @@ import java.util.Collection;
 import com.fakezone.fakezone.FakezoneApplication;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class OrderRepositoryTest {
     @Autowired
     private OrderRepository repository;

@@ -32,7 +32,7 @@ public class Guest_User_Access_to_Product_Information {
 
     @BeforeEach
     void setUp() {
-
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister = testHelper.register_and_login();
@@ -52,15 +52,6 @@ public class Guest_User_Access_to_Product_Information {
         productId = productResponse.getData().getProductId();
     }
 
-    @AfterEach
-    void tearDown() {
-        Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, userId, productId);
-        assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, userId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-        Response<Boolean> deleteResponse = systemService.deleteUser(username);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-    }
 
     @Test
     void testGuestUserAccessToProductInformation_Succsses() {

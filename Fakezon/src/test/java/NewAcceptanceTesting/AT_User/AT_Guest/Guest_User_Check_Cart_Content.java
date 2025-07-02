@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -38,6 +39,7 @@ public class Guest_User_Check_Cart_Content {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         Response<UserDTO> resultRegister1 = testHelper.register_and_login();
@@ -82,19 +84,6 @@ public class Guest_User_Check_Cart_Content {
         // Registered user adds product 2 to the cart
     }
 
-    @AfterEach
-    void tearDown() {
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "Guest user deletion should succeed");
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(founderEmail);
-        assertTrue(deleteUserResponse.isSuccess(), "Registered user deletion should succeed");
-        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(registeredEmail);
-        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
-
-    }
-
     @Test
     void testGuesUseChecCartContent_Success(){
         // Guest checks cart content
@@ -129,8 +118,8 @@ public class Guest_User_Check_Cart_Content {
         assertTrue(resultRegister3.isSuccess());
         int registeredId3 = resultRegister3.getData().getUserId();
         Response<List<CartItemInfoDTO>> emptyCartResponse = systemService.viewCart(registeredId3);
-        assertFalse(emptyCartResponse.isSuccess());
+        assertTrue(emptyCartResponse.isSuccess());
         assertEquals("Cart is empty", emptyCartResponse.getMessage());
-        assertNull(emptyCartResponse.getData());
+        assertTrue(emptyCartResponse.getData().isEmpty());
     }
 }

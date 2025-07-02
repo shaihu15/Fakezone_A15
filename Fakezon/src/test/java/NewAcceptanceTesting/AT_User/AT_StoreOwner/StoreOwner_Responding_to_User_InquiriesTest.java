@@ -2,7 +2,6 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +20,7 @@ import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_Responding_to_User_Inquiries {
+public class StoreOwner_Responding_to_User_InquiriesTest {
 
     @Autowired
     private SystemService systemService;
@@ -34,6 +33,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Register store owner
@@ -56,20 +56,7 @@ public class StoreOwner_Responding_to_User_Inquiries {
         assertTrue(sendMsgResp.isSuccess());
 
     }
-
-    @AfterEach
-    void tearDown() {
-        // Clean up: remove store and delete users
-        Response<String> closeStoreResp = systemService.closeStoreByFounder(storeId, storeOwnerId);
-        assertTrue(closeStoreResp.isSuccess());
-
-        Response<Boolean> deleteCustomerResp = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteCustomerResp.isSuccess());
-
-        Response<Boolean> deleteStoreOwnerResp = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteStoreOwnerResp.isSuccess());
-    }
-
+    
     @Test
     void testRespondingtoUserInquiries_Success() throws InterruptedException {
         // Store owner sends reply to customer

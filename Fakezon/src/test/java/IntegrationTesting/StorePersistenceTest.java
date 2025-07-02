@@ -15,7 +15,6 @@ import DomainLayer.IRepository.IStoreRepository;
 import DomainLayer.Model.Store;
 
 @SpringBootTest(classes = com.fakezone.fakezone.FakezoneApplication.class)
-@ActiveProfiles("test")
 public class StorePersistenceTest {
 
     @Autowired

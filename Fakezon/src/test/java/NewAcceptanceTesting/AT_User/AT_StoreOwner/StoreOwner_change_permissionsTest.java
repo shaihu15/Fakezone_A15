@@ -30,7 +30,7 @@ import DomainLayer.Enums.StoreManagerPermission;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_change_permissions {
+public class StoreOwner_change_permissionsTest {
 
     @Autowired
     private SystemService systemService;
@@ -44,7 +44,7 @@ public class StoreOwner_change_permissions {
     private int SecondOwnerUserId;
     @BeforeEach
     void setUp() {
-
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Setup Owner
@@ -89,24 +89,6 @@ public class StoreOwner_change_permissions {
         assertTrue(acceptSecondOwnerRes.isSuccess());
     }
 
-    @AfterEach
-    void tearDown() {
-        // Remove the store and users created for this test
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, OwnerUserId);
-        assertTrue(closeStoreRes.isSuccess());
-
-        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerRes.isSuccess());
-
-        Response<Boolean> deleteOtherUserRes = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteOtherUserRes.isSuccess());
-
-        Response<Boolean> deleteSecondOwnerRes = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteSecondOwnerRes.isSuccess());
-
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess());
-    }
 
     @Test
     void testAddStoreManagerPermissions_Success_SinglePermission() {

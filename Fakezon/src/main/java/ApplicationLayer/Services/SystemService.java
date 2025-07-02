@@ -62,6 +62,8 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 
 @Service
@@ -248,7 +250,6 @@ public class SystemService implements ISystemService {
     public Response<StoreDTO> userAccessStore(int storeId) {
         try {
             logger.info("System Service - User accessed store: " + storeId);
-            
             StoreDTO s = this.storeService.viewStore(storeId);
 
             return new Response<StoreDTO>(s, "Store retrieved successfully", true, null, null);
@@ -2573,5 +2574,45 @@ public class SystemService implements ISystemService {
                     ErrorType.INTERNAL_ERROR, null);
         }
     }
+    // only for tests
+    @Override 
+    @Transactional
+
+    public Response<Void> removeStore(int storeId, int requesterId) {
+        try {
+        // // Check if requester is logged in and is a system admin (optional, but recommended)
+        // if (!userService.isUserLoggedIn(requesterId)) {
+        //     logger.error("System Service - User is not logged in: " + requesterId);
+        //     return new Response<>(null, "User is not logged in", false, ErrorType.INVALID_INPUT, null);
+        // }
+        if (!storeService.isStoreOwner(storeId, requesterId)) {
+            logger.error("System Service - User is not a system admin: " + requesterId);
+            return new Response<>(null, "User is not a system admin", false, ErrorType.UNAUTHORIZED, null);
+        }
+        // Check if store is closed
+        if (storeService.isStoreOpen(storeId)) {
+            logger.error("System Service - Store must be closed before removal: " + storeId);
+            return new Response<>(null, "Store must be closed before removal", false, ErrorType.INVALID_INPUT, null);
+        }
+        // Remove the store from the repository/service
+        storeService.removeStore(storeId);
+        logger.info("System Service - Store removed: " + storeId + " by admin: " + requesterId);
+        return new Response<>(null, "Store removed successfully", true, null, null);
+        } catch (Exception e) {
+            logger.error("System Service - Error during removing store: " + e.getMessage());
+            return new Response<>(null, "Error during removing store: " + e.getMessage(), false, ErrorType.INTERNAL_ERROR, null);
+        }
+    }
     
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    /**
+     * Resets the registered_users_user_id_seq sequence so that the next user will get user_id = 1.
+     * Only use this for test isolation!
+     */
+    @Transactional
+    public void resetUserIdSequence() {
+        entityManager.createNativeQuery("ALTER SEQUENCE registered_users_user_id_seq RESTART WITH 1").executeUpdate();
+    }
 }

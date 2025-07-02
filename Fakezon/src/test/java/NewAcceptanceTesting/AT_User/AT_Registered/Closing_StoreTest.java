@@ -1,53 +1,25 @@
 package NewAcceptanceTesting.AT_User.AT_Registered;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.AbstractMap;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
-
-import ApplicationLayer.Response;
-import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Interfaces.IOrderService;
-import ApplicationLayer.Interfaces.IProductService;
-import ApplicationLayer.Interfaces.IStoreService;
-import ApplicationLayer.Interfaces.IUserService;
-import ApplicationLayer.Services.OrderService;
-import ApplicationLayer.Services.ProductService;
-import ApplicationLayer.Services.StoreService;
-import ApplicationLayer.Services.SystemService;
-import ApplicationLayer.Services.UserService;
-import DomainLayer.IRepository.IProductRepository;
-import DomainLayer.IRepository.IStoreRepository;
-import DomainLayer.IRepository.IUserRepository;
-import DomainLayer.Interfaces.IAuthenticator;
-import DomainLayer.Interfaces.IDelivery;
-import DomainLayer.Interfaces.IOrderRepository;
-import DomainLayer.Interfaces.IPayment;
-import InfrastructureLayer.Adapters.AuthenticatorAdapter;
-import InfrastructureLayer.Adapters.DeliveryAdapter;
-import InfrastructureLayer.Adapters.PaymentAdapter;
-import InfrastructureLayer.Repositories.OrderRepository;
-import InfrastructureLayer.Repositories.ProductRepository;
-import InfrastructureLayer.Repositories.StoreRepository;
-import InfrastructureLayer.Repositories.UserRepository;
-import NewAcceptanceTesting.TestHelper;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import com.fakezone.fakezone.FakezoneApplication;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import ApplicationLayer.DTO.UserDTO;
+import ApplicationLayer.Response;
+import ApplicationLayer.Services.SystemService;
+import NewAcceptanceTesting.TestHelper;
+import com.fakezone.fakezone.FakezoneApplication;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class Closing_Store {
-    //Use-case: 4.9 Closing Store
-
-     @Autowired
+public class Closing_StoreTest {
+    @Autowired
     private SystemService systemService;
 
     private TestHelper testHelper;
@@ -55,13 +27,38 @@ public class Closing_Store {
     int storeId;
     int userId;
     String storeName;
+    int adminId;
+    Integer otherStoreId = null;
+    Integer otherUserId = null;
+    Integer newAdminUserId = null;
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData();
+        systemService.resetUserIdSequence(); // <-- Add this after clearing data
+        testHelper = new TestHelper(systemService);
 
-        systemService.clearAllData(); //should be removed when there's a DB and we exclude the tests!!!
-        testHelper = new TestHelper(systemService);       
+        // Register and login the admin user (same as in TempDataLoader)
+        String adminEmail = "dev@fakezone.bgu.ac.il";
+        String adminPassword = "Devpass1";
+        String adminDob = "2000-01-01";
+        String adminCountry = "IL";
 
+        Response<String> registerRes = systemService.guestRegister(adminEmail, adminPassword, adminDob, adminCountry);
+        if (!registerRes.isSuccess()) {
+            System.out.println("Admin registration failed: " + registerRes.getMessage() + ". Proceeding to login.");
+        }
+
+        Response<AbstractMap.SimpleEntry<UserDTO, String>> loginRes = systemService.login(adminEmail, adminPassword);
+        assertTrue(loginRes.isSuccess(), "Admin login failed: " + loginRes.getMessage());
+        UserDTO adminUser = loginRes.getData().getKey();
+        adminId = adminUser.getUserId();
+
+        // Promote to system admin (if not already)
+        Response<Void> promoteRes = systemService.addSystemAdmin(adminId, adminId);
+        assertTrue(promoteRes.isSuccess(), "Failed to promote admin user: " + promoteRes.getMessage());
+
+        // Register and login a regular user
         Response<UserDTO> resultUser = testHelper.register_and_login();
         userId = resultUser.getData().getUserId();
         storeName = "Test Store";
@@ -69,6 +66,7 @@ public class Closing_Store {
         Response<Integer> resultAddStore = systemService.addStore(userId, storeName);
         storeId = resultAddStore.getData();
     }
+
 
     @Test
     void testCloseStore_validArguments_Success() {
@@ -78,7 +76,7 @@ public class Closing_Store {
 
         Response<String> result2 = systemService.closeStoreByFounder(storeId, userId);
         assertFalse(result2.isSuccess());
-        assertEquals("Error during closing store: Store: 1 is already closed", result2.getMessage());
+        assertEquals("Error during closing store: Store: " + storeId + " is already closed", result2.getMessage());
     }
 
     @Test
@@ -107,9 +105,6 @@ public class Closing_Store {
 
     @Test
     void testCloseStoreByAdmin_validArguments_Success() {
-        // Use the pre-configured admin user (ID: 1001)
-        int adminId = 1001;
-        
         Response<String> result = systemService.closeStoreByAdmin(storeId, adminId);
         assertTrue(result.isSuccess());
         assertEquals("Store closed successfully by admin", result.getMessage());
@@ -122,9 +117,6 @@ public class Closing_Store {
 
     @Test
     void testCloseStoreByAdmin_invalidStoreId_Failure() {
-        // Use the pre-configured admin user (ID: 1001)
-        int adminId = 1001;
-        
         Response<String> result = systemService.closeStoreByAdmin(-1, adminId);
         assertFalse(result.isSuccess());
         assertEquals("Error during closing store by admin: Store not found", result.getMessage());
@@ -149,27 +141,23 @@ public class Closing_Store {
 
     @Test
     void testCloseStoreByAdmin_userNotLoggedIn_Failure() {
-        // Use the pre-configured admin user (ID: 1001) but log them out
-        int adminId = 1001;
-        
-        // First ensure admin is logged in, then log them out
-        systemService.login("testFounder1001@gmail.com", "a12345"); // Login the admin
-        systemService.userLogout(adminId); // Then log them out
-        
+        // Log out the admin
+        systemService.userLogout(adminId);
+
         Response<String> result = systemService.closeStoreByAdmin(storeId, adminId);
         assertFalse(result.isSuccess());
         assertEquals("User is not logged in", result.getMessage());
+
+        // Log admin back in for cleanup
+        systemService.login("dev@fakezone.bgu.ac.il", "Devpass1");
     }
 
     @Test
     void testCloseStoreByAdmin_alreadyClosed_Failure() {
-        // Use the pre-configured admin user (ID: 1001)
-        int adminId = 1001;
-        
         // Close store first time
         Response<String> result1 = systemService.closeStoreByAdmin(storeId, adminId);
         assertTrue(result1.isSuccess());
-        
+
         // Try to close again
         Response<String> result2 = systemService.closeStoreByAdmin(storeId, adminId);
         assertFalse(result2.isSuccess());
@@ -180,14 +168,11 @@ public class Closing_Store {
     void testCloseStoreByAdmin_canCloseAnyStore_Success() {
         // Create another user and their store
         Response<UserDTO> otherUser = testHelper.register_and_login2();
-        int otherUserId = otherUser.getData().getUserId();
-        
+        otherUserId = otherUser.getData().getUserId();
+
         Response<Integer> otherStoreResult = systemService.addStore(otherUserId, "Other Store");
-        int otherStoreId = otherStoreResult.getData();
-        
-        // Use the pre-configured admin user (ID: 1001)
-        int adminId = 1001;
-        
+        otherStoreId = otherStoreResult.getData();
+
         // Admin should be able to close any store, not just their own
         Response<String> result = systemService.closeStoreByAdmin(otherStoreId, adminId);
         assertTrue(result.isSuccess());
@@ -196,21 +181,17 @@ public class Closing_Store {
 
     @Test
     void testCloseStoreByAdmin_adminCanCreateOtherAdmins_Success() {
-        // Use the pre-configured admin user (ID: 1001) to create another admin
-        int existingAdminId = 1001;
-        
         // Create a new user to make admin
         Response<UserDTO> newUser = testHelper.register_and_login2();
-        int newUserId = newUser.getData().getUserId();
-        
+        newAdminUserId = newUser.getData().getUserId();
+
         // Existing admin creates new admin
-        Response<Void> addAdminResult = systemService.addSystemAdmin(existingAdminId, newUserId);
+        Response<Void> addAdminResult = systemService.addSystemAdmin(adminId, newAdminUserId);
         assertTrue(addAdminResult.isSuccess());
-        
+
         // New admin should be able to close stores
-        Response<String> result = systemService.closeStoreByAdmin(storeId, newUserId);
+        Response<String> result = systemService.closeStoreByAdmin(storeId, newAdminUserId);
         assertTrue(result.isSuccess());
         assertEquals("Store closed successfully by admin", result.getMessage());
     }
-
 }

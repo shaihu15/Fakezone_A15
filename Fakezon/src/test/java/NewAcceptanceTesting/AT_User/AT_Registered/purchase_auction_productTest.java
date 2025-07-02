@@ -3,22 +3,17 @@ package NewAcceptanceTesting.AT_User.AT_Registered;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -27,7 +22,6 @@ import ApplicationLayer.DTO.CartItemInfoDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
@@ -35,7 +29,7 @@ import DomainLayer.Model.helpers.StoreMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class purchase_auction_product {
+public class purchase_auction_productTest {
 
     @Autowired
     private SystemService systemService;
@@ -50,9 +44,9 @@ public class purchase_auction_product {
     private int buyer2Id;
     private int regularProductId; // To be used for auction setup
 
-    //@BeforeEach
-    @Test
+    @BeforeEach
     void setUp() {
+        systemService.clearAllData();
 
         testHelper = new TestHelper(systemService);
 
@@ -85,25 +79,6 @@ public class purchase_auction_product {
         buyer2Id = buyer2Res.getData().getUserId();
     }
 
-    @AfterEach
-    void tearDown() {
-        // Clean up: remove auction product and close store
-        Response<Void> removeAuctionProductRes = systemService.removeProductFromStore(storeId, storeOwnerId, auctionProductId);
-        assertTrue(removeAuctionProductRes.isSuccess(), "Failed to remove auction product");
-
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, storeOwnerId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
-
-        // Delete users
-        Response<Boolean> deleteBuyer1Res = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteBuyer1Res.isSuccess(), "Failed to delete buyer1");
-
-        Response<Boolean> deleteBuyer2Res = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteBuyer2Res.isSuccess(), "Failed to delete buyer2");
-
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete store owner");
-    }
 
     @Test
     void testPurchaseAuctionProduct_SuccessScenario() throws InterruptedException {

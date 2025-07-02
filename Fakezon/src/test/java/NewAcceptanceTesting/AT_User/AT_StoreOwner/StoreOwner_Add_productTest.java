@@ -6,8 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.context.ActiveProfiles;
+
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -16,20 +15,12 @@ import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
 import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Enums.PCategory;
-import ApplicationLayer.Interfaces.*;
 import ApplicationLayer.Services.SystemService;
-import DomainLayer.Interfaces.*;
 import NewAcceptanceTesting.TestHelper;
-import ApplicationLayer.Interfaces.INotificationWebSocketHandler;
-import InfrastructureLayer.Adapters.NotificationWebSocketHandler;
 
-import com.fakezone.fakezone.FakezoneApplication;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-public class StoreOwner_Add_product {
+public class StoreOwner_Add_productTest {
     //Use-case: 4.1 StoreOwner - Add a product
 
      @Autowired

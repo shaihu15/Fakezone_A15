@@ -72,12 +72,12 @@ public class Store implements IStore {
     @MapKeyColumn(name = "user_id")
     private Map<Integer, StoreRating> Sratings; // HASH userID to store rating
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)//LAZY
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)//LAZY
     @JoinColumn(name = "owner_store_id")
     @MapKeyClass(StoreProductKey.class)
     private Map<StoreProductKey, StoreProduct> storeProducts; // HASH (storeId, sproductId) to store product
     
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "auction_store_id")
     @MapKeyClass(StoreProductKey.class)
     private Map<StoreProductKey, AuctionProduct> auctionProducts; // HASH productID to auction product
@@ -159,7 +159,7 @@ public class Store implements IStore {
     @Transient
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "store_id")
     private List<Offer> allOffers = new ArrayList<>(); // All offers for this store (both regular and pending)
     
@@ -1458,28 +1458,20 @@ public class Store implements IStore {
                 .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
                 .findFirst()
                 .orElse(null);
-                
+            int reducedQuantity = 0;
             if (auctionProduct != null) {
                 if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone()) {
                     amount += auctionProduct.getCurrentHighestBid();
-                    amount += auctionProduct.getStoreProduct().getBasePrice() * (quantity - 1); 
-                }
-                else{
-                    amount += auctionProduct.getStoreProduct().getBasePrice() * quantity;
-                }
-                
-            } else {
-                Offer offer = getUserOfferOnStoreProduct(userId, productId);
-                if(offer != null && offer.getUserId() == userId && offer.isApproved() && offer.isHandled()){
-                    amount += offer.getOfferAmount();
-                    if(quantity > 1){
-                        amount += product.getBasePrice() * (quantity - 1);
-                    }
-                }
-                else{
-                    amount += product.getBasePrice() * quantity;
+                    reducedQuantity++;
                 }
             }
+            Offer offer = getAcceptedHandledOffer(userId, productId);
+            if(offer != null){
+                amount += offer.getOfferAmount();
+                reducedQuantity++;
+            }
+            amount += product.getBasePrice() * (quantity-reducedQuantity);
+            
         }
         double totalDiscount = discountPolicies.values().stream()
         .mapToDouble(d -> d.apply(cart)).sum();
@@ -1488,6 +1480,17 @@ public class Store implements IStore {
         return amount;
     }
 
+    // Helper to find accepted and handled offer for user and product
+    private Offer getAcceptedHandledOffer(int userId, int productId) {
+        if (allOffers != null) {
+            for (Offer offer : allOffers) {
+                if (offer.getUserId() == userId && offer.getProductId() == productId && offer.isApproved() && offer.isHandled()) {
+                    return offer;
+                }
+            }
+        }
+        return null;
+    }
 
     @Override
     public boolean canViewOrders(int userId) {
@@ -1586,7 +1589,7 @@ public class Store implements IStore {
                 }
                 else{
                     int newQuantity = Math.min(quantity, storeProduct.getQuantity());
-                    Offer offer = getUserOfferOnStoreProduct(userId, productId);
+                    Offer offer = getAcceptedHandledOffer(userId, productId);
                     if(offer != null){
                         removeOffer(offer);
                     }
@@ -1687,7 +1690,7 @@ public class Store implements IStore {
             if(offer != null){
                 throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }
-            offer = getUserPendingOfferOnStoreProductUnsafe(userId, productId);
+            offer = getUserPendingOfferOnStoreProduct(userId, productId);
             if(offer != null){
                 throw new IllegalArgumentException("User already has pending counter offer on the same product");
             }
@@ -1714,7 +1717,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("Only Store Owners can Accept Offers");
             }
-            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId); // revert to pending offer search
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1740,7 +1743,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("Only Store Owners can Decline Offers");
             }
-            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId); // revert to pending offer search
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1861,7 +1864,7 @@ public class Store implements IStore {
             if(!isOwner(ownerId)){
                 throw new IllegalArgumentException("User " + ownerId + " is not a valid Store Owner in store " + storeID);
             }
-            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId); // revert to pending offer search
             if(offer == null){
                 throw new IllegalArgumentException("User " + userId + " Did not place an Offer on Product " + productId);
             }
@@ -1873,18 +1876,7 @@ public class Store implements IStore {
                 throw new IllegalArgumentException("User already has a counter offer pending");
             }
             
-            // Decline the original offer silently (no events for counter offers)
-            offer.decline(ownerId);
-            offer.setHandled(); // Mark as handled to prevent event publishing
-            // Don't remove from persistent collection - just remove from transient maps
-            List<Offer> offers = offersOnProducts.get(offer.getUserId());
-            if(offers != null){
-                offers.remove(offer);
-                if(offers.isEmpty()){
-                    offersOnProducts.remove(offer.getUserId());
-                }
-            }
-            
+            declineOfferOnStoreProduct(ownerId, userId, productId);
             // Create the counter offer
             Offer counterOffer = new Offer(userId, storeID, productId, offerAmount, List.copyOf(storeOwners));
             counterOffer.setOfferType("PENDING");
@@ -1970,7 +1962,7 @@ public class Store implements IStore {
             }
             
             // Check if user already has an offer on this product
-            Offer existingOffer = getUserOfferOnStoreProductUnsafe(userId, productId);
+            Offer existingOffer = getAcceptedHandledOffer(userId, productId);
             if(existingOffer != null){
                 throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }

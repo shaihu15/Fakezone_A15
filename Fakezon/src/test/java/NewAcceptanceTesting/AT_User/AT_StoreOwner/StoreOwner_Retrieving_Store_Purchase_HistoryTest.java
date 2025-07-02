@@ -3,8 +3,7 @@ package NewAcceptanceTesting.AT_User.AT_StoreOwner;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,28 +12,24 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
 import ApplicationLayer.Response;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.DTO.OrderedProductDTO;
-import ApplicationLayer.DTO.ProductDTO;
 import ApplicationLayer.DTO.StoreProductDTO;
-import ApplicationLayer.DTO.StoreRolesDTO;
 import ApplicationLayer.DTO.UserDTO;
-import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Enums.PCategory; 
 
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Enums.StoreManagerPermission;
 
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-
-public class StoreOwner_Retrieving_Store_Purchase_History {
+public class StoreOwner_Retrieving_Store_Purchase_HistoryTest {
 
     @Autowired
     private SystemService systemService;
@@ -52,6 +47,7 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Guest enters the system
@@ -103,30 +99,6 @@ public class StoreOwner_Retrieving_Store_Purchase_History {
         Response<List<OrderDTO>> orders =systemService.getOrdersByUserId(registeredId);
         assertTrue(orders.isSuccess());
         assertTrue(orders.getData().size() == 1);
-    }
-
-    @AfterEach
-    void tearDown() {
-        // Remove the product from the store
-        Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, StoreFounderId, productIdInt);
-        assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
-
-        // Close the store
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-
-        // Delete the users
-        Response<Boolean> deleteResponse1 = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteResponse1.isSuccess(), "User deletion should succeed");
-
-        Response<Boolean> deleteResponse2 = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteResponse2.isSuccess(), "User deletion should succeed");
-
-        Response<Boolean> deleteResponse3 = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteResponse3.isSuccess(), "User deletion should succeed");
-
-        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
     }
     
     @Test

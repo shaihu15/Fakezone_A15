@@ -6,14 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Callable;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -21,6 +19,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
 import com.fakezone.fakezone.FakezoneApplication;
 import NewAcceptanceTesting.TestHelper;
 import ApplicationLayer.Response;
@@ -29,10 +29,8 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.DTO.OrderDTO;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.PaymentMethod;
-import DomainLayer.Interfaces.IOrder;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-
 public class Immediate_Purchase_of_Shopping_Cart {
     //Use-Case: 2.5 Immediate Purchase of Shopping Cart
 
@@ -50,6 +48,7 @@ public class Immediate_Purchase_of_Shopping_Cart {
 
     @BeforeEach
     void setUp() {
+        systemService.clearAllData(); // Clear data before each test to ensure isolation
         testHelper = new TestHelper(systemService);
 
         // Guest enters the system
@@ -84,21 +83,6 @@ public class Immediate_Purchase_of_Shopping_Cart {
         //the product is added to the store
     }
 
-    @AfterEach
-    void tearDown() {
-
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-
-        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
-
-        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
-
-        Response<Boolean> deleteRegisteredResponse3 = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteRegisteredResponse3.isSuccess(), "Registered user 3 deletion should succeed");
-    }
  
     @Test
     void testImmediatePurchase_Registered_Success() {
