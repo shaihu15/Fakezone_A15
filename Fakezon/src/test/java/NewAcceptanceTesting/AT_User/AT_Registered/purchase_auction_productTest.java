@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,8 +43,7 @@ public class purchase_auction_productTest {
     private int buyer2Id;
     private int regularProductId; // To be used for auction setup
 
-    //@BeforeEach
-    @Test
+    @BeforeEach
     void setUp() {
         systemService.clearAllData();
 
@@ -79,25 +78,6 @@ public class purchase_auction_productTest {
         buyer2Id = buyer2Res.getData().getUserId();
     }
 
-    @AfterEach
-    void tearDown() {
-        // Clean up: remove auction product and close store
-        Response<Void> removeAuctionProductRes = systemService.removeProductFromStore(storeId, storeOwnerId, auctionProductId);
-        assertTrue(removeAuctionProductRes.isSuccess(), "Failed to remove auction product");
-
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, storeOwnerId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
-
-        // Delete users
-        Response<Boolean> deleteBuyer1Res = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteBuyer1Res.isSuccess(), "Failed to delete buyer1");
-
-        Response<Boolean> deleteBuyer2Res = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteBuyer2Res.isSuccess(), "Failed to delete buyer2");
-
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete store owner");
-    }
 
     @Test
     void testPurchaseAuctionProduct_SuccessScenario() throws InterruptedException {

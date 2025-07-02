@@ -24,8 +24,10 @@ import com.fakezone.fakezone.FakezoneApplication;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class Store_ratingTest {
     //Use-case: 3.4 Store rating
     
@@ -63,7 +65,7 @@ public class Store_ratingTest {
         Response<UserDTO> registered = testHelper.register_and_login2();
         registeredId = registered.getData().getUserId();
 
-        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, storeId, productId, 1); 
+        Response<Void> responseAddToBasket = systemService.addToBasket(registeredId, productId, storeId, 1); 
         assertTrue(responseAddToBasket.isSuccess());
 
         Response<String> responsePurchaseCart = systemService.purchaseCart
