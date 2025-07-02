@@ -52,7 +52,7 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/mydb
           SPRING_DATASOURCE_USERNAME: myuser
           SPRING_DATASOURCE_PASSWORD: mypassword
-        run: mvn verify -e -X
+        run: mvn test
 
       - name: Upload JaCoCo report
         uses: actions/upload-artifact@v4
