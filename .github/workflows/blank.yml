@@ -11,6 +11,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # 1) Start a Postgres container on the runner
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: mydb
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,7 +37,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Cache Maven dependencies to speed up builds
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -30,12 +45,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # Compile, run tests, and generate JaCoCo code coverage report
+      # 2) Inject Spring’s datasource env vars so your tests point at the Postgres service
       - name: Run tests and generate coverage report
         working-directory: Fakezon
-        run: mvn verify
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/mydb
+          SPRING_DATASOURCE_USERNAME: myuser
+          SPRING_DATASOURCE_PASSWORD: mypassword
+        run: mvn verify -e -X
 
-      # Upload the generated JaCoCo report as a downloadable artifact from the GitHub Actions UI
       - name: Upload JaCoCo report
         uses: actions/upload-artifact@v4
         with:
