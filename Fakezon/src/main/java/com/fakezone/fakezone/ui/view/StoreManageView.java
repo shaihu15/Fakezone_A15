@@ -18,6 +18,7 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -160,6 +161,15 @@ public class StoreManageView extends VerticalLayout implements BeforeEnterObserv
         actionButtonsLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         actionButtonsLayout.setAlignItems(Alignment.CENTER);
         actionButtonsLayout.getStyle().set("margin-top", "10px");
+        actionButtonsLayout.setWidth("100%"); 
+        actionButtonsLayout.setWidth("100%");                      // full‑width container
+        actionButtonsLayout.getStyle()
+            .set("display", "flex")                                // ensure it’s flex
+            .set("flex-wrap", "wrap")                              // allow wrapping
+            .set("justify-content", "center")                      // center rows
+            .set("align-items", "center")
+            .set("gap", "10px")                                     // spacing between items
+            .set("margin-top", "10px");
 
         // INVENTORY buttons
         if (effectivePermissions.contains(StoreManagerPermission.INVENTORY)) {
