@@ -1686,7 +1686,7 @@ public class Store implements IStore {
             if (userOffers == null){
                 userOffers = new ArrayList<>();
             }
-            Offer offer = getAcceptedHandledOffer(userId, productId);
+            Offer offer = getUserOfferOnStoreProductUnsafe(userId, productId);
             if(offer != null){
                 throw new IllegalArgumentException("Can not Offer on the Same Product Twice");
             }
