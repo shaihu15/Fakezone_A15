@@ -23,9 +23,11 @@ import ApplicationLayer.Enums.ErrorType;
 import ApplicationLayer.Services.SystemService;
 import DomainLayer.Enums.StoreManagerPermission;
 import DomainLayer.Model.helpers.StoreMsg;
+import org.springframework.test.context.ActiveProfiles;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class StoreOwner_Manager_AppointmentTest {
 
     @Autowired
@@ -80,27 +82,6 @@ public class StoreOwner_Manager_AppointmentTest {
                 "otherOwnerUserId should be an owner");
     }
 
-    @AfterEach
-    void tearDown() {
-        // Clean up: remove all roles and delete users
-        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, ownerUserId, managerUserId);
-        assertTrue(removeManagerRes.isSuccess(), "Failed to remove manager after test");
-
-        Response<Void> removeOwnerRes = systemService.removeStoreOwner(storeId, ownerUserId, otherOwnerUserId);
-        assertTrue(removeOwnerRes.isSuccess(), "Failed to remove other owner after test");
-
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, ownerUserId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store after test");
-
-        Response<Boolean> deleteManagerUserRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerUserRes.isSuccess(), "Failed to delete manager user after test");
-
-        Response<Boolean> deleteOtherRegisteredUserRes = systemService.deleteUser(testHelper.validEmail3());
-        assertTrue(deleteOtherRegisteredUserRes.isSuccess(), "Failed to delete other registered user after test");
-
-        Response<Boolean> deleteOtherOwnerUserRes = systemService.deleteUser(testHelper.validEmail4());
-        assertTrue(deleteOtherOwnerUserRes.isSuccess(), "Failed to delete other owner user after test");
-    }
 
     @Test
     void testAddStoreManager_Success() throws InterruptedException {
