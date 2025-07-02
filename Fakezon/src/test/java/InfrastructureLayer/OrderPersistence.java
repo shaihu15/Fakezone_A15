@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = {com.fakezone.fakezone.FakezoneApplication.class})
 @Transactional
 @TestPropertySource(locations = "classpath:application-test.properties")
-public class OrderPersistenceTest {
+public class OrderPersistence {
 
     @Autowired
     private IOrderRepository orderRepository;

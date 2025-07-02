@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = {com.fakezone.fakezone.FakezoneApplication.class})
 @Transactional
 @TestPropertySource(locations = "classpath:application-test.properties")
-public class UserPersistenceTest {
+public class UserPersistence {
 
     @Autowired
     private IUserRepository userRepository;
