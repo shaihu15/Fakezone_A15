@@ -30,7 +30,6 @@ import ApplicationLayer.Services.SystemService;
 
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class StoreManager_Performing_ManagementTest {
 
     @Autowired
@@ -92,25 +91,6 @@ public class StoreManager_Performing_ManagementTest {
         assertTrue(acceptRes.isSuccess(), "Expected manager to successfully accept assignment");
 
     }
-
-    @AfterEach
-    void tearDown() {
-        // Remove the manager from the store
-        Response<Void> removeManagerRes = systemService.removeStoreManager(storeId, ownerUserId, managerUserId);
-        assertTrue(removeManagerRes.isSuccess(), "Failed to remove store manager");
-
-        // Close the store
-        Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, ownerUserId);
-        assertTrue(closeStoreRes.isSuccess(), "Failed to close store");
-
-        // Delete the users
-        Response<Boolean> deleteOwnerRes = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteOwnerRes.isSuccess(), "Failed to delete owner user");
-
-        Response<Boolean> deleteManagerRes = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteManagerRes.isSuccess(), "Failed to delete manager user");
-    }
-
 
     @Test
     void testOwnerCanViewRoles() {

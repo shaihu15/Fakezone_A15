@@ -18,7 +18,6 @@ import ApplicationLayer.DTO.UserDTO;
 import ApplicationLayer.Services.SystemService;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class Save_Products_in_Purchase_Basket {
     //Use-case: 2.3 Save Products in Purchase Basket 
 
@@ -65,17 +64,6 @@ public class Save_Products_in_Purchase_Basket {
         assertTrue(guestResponse.isSuccess());
         guestId = guestResponse.getData().getUserId();
 
-    }
-    @AfterEach
-    void tearDown() {
-        Response<Void> deleteProductResponse = systemService.removeProductFromStore(storeId, StoreFounderId, productIdInt);
-        assertTrue(deleteProductResponse.isSuccess(), "Product deletion should succeed");
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-        Response<Boolean> deleteResponse = systemService.deleteUser(testHelper.validEmail2());
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-        Response<Boolean> deleteGuestResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteGuestResponse.isSuccess(), "Guest user deletion should succeed");
     }
 
 

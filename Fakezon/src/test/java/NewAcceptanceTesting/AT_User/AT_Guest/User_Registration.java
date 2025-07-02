@@ -43,12 +43,6 @@ public class User_Registration {
         assertTrue(guestResponse.isSuccess());
         guestId = guestResponse.getData().getUserId();
     }
-    @AfterEach
-    void tearDown() {
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "User deletion should succeed");
-
-    }
 
     
     @Test

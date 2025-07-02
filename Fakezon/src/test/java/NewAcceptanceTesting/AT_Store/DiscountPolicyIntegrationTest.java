@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * These tests verify that discount policies can be properly persisted and retrieved.
  */
 @SpringBootTest(classes = FakezoneApplication.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
 public class DiscountPolicyIntegrationTest {
 

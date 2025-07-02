@@ -22,7 +22,6 @@ import DomainLayer.Model.helpers.UserMsg;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class Sending_Direct_Message_to_StoreTest {
     //Use-case: 3.5 Sending a Direct Message to a Store
 

@@ -18,7 +18,6 @@ import NewAcceptanceTesting.TestHelper;
 import com.fakezone.fakezone.FakezoneApplication;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test") // Use the test profile to avoid affecting production data
 public class Closing_StoreTest {
     @Autowired
     private SystemService systemService;
@@ -68,53 +67,6 @@ public class Closing_StoreTest {
         storeId = resultAddStore.getData();
     }
 
-    @AfterEach
-    void tearDown() {
-        try {
-            if (storeId > 0) {
-                Response<String> closeStoreRes = systemService.closeStoreByFounder(storeId, userId);
-                if (!closeStoreRes.isSuccess()) {
-                    System.err.println("Warning: Failed to close main store: " + closeStoreRes.getMessage());
-                }
-                Response<Void> removeStoreRes = systemService.removeStore(storeId, userId);
-                if (!removeStoreRes.isSuccess()) {
-                    System.err.println("Warning: Failed to remove main store: " + removeStoreRes.getMessage());
-                }
-            }
-            if (otherStoreId != null && otherUserId != null) {
-                Response<Void> removeOtherStoreRes = systemService.removeStore(otherStoreId, otherUserId);
-                if (!removeOtherStoreRes.isSuccess()) {
-                    System.err.println("Warning: Failed to remove other store: " + removeOtherStoreRes.getMessage());
-                }
-            }
-            Response<Boolean> deleteUserRes = systemService.deleteUser(testHelper.validEmail());
-            if (!deleteUserRes.isSuccess()) {
-                System.err.println("Warning: Failed to delete user: " + deleteUserRes.getMessage());
-            }
-            Response<Boolean> deleteUser2Res = systemService.deleteUser(testHelper.validEmail2());
-            if (!deleteUser2Res.isSuccess()) {
-                System.err.println("Warning: Failed to delete user2: " + deleteUser2Res.getMessage());
-            }
-            if (newAdminUserId != null) {
-                Response<Boolean> deleteAdminRes = systemService.deleteUser(testHelper.validEmail2());
-                if (!deleteAdminRes.isSuccess()) {
-                    System.err.println("Warning: Failed to delete new admin user: " + deleteAdminRes.getMessage());
-                }
-            }
-            if (adminId > 0) systemService.userLogout(adminId);
-            if (userId > 0) systemService.userLogout(userId);
-            if (otherUserId != null) systemService.userLogout(otherUserId);
-            if (newAdminUserId != null) systemService.userLogout(newAdminUserId);
-        } catch (Exception e) {
-            System.err.println("Warning: Exception during cleanup: " + e.getMessage());
-        } finally {
-            storeId = 0;
-            userId = 0;
-            otherStoreId = null;
-            otherUserId = null;
-            newAdminUserId = null;
-        }
-    }
 
     @Test
     void testCloseStore_validArguments_Success() {

@@ -39,17 +39,6 @@ public class StoreOwner_Closing_StoreTest {
         assertTrue(storeIdResponse.isSuccess());
         storeId = storeIdResponse.getData();
     }
-    @AfterEach
-    void tearDown() {
-        // Close the store if it's still open
-        if (systemService.isStoreOpen(storeId)) {
-            Response<String> closeStoreResponse = systemService.closeStoreByFounder(storeId, OwnerUserId);
-            assertTrue(closeStoreResponse.isSuccess());
-        }
-        // Delete the owner user
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(testHelper.validEmail());
-        assertTrue(deleteUserResponse.isSuccess());
-    }
 
     @Test
     void testStoreOwnerClosingStore_Success() {

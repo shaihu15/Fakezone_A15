@@ -18,7 +18,6 @@ import DomainLayer.Interfaces.IProduct;
 import DomainLayer.Model.Product;
 
 @SpringBootTest(classes = com.fakezone.fakezone.FakezoneApplication.class)
-@ActiveProfiles("test")
 @Transactional
 public class ProductPersistenceTest {
 

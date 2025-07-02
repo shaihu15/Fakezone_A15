@@ -22,7 +22,6 @@ import ApplicationLayer.Services.SystemService;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
-@ActiveProfiles("test")
 public class Guest_User_Check_Cart_Content {
 
     @Autowired
@@ -83,19 +82,6 @@ public class Guest_User_Check_Cart_Content {
         Response<Void> responseRegistered = systemService.addToBasket(registeredId, productId2, storeId,1); 
         assertTrue(responseRegistered.isSuccess());
         // Registered user adds product 2 to the cart
-    }
-
-    @AfterEach
-    void tearDown() {
-        Response<String> deleteStoreResponse = systemService.closeStoreByFounder(storeId, StoreFounderId);
-        assertTrue(deleteStoreResponse.isSuccess(), "Store deletion should succeed");
-        Response<Boolean> deleteResponse = systemService.removeUnsignedUser(guestId);
-        assertTrue(deleteResponse.isSuccess(), "Guest user deletion should succeed");
-        Response<Boolean> deleteUserResponse = systemService.deleteUser(founderEmail);
-        assertTrue(deleteUserResponse.isSuccess(), "Registered user deletion should succeed");
-        Response<Boolean> deleteRegisteredResponse = systemService.deleteUser(registeredEmail);
-        assertTrue(deleteRegisteredResponse.isSuccess(), "Registered user deletion should succeed");
-
     }
 
     @Test
