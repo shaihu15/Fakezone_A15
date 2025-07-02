@@ -62,6 +62,8 @@ import InfrastructureLayer.Adapters.AuthenticatorAdapter;
 import InfrastructureLayer.Adapters.DeliveryAdapter;
 import InfrastructureLayer.Adapters.PaymentAdapter;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 
 @Service
@@ -2602,4 +2604,15 @@ public class SystemService implements ISystemService {
         }
     }
     
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    /**
+     * Resets the registered_users_user_id_seq sequence so that the next user will get user_id = 1.
+     * Only use this for test isolation!
+     */
+    @Transactional
+    public void resetUserIdSequence() {
+        entityManager.createNativeQuery("ALTER SEQUENCE registered_users_user_id_seq RESTART WITH 1").executeUpdate();
+    }
 }

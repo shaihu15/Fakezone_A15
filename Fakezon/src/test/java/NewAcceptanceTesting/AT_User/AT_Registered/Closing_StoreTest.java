@@ -36,6 +36,7 @@ public class Closing_StoreTest {
     @BeforeEach
     void setUp() {
         systemService.clearAllData();
+        systemService.resetUserIdSequence(); // <-- Add this after clearing data
         testHelper = new TestHelper(systemService);
 
         // Register and login the admin user (same as in TempDataLoader)
