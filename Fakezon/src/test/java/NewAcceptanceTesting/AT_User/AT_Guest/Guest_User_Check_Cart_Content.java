@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.fakezone.fakezone.FakezoneApplication;
 
@@ -21,6 +22,7 @@ import ApplicationLayer.Services.SystemService;
 import NewAcceptanceTesting.TestHelper;
 
 @SpringBootTest(classes = FakezoneApplication.class)
+@ActiveProfiles("test")
 public class Guest_User_Check_Cart_Content {
 
     @Autowired
@@ -130,8 +132,8 @@ public class Guest_User_Check_Cart_Content {
         assertTrue(resultRegister3.isSuccess());
         int registeredId3 = resultRegister3.getData().getUserId();
         Response<List<CartItemInfoDTO>> emptyCartResponse = systemService.viewCart(registeredId3);
-        assertFalse(emptyCartResponse.isSuccess());
+        assertTrue(emptyCartResponse.isSuccess());
         assertEquals("Cart is empty", emptyCartResponse.getMessage());
-        assertNull(emptyCartResponse.getData());
+        assertTrue(emptyCartResponse.getData().isEmpty());
     }
 }

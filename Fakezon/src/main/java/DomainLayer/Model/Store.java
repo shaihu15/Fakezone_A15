@@ -1458,28 +1458,20 @@ public class Store implements IStore {
                 .filter(ap -> ap.getStoreProduct().getSproductID() == productId)
                 .findFirst()
                 .orElse(null);
-                
+            int reducedQuantity = 0;
             if (auctionProduct != null) {
                 if (auctionProduct.getUserIDHighestBid() == userId && auctionProduct.isDone()) {
                     amount += auctionProduct.getCurrentHighestBid();
-                    amount += auctionProduct.getStoreProduct().getBasePrice() * (quantity - 1); 
-                }
-                else{
-                    amount += auctionProduct.getStoreProduct().getBasePrice() * quantity;
-                }
-                
-            } else {
-                Offer offer = getAcceptedHandledOffer(userId, productId);
-                if(offer != null){
-                    amount += offer.getOfferAmount();
-                    if(quantity > 1){
-                        amount += product.getBasePrice() * (quantity - 1);
-                    }
-                }
-                else{
-                    amount += product.getBasePrice() * quantity;
+                    reducedQuantity++;
                 }
             }
+            Offer offer = getAcceptedHandledOffer(userId, productId);
+            if(offer != null){
+                amount += offer.getOfferAmount();
+                reducedQuantity++;
+            }
+            amount += product.getBasePrice() * (quantity-reducedQuantity);
+            
         }
         double totalDiscount = discountPolicies.values().stream()
         .mapToDouble(d -> d.apply(cart)).sum();
