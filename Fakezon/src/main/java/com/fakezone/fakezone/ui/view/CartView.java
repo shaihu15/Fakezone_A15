@@ -436,44 +436,45 @@ public class CartView extends VerticalLayout implements AfterNavigationObserver{
         quantityField.setMax(maxStock);
         quantityField.setWidth("60px");
         quantityField.getElement().getStyle().set("text-align", "center");
+        quantityField.setReadOnly(true);
 
-        Button decreaseButton = new Button(new Icon(VaadinIcon.MINUS));
-        Button increaseButton = new Button(new Icon(VaadinIcon.PLUS));
-        Button confirmButton = new Button("Update"); // Or use an Icon like VaadinIcon.CHECK
+        // Button decreaseButton = new Button(new Icon(VaadinIcon.MINUS));
+        // Button increaseButton = new Button(new Icon(VaadinIcon.PLUS));
+        // Button confirmButton = new Button("Update"); // Or use an Icon like VaadinIcon.CHECK
 
-        confirmButton.setVisible(false); // Initially hidden
-        confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
-        decreaseButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL);
-        increaseButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL);
+        // confirmButton.setVisible(false); // Initially hidden
+        // confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+        // decreaseButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL);
+        // increaseButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SMALL);
 
 
-        decreaseButton.addClickListener(e -> {
-            int currentQuantity = quantityField.getValue();
-            if (currentQuantity > 1) { // Or your defined minimum
-                quantityField.setValue(currentQuantity - 1);
-                confirmButton.setVisible(true);
-            }
-        });
+        // decreaseButton.addClickListener(e -> {
+        //     int currentQuantity = quantityField.getValue();
+        //     if (currentQuantity > 1) { // Or your defined minimum
+        //         quantityField.setValue(currentQuantity - 1);
+        //         confirmButton.setVisible(true);
+        //     }
+        // });
 
-        increaseButton.addClickListener(e -> {
-            int currentQuantity = quantityField.getValue();
-            if (currentQuantity < maxStock){
-                quantityField.setValue(currentQuantity + 1);
-                confirmButton.setVisible(true);
-            }
-        });
+        // increaseButton.addClickListener(e -> {
+        //     int currentQuantity = quantityField.getValue();
+        //     if (currentQuantity < maxStock){
+        //         quantityField.setValue(currentQuantity + 1);
+        //         confirmButton.setVisible(true);
+        //     }
+        // });
 
-        confirmButton.addClickListener(e -> {
-            int newQuantity = quantityField.getValue();
-            // Prevent update if quantity hasn't changed (optional, but good UX)
-            if (newQuantity == item.getQuantityInCart()) {
-                confirmButton.setVisible(false);
-                return;
-            }
-            updateCartItemQuantity(item.getProductId(), item.getStoreId(), newQuantity, confirmButton, quantityField, item.getQuantityInCart());
-        });
+        // confirmButton.addClickListener(e -> {
+        //     int newQuantity = quantityField.getValue();
+        //     // Prevent update if quantity hasn't changed (optional, but good UX)
+        //     if (newQuantity == item.getQuantityInCart()) {
+        //         confirmButton.setVisible(false);
+        //         return;
+        //     }
+        //     updateCartItemQuantity(item.getProductId(), item.getStoreId(), newQuantity, confirmButton, quantityField, item.getQuantityInCart());
+        // });
         
-        HorizontalLayout editorLayout = new HorizontalLayout(decreaseButton, quantityField, increaseButton, confirmButton);
+        HorizontalLayout editorLayout = new HorizontalLayout(quantityField);
         editorLayout.setAlignItems(Alignment.CENTER);
         editorLayout.setSpacing(false); // More compact
         return editorLayout;
